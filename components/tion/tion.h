@@ -14,20 +14,28 @@
 namespace esphome {
 namespace tion {
 
-class TionBase : public ble_client::BLEClientNode {
+class TionBleNode : public ble_client::BLEClientNode {
  public:
   void gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
                            esp_ble_gattc_cb_param_t *param) override;
-
+  virtual void on_ready() = 0;
   virtual void read_data(const uint8_t *data, uint16_t size) = 0;
   virtual bool write_data(const uint8_t *data, uint16_t size) const;
 
-  virtual void on_ready() = 0;
-  bool is_established() const { return this->node_state == esp32_ble_tracker::ClientState::ESTABLISHED; };
+  virtual const esp_bt_uuid_t &get_ble_service() const = 0;
+  virtual const esp_bt_uuid_t &get_ble_char_tx() const = 0;
+  virtual const esp_bt_uuid_t &get_ble_char_rx() const = 0;
 
  protected:
   uint16_t char_rx_;
   uint16_t char_tx_;
+};
+
+class TionBase : public TionBleNode {
+ public:
+  const esp_bt_uuid_t &get_ble_service() const override;
+  const esp_bt_uuid_t &get_ble_char_tx() const override;
+  const esp_bt_uuid_t &get_ble_char_rx() const override;
 };
 
 template<class T> class Tion : public TionBase, public T {

@@ -15,21 +15,21 @@ static const esp_bt_uuid_t BLE_TION_SERVICE{
     }};
 
 // 98f00002-3788-83ea-453e-f52244709ddb
-static const esp_bt_uuid_t BLE_TION_TX{
+static const esp_bt_uuid_t BLE_TION_CHAR_TX{
     .len = ESP_UUID_LEN_128,
     .uuid = {
         .uuid128 = {0xDB, 0x9D, 0x70, 0x44, 0x22, 0xF5, 0x3E, 0x45, 0xEA, 0x83, 0x88, 0x37, 0x02, 0x00, 0xF0, 0x98},
     }};
 
 // 98f00003-3788-83ea-453e-f52244709ddb
-static const esp_bt_uuid_t BLE_TION_RX{
+static const esp_bt_uuid_t BLE_TION_CHAR_RX{
     .len = ESP_UUID_LEN_128,
     .uuid = {
         .uuid128 = {0xDB, 0x9D, 0x70, 0x44, 0x22, 0xF5, 0x3E, 0x45, 0xEA, 0x83, 0x88, 0x37, 0x03, 0x00, 0xF0, 0x98},
     }};
 
-void TionBase::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
-                                   esp_ble_gattc_cb_param_t *param) {
+void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
+                                      esp_ble_gattc_cb_param_t *param) {
   if (event == ESP_GATTC_NOTIFY_EVT) {
     ESP_LOGV(TAG, "Got notify for handle %04u: %s", param->notify.handle,
              format_hex_pretty(param->notify.value, param->notify.value_len).c_str());
@@ -47,9 +47,9 @@ void TionBase::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gat
   }
 
   if (event == ESP_GATTC_SEARCH_CMPL_EVT) {
-    auto ble_service = esp32_ble_tracker::ESPBTUUID::from_uuid(BLE_TION_SERVICE);
+    auto ble_service = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_service());
 
-    auto ble_char_tx = esp32_ble_tracker::ESPBTUUID::from_uuid(BLE_TION_TX);
+    auto ble_char_tx = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_char_tx());
     auto tx = this->parent()->get_characteristic(ble_service, ble_char_tx);
     if (tx == nullptr) {
       ESP_LOGE(TAG, "Can't discover TX characteristics");
@@ -57,7 +57,7 @@ void TionBase::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gat
     }
     this->char_tx_ = tx->handle;
 
-    auto ble_char_rx = esp32_ble_tracker::ESPBTUUID::from_uuid(BLE_TION_RX);
+    auto ble_char_rx = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_char_rx());
     auto rx = this->parent()->get_characteristic(ble_service, ble_char_rx);
     if (tx == nullptr) {
       ESP_LOGE(TAG, "Can't discover RX characteristics");
@@ -80,12 +80,18 @@ void TionBase::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gat
   }
 }
 
-bool TionBase::write_data(const uint8_t *data, uint16_t size) const {
+bool TionBleNode::write_data(const uint8_t *data, uint16_t size) const {
   ESP_LOGV(TAG, "write_data: %s", format_hex_pretty(data, size).c_str());
   return esp_ble_gattc_write_char(this->parent_->gattc_if, this->parent_->conn_id, this->char_tx_, size,
                                   const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_NO_RSP,
                                   ESP_GATT_AUTH_REQ_NONE) == ESP_GATT_OK;
 }
+
+const esp_bt_uuid_t &TionBase::get_ble_service() const { return BLE_TION_SERVICE; }
+
+const esp_bt_uuid_t &TionBase::get_ble_char_tx() const { return BLE_TION_CHAR_TX; }
+
+const esp_bt_uuid_t &TionBase::get_ble_char_rx() const { return BLE_TION_CHAR_RX; }
 
 climate::ClimateTraits TionClimate::traits() {
   auto traits = climate::ClimateTraits();
@@ -162,11 +168,11 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
   if (this->version_ != nullptr) {
     this->version_->publish_state(str_snprintf("%04X", 4, status.firmware_version));
   }
-  ESP_LOGI(TAG, "Work Mode       : %02X", status.work_mode);
-  ESP_LOGI(TAG, "Device type     : %04X", status.device_type);
-  ESP_LOGI(TAG, "Device sub-type : %04X", status.device_subtype);
-  ESP_LOGI(TAG, "Hardware version: %04X", status.hardware_version);
-  ESP_LOGI(TAG, "Firmware version: %04X", status.firmware_version);
+  ESP_LOGV(TAG, "Work Mode       : %02X", status.work_mode);
+  ESP_LOGV(TAG, "Device type     : %04X", status.device_type);
+  ESP_LOGV(TAG, "Device sub-type : %04X", status.device_subtype);
+  ESP_LOGV(TAG, "Hardware version: %04X", status.hardware_version);
+  ESP_LOGV(TAG, "Firmware version: %04X", status.firmware_version);
 }
 
 }  // namespace tion
