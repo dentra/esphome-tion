@@ -1,12 +1,8 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.cpp_types import PollingComponent
-from esphome.components import (
-    climate,
-    switch,
-    number,
-)
-from .. import tion
+from esphome.components import climate, switch, number
+
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -16,6 +12,7 @@ from esphome.const import (
     ENTITY_CATEGORY_CONFIG,
     PLATFORM_ESP32,
 )
+from .. import tion, tion_lt  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
 ESP_PLATFORMS = [PLATFORM_ESP32]
@@ -33,7 +30,9 @@ Tion4sBoostTimeNumber = tion.tion_ns.class_("Tion4sBoostTimeNumber", number.Numb
 CONF_RECIRCULATION = "recirculation"
 CONF_BOOST_TIME = "boost_time"
 
-CONFIG_SCHEMA = tion.tion_schema(Tion4s, Tion4sLedSwitch, Tion4sBuzzerSwitch).extend(
+CONFIG_SCHEMA = tion_lt.tion_lt_schema(
+    Tion4s, Tion4sLedSwitch, Tion4sBuzzerSwitch
+).extend(
     {
         cv.Optional(CONF_RECIRCULATION): switch.SWITCH_SCHEMA.extend(
             {
@@ -65,7 +64,8 @@ CONFIG_SCHEMA = tion.tion_schema(Tion4s, Tion4sLedSwitch, Tion4sBuzzerSwitch).ex
 
 
 async def to_code(config):
-    var = await tion.setup_breezer(config)
+    """Generate code"""
+    var = await tion_lt.setup_tion_lt(config)
     await tion.setup_switch(config, CONF_RECIRCULATION, var.set_recirculation, var)
     if CONF_BOOST_TIME in config:
         numb = await number.new_number(
