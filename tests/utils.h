@@ -32,11 +32,13 @@ void _test_check_success(const char *file, int line, const char *msg, const std:
 
 #define test_check(res, actual, expected) \
   { \
-    if ((actual) != (expected)) { \
-      _test_check_failed(__FILE__, __LINE__, #actual " != " #expected, actual, expected); \
+    auto __actual_res = (actual); \
+    auto __expected_res = (expected); \
+    if ((__actual_res) != (__expected_res)) { \
+      _test_check_failed(__FILE__, __LINE__, #actual " != " #expected, __actual_res, __expected_res); \
       res = false; \
     } else { \
-      _test_check_success(__FILE__, __LINE__, #actual " == " #expected, actual, expected); \
+      _test_check_success(__FILE__, __LINE__, #actual " == " #expected, __actual_res, __expected_res); \
     } \
   }
 

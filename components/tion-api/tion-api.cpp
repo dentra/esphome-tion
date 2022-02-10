@@ -44,6 +44,7 @@ struct tion_frame_t {
 void TionApi::read_data(const uint8_t *data, uint16_t size) {
   TION_LOGV(TAG, "Read data: %s", hexencode(data, size).c_str());
   if (data == nullptr || size == 0) {
+    TION_LOGW(TAG, "Empy frame data");
     return;
   }
   const uint8_t packet_type = *data++;

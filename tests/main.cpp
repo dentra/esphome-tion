@@ -22,6 +22,7 @@
 #include "test_api_4s.h"
 #include "test_api_lt.h"
 #include "test_api_crc.h"
+#include "test_api_3s.h"
 
 bool test_cl(bool print);
 
@@ -29,10 +30,7 @@ int main(int argc, char const *argv[]) {
   dentra::tion::set_logger(printf_logger);
 
   auto tests = {
-      &test_api_crc,
-      &test_api,
-      &test_api_4s,
-      &test_api_lt,
+      &test_api_crc, &test_api, &test_api_4s, &test_api_lt, &test_api_3s,
   };
   bool res = true;
   for (auto test : tests) {
