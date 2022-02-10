@@ -64,7 +64,7 @@ struct tion3s_frame_t {
 
 #pragma pack(pop)
 
-bool Tions3sApi::read_data(const uint8_t *data, uint16_t size) {
+bool TionsApi3s::read_data(const uint8_t *data, uint16_t size) {
   TION_LOGV(TAG, "Read data: %s", hexencode(data, size).c_str());
   if (data == nullptr || size == 0) {
     TION_LOGW(TAG, "Empy frame data");
@@ -90,7 +90,7 @@ bool Tions3sApi::read_data(const uint8_t *data, uint16_t size) {
   return false;
 }
 
-bool Tions3sApi::write_frame_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) const {
+bool TionsApi3s::write_frame_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) const {
   tion3s_frame_t frame{.type = frame_type, .data = {}, .magic = FRAME_MAGIC};
   if (frame_data_size <= sizeof(frame.data)) {
     std::memcpy(frame.data, frame_data, frame_data_size);
@@ -98,18 +98,18 @@ bool Tions3sApi::write_frame_(uint16_t frame_type, const void *frame_data, uint1
   return this->write_data(reinterpret_cast<const uint8_t *>(&frame), sizeof(frame));
 }
 
-bool Tions3sApi::request_state() const {
+bool TionsApi3s::request_state() const {
   TION_LOGD(TAG, "Request state");
   return this->write_(FRAME_TYPE_STATE_REQ);
 }
 
-bool Tions3sApi::write_state(const tion3s_state_t &state) const {
+bool TionsApi3s::write_state(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Write state");
   auto mode = tion3s_state_set_t::create(state);
   return this->write_frame_(FRAME_TYPE_STATE_SET, &mode, sizeof(mode));
 }
 
-bool Tions3sApi::reset_filter(const tion3s_state_t &state) const {
+bool TionsApi3s::reset_filter(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Reset filter");
   auto mode = tion3s_state_set_t::create(state);
   mode.filter_time.reset = true;

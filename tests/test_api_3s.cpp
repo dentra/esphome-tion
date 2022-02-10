@@ -9,7 +9,7 @@ using namespace dentra::tion;
 
 static std::vector<uint8_t> wr_data_;
 
-class Api3sTest : public Tions3sApi {
+class Api3sTest : public TionsApi3s {
  public:
   bool write_data(const uint8_t *data, uint16_t size) const override {
     LOGD("Writting data: %s", hexencode(data, size).c_str());

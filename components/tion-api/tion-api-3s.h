@@ -36,7 +36,7 @@ struct tion3s_state_t {
 };
 #pragma pack(pop)
 
-class Tions3sApi {
+class TionsApi3s {
  public:
   virtual void read(const tion3s_state_t &state) {}
 
