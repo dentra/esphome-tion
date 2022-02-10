@@ -81,7 +81,8 @@ bool TionsApi3s::read_data(const uint8_t *data, uint16_t size) {
   }
 
   if (frame->type == FRAME_TYPE_STATE_RSP) {
-    this->read(*reinterpret_cast<const tion3s_state_t *>(frame->data));
+    const void *frame_data = frame->data;
+    this->read(*static_cast<const tion3s_state_t *>(frame_data));
     return true;
   }
 

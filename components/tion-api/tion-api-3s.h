@@ -24,9 +24,9 @@ struct tion3s_state_t {
     uint8_t reserved : 7;
   } system;
   int8_t outdoor_temperature1;
-  int8_t outdoor_temperature2;  // 7
+  int8_t outdoor_temperature2;
   int8_t indoor_temperature;
-  uint16_t filter_time;  // 9,10
+  uint16_t filter_time;
   uint8_t hours;
   uint8_t minutes;
   uint8_t last_error;
