@@ -46,66 +46,66 @@ void TionLt::read(const tionlt_state_t &state) {
   if (this->buzzer_) {
     this->buzzer_->publish_state(state.system.sound_state);
   } else {
-    ESP_LOGI(TAG, "sound_state           : %s", ONOFF(state.system.sound_state));
+    ESP_LOGV(TAG, "sound_state           : %s", ONOFF(state.system.sound_state));
   }
   if (this->led_) {
     this->led_->publish_state(state.system.led_state);
   } else {
-    ESP_LOGI(TAG, "led_state             : %s", ONOFF(state.system.led_state));
+    ESP_LOGV(TAG, "led_state             : %s", ONOFF(state.system.led_state));
   }
   if (this->temp_in_) {
     this->temp_in_->publish_state(state.sensors.indoor_temperature);
   } else {
-    ESP_LOGI(TAG, "indoor_temperature    : %d", state.sensors.indoor_temperature);
+    ESP_LOGV(TAG, "indoor_temperature    : %d", state.sensors.indoor_temperature);
   }
   if (this->temp_out_) {
     this->temp_out_->publish_state(state.sensors.outdoor_temperature);
   } else {
-    ESP_LOGI(TAG, "outdoor_temperature   : %d", state.sensors.outdoor_temperature);
+    ESP_LOGV(TAG, "outdoor_temperature   : %d", state.sensors.outdoor_temperature);
   }
   if (this->heater_power_) {
     this->heater_power_->publish_state(state.heater_power());
   } else {
-    ESP_LOGI(TAG, "heater_power          : %f", state.heater_power());
+    ESP_LOGV(TAG, "heater_power          : %f", state.heater_power());
   }
   if (this->airflow_counter_) {
     this->airflow_counter_->publish_state(state.counters.airflow_counter());
   } else {
-    ESP_LOGI(TAG, "airflow_counter       : %f", state.counters.airflow_counter());
+    ESP_LOGV(TAG, "airflow_counter       : %f", state.counters.airflow_counter());
   }
   if (this->filter_warnout_) {
     this->filter_warnout_->publish_state(state.system.filter_wornout);
   } else {
-    ESP_LOGI(TAG, "filter_wornout        : %s", ONOFF(state.system.filter_wornout));
+    ESP_LOGV(TAG, "filter_wornout        : %s", ONOFF(state.system.filter_wornout));
   }
   if (this->filter_days_left_) {
     this->filter_days_left_->publish_state(state.counters.fileter_days());
   } else {
-    ESP_LOGI(TAG, "counters.filter_time  : %u", state.counters.filter_time);
+    ESP_LOGV(TAG, "counters.filter_time  : %u", state.counters.filter_time);
   }
 
-  ESP_LOGI(TAG, "last_com_source       : %u", state.system.last_com_source);
-  ESP_LOGI(TAG, "auto_co2              : %u", state.system.auto_co2);
-  ESP_LOGI(TAG, "heater_state          : %u", state.system.heater_state);
-  ESP_LOGI(TAG, "heater_present        : %u", state.system.heater_present);
-  ESP_LOGI(TAG, "heater_var            : %u", state.heater_var);
-  ESP_LOGI(TAG, "kiv_present           : %u", state.system.kiv_present);
-  ESP_LOGI(TAG, "kiv_active            : %u", state.system.kiv_active);
-  ESP_LOGI(TAG, "reserved              : %02x", state.system.reserved);
-  ESP_LOGI(TAG, "gate_position         : %u", state.system.gate_position);
-  ESP_LOGI(TAG, "pcb_temperature       : %u", state.sensors.pcb_temperature);
-  ESP_LOGI(TAG, "fan_time              : %u", state.counters.fan_time);
-  ESP_LOGI(TAG, "work_time             : %u", state.counters.work_time);
-  ESP_LOGI(TAG, "errors.reg            : %u", state.errors.reg);
-  ESP_LOGI(TAG, "errors.cnt            : %s",
+  ESP_LOGV(TAG, "last_com_source       : %u", state.system.last_com_source);
+  ESP_LOGV(TAG, "auto_co2              : %u", state.system.auto_co2);
+  ESP_LOGV(TAG, "heater_state          : %u", state.system.heater_state);
+  ESP_LOGV(TAG, "heater_present        : %u", state.system.heater_present);
+  ESP_LOGV(TAG, "heater_var            : %u", state.heater_var);
+  ESP_LOGV(TAG, "kiv_present           : %u", state.system.kiv_present);
+  ESP_LOGV(TAG, "kiv_active            : %u", state.system.kiv_active);
+  ESP_LOGV(TAG, "reserved              : %02x", state.system.reserved);
+  ESP_LOGV(TAG, "gate_position         : %u", state.system.gate_position);
+  ESP_LOGV(TAG, "pcb_temperature       : %u", state.sensors.pcb_temperature);
+  ESP_LOGV(TAG, "fan_time              : %u", state.counters.fan_time);
+  ESP_LOGV(TAG, "work_time             : %u", state.counters.work_time);
+  ESP_LOGV(TAG, "errors.reg            : %u", state.errors.reg);
+  ESP_LOGV(TAG, "errors.cnt            : %s",
            format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors.cnt), sizeof(state.errors.cnt)).c_str());
-  ESP_LOGI(TAG, "btn_presets.temp0     : %d", state.button_presets.temp[0]);
-  ESP_LOGI(TAG, "btn_presets.fan_speed0: %d", state.button_presets.fan_speed[0]);
-  ESP_LOGI(TAG, "btn_presets.temp1     : %d", state.button_presets.temp[1]);
-  ESP_LOGI(TAG, "btn_presets.fan_speed1: %d", state.button_presets.fan_speed[1]);
-  ESP_LOGI(TAG, "btn_presets.temp2     : %d", state.button_presets.temp[2]);
-  ESP_LOGI(TAG, "btn_presets.fan_speed2: %d", state.button_presets.fan_speed[2]);
-  ESP_LOGI(TAG, "test_type             : %u", state.test_type);
+  ESP_LOGV(TAG, "btn_presets.temp0     : %d", state.button_presets.temp[0]);
+  ESP_LOGV(TAG, "btn_presets.fan_speed0: %d", state.button_presets.fan_speed[0]);
+  ESP_LOGV(TAG, "btn_presets.temp1     : %d", state.button_presets.temp[1]);
+  ESP_LOGV(TAG, "btn_presets.fan_speed1: %d", state.button_presets.fan_speed[1]);
+  ESP_LOGV(TAG, "btn_presets.temp2     : %d", state.button_presets.temp[2]);
+  ESP_LOGV(TAG, "btn_presets.fan_speed2: %d", state.button_presets.fan_speed[2]);
+  ESP_LOGV(TAG, "test_type             : %u", state.test_type);
 
   this->publish_state();
   // leave 3 sec connection left for end all of jobs

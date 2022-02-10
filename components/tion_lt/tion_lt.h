@@ -26,7 +26,6 @@ class TionLt : public TionComponent, public TionClimate, public Tion<TionApiLt> 
  protected:
   bool dirty_{};
   void update_state_(tionlt_state_t &state);
-  bool first_{};
 };
 
 class TionLtLedSwitch : public switch_::Switch {
