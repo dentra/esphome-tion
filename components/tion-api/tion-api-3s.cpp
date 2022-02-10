@@ -17,7 +17,7 @@ enum {
   FRAME_TYPE_STATE_SET = 0x023D,
   // FRAME_TYPE_FILTER_TIME_SET = 0x033D,
   // FRAME_TYPE_FILTER_TIME_RESET = 0x043D,
-  // FRAME_TYPE_SRV_MOD_SET = 0x053D,
+  FRAME_TYPE_SRV_MOD_SET = 0x053D,
   // FRAME_TYPE_HARD_RESET_REQ = 0x063D,
   // FRAME_TYPE_MA_PAIRING_REQ = 0x073D,
   // FRAME_TYPE_TIME_SET = 0x083D,
@@ -97,6 +97,14 @@ bool TionsApi3s::write_frame_(uint16_t frame_type, const void *frame_data, uint1
     std::memcpy(frame.data, frame_data, frame_data_size);
   }
   return this->write_data(reinterpret_cast<const uint8_t *>(&frame), sizeof(frame));
+}
+
+bool TionsApi3s::pair() const {
+  TION_LOGD(TAG, "Set srv mod");
+  struct {
+    uint8_t pair;
+  } PACKED srv_mod{.pair = 1};
+  return this->write_frame_(FRAME_TYPE_SRV_MOD_SET, &srv_mod, sizeof(srv_mod));
 }
 
 bool TionsApi3s::request_state() const {

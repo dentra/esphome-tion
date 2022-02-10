@@ -35,7 +35,10 @@ const esp_bt_uuid_t &Tion3s::get_ble_char_tx() const { return BLE_TION3S_CHAR_TX
 
 const esp_bt_uuid_t &Tion3s::get_ble_char_rx() const { return BLE_TION3S_CHAR_RX; }
 
-void Tion3s::on_ready() { this->request_state(); }
+void Tion3s::on_ready() {
+  this->pair();
+  this->request_state();
+}
 
 void Tion3s::read(const tion3s_state_t &state) {
   if (this->dirty_) {
