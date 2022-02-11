@@ -55,10 +55,13 @@ void Tion3s::on_ready() {
     return;
   }
 
-  TionsApi3s::pair();
-  this->pair_state_ = 1;
-  this->rtc_.save(&this->pair_state_);
-  this->defer([this]() { this->request_state(); });
+  bool res = TionsApi3s::pair();
+  if (res) {
+    this->pair_state_ = 1;
+    this->rtc_.save(&this->pair_state_);
+  }
+  ESP_LOGD(TAG, "Pairing complete: %s", YESNO(res));
+  App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
 }
 
 void Tion3s::read(const tion3s_state_t &state) {
