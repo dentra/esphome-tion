@@ -28,14 +28,14 @@ bool test_api_lt(bool print) {
   test_check(res, wr_data_, from_hex("80.0C.00.3A.AD.09.40.01.00.00.00.D1.DC"));
 
   tionlt_state_t st{};
-  st.system.power_state = 0;
-  st.counters.filter_time = 1;
+  st.flags.power_state = 0;
+  st.counters.work_time = 1;
 
   wr_data_.clear();
   tlt.write_state(st);
   test_check(
       res, wr_data_,
-      from_hex("00.1E.00.3A.AD.30.12.01.00.00.00.01.00.00.00.00.00.00.00.00.C0.00.00.00.00.00.00.01.00.00.CF.87"));
+      from_hex("00.1E.00.3A.AD.30.12.01.00.00.00.01.00.00.00.00.00.00.00.00.C0.00.00.00.00.00.00.00.00.00.F8.B7"));
 
   return res;
 }

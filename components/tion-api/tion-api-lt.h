@@ -15,39 +15,31 @@ struct _button_presets {
 
 struct tionlt_state_t {
   struct {
-    struct {
-      // состояние (power state)
-      bool power_state : 1;
-      // состояние звуковых оповещений
-      bool sound_state : 1;
-      // состояние световых оповещений
-      bool led_state : 1;
-      //
-      uint8_t last_com_source : 1;
-      // предупреждение о необходимости замены фильтра
-      bool filter_wornout : 1;
-      //
-      uint8_t auto_co2 : 1;
-      //
-      uint8_t heater_state : 1;
-      //
-      uint8_t heater_present : 1;
-      // the presence of the KIV mode
-      uint8_t kiv_present : 1;
-      // state of the KIV mode
-      uint8_t kiv_active : 1;
-      // reserved
-      uint8_t reserved : 6;
-    };
-    uint8_t gate_position;  // gate_state
-    int8_t target_temperature;
-    uint8_t fan_speed;
-  } system;
-  struct {
-    int8_t indoor_temperature;
-    int8_t outdoor_temperature;
-    int8_t pcb_temperature;
-  } sensors;
+    // состояние (power state)
+    bool power_state : 1;
+    // состояние звуковых оповещений
+    bool sound_state : 1;
+    // состояние световых оповещений
+    bool led_state : 1;
+    uint8_t last_com_source : 1;
+    // предупреждение о необходимости замены фильтра
+    bool filter_wornout : 1;
+    bool auto_co2 : 1;
+    bool heater_state : 1;
+    bool heater_present : 1;
+    // the presence of the KIV mode
+    bool kiv_present : 1;
+    // state of the KIV mode
+    bool kiv_active : 1;
+    // reserved
+    uint8_t reserved : 6;
+  } flags;
+  uint8_t gate_position;  // gate_state
+  int8_t target_temperature;
+  uint8_t fan_speed;
+  int8_t indoor_temperature;
+  int8_t outdoor_temperature;
+  int8_t pcb_temperature;
   tion_state_counters_t counters;
   struct {
     uint32_t reg;
@@ -57,9 +49,7 @@ struct tionlt_state_t {
     } cnt;
   } errors;
   _button_presets button_presets;
-  struct {
-    uint8_t max_fan_speed;
-  } limits;
+  uint8_t max_fan_speed;
   uint8_t heater_var;
   uint8_t test_type;
   float heater_power() const;

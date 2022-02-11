@@ -73,110 +73,98 @@ void Tion4s::read(const tion4s_state_t &state) {
     return;
   }
 
-  this->max_fan_speed_ = state.limits.max_fan_speed;
-
-  if (state.system.power_state) {
-    this->mode = state.system.heater_mode == tion4s_state_t::HEATER_MODE_HEATING ? climate::CLIMATE_MODE_HEAT
-                                                                                 : climate::CLIMATE_MODE_FAN_ONLY;
+  this->max_fan_speed_ = state.max_fan_speed;
+  if (state.flags.power_state) {
+    this->mode = state.flags.heater_mode == tion4s_state_t::HEATER_MODE_HEATING ? climate::CLIMATE_MODE_HEAT
+                                                                                : climate::CLIMATE_MODE_FAN_ONLY;
   } else {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
-
-  this->target_temperature = state.system.target_temperature;
-
-  this->set_fan_mode_(state.system.fan_speed);
+  this->target_temperature = state.target_temperature;
+  this->set_fan_mode_(state.fan_speed);
+  this->publish_state();
 
   if (this->buzzer_) {
-    this->buzzer_->publish_state(state.system.sound_state);
-  } else {
-    ESP_LOGV(TAG, "sound_state                : %s", ONOFF(state.system.sound_state));
+    this->buzzer_->publish_state(state.flags.sound_state);
   }
   if (this->led_) {
-    this->led_->publish_state(state.system.led_state);
-  } else {
-    ESP_LOGV(TAG, "led_state                  : %s", ONOFF(state.system.led_state));
+    this->led_->publish_state(state.flags.led_state);
   }
   if (this->temp_in_) {
-    this->temp_in_->publish_state(state.sensors.indoor_temperature);
-  } else {
-    ESP_LOGV(TAG, "indoor_temp    : %d", state.sensors.indoor_temperature);
+    this->temp_in_->publish_state(state.indoor_temperature);
   }
   if (this->temp_out_) {
-    this->temp_out_->publish_state(state.sensors.outdoor_temperature);
-  } else {
-    ESP_LOGV(TAG, "outdoor_temp   : %d", state.sensors.outdoor_temperature);
+    this->temp_out_->publish_state(state.outdoor_temperature);
   }
   if (this->heater_power_) {
     this->heater_power_->publish_state(state.heater_power());
-  } else {
-    ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
   }
   if (this->airflow_counter_) {
     this->airflow_counter_->publish_state(state.counters.airflow_counter());
-  } else {
-    ESP_LOGV(TAG, "airflow_counter: %f", state.counters.airflow_counter());
   }
   if (this->filter_warnout_) {
-    this->filter_warnout_->publish_state(state.system.filter_wornout);
-  } else {
-    ESP_LOGV(TAG, "filter_wornout : %s", ONOFF(state.system.filter_wornout));
+    this->filter_warnout_->publish_state(state.flags.filter_wornout);
   }
   if (this->filter_days_left_) {
     this->filter_days_left_->publish_state(state.counters.fileter_days());
-  } else {
-    ESP_LOGV(TAG, "filter_time    : %u", state.counters.filter_time);
   }
   if (this->recirculation_) {
-    this->recirculation_->publish_state(state.system.substate == tion4s_state_t::SUBSTATE_RECIRCULATION);
-  } else {
-    ESP_LOGV(TAG, "substate       : %u", state.system.substate);
+    this->recirculation_->publish_state(state.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION);
   }
 
-  ESP_LOGV(TAG, "pcb_pwr_temp   : %d", state.sensors.pcb_pwr_temperature);
-  ESP_LOGV(TAG, "pcb_ctl_temp   : %d", state.sensors.pcb_ctl_temperature);
-  ESP_LOGV(TAG, "fan_speed      : %u", state.system.fan_speed);
-  ESP_LOGV(TAG, "heater_mode    : %u", state.system.heater_mode);
-  ESP_LOGV(TAG, "heater_state   : %s", ONOFF(state.system.heater_state));
-  ESP_LOGV(TAG, "heater_present : %u", state.system.heater_present);
-  ESP_LOGV(TAG, "heater_var     : %u", state.heater_var);
-  ESP_LOGV(TAG, "last_com_source: %u", state.system.last_com_source);
+  ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
+  ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
+  ESP_LOGV(TAG, "indoor_temp    : %d", state.indoor_temperature);
+  ESP_LOGV(TAG, "outdoor_temp   : %d", state.outdoor_temperature);
+  ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
+  ESP_LOGV(TAG, "airflow_counter: %f", state.counters.airflow_counter());
+  ESP_LOGV(TAG, "filter_wornout : %s", ONOFF(state.flags.filter_wornout));
+  ESP_LOGV(TAG, "filter_time    : %u", state.counters.filter_time);
+  ESP_LOGV(TAG, "gate_position       : %u", state.gate_position);
 
-  ESP_LOGV(TAG, "ma             : %s", ONOFF(state.system.ma));
-  ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.system.ma_auto));
-  ESP_LOGV(TAG, "active_timer   : %s", ONOFF(state.system.active_timer));
-  ESP_LOGV(TAG, "reserved       : %02x", state.system.reserved);
+  ESP_LOGV(TAG, "pcb_pwr_temp   : %d", state.pcb_pwr_temperature);
+  ESP_LOGV(TAG, "pcb_ctl_temp   : %d", state.pcb_ctl_temperature);
+  ESP_LOGV(TAG, "fan_speed      : %u", state.fan_speed);
+  ESP_LOGV(TAG, "heater_mode    : %u", state.flags.heater_mode);
+  ESP_LOGV(TAG, "heater_state   : %s", ONOFF(state.flags.heater_state));
+  ESP_LOGV(TAG, "heater_present : %u", state.flags.heater_present);
+  ESP_LOGV(TAG, "heater_var     : %u", state.heater_var);
+  ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
+
+  ESP_LOGV(TAG, "ma             : %s", ONOFF(state.flags.ma));
+  ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.flags.ma_auto));
+  ESP_LOGV(TAG, "active_timer   : %s", ONOFF(state.flags.active_timer));
+  ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);
   ESP_LOGV(TAG, "work_time      : %u", state.counters.work_time);
   ESP_LOGV(TAG, "fan_time       : %u", state.counters.fan_time);
   ESP_LOGV(TAG, "errors         : %u", state.errors);
-
-  this->publish_state();
 
   // leave 3 sec connection left for end all of jobs
   App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
 }
 
 void Tion4s::update_state_(tion4s_state_t &state) const {
-  state.system.power_state = this->mode != climate::CLIMATE_MODE_OFF;
-  state.system.heater_mode = this->mode == climate::CLIMATE_MODE_HEAT
-                                 ? tion4s_state_t::HEATER_MODE_HEATING
-                                 : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
+  state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
+  state.flags.heater_mode = this->mode == climate::CLIMATE_MODE_HEAT
+                                ? tion4s_state_t::HEATER_MODE_HEATING
+                                : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
   if (this->recirculation_) {
-    state.system.substate =
-        this->recirculation_->state ? tion4s_state_t::SUBSTATE_RECIRCULATION : tion4s_state_t::SUBSTATE_INFLOW;
+    state.gate_position = this->recirculation_->state ? tion4s_state_t::GATE_POSITION_RECIRCULATION
+                                                      : tion4s_state_t::GATE_POSITION_INFLOW;
   }
 
-  state.system.target_temperature = this->target_temperature;
+  state.target_temperature = this->target_temperature;
 
   if (this->led_) {
-    state.system.led_state = this->led_->state;
+    state.flags.led_state = this->led_->state;
   }
 
   if (this->buzzer_) {
-    state.system.sound_state = this->buzzer_->state;
+    state.flags.sound_state = this->buzzer_->state;
   }
 
   if (this->custom_fan_mode.has_value()) {
-    state.system.fan_speed = this->get_fan_speed();
+    state.fan_speed = this->get_fan_speed();
   }
 }
 

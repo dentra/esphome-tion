@@ -12,11 +12,11 @@ struct tion4s_state_t {
     HEATER_MODE_TEMPERATURE_MAINTENANCE = 1,
   };
   // air intake: indoor, outdoor, mixed
-  enum Substate : uint8_t {
+  enum GatePosition : uint8_t {
     // приток
-    SUBSTATE_INFLOW = 0,
+    GATE_POSITION_INFLOW = 0,
     // рециркуляция
-    SUBSTATE_RECIRCULATION = 1,
+    GATE_POSITION_RECIRCULATION = 1,
   };
 
   enum HeaterPresent : uint16_t {
@@ -26,52 +26,44 @@ struct tion4s_state_t {
   };
 
   struct {
-    struct {
-      // состояние (power state)
-      bool power_state : 1;
-      // состояние звуковых оповещений
-      bool sound_state : 1;
-      // состояние световых оповещений
-      bool led_state : 1;
-      // сотояние обогрева
-      bool heater_state : 1;
-      // HeaterMode: режим обогрева
-      uint8_t heater_mode : 1;
-      //
-      uint8_t last_com_source : 1;
-      // предупреждение о необходимости замены фильтра
-      bool filter_wornout : 1;
-      // мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW
-      uint8_t /*HeaterPresent*/ heater_present : 3;
-      // MagicAir control
-      bool ma : 1;
-      // MagicAir auto control
-      bool ma_auto : 1;
-      //
-      bool active_timer : 1;
-      // зарезервированно
-      uint8_t reserved : 3;
-    };
-    // Substate: режим рециркуляции (recirculation)
-    uint8_t substate;
-    // теператрура нагрева
-    int8_t target_temperature;
-    // скорость вентилятора 0-5
-    uint8_t fan_speed;
-  } system;
-  struct {
-    int8_t indoor_temperature;
-    int8_t outdoor_temperature;
-    int8_t pcb_ctl_temperature;
-    int8_t pcb_pwr_temperature;
-  } sensors;
+    // состояние (power state)
+    bool power_state : 1;
+    // состояние звуковых оповещений
+    bool sound_state : 1;
+    // состояние световых оповещений
+    bool led_state : 1;
+    // сотояние обогрева
+    bool heater_state : 1;
+    // режим обогрева
+    uint8_t /*HeaterMode*/ heater_mode : 1;
+    //
+    uint8_t last_com_source : 1;
+    // предупреждение о необходимости замены фильтра
+    bool filter_wornout : 1;
+    // мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW
+    uint8_t /*HeaterPresent*/ heater_present : 3;
+    // MagicAir control
+    bool ma : 1;
+    // MagicAir auto control
+    bool ma_auto : 1;
+    //
+    bool active_timer : 1;
+    // зарезервированно
+    uint8_t reserved : 3;
+  } flags;
+  GatePosition gate_position;
+  // теператрура нагрева
+  int8_t target_temperature;
+  // скорость вентилятора 0-5
+  uint8_t fan_speed;
+  int8_t indoor_temperature;
+  int8_t outdoor_temperature;
+  int8_t pcb_ctl_temperature;
+  int8_t pcb_pwr_temperature;
   tion_state_counters_t counters;
   uint32_t errors;
-  struct {
-    // fan speed limit
-    uint8_t max_fan_speed;
-  } limits;
-
+  // fan speed limit
+  uint8_t max_fan_speed;
   // Heater power in %
   // use heater_power() to get actual consumption in W
   uint8_t heater_var;

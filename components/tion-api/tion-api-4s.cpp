@@ -52,7 +52,7 @@ enum {
 #pragma pack(push, 1)
 
 // структура для изменения состояния
-struct tion4s_mode_t {
+struct tion4s_state_set_t {
   struct {
     // состояние (power state)
     bool power_state : 1;
@@ -60,8 +60,7 @@ struct tion4s_mode_t {
     bool sound_state : 1;
     // состояние световых оповещений
     bool led_state : 1;
-    // HeaterMode
-    uint8_t heater_mode : 1;
+    uint8_t /*HeaterMode*/ heater_mode : 1;
     bool last_com_source : 1;
     bool factory_reset : 1;
     bool error_reset : 1;
@@ -70,28 +69,27 @@ struct tion4s_mode_t {
     bool ma_auto : 1;
     uint8_t reserved : 6;
   };
-  struct {
-    // Substate
-    uint8_t substate;
-    // температрура нагревателя.
-    int8_t target_temperature;
-    uint8_t fan_speed;
-  };
+  tion4s_state_t::GatePosition gate_position;
+  // температрура нагревателя.
+  int8_t target_temperature;
+  uint8_t fan_speed;
   uint32_t filter_time;
 
-  static tion4s_mode_t create(const tion4s_state_t &state) {
-    tion4s_mode_t mode{};
-    mode.power_state = state.system.power_state;
-    mode.heater_mode = state.system.heater_mode;
-    mode.substate = state.system.substate;
-    mode.target_temperature = state.system.target_temperature;
-    mode.led_state = state.system.led_state;
-    mode.sound_state = state.system.sound_state;
-    mode.fan_speed = state.system.fan_speed;
-    mode.filter_time = state.counters.filter_time;
-    mode.ma_auto = state.system.ma_auto;
-    mode.ma = state.system.ma;
-    return mode;
+  static tion4s_state_set_t create(const tion4s_state_t &state) {
+    tion4s_state_set_t st_set{};
+
+    st_set.power_state = state.flags.power_state;
+    st_set.heater_mode = state.flags.heater_mode;
+    st_set.gate_position = state.gate_position;
+    st_set.target_temperature = state.target_temperature;
+    st_set.led_state = state.flags.led_state;
+    st_set.sound_state = state.flags.sound_state;
+    st_set.fan_speed = state.fan_speed;
+    st_set.filter_time = state.counters.filter_time;
+    st_set.ma_auto = state.flags.ma_auto;
+    st_set.ma = state.flags.ma;
+
+    return st_set;
   }
 };
 
@@ -129,10 +127,10 @@ struct tion4s_timer_settings_t {
 #pragma pack(pop)
 
 float tion4s_state_t::heater_power() const {
-  if (heater_var == 0 || !system.heater_state) {
+  if (heater_var == 0 || !flags.heater_state) {
     return 0.0f;
   }
-  switch (system.heater_present) {
+  switch (flags.heater_present) {
     case HEATER_PRESENT_NONE:
       return 0.0f;
     case HEATER_PRESENT_1000W:
@@ -140,7 +138,7 @@ float tion4s_state_t::heater_power() const {
     case HEATER_PRESENT_1400W:
       return heater_var * (0.01f * 1400.0f);
     default:
-      TION_LOGW(TAG, "unknown heater_present value %u", system.heater_present);
+      TION_LOGW(TAG, "unknown heater_present value %u", flags.heater_present);
       return NAN;
   }
 }
@@ -215,11 +213,11 @@ void TionApi4s::read_(uint16_t frame_type, const void *frame_data, uint16_t fram
     if (frame_data_size != sizeof(timer_settings_frame_t)) {
       TION_LOGW(TAG, "Incorrect timer response data size: %u", frame_data_size);
     } else {
-      // auto &b_timer_set = *static_cast<const timer_settings_frame_t *>(frame_data);
-      // TION_LOGV(TAG, "timer[%u].device_mode: %u", b_timer_set.timer_id, b_timer_set.timer.device_mode);
-      // TION_LOGV(TAG, "timer[%u].target_temp: %d", b_timer_set.timer_id, b_timer_set.timer.target_temp);
-      // TION_LOGV(TAG, "timer[%u].fan_state: %u", b_timer_set.timer_id, b_timer_set.timer.fan_state);
-      // timer[b_timer_set.timer_id] = b_timer_set.timer;
+      // auto &timer_set = *static_cast<const timer_settings_frame_t *>(frame_data);
+      // TION_LOGV(TAG, "timer[%u].device_mode: %u", timer_set.timer_id, timer_set.timer.device_mode);
+      // TION_LOGV(TAG, "timer[%u].target_temp: %d", timer_set.timer_id, timer_set.timer.target_temp);
+      // TION_LOGV(TAG, "timer[%u].fan_state: %u", timer_set.timer_id, timer_set.timer.fan_state);
+      // timer[timer_set.timer_id] = timer_set.timer;
     }
   } else if (frame_type == FRAME_TYPE_TIMERS_STATE_RSP) {
     TION_LOGW(TAG, "FRAME_TYPE_TIMERS_STATE_RSP response: %s", hexencode(frame_data, frame_data_size).c_str());
@@ -267,31 +265,35 @@ void TionApi4s::request_timers() {
 
 bool TionApi4s::write_state(const tion4s_state_t &state) const {
   TION_LOGD(TAG, "Write state");
-  auto mode = tion4s_mode_t::create(state);
-  if (mode.filter_time == 0) {
+  if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
-  return this->write_(FRAME_TYPE_STATE_SET, mode, this->next_command_id());
+  auto st_set = tion4s_state_set_t::create(state);
+  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
 
 bool TionApi4s::reset_filter(const tion4s_state_t &state) const {
   TION_LOGD(TAG, "Reset filter");
-  auto mode = tion4s_mode_t::create(state);
-  if (mode.filter_time == 0) {
+  if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
-  mode.filter_teset = true;
-  mode.filter_time = 0;
-  return this->write_(FRAME_TYPE_STATE_SET, mode, this->next_command_id());
+  auto st_set = tion4s_state_set_t::create(state);
+  st_set.filter_teset = true;
+  st_set.filter_time = 0;
+  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
 
 bool TionApi4s::factory_reset(const tion4s_state_t &state) const {
   TION_LOGD(TAG, "Factory reset");
-  auto mode = tion4s_mode_t::create(state);
-  mode.factory_reset = true;
-  return this->write_(FRAME_TYPE_STATE_SET, mode, this->next_command_id());
+  if (state.counters.work_time == 0) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
+  auto st_set = tion4s_state_set_t::create(state);
+  st_set.factory_reset = true;
+  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
 
 bool TionApi4s::set_turbo_time(uint16_t time) const {
@@ -299,7 +301,7 @@ bool TionApi4s::set_turbo_time(uint16_t time) const {
   struct {
     uint16_t time;
     uint8_t err_code;
-  } __attribute__((packed)) turbo{.time = time, .err_code = 0};
+  } PACKED turbo{.time = time, .err_code = 0};
   return this->write_(FRAME_TYPE_TURBO_SET, turbo, this->next_command_id());
 };
 

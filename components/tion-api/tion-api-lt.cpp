@@ -26,7 +26,7 @@ enum {
 #pragma pack(push, 1)
 
 // used to change state of device
-struct tionlt_mode_t {
+struct tionlt_state_set_t {
   struct {
     bool power_state : 1;
     bool sound_state : 1;
@@ -47,40 +47,30 @@ struct tionlt_mode_t {
   uint16_t filter_time;
   uint8_t test_type;
 
-  static tionlt_mode_t create(const tionlt_state_t &state) {
-    tionlt_mode_t mode{};
+  static tionlt_state_set_t create(const tionlt_state_t &state) {
+    tionlt_state_set_t st_set{};
 
-    mode.filter_time = state.counters.filter_time;
+    st_set.filter_time = state.counters.filter_time;
 
-    mode.fan_speed = state.system.fan_speed;
-    mode.gate_position = state.system.gate_position;
-    mode.target_temperature = state.system.target_temperature;
+    st_set.fan_speed = state.fan_speed;
+    st_set.gate_position = state.gate_position;
+    st_set.target_temperature = state.target_temperature;
 
-    mode.power_state = state.system.power_state;
-    mode.sound_state = state.system.sound_state;
-    mode.led_state = state.system.led_state;
-    mode.heater_state = state.system.heater_state;
+    st_set.power_state = state.flags.power_state;
+    st_set.sound_state = state.flags.sound_state;
+    st_set.led_state = state.flags.led_state;
+    st_set.heater_state = state.flags.heater_state;
 
-    mode.test_type = state.test_type;
-    mode.button_presets = state.button_presets;
+    st_set.test_type = state.test_type;
+    st_set.button_presets = state.button_presets;
 
-    return mode;
+    return st_set;
   }
 };
 
 #pragma pack(pop)
 
-float tionlt_state_t::heater_power() const {
-  switch (system.heater_present) {
-    case 0:  // TODO change to enum
-      return 0.0f;
-    case 1:
-      return heater_var * (0.01f * 1000.0f);
-    default:
-      TION_LOGW(TAG, "unknown heater_present value %u", system.heater_present);
-      return NAN;
-  }
-}
+float tionlt_state_t::heater_power() const { return flags.heater_present ? heater_var * (0.01f * 1000.0f) : 0.0f; }
 
 void TionApiLt::read_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) {
   TION_LOGV(TAG, "read frame data 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
@@ -122,31 +112,35 @@ void TionApiLt::request_state() {
 
 bool TionApiLt::write_state(const tionlt_state_t &state) const {
   TION_LOGD(TAG, "Write state");
-  auto mode = tionlt_mode_t::create(state);
-  if (mode.filter_time == 0) {
+  if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
-  return this->write_(FRAME_TYPE_STATE_SET, mode, this->next_command_id());
+  auto st_set = tionlt_state_set_t::create(state);
+  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
 
 bool TionApiLt::reset_filter(const tionlt_state_t &state) const {
   TION_LOGD(TAG, "Reset filter");
-  auto mode = tionlt_mode_t::create(state);
-  if (mode.filter_time == 0) {
+  if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
-  mode.filter_reset = true;
-  mode.filter_time = 0;
-  return this->write_(FRAME_TYPE_STATE_SET, mode, this->next_command_id());
+  auto st_set = tionlt_state_set_t::create(state);
+  st_set.filter_reset = true;
+  st_set.filter_time = 0;
+  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
 
 bool TionApiLt::factory_reset(const tionlt_state_t &state) const {
   TION_LOGD(TAG, "Factory reset");
-  auto mode = tionlt_mode_t::create(state);
-  mode.factory_reset = true;
-  return this->write_(FRAME_TYPE_STATE_SET, mode, this->next_command_id());
+  if (state.counters.work_time == 0) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
+  auto st_set = tionlt_state_set_t::create(state);
+  st_set.factory_reset = true;
+  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
 
 }  // namespace tion
