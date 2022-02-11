@@ -40,6 +40,11 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
     this->parent_->set_enabled(true);
   }
 
+  void reset_pair() {
+    this->pair_state_ = 0;
+    this->parent_->set_enabled(false);
+  }
+
  protected:
   ESPPreferenceObject rtc_;
   bool dirty_{};
