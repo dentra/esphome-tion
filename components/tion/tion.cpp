@@ -39,10 +39,15 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
     return;
   }
 
-  if (event == ESP_GATTC_REG_FOR_NOTIFY_EVT) {
+  if (event == ESP_GATTC_WRITE_DESCR_EVT) {
+    ESP_LOGV(TAG, "write_char_descr at 0x%x complete 0x%02x", param->write.handle, param->write.status);
     this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
-    ESP_LOGD(TAG, "Registring for notify complete");
     this->on_ready();
+    return;
+  }
+
+  if (event == ESP_GATTC_REG_FOR_NOTIFY_EVT) {
+    ESP_LOGD(TAG, "Registring for notify complete");
     return;
   }
 
@@ -65,14 +70,18 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
     }
     this->char_rx_ = rx->handle;
 
-    if (this->ble_reg_for_notify()) {
-      auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
-      ESP_LOGV(TAG, "Register for notify  0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
-    }
-
     ESP_LOGD(TAG, "Discovering complete");
     ESP_LOGV(TAG, "  TX handle 0x%x", this->char_tx_);
     ESP_LOGV(TAG, "  RX handle 0x%x", this->char_rx_);
+
+    if (this->ble_reg_for_notify()) {
+      auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
+      ESP_LOGV(TAG, "Register for notify  0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
+    } else {
+      this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
+      this->on_ready();
+    }
+
     return;
   }
 
@@ -91,11 +100,6 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
 #ifdef ESPHOME_LOG_HAS_VERBOSE
   if (event == ESP_GATTC_WRITE_CHAR_EVT) {
     ESP_LOGV(TAG, "write_char at 0x%x complete 0x%02x", param->write.handle, param->write.status);
-    return;
-  }
-
-  if (event == ESP_GATTC_WRITE_DESCR_EVT) {
-    ESP_LOGV(TAG, "write_char_descr at 0x%x complete 0x%02x", param->write.handle, param->write.status);
     return;
   }
 
