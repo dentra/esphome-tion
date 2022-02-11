@@ -51,7 +51,8 @@ void Tion3s::on_ready() {
   }
 
   if (this->pair_state_ > 0) {
-    this->request_state();
+    bool res = this->request_state();
+    ESP_LOGV(TAG, "Request state result: %s", YESNO(res));
     return;
   }
 

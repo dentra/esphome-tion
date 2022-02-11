@@ -59,32 +59,60 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
 
     auto ble_char_rx = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_char_rx());
     auto rx = this->parent()->get_characteristic(ble_service, ble_char_rx);
-    if (tx == nullptr) {
+    if (rx == nullptr) {
       ESP_LOGE(TAG, "Can't discover RX characteristics");
       return;
     }
     this->char_rx_ = rx->handle;
 
+    ESP_LOGV(TAG, "Register for notify, handle: 0x%x", this->char_rx_);
     auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
 
     ESP_LOGD(TAG, "Discovering complete: %s", YESNO(err == ESP_OK));
+    ESP_LOGV(TAG, "  TX handle 0x%x", this->char_tx_);
+    ESP_LOGV(TAG, "  RX handle 0x%x", this->char_rx_);
     return;
   }
 
   if (event == ESP_GATTC_CONNECT_EVT) {
     // let device to pair
-    auto err = esp_ble_set_encryption(param->connect.remote_bda, this->get_ble_encryption());
-
-    ESP_LOGD(TAG, "Bonding complete: %s", YESNO(err == ESP_OK));
+    auto ble_sec_act = this->get_ble_encryption();
+    if (ble_sec_act != 0) {
+      auto err = esp_ble_set_encryption(param->connect.remote_bda, ble_sec_act);
+      ESP_LOGD(TAG, "Bonding complete: %s", YESNO(err == ESP_OK));
+    } else {
+      ESP_LOGV(TAG, "Bonding skipped");
+    }
     return;
   }
+
+#ifdef ESPHOME_LOG_HAS_VERBOSE
+  if (event == ESP_GATTC_WRITE_CHAR_EVT) {
+    ESP_LOGV(TAG, "write_char at 0x%x complete 0x%02x", param->write.handle, param->write.status);
+    return;
+  }
+
+  if (event == ESP_GATTC_WRITE_DESCR_EVT) {
+    ESP_LOGV(TAG, "write_char_descr at 0x%x complete 0x%02x", param->write.handle, param->write.status);
+    return;
+  }
+
+  if (event == ESP_GATTC_ENC_CMPL_CB_EVT) {
+    ESP_LOGV(TAG, "esp_ble_set_encryption complete");
+    return;
+  }
+#endif
 }
 
 bool TionBleNode::write_data(const uint8_t *data, uint16_t size) const {
-  ESP_LOGV(TAG, "write_data: %s", format_hex_pretty(data, size).c_str());
+  ESP_LOGV(TAG, "write_data to %u: %s", this->char_tx_, format_hex_pretty(data, size).c_str());
+#ifdef ESPHOME_LOG_HAS_VERBOSE
+  esp_gatt_write_type_t write_type = ESP_GATT_WRITE_TYPE_RSP;
+#else
+  esp_gatt_write_type_t write_type = ESP_GATT_WRITE_TYPE_NO_RSP;
+#endif
   return esp_ble_gattc_write_char(this->parent_->gattc_if, this->parent_->conn_id, this->char_tx_, size,
-                                  const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_NO_RSP,
-                                  ESP_GATT_AUTH_REQ_NONE) == ESP_OK;
+                                  const_cast<uint8_t *>(data), write_type, ESP_GATT_AUTH_REQ_NONE) == ESP_OK;
 }
 
 const esp_bt_uuid_t &TionBase::get_ble_service() const { return BLE_TION_SERVICE; }
