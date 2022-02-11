@@ -25,6 +25,7 @@ class TionBleNode : public ble_client::BLEClientNode {
   virtual const esp_bt_uuid_t &get_ble_service() const = 0;
   virtual const esp_bt_uuid_t &get_ble_char_tx() const = 0;
   virtual const esp_bt_uuid_t &get_ble_char_rx() const = 0;
+  virtual esp_ble_sec_act_t get_ble_encryption() const { return esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM; }
 
  protected:
   uint16_t char_rx_;

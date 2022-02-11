@@ -73,7 +73,7 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
 
   if (event == ESP_GATTC_CONNECT_EVT) {
     // let device to pair
-    auto err = esp_ble_set_encryption(param->connect.remote_bda, ESP_BLE_SEC_ENCRYPT_MITM);
+    auto err = esp_ble_set_encryption(param->connect.remote_bda, this->get_ble_encryption());
 
     ESP_LOGD(TAG, "Bonding complete: %s", YESNO(err == ESP_OK));
     return;
