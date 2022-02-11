@@ -31,28 +31,28 @@ enum {
 struct tion3s_state_set_t {
   uint8_t fan_speed;
   int8_t target_temperature;
-  uint8_t /*GatePosition*/ gate_position;
-  tion3s_state_t::System system;
+  uint8_t /*tion3s_state_t::GatePosition*/ gate_position;
+  tion3s_state_t::Flags flags;
   struct {
-    bool save_bit : 1;
+    bool save : 1;
     bool reset : 1;
     uint8_t reserved : 6;
     uint16_t value;
   } filter_time;
-  uint8_t hard_reset_flag;
-  uint8_t service_mode_flag;
+  uint8_t hard_reset;
+  uint8_t service_mode;
   // uint8_t reserved[7];
 
   static tion3s_state_set_t create(const tion3s_state_t &state) {
-    tion3s_state_set_t mode{};
+    tion3s_state_set_t st_set{};
 
-    mode.fan_speed = state.fan_speed;
-    mode.target_temperature = state.target_temperature;
-    mode.gate_position = state.gate_position;
-    mode.system = state.system;
-    mode.filter_time.value = state.filter_time;
+    st_set.fan_speed = state.fan_speed;
+    st_set.target_temperature = state.target_temperature;
+    st_set.gate_position = state.gate_position;
+    st_set.flags = state.flags;
+    st_set.filter_time.value = state.filter_time;
 
-    return mode;
+    return st_set;
   }
 };
 
@@ -100,11 +100,11 @@ bool TionsApi3s::write_frame_(uint16_t frame_type, const void *frame_data, uint1
 }
 
 bool TionsApi3s::pair() const {
-  TION_LOGD(TAG, "Set service mode");
+  TION_LOGD(TAG, "Enter pair mode");
   struct {
     uint8_t pair;
-  } PACKED srv_mode{.pair = 1};
-  return this->write_frame_(FRAME_TYPE_SRV_MODE_SET, &srv_mode, sizeof(srv_mode));
+  } PACKED pair{.pair = 1};
+  return this->write_frame_(FRAME_TYPE_SRV_MODE_SET, &pair, sizeof(pair));
 }
 
 bool TionsApi3s::request_state() const {
@@ -114,12 +114,20 @@ bool TionsApi3s::request_state() const {
 
 bool TionsApi3s::write_state(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Write state");
+  if (state.firmware_version == 0) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
   auto mode = tion3s_state_set_t::create(state);
   return this->write_frame_(FRAME_TYPE_STATE_SET, &mode, sizeof(mode));
 }
 
 bool TionsApi3s::reset_filter(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Reset filter");
+  if (state.firmware_version == 0) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
   auto mode = tion3s_state_set_t::create(state);
   mode.filter_time.reset = true;
   return this->write_frame_(FRAME_TYPE_STATE_SET, &mode, sizeof(mode));

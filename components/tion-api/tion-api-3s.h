@@ -7,22 +7,22 @@ namespace tion {
 
 #pragma pack(push, 1)
 struct tion3s_state_t {
-  enum GatePosition : uint8_t { INDOOR = 0, MIXED = 1, OUTDOOR = 2 };
+  enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
   uint8_t fan_speed : 4;
   uint8_t /*GatePosition*/ gate_position : 4;
   int8_t target_temperature;
-  struct System {
+  struct Flags {
     bool heater_state : 1;
     bool power_state : 1;
     bool timer_state : 1;
     bool sound_state : 1;
     bool auto_state : 1;
     bool ma_connect : 1;
-    bool save_bit : 1;
+    bool save : 1;
     bool ma_pairing : 1;
     bool preset_state : 1;
     uint8_t reserved : 7;
-  } system;
+  } flags;
   int8_t outdoor_temperature1;
   int8_t outdoor_temperature2;
   int8_t indoor_temperature;

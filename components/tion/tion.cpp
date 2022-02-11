@@ -65,17 +65,17 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
     }
     this->char_rx_ = rx->handle;
 
-    esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
+    auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
 
-    ESP_LOGD(TAG, "Discovering complete");
+    ESP_LOGD(TAG, "Discovering complete: %s", YESNO(err == ESP_OK));
     return;
   }
 
   if (event == ESP_GATTC_CONNECT_EVT) {
     // let device to pair
-    esp_ble_set_encryption(param->connect.remote_bda, ESP_BLE_SEC_ENCRYPT_MITM);
+    auto err = esp_ble_set_encryption(param->connect.remote_bda, ESP_BLE_SEC_ENCRYPT_MITM);
 
-    ESP_LOGD(TAG, "Pairing complete");
+    ESP_LOGD(TAG, "Pairing complete: %s", YESNO(err == ESP_OK));
     return;
   }
 }
@@ -84,7 +84,7 @@ bool TionBleNode::write_data(const uint8_t *data, uint16_t size) const {
   ESP_LOGV(TAG, "write_data: %s", format_hex_pretty(data, size).c_str());
   return esp_ble_gattc_write_char(this->parent_->gattc_if, this->parent_->conn_id, this->char_tx_, size,
                                   const_cast<uint8_t *>(data), ESP_GATT_WRITE_TYPE_NO_RSP,
-                                  ESP_GATT_AUTH_REQ_NONE) == ESP_GATT_OK;
+                                  ESP_GATT_AUTH_REQ_NONE) == ESP_OK;
 }
 
 const esp_bt_uuid_t &TionBase::get_ble_service() const { return BLE_TION_SERVICE; }

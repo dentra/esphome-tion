@@ -35,9 +35,30 @@ const esp_bt_uuid_t &Tion3s::get_ble_char_tx() const { return BLE_TION3S_CHAR_TX
 
 const esp_bt_uuid_t &Tion3s::get_ble_char_rx() const { return BLE_TION3S_CHAR_RX; }
 
+void Tion3s::setup() {
+  this->rtc_ = global_preferences->make_preference<int8_t>(fnv1_hash(TAG), true);
+  int8_t loaded{};
+  if (this->rtc_.load(&loaded)) {
+    this->pair_state_ = loaded;
+  }
+}
+
 void Tion3s::on_ready() {
-  this->pair();
-  this->request_state();
+  if (this->pair_state_ == 0) {
+    ESP_LOGD(TAG, "Not paired yet");
+    this->parent_->set_enabled(false);
+    return;
+  }
+
+  if (this->pair_state_ > 0) {
+    this->request_state();
+    return;
+  }
+
+  TionsApi3s::pair();
+  this->pair_state_ = 1;
+  this->rtc_.save(&this->pair_state_);
+  this->defer([this]() { this->request_state(); });
 }
 
 void Tion3s::read(const tion3s_state_t &state) {
@@ -49,8 +70,8 @@ void Tion3s::read(const tion3s_state_t &state) {
     return;
   }
 
-  if (state.system.power_state) {
-    this->mode = state.system.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY;
+  if (state.flags.power_state) {
+    this->mode = state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY;
   } else {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
@@ -62,25 +83,40 @@ void Tion3s::read(const tion3s_state_t &state) {
     this->version_->publish_state(str_snprintf("%04X", 4, state.firmware_version));
   }
   if (this->buzzer_) {
-    this->buzzer_->publish_state(state.system.sound_state);
-  } else {
-    ESP_LOGV(TAG, "sound_state           : %s", ONOFF(state.system.sound_state));
+    this->buzzer_->publish_state(state.flags.sound_state);
   }
   if (this->temp_in_) {
     this->temp_in_->publish_state(state.indoor_temperature);
-  } else {
-    ESP_LOGV(TAG, "indoor_temperature    : %d", state.indoor_temperature);
   }
   if (this->temp_out_) {
     this->temp_out_->publish_state(state.outdoor_temperature2);
-  } else {
-    ESP_LOGV(TAG, "outdoor_temperature   : %d", state.outdoor_temperature2);
   }
   if (this->filter_days_left_) {
     this->filter_days_left_->publish_state(state.filter_days);
-  } else {
-    ESP_LOGV(TAG, "filter_days           : %u", state.filter_days);
   }
+
+  ESP_LOGV(TAG, "fan_speed    : %u", state.fan_speed);
+  ESP_LOGV(TAG, "gate_position: %u", state.gate_position);
+  ESP_LOGV(TAG, "target_temp  : %u", state.target_temperature);
+  ESP_LOGV(TAG, "heater_state : %s", ONOFF(state.flags.heater_state));
+  ESP_LOGV(TAG, "power_state  : %s", ONOFF(state.flags.power_state));
+  ESP_LOGV(TAG, "timer_state  : %s", ONOFF(state.flags.timer_state));
+  ESP_LOGV(TAG, "sound_state  : %s", ONOFF(state.flags.sound_state));
+  ESP_LOGV(TAG, "auto_state   : %s", ONOFF(state.flags.auto_state));
+  ESP_LOGV(TAG, "ma_connect   : %s", ONOFF(state.flags.ma_connect));
+  ESP_LOGV(TAG, "save         : %s", ONOFF(state.flags.save));
+  ESP_LOGV(TAG, "ma_pairing   : %s", ONOFF(state.flags.ma_pairing));
+  ESP_LOGV(TAG, "reserved     : 0x%02X", state.flags.reserved);
+  ESP_LOGV(TAG, "outdoor_temp1: %d", state.outdoor_temperature1);
+  ESP_LOGV(TAG, "outdoor_temp2: %d", state.outdoor_temperature2);
+  ESP_LOGV(TAG, "indoor_temp  : %d", state.indoor_temperature);
+  ESP_LOGV(TAG, "filter_time  : %u", state.filter_time);
+  ESP_LOGV(TAG, "hours        : %u", state.hours);
+  ESP_LOGV(TAG, "minutes      : %u", state.minutes);
+  ESP_LOGV(TAG, "last_error   : %u", state.last_error);
+  ESP_LOGV(TAG, "productivity : %u", state.productivity);
+  ESP_LOGV(TAG, "filter_days  : %u", state.filter_days);
+  ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 
   // leave 3 sec connection left for end all of jobs
   App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
@@ -92,11 +128,11 @@ void Tion3s::update_state_(tion3s_state_t &state) {
   }
 
   state.target_temperature = this->target_temperature;
-  state.system.power_state = this->mode != climate::CLIMATE_MODE_OFF;
-  state.system.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
+  state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
+  state.flags.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
 
   if (this->buzzer_) {
-    state.system.sound_state = this->buzzer_->state;
+    state.flags.sound_state = this->buzzer_->state;
   }
 }
 

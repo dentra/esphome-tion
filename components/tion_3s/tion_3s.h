@@ -1,5 +1,7 @@
 #pragma once
 
+#include "esphome/core/preferences.h"
+
 #include "../tion-api/tion-api-3s.h"
 #include "../tion/tion.h"
 
@@ -10,7 +12,12 @@ using namespace dentra::tion;
 
 class Tion3s : public TionComponent, public TionClimate, public TionBleNode, public TionsApi3s {
  public:
-  void update() override { this->parent_->set_enabled(true); }
+  void setup() override;
+  void update() override {
+    if (this->pair_state_ > 0) {
+      this->parent_->set_enabled(true);
+    }
+  }
 
   const esp_bt_uuid_t &get_ble_service() const override;
   const esp_bt_uuid_t &get_ble_char_tx() const override;
@@ -28,8 +35,15 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
     return true;
   };
 
+  void pair() {
+    this->pair_state_ = -1;
+    this->parent_->set_enabled(true);
+  }
+
  protected:
+  ESPPreferenceObject rtc_;
   bool dirty_{};
+  int8_t pair_state_{};  // 0 - not paired, 1 - paired, -1 - pairing
   void update_state_(tion3s_state_t &state);
 };
 
