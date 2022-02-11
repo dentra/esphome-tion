@@ -23,6 +23,8 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
   const esp_bt_uuid_t &get_ble_char_tx() const override;
   const esp_bt_uuid_t &get_ble_char_rx() const override;
   esp_ble_sec_act_t get_ble_encryption() const override { return ble_sec_enc_; }
+  bool ble_reg_for_notify() const override { return pair_state_ > 0; }
+
   void set_ble_encryption(esp_ble_sec_act_t ble_sec_enc) { this->ble_sec_enc_ = ble_sec_enc; }
 
   void read_data(const uint8_t *data, uint16_t size) override { TionsApi3s::read_data(data, size); }

@@ -65,10 +65,12 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
     }
     this->char_rx_ = rx->handle;
 
-    ESP_LOGV(TAG, "Register for notify, handle: 0x%x", this->char_rx_);
-    auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
+    if (this->ble_reg_for_notify()) {
+      auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
+      ESP_LOGV(TAG, "Register for notify  0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
+    }
 
-    ESP_LOGD(TAG, "Discovering complete: %s", YESNO(err == ESP_OK));
+    ESP_LOGD(TAG, "Discovering complete");
     ESP_LOGV(TAG, "  TX handle 0x%x", this->char_tx_);
     ESP_LOGV(TAG, "  RX handle 0x%x", this->char_rx_);
     return;
@@ -105,7 +107,7 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
 }
 
 bool TionBleNode::write_data(const uint8_t *data, uint16_t size) const {
-  ESP_LOGV(TAG, "write_data to %u: %s", this->char_tx_, format_hex_pretty(data, size).c_str());
+  ESP_LOGV(TAG, "write_data to 0x%x: %s", this->char_tx_, format_hex_pretty(data, size).c_str());
 #ifdef ESPHOME_LOG_HAS_VERBOSE
   esp_gatt_write_type_t write_type = ESP_GATT_WRITE_TYPE_RSP;
 #else

@@ -30,9 +30,7 @@ static const esp_bt_uuid_t BLE_TION3S_CHAR_RX{
     }};
 
 const esp_bt_uuid_t &Tion3s::get_ble_service() const { return BLE_TION3S_SERVICE; }
-
 const esp_bt_uuid_t &Tion3s::get_ble_char_tx() const { return BLE_TION3S_CHAR_TX; }
-
 const esp_bt_uuid_t &Tion3s::get_ble_char_rx() const { return BLE_TION3S_CHAR_RX; }
 
 void Tion3s::setup() {
