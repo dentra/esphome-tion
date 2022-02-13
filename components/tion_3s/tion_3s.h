@@ -12,12 +12,19 @@ using namespace dentra::tion;
 
 class Tion3s : public TionComponent, public TionClimate, public TionBleNode, public TionsApi3s {
  public:
+  float get_setup_priority() const override {
+    // we should setup after esp32_ble_tracker
+    return setup_priority::AFTER_BLUETOOTH;
+  }
   void setup() override;
   void update() override {
     if (this->pair_state_ > 0) {
       this->parent_->set_enabled(true);
     }
   }
+
+  void gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
+                           esp_ble_gattc_cb_param_t *param) override;
 
   const esp_bt_uuid_t &get_ble_service() const override;
   const esp_bt_uuid_t &get_ble_char_tx() const override;
@@ -50,7 +57,7 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
   bool dirty_{};
   int8_t pair_state_{};  // 0 - not paired, 1 - paired, -1 - pairing
   void update_state_(tion3s_state_t &state);
-  esp_ble_sec_act_t ble_sec_enc_{esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM};
+  esp_ble_sec_act_t ble_sec_enc_{/*esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM*/};
   bool direct_write_{};
 };
 
