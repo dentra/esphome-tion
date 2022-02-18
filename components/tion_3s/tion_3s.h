@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/preferences.h"
+#include "esphome/components/select/select.h"
 
 #include "../tion-api/tion-api-3s.h"
 #include "../tion/tion.h"
@@ -12,10 +13,6 @@ using namespace dentra::tion;
 
 class Tion3s : public TionComponent, public TionClimate, public TionBleNode, public TionsApi3s {
  public:
-  float get_setup_priority() const override {
-    // we should setup after esp32_ble_tracker
-    return setup_priority::AFTER_BLUETOOTH;
-  }
   void setup() override;
   void update() override {
     if (this->pair_state_ > 0) {
@@ -23,8 +20,7 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
     }
   }
 
-  void gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
-                           esp_ble_gattc_cb_param_t *param) override;
+  void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
 
   const esp_bt_uuid_t &get_ble_service() const override;
   const esp_bt_uuid_t &get_ble_char_tx() const override;
@@ -53,11 +49,16 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
   }
 
  protected:
+  select::Select *air_intake_{};
   ESPPreferenceObject rtc_;
   bool dirty_{};
   int8_t pair_state_{};  // 0 - not paired, 1 - paired, -1 - pairing
   void update_state_(tion3s_state_t &state);
-  esp_ble_sec_act_t ble_sec_enc_{/*esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM*/};
+  esp_ble_sec_act_t ble_sec_enc_{
+#ifndef BLE_SECURE_ENABLED
+      esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT
+#endif
+  };
   bool direct_write_{};
 };
 
@@ -65,6 +66,18 @@ class Tion3sBuzzerSwitch : public switch_::Switch {
  public:
   explicit Tion3sBuzzerSwitch(Tion3s *parent) : parent_(parent) {}
   void write_state(bool state) override {
+    this->publish_state(state);
+    this->parent_->write_state();
+  }
+
+ protected:
+  Tion3s *parent_;
+};
+
+class Tion3sAirIntakeSelect : public select::Select {
+ public:
+  explicit Tion3sAirIntakeSelect(Tion3s *parent) : parent_(parent) {}
+  void control(const std::string &value) override {
     this->publish_state(state);
     this->parent_->write_state();
   }

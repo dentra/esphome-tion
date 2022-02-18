@@ -77,6 +77,7 @@ climate:
       name: "$name Boost Time"
     version:
       name: "$name Version"
+    update_interval: 60s
 ```
 
 ### Sample configuration for Tion Lite
@@ -97,7 +98,7 @@ ble_client:
 
 climate:
   - platform: tion_lt
-    ble_client_id: ble_client_tion1
+    ble_client_id: ble_client_tion
     name: "$name"
     buzzer:
       name: "$name Buzzer"
@@ -117,6 +118,7 @@ climate:
       name: "$name Filter Warnout"
     version:
       name: "$name Version"
+    update_interval: 60s
 ```
 
 ## Issue reporting
