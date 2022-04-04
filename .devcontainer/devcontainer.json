@@ -3,7 +3,7 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2022.2.4",
+      "esphome_version": "2022.3.2",
       // additional APT dependicies
       "apt_deps": "bash-completion less libmbedtls-dev gdb"
     }
