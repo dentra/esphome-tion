@@ -11,7 +11,7 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class Tion3s : public TionComponent, public TionClimate, public TionBleNode, public TionsApi3s {
+class Tion3s : public TionClimateComponentWithBoost, public TionBleNode, public TionsApi3s {
  public:
   void setup() override;
   void update() override {
@@ -60,6 +60,7 @@ class Tion3s : public TionComponent, public TionClimate, public TionBleNode, pub
 #endif
   };
   bool direct_write_{};
+  uint8_t saved_fan_speed_{};
 };
 
 class Tion3sBuzzerSwitch : public switch_::Switch {

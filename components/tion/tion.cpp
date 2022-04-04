@@ -1,4 +1,5 @@
 #include "esphome/core/log.h"
+#include "esphome/core/application.h"
 #include "inttypes.h"
 #include "tion.h"
 
@@ -6,6 +7,14 @@ namespace esphome {
 namespace tion {
 
 static const char *const TAG = "tion";
+
+// default boost time - 10 minutes
+#define DEFAULT_BOOST_TIME_SEC 10 * 60
+// boost time update interval
+#define BOOST_TIME_UPDATE_INTERVAL_SEC 30
+
+// application scheduler name
+static const char *const ASH_BOOST = "tion-boost";
 
 // 98f00001-3788-83ea-453e-f52244709ddb
 static const esp_bt_uuid_t BLE_TION_SERVICE{
@@ -142,6 +151,10 @@ climate::ClimateTraits TionClimate::traits() {
     char buf[2] = {i, 0};
     traits.add_supported_custom_fan_mode(buf);
   }
+  traits.set_supported_presets({
+      climate_CLIMATE_PRESET_DEFAULT,
+      climate::CLIMATE_PRESET_BOOST,
+  });
   return traits;
 }
 
@@ -161,19 +174,32 @@ void TionClimate::control(const climate::ClimateCall &call) {
     }
   }
 
+  if (call.get_preset().has_value() && *call.get_preset() != *this->preset) {
+    const auto preset = *call.get_preset();
+    if (preset == climate::CLIMATE_PRESET_BOOST) {
+      this->enable_boost();
+    } else {
+      this->cancel_boost();
+    }
+  }
+
   if (call.get_fan_mode().has_value()) {
     auto fan_mode = *call.get_fan_mode();
     ESP_LOGW(TAG, "Unsupported fan mode: %d", fan_mode);
   }
 
   if (call.get_custom_fan_mode().has_value()) {
-    const auto fan_mode = *call.get_custom_fan_mode();
-    const auto fan_speed = *fan_mode.c_str() - '0';
-    if (fan_speed <= this->max_fan_speed_) {
-      this->custom_fan_mode = fan_mode;
-      ESP_LOGD(TAG, "Set fan mode %s", fan_mode.c_str());
+    if (this->preset == climate::CLIMATE_PRESET_BOOST) {
+      ESP_LOGW(TAG, "Boost preset enabled. Ignore change fan speed.");
     } else {
-      ESP_LOGW(TAG, "Unsupported fan mode: %u from %u", fan_speed, this->max_fan_speed_);
+      const auto fan_mode = *call.get_custom_fan_mode();
+      const auto fan_speed = *fan_mode.c_str() - '0';
+      if (fan_speed <= this->max_fan_speed_) {
+        this->custom_fan_mode = fan_mode;
+        ESP_LOGD(TAG, "Set fan mode %s", fan_mode.c_str());
+      } else {
+        ESP_LOGW(TAG, "Unsupported fan mode: %u from %u", fan_speed, this->max_fan_speed_);
+      }
     }
   }
 
@@ -186,7 +212,7 @@ void TionClimate::control(const climate::ClimateCall &call) {
   this->write_state();
 }
 
-void TionClimate::set_fan_mode_(uint8_t fan_speed) {
+void TionClimate::set_fan_speed(uint8_t fan_speed) {
   char fan_mode[2] = {static_cast<char>(fan_speed + '0'), 0};
   this->custom_fan_mode = std::string(fan_mode);
 }
@@ -207,6 +233,59 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
   ESP_LOGV(TAG, "Device sub-type : %04X", status.device_subtype);
   ESP_LOGV(TAG, "Hardware version: %04X", status.hardware_version);
   ESP_LOGV(TAG, "Firmware version: %04X", status.firmware_version);
+}
+
+void TionClimateComponentWithBoost::setup() { this->preset = climate_CLIMATE_PRESET_DEFAULT; }
+
+void TionClimateComponentWithBoost::enable_boost() {
+  uint32_t boost_time = this->boost_time_ ? this->boost_time_->state : DEFAULT_BOOST_TIME_SEC;
+  if (boost_time == 0) {
+    ESP_LOGW(TAG, "Boost time is not configured");
+    return ;
+  }
+
+  if (*this->preset != climate::CLIMATE_PRESET_BOOST) {
+    this->saved_preset_ = *this->preset;
+    this->saved_fan_speed_ = this->get_fan_speed();
+    this->preset = climate::CLIMATE_PRESET_BOOST;
+  }
+  this->set_fan_speed(this->max_fan_speed_);
+
+  // if boost_time_left not configured, just schedule stop boost after boost_time
+  if (this->boost_time_left_ == nullptr) {
+    App.scheduler.set_timeout(this, ASH_BOOST, boost_time * 1000, [this]() {
+      this->cancel_boost();
+      this->write_state();
+    });
+    return ;
+  }
+
+  // if boost_time_left is configured, schedule update it
+  App.scheduler.set_interval(this, ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this]() {
+    int time_left = this->boost_time_left_->state;
+    time_left -= BOOST_TIME_UPDATE_INTERVAL_SEC;
+    if (time_left > 0) {
+      this->boost_time_left_->publish_state(time_left);
+    } else {
+      this->cancel_boost();
+      this->write_state();
+    }
+  });
+
+  this->boost_time_left_->publish_state(boost_time);
+
+  return ;
+}
+
+void TionClimateComponentWithBoost::cancel_boost() {
+  if (this->boost_time_left_) {
+    App.scheduler.cancel_interval(this, ASH_BOOST);
+  } else {
+    App.scheduler.cancel_timeout(this, ASH_BOOST);
+  }
+  this->set_fan_speed(this->saved_fan_speed_);
+  this->boost_time_left_->publish_state(NAN);
+  this->preset = this->saved_preset_;
 }
 
 }  // namespace tion

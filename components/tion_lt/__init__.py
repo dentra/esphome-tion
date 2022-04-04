@@ -54,16 +54,9 @@ def tion_lt_schema(tion_class, led_class, buzzer_class):
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.BINARY_SENSOR_SCHEMA.extend(
-                {
-                    cv.GenerateID(): cv.declare_id(binary_sensor.BinarySensor),
-                    cv.Optional(
-                        CONF_DEVICE_CLASS, default=DEVICE_CLASS_PROBLEM
-                    ): binary_sensor.device_class,
-                    cv.Optional(
-                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_DIAGNOSTIC
-                    ): cv.entity_category,
-                }
+            cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.binary_sensor_schema(
+                device_class=DEVICE_CLASS_PROBLEM,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
         }
     )

@@ -7,12 +7,15 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/number/number.h"
 
 #include "../tion-api/log.h"
 #include "../tion-api/tion-api.h"
 
 namespace esphome {
 namespace tion {
+
+#define climate_CLIMATE_PRESET_DEFAULT climate::CLIMATE_PRESET_NONE
 
 class TionBleNode : public ble_client::BLEClientNode {
  public:
@@ -57,8 +60,11 @@ class TionClimate : public climate::Climate {
 
  protected:
   uint8_t max_fan_speed_ = 6;
-  void set_fan_mode_(uint8_t fan_speed);
+  void set_fan_speed(uint8_t fan_speed);
   uint8_t get_fan_speed() const;
+  virtual void enable_boost() = 0;
+  virtual void cancel_boost() = 0;
+  climate::ClimatePreset saved_preset_{climate_CLIMATE_PRESET_DEFAULT};
 };
 
 class TionComponent : public PollingComponent {
@@ -72,6 +78,8 @@ class TionComponent : public PollingComponent {
   void set_airflow_counter(sensor::Sensor *airflow_counter) { this->airflow_counter_ = airflow_counter; }
   void set_filter_days_left(sensor::Sensor *filter_days_left) { this->filter_days_left_ = filter_days_left; }
   void set_filter_warnout(binary_sensor::BinarySensor *filter_warnout) { this->filter_warnout_ = filter_warnout; }
+  void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
+  void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
 
  protected:
   text_sensor::TextSensor *version_{};
@@ -83,8 +91,26 @@ class TionComponent : public PollingComponent {
   sensor::Sensor *airflow_counter_{};
   sensor::Sensor *filter_days_left_{};
   binary_sensor::BinarySensor *filter_warnout_{};
+  number::Number *boost_time_{};
+  sensor::Sensor *boost_time_left_{};
 
   void read_dev_status_(const dentra::tion::tion_dev_status_t &status);
+};
+
+class TionBoostTimeNumber : public number::Number {
+ public:
+ protected:
+  virtual void control(float value) { this->publish_state(value); }
+};
+
+class TionClimateComponentWithBoost : public TionComponent, public TionClimate {
+ public:
+  void setup() override;
+
+ protected:
+  uint8_t saved_fan_speed_{};
+  void enable_boost() override;
+  void cancel_boost() override;
 };
 
 }  // namespace tion

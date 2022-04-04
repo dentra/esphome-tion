@@ -8,7 +8,7 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLt : public TionComponent, public TionClimate, public Tion<TionApiLt> {
+class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt> {
  public:
   void update() override { this->parent_->set_enabled(true); }
 

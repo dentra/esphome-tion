@@ -7,12 +7,15 @@ from esphome.components import (
     sensor,
     text_sensor,
     binary_sensor,
+    number,
+    select,
 )
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_ID,
     CONF_INVERTED,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VERSION,
     DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
@@ -21,13 +24,22 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_NONE,
     UNIT_CELSIUS,
+    UNIT_SECOND,
 )
 
 
 CODEOWNERS = ["@dentra"]
 ESP_PLATFORMS = [PLATFORM_ESP32]
 DEPENDENCIES = ["ble_client"]
-AUTO_LOAD = ["tion-api", "sensor", "switch", "text_sensor", "binary_sensor"]
+AUTO_LOAD = [
+    "tion-api",
+    "sensor",
+    "switch",
+    "text_sensor",
+    "binary_sensor",
+    "number",
+    "select",
+]
 
 ICON_AIR_FILTER = "mdi:air-filter"
 
@@ -35,10 +47,13 @@ CONF_BUZZER = "buzzer"
 CONF_TEMP_IN = "temp_in"
 CONF_TEMP_OUT = "temp_out"
 CONF_FILTER_DAYS_LEFT = "filter_days_left"
+CONF_BOOST_TIME = "boost_time"
+CONF_BOOST_TIME_LEFT = "boost_time_left"
 
 UNIT_DAYS = "days"
 
 tion_ns = cg.esphome_ns.namespace("tion")
+TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
 
 
 def tion_schema(tion_class, buzzer_class):
@@ -90,6 +105,25 @@ def tion_schema(tion_class, buzzer_class):
                     state_class=STATE_CLASS_NONE,
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
+                cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
+                        cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
+                        cv.Optional(
+                            CONF_UNIT_OF_MEASUREMENT, default=UNIT_SECOND
+                        ): cv.string_strict,
+                        cv.Optional(
+                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
+                        ): cv.entity_category,
+                    }
+                ),
+                cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
+                    unit_of_measurement=UNIT_SECOND,
+                    accuracy_decimals=0,
+                    icon="mdi:clock-end",
+                    state_class=STATE_CLASS_NONE,
+                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                ),
             }
         )
         .extend(ble_client.BLE_CLIENT_SCHEMA)
@@ -102,10 +136,10 @@ async def setup_binary_sensor(config, key, setter):
     if key not in config:
         return None
     conf = config[key]
-    var = cg.new_Pvariable(conf[CONF_ID])
-    await binary_sensor.register_binary_sensor(var, conf)
-    cg.add(setter(var))
-    return var
+    sens = cg.new_Pvariable(conf[CONF_ID])
+    await binary_sensor.register_binary_sensor(sens, conf)
+    cg.add(setter(sens))
+    return sens
 
 
 async def setup_switch(config, key, setter, parent):
@@ -113,19 +147,52 @@ async def setup_switch(config, key, setter, parent):
     if key not in config:
         return None
     conf = config[key]
-    var = cg.new_Pvariable(conf[CONF_ID], parent)
-    await switch.register_switch(var, conf)
-    cg.add(setter(var))
-    return var
+    swch = cg.new_Pvariable(conf[CONF_ID], parent)
+    await switch.register_switch(swch, conf)
+    cg.add(setter(swch))
+    return swch
 
 
 async def setup_sensor(config, key, setter):
     """Setup sensor"""
     if key not in config:
         return None
-    var = await sensor.new_sensor(config[key])
-    cg.add(setter(var))
-    return var
+    sens = await sensor.new_sensor(config[key])
+    cg.add(setter(sens))
+    return sens
+
+
+async def setup_text_sensor(config, key, setter):
+    """Setup text sensor"""
+    if key not in config:
+        return None
+    conf = config[key]
+    sens = cg.new_Pvariable(conf[CONF_ID])
+    await text_sensor.register_text_sensor(sens, conf)
+    cg.add(setter(sens))
+    return sens
+
+
+async def setup_number(config, key, setter, min_value, max_value, step):
+    """Setup number"""
+    if key not in config:
+        return None
+    numb = await number.new_number(
+        config[CONF_BOOST_TIME], min_value=min_value, max_value=max_value, step=step
+    )
+    cg.add(setter(numb))
+    return numb
+
+
+async def setup_select(config, key, setter, parent, options):
+    """Setup select"""
+    if key not in config:
+        return None
+    conf = config[key]
+    slct = cg.new_Pvariable(conf[CONF_ID], parent)
+    await select.register_select(slct, conf, options=options)
+    cg.add(setter(slct))
+    return slct
 
 
 async def setup_tion_core(config):
@@ -139,12 +206,9 @@ async def setup_tion_core(config):
     await setup_sensor(config, CONF_TEMP_IN, var.set_temp_in)
     await setup_sensor(config, CONF_TEMP_OUT, var.set_temp_out)
     await setup_sensor(config, CONF_FILTER_DAYS_LEFT, var.set_filter_days_left)
-
-    if CONF_VERSION in config:
-        conf = config[CONF_VERSION]
-        sens = cg.new_Pvariable(conf[CONF_ID])
-        await text_sensor.register_text_sensor(sens, conf)
-        cg.add(var.set_version(sens))
+    await setup_text_sensor(config, CONF_VERSION, var.set_version)
+    await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 20, 1)
+    await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

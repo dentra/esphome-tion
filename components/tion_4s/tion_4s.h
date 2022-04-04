@@ -1,6 +1,5 @@
 #pragma once
 
-#include "esphome/components/number/number.h"
 #include "esphome/components/time/real_time_clock.h"
 
 #include "../tion-api/tion-api-4s.h"
@@ -13,20 +12,18 @@ using namespace dentra::tion;
 
 enum UpdateState : uint8_t {
   UPDATE_STATE = 1 << 0,
-  UPDATE_BOOST = 1 << 1,
+  UPDATE_BOOST_ENABLE = 1 << 1,
+  UPDATE_BOOST_CANCEL = 1 << 2,
 };
 
 class Tion4s : public TionComponent, public TionClimate, public Tion<TionApi4s> {
  public:
+  void setup() override;
   void update() override { this->parent_->set_enabled(true); }
-
-  climate::ClimateTraits traits() override;
-  void control(const climate::ClimateCall &call) override;
 
   void on_ready() override;
 
   void set_recirculation(switch_::Switch *recirculation) { this->recirculation_ = recirculation; }
-  void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
 
   bool write_state() override {
     this->publish_state();
@@ -40,9 +37,12 @@ class Tion4s : public TionComponent, public TionClimate, public Tion<TionApi4s> 
   void read(const tion4s_turbo_t &turbo) override;
   void read(const tion4s_time_t &time) override;
 
+  void enable_boost() override;
+  void cancel_boost() override;
+
  protected:
   switch_::Switch *recirculation_{};
-  number::Number *boost_time_{};
+
   void update_state_(tion4s_state_t &state) const;
   uint32_t update_flag_{};
 };
@@ -81,12 +81,6 @@ class Tion4sRecirculationSwitch : public switch_::Switch {
 
  protected:
   Tion4s *parent_;
-};
-
-class Tion4sBoostTimeNumber : public number::Number, public Parented<Tion4s> {
- public:
- protected:
-  virtual void control(float value) { this->publish_state(value); }
 };
 
 }  // namespace tion

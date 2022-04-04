@@ -10,19 +10,7 @@ namespace tion {
 
 static const char *const TAG = "tion_4s";
 
-climate::ClimateTraits Tion4s::traits() {
-  auto traits = TionClimate::traits();
-  traits.set_supported_presets({climate::CLIMATE_PRESET_NONE, climate::CLIMATE_PRESET_BOOST});
-  return traits;
-}
-
-void Tion4s::control(const climate::ClimateCall &call) {
-  if (call.get_preset().has_value()) {
-    // TODO update turbo state
-    this->update_flag_ |= UPDATE_BOOST;
-  }
-  TionClimate::control(call);
-}
+void Tion4s::setup() { this->preset = climate_CLIMATE_PRESET_DEFAULT; }
 
 void Tion4s::on_ready() { this->request_dev_status(); }
 
@@ -49,18 +37,40 @@ void Tion4s::read(const tion4s_time_t &time) {
 }
 
 void Tion4s::read(const tion4s_turbo_t &turbo) {
-  if ((this->update_flag_ & UPDATE_BOOST) != 0) {
-    this->update_flag_ &= ~UPDATE_BOOST;
+  if ((this->update_flag_ & UPDATE_BOOST_ENABLE) != 0) {
+    this->update_flag_ &= ~UPDATE_BOOST_ENABLE;
     uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state : turbo.turbo_time;
     if (turbo_time > 0) {
       TionApi4s::set_turbo_time(turbo_time);
+      this->saved_preset_ = *this->preset;
+      this->preset = climate::CLIMATE_PRESET_BOOST;
     }
     return;
   }
-  this->preset = turbo.is_active ? climate::CLIMATE_PRESET_BOOST : climate::CLIMATE_PRESET_NONE;
-  if (this->boost_time_) {
-    this->boost_time_->publish_state(turbo.turbo_time);
+
+  if ((this->update_flag_ & UPDATE_BOOST_CANCEL) != 0) {
+    this->update_flag_ &= ~UPDATE_BOOST_CANCEL;
+    TionApi4s::set_turbo_time(0);
+    this->preset = this->saved_preset_;
+    return;
   }
+
+  // change preset if turbo changed outside
+  if (turbo.is_active) {
+    if (*this->preset != climate::CLIMATE_PRESET_BOOST) {
+      this->saved_preset_ = *this->preset;
+      this->preset = climate::CLIMATE_PRESET_BOOST;
+    }
+  } else {
+    if (*this->preset == climate::CLIMATE_PRESET_BOOST) {
+      this->preset = this->saved_preset_;
+    }
+  }
+
+  if (this->boost_time_left_) {
+    this->boost_time_left_->publish_state(turbo.turbo_time);
+  }
+
   this->publish_state();
 }
 
@@ -81,7 +91,7 @@ void Tion4s::read(const tion4s_state_t &state) {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
   this->target_temperature = state.target_temperature;
-  this->set_fan_mode_(state.fan_speed);
+  this->set_fan_speed(state.fan_speed);
   this->publish_state();
 
   if (this->buzzer_) {
@@ -139,7 +149,7 @@ void Tion4s::read(const tion4s_state_t &state) {
   ESP_LOGV(TAG, "fan_time       : %u", state.counters.fan_time);
   ESP_LOGV(TAG, "errors         : %u", state.errors);
 
-  // leave 3 sec connection left for end all of jobs
+  // leave 3 sec connection left to end all of jobs
   App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
 }
 
@@ -166,6 +176,16 @@ void Tion4s::update_state_(tion4s_state_t &state) const {
   if (this->custom_fan_mode.has_value()) {
     state.fan_speed = this->get_fan_speed();
   }
+}
+
+void Tion4s::enable_boost() {
+  // TODO update turbo state
+  this->update_flag_ |= UPDATE_BOOST_ENABLE;
+}
+
+void Tion4s::cancel_boost() {
+  // TODO update turbo state
+  this->update_flag_ |= UPDATE_BOOST_CANCEL;
 }
 
 }  // namespace tion
