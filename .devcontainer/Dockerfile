@@ -1,7 +1,9 @@
-FROM esphome/esphome-lint:dev
+ARG esphome_version
+FROM esphome/esphome-lint:${esphome_version}
 
 ARG esphome_version
 ARG apt_deps
+ARG pip_deps
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \
@@ -9,8 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# pyparsing needed to fix https://github.com/esphome/issues/issues/2540
-RUN pip3 --disable-pip-version-check --no-cache-dir install esphome==$esphome_version pyparsing==2.2.0 \
+RUN pip3 --disable-pip-version-check --no-cache-dir install esphome==$esphome_version $pip_deps \
  && rm -rf /tmp/pip-tmp
 
 RUN echo "alias ll='ls -l'" >> /etc/bash.bashrc \

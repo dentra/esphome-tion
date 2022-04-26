@@ -3,9 +3,11 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2022.3.2",
+      "esphome_version": "2022.4.0",
       // additional APT dependicies
-      "apt_deps": "bash-completion less libmbedtls-dev gdb"
+      "apt_deps": "bash-completion less libmbedtls-dev gdb",
+      // additional PIP dependicies
+      "pip_deps": ""
     }
   },
   "runArgs": [
