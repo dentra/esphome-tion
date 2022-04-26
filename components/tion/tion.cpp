@@ -85,7 +85,7 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
 
     if (this->ble_reg_for_notify()) {
       auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
-      ESP_LOGV(TAG, "Register for notify  0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
+      ESP_LOGV(TAG, "Register for notify 0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
     } else {
       this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
       this->on_ready();
@@ -241,7 +241,7 @@ void TionClimateComponentWithBoost::enable_boost() {
   uint32_t boost_time = this->boost_time_ ? this->boost_time_->state : DEFAULT_BOOST_TIME_SEC;
   if (boost_time == 0) {
     ESP_LOGW(TAG, "Boost time is not configured");
-    return ;
+    return;
   }
 
   if (*this->preset != climate::CLIMATE_PRESET_BOOST) {
@@ -257,7 +257,7 @@ void TionClimateComponentWithBoost::enable_boost() {
       this->cancel_boost();
       this->write_state();
     });
-    return ;
+    return;
   }
 
   // if boost_time_left is configured, schedule update it
@@ -274,7 +274,7 @@ void TionClimateComponentWithBoost::enable_boost() {
 
   this->boost_time_left_->publish_state(boost_time);
 
-  return ;
+  return;
 }
 
 void TionClimateComponentWithBoost::cancel_boost() {
