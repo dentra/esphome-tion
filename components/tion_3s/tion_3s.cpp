@@ -170,13 +170,6 @@ void Tion3s::update_state_(tion3s_state_t &state) {
 }
 
 bool Tion3s::write_state() {
-  if (this->direct_write_) {
-    tion3s_state_t st{};
-    st.firmware_version = 0xFFFF;
-    this->update_state_(st);
-    return TionsApi3s::write_state(st);
-  }
-
   this->publish_state();
   this->dirty_ = true;
   this->parent_->set_enabled(true);

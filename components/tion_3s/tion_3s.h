@@ -29,7 +29,6 @@ class Tion3s : public TionClimateComponentWithBoost, public TionBleNode, public 
   bool ble_reg_for_notify() const override { return this->pair_state_ > 0; }
 
   void set_ble_encryption(esp_ble_sec_act_t ble_sec_enc) { this->ble_sec_enc_ = ble_sec_enc; }
-  void set_direct_write(bool direct_write) { this->direct_write_ = direct_write; }
 
   void read_data(const uint8_t *data, uint16_t size) override { TionsApi3s::read_data(data, size); }
   bool write_data(const uint8_t *data, uint16_t size) const override { return TionBleNode::write_data(data, size); }
@@ -55,7 +54,6 @@ class Tion3s : public TionClimateComponentWithBoost, public TionBleNode, public 
   int8_t pair_state_{};  // 0 - not paired, 1 - paired, -1 - pairing
   void update_state_(tion3s_state_t &state);
   esp_ble_sec_act_t ble_sec_enc_{esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT};
-  bool direct_write_{};
   uint8_t saved_fan_speed_{};
 };
 
