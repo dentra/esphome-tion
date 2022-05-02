@@ -15,6 +15,8 @@ enum {
   FRAME_TYPE_STATE_REQ = 0x013D,
   FRAME_TYPE_STATE_RSP = 0x10B3,
   FRAME_TYPE_STATE_SET = 0x023D,
+  FRAME_TYPE_STATE_SET_RSP = 0x203D,
+
   // FRAME_TYPE_FILTER_TIME_SET = 0x033D,
   // FRAME_TYPE_FILTER_TIME_RESET = 0x043D,
   FRAME_TYPE_SRV_MODE_SET = 0x053D,
@@ -80,7 +82,7 @@ bool TionsApi3s::read_data(const uint8_t *data, uint16_t size) {
     return false;
   }
 
-  if (frame->type == FRAME_TYPE_STATE_RSP) {
+  if (frame->type == FRAME_TYPE_STATE_RSP || frame->type == FRAME_TYPE_STATE_SET_RSP) {
     const void *frame_data = frame->data;
     this->read(*static_cast<const tion3s_state_t *>(frame_data));
     return true;
