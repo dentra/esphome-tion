@@ -87,11 +87,6 @@ void Tion3s::read(const tion3s_state_t &state) {
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
 
-  if (this->preset == climate::CLIMATE_PRESET_BOOST && state.fan_speed != this->max_fan_speed_) {
-    ESP_LOGW(TAG, "Dropping boost preset: %u", state.fan_speed);
-    this->cancel_boost_();
-  }
-
   this->publish_state();
 
   if (this->version_) {

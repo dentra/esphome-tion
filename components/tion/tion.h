@@ -124,6 +124,8 @@ class TionClimate : public climate::Climate {
 
 class TionComponent : public PollingComponent {
  public:
+  void setup() override;
+
   void set_version(text_sensor::TextSensor *version) { this->version_ = version; }
   void set_buzzer(switch_::Switch *buzzer) { this->buzzer_ = buzzer; }
   void set_led(switch_::Switch *led) { this->led_ = led; }

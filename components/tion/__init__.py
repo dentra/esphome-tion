@@ -1,5 +1,4 @@
 import esphome.codegen as cg
-from esphome.cpp_generator import UnaryOpExpression
 import esphome.config_validation as cv
 from esphome.components import (
     ble_client,
@@ -16,7 +15,6 @@ from esphome.const import (
     CONF_ICON,
     CONF_ID,
     CONF_INVERTED,
-    CONF_PRESET_BOOST,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VERSION,
     DEVICE_CLASS_TEMPERATURE,
@@ -26,7 +24,8 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_NONE,
     UNIT_CELSIUS,
-    UNIT_SECOND,
+    UNIT_MINUTE,
+    UNIT_PERCENT,
 )
 
 
@@ -136,7 +135,7 @@ def tion_schema(tion_class, buzzer_class):
                         cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
                         cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
                         cv.Optional(
-                            CONF_UNIT_OF_MEASUREMENT, default=UNIT_SECOND
+                            CONF_UNIT_OF_MEASUREMENT, default=UNIT_MINUTE
                         ): cv.string_strict,
                         cv.Optional(
                             CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
@@ -144,8 +143,8 @@ def tion_schema(tion_class, buzzer_class):
                     }
                 ),
                 cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
-                    unit_of_measurement=UNIT_SECOND,
-                    accuracy_decimals=0,
+                    unit_of_measurement=UNIT_PERCENT,
+                    accuracy_decimals=1,
                     icon="mdi:clock-end",
                     state_class=STATE_CLASS_NONE,
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
@@ -200,7 +199,9 @@ async def setup_text_sensor(config, key, setter):
     return sens
 
 
-async def setup_number(config, key, setter, min_value, max_value, step):
+async def setup_number(
+    config: dict, key: str, setter, min_value: int, max_value: int, step: int
+):
     """Setup number"""
     if key not in config:
         return None
@@ -252,7 +253,7 @@ async def setup_tion_core(config):
     await setup_sensor(config, CONF_TEMP_OUT, var.set_temp_out)
     await setup_sensor(config, CONF_FILTER_DAYS_LEFT, var.set_filter_days_left)
     await setup_text_sensor(config, CONF_VERSION, var.set_version)
-    await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 20, 1)
+    await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
     await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
     await setup_presets(config, CONF_PRESETS, var.update_preset)
 

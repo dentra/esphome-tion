@@ -11,7 +11,7 @@ static const char *const TAG = "tion";
 // default boost time - 10 minutes
 #define DEFAULT_BOOST_TIME_SEC 10 * 60
 // boost time update interval
-#define BOOST_TIME_UPDATE_INTERVAL_SEC 30
+#define BOOST_TIME_UPDATE_INTERVAL_SEC 20
 
 // application scheduler name
 static const char *const ASH_BOOST = "tion-boost";
@@ -223,6 +223,7 @@ void TionClimate::set_fan_speed_(uint8_t fan_speed) {
 }
 
 bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
+  ESP_LOGD(TAG, "Enable preset %s", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
   if (preset == climate::CLIMATE_PRESET_BOOST) {
     if (!this->enable_boost_()) {
       return false;
@@ -245,9 +246,16 @@ bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
 }
 
 void TionClimate::cancel_preset_(climate::ClimatePreset preset) {
+  ESP_LOGD(TAG, "Cancel preset %s", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
   if (preset == climate::CLIMATE_PRESET_BOOST) {
     this->cancel_boost_();
     this->enable_preset_(this->saved_preset_);
+  }
+}
+
+void TionComponent::setup() {
+  if (this->boost_time_ || std::isnan(this->boost_time_->state)) {
+    this->boost_time_->set(DEFAULT_BOOST_TIME_SEC / 60);
   }
 }
 
@@ -263,7 +271,7 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
 }
 
 bool TionClimateComponentWithBoost::enable_boost_() {
-  uint32_t boost_time = this->boost_time_ ? this->boost_time_->state : DEFAULT_BOOST_TIME_SEC;
+  uint32_t boost_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
   if (boost_time == 0) {
     ESP_LOGW(TAG, "Boost time is not configured");
     return false;
@@ -271,34 +279,41 @@ bool TionClimateComponentWithBoost::enable_boost_() {
 
   // if boost_time_left not configured, just schedule stop boost after boost_time
   if (this->boost_time_left_ == nullptr) {
+    ESP_LOGD(TAG, "Schedule boost timeout for %u s", boost_time);
     App.scheduler.set_timeout(this, ASH_BOOST, boost_time * 1000, [this]() {
-      this->cancel_boost_();
+      this->cancel_preset_(*this->preset);
       this->write_state();
     });
     return true;
   }
 
   // if boost_time_left is configured, schedule update it
-  App.scheduler.set_interval(this, ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this]() {
-    int time_left = this->boost_time_left_->state;
-    time_left -= BOOST_TIME_UPDATE_INTERVAL_SEC;
-    if (time_left > 0) {
-      this->boost_time_left_->publish_state(time_left);
+  ESP_LOGD(TAG, "Schedule boost interval up to %u s", boost_time);
+  App.scheduler.set_interval(this, ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this, boost_time]() {
+    int time_left;
+    if (std::isnan(this->boost_time_left_->state)) {
+      time_left = boost_time;
     } else {
-      this->cancel_boost_();
+      time_left = (this->boost_time_left_->state * (boost_time / 100)) - BOOST_TIME_UPDATE_INTERVAL_SEC;
+    }
+    ESP_LOGV(TAG, "Boost time left %d s", time_left);
+    if (time_left > 0) {
+      this->boost_time_left_->publish_state(static_cast<float>(time_left) / static_cast<float>(boost_time / 100));
+    } else {
+      this->cancel_preset_(*this->preset);
       this->write_state();
     }
   });
-
-  this->boost_time_left_->publish_state(boost_time);
 
   return true;
 }
 
 void TionClimateComponentWithBoost::cancel_boost_() {
   if (this->boost_time_left_) {
+    ESP_LOGV(TAG, "Cancel boost interval");
     App.scheduler.cancel_interval(this, ASH_BOOST);
   } else {
+    ESP_LOGV(TAG, "Cancel boost timeout");
     App.scheduler.cancel_timeout(this, ASH_BOOST);
   }
   this->boost_time_left_->publish_state(NAN);
