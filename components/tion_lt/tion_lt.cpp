@@ -35,11 +35,14 @@ void TionLt::read(const tionlt_state_t &state) {
     this->cancel_boost_();
   }
 
-  if (state.flags.power_state) {
-    this->mode = state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY;
-  } else {
-    this->mode = climate::CLIMATE_MODE_OFF;
-  }
+  this->mode = state.flags.power_state
+                   ? state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY
+                   : climate::CLIMATE_MODE_OFF;
+
+  this->action = this->mode == climate::CLIMATE_MODE_OFF ? climate::CLIMATE_ACTION_OFF
+                 : state.heater_var > 0                  ? climate::CLIMATE_ACTION_HEATING
+                                                         : climate::CLIMATE_ACTION_FAN;
+
   this->current_temperature = state.indoor_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);

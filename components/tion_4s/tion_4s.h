@@ -16,6 +16,12 @@ enum UpdateState : uint8_t {
 
 class Tion4s : public TionClimateComponent, public Tion<TionApi4s> {
  public:
+  climate::ClimateTraits traits() override {
+    auto traits = TionClimate::traits();
+    traits.set_supports_action(true);
+    return traits;
+  }
+
   void update() override { this->parent_->set_enabled(true); }
 
   void on_ready() override;

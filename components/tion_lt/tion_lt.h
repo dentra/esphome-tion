@@ -10,6 +10,12 @@ using namespace dentra::tion;
 
 class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt> {
  public:
+  climate::ClimateTraits traits() override {
+    auto traits = TionClimate::traits();
+    traits.set_supports_action(true);
+    return traits;
+  }
+
   void update() override { this->parent_->set_enabled(true); }
 
   void on_ready() override;
