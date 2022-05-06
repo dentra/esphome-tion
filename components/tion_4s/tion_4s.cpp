@@ -42,17 +42,19 @@ void Tion4s::read(const tion4s_turbo_t &turbo) {
     this->update_flag_ &= ~UPDATE_BOOST_ENABLE;
     uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state : turbo.turbo_time;
     if (turbo_time > 0) {
-      TionApi4s::set_turbo_time(turbo_time);
-      this->saved_preset_ = *this->preset;
-      this->preset = climate::CLIMATE_PRESET_BOOST;
+      this->set_turbo_time(turbo_time);
+    } else {
+      // fallback on error
+      this->enable_preset_(this->saved_preset_);
     }
     return;
   }
 
   if ((this->update_flag_ & UPDATE_BOOST_CANCEL) != 0) {
     this->update_flag_ &= ~UPDATE_BOOST_CANCEL;
-    TionApi4s::set_turbo_time(0);
-    this->preset = this->saved_preset_;
+    if (turbo.turbo_time > 0) {
+      this->set_turbo_time(0);
+    }
     return;
   }
 
@@ -64,7 +66,7 @@ void Tion4s::read(const tion4s_turbo_t &turbo) {
     }
   } else {
     if (*this->preset == climate::CLIMATE_PRESET_BOOST) {
-      this->preset = this->saved_preset_;
+      this->enable_preset_(this->saved_preset_);
     }
   }
 
@@ -78,9 +80,7 @@ void Tion4s::read(const tion4s_turbo_t &turbo) {
 void Tion4s::read(const tion4s_state_t &state) {
   if ((this->update_flag_ & UPDATE_STATE) != 0) {
     this->update_flag_ &= ~UPDATE_STATE;
-    tion4s_state_t st = state;
-    this->update_state_(st);
-    TionApi4s::write_state(st);
+    this->flush_state_(state);
     return;
   }
 
@@ -155,7 +155,8 @@ void Tion4s::read(const tion4s_state_t &state) {
   App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
 }
 
-void Tion4s::update_state_(tion4s_state_t &state) const {
+void Tion4s::flush_state_(const tion4s_state_t &state_) const {
+  tion4s_state_t state = state_;
   state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
   state.flags.heater_mode = this->mode == climate::CLIMATE_MODE_HEAT
                                 ? tion4s_state_t::HEATER_MODE_HEATING
@@ -178,6 +179,8 @@ void Tion4s::update_state_(tion4s_state_t &state) const {
   if (this->custom_fan_mode.has_value()) {
     state.fan_speed = this->get_fan_speed_();
   }
+
+  TionApi4s::write_state(state);
 }
 
 bool Tion4s::enable_boost_() {

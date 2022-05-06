@@ -52,7 +52,7 @@ class Tion3s : public TionClimateComponentWithBoost, public TionBleNode, public 
   ESPPreferenceObject rtc_;
   bool dirty_{};
   int8_t pair_state_{};  // 0 - not paired, 1 - paired, -1 - pairing
-  void update_state_(tion3s_state_t &state);
+  void flush_state_(const tion3s_state_t &state) const;
   esp_ble_sec_act_t ble_sec_enc_{esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT};
   uint8_t saved_fan_speed_{};
 };

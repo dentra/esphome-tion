@@ -19,6 +19,7 @@ class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt> {
   void update() override { this->parent_->set_enabled(true); }
 
   void on_ready() override;
+
   bool write_state() override {
     this->publish_state();
     this->dirty_ = true;
@@ -31,7 +32,7 @@ class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt> {
 
  protected:
   bool dirty_{};
-  void update_state_(tionlt_state_t &state);
+  void flush_state_(const tionlt_state_t &state) const;
 };
 
 class TionLtLedSwitch : public switch_::Switch {

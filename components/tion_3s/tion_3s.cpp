@@ -72,9 +72,8 @@ void Tion3s::on_ready() {
 void Tion3s::read(const tion3s_state_t &state) {
   if (this->dirty_) {
     this->dirty_ = false;
-    tion3s_state_t st = state;
-    this->update_state_(st);
-    TionsApi3s::write_state(st);
+    this->flush_state_(state);
+
     return;
   }
 
@@ -141,7 +140,8 @@ static int get_state_index(select::Select *select, size_t first) {
   return std::distance(options.begin(), pos) + first;
 }
 
-void Tion3s::update_state_(tion3s_state_t &state) {
+void Tion3s::flush_state_(const tion3s_state_t &state_) const {
+  tion3s_state_t state = state_;
   if (this->custom_fan_mode.has_value()) {
     state.fan_speed = this->get_fan_speed_();
   }
@@ -158,6 +158,8 @@ void Tion3s::update_state_(tion3s_state_t &state) {
   if (gate_position != -1) {
     state.gate_position = gate_position;
   }
+
+  TionsApi3s::write_state(state);
 }
 
 bool Tion3s::write_state() {

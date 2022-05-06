@@ -43,7 +43,7 @@ class Tion4s : public TionClimateComponent, public Tion<TionApi4s> {
  protected:
   switch_::Switch *recirculation_{};
 
-  void update_state_(tion4s_state_t &state) const;
+  void flush_state_(const tion4s_state_t &state) const;
   uint32_t update_flag_{};
 
   bool enable_boost_() override;

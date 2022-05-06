@@ -22,9 +22,7 @@ void TionLt::read(const tion_dev_status_t &status) {
 void TionLt::read(const tionlt_state_t &state) {
   if (this->dirty_) {
     this->dirty_ = false;
-    tionlt_state_t st = state;
-    this->update_state_(st);
-    TionApiLt::write_state(st);
+    this->flush_state_(state);
     return;
   }
 
@@ -101,7 +99,8 @@ void TionLt::read(const tionlt_state_t &state) {
   App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
 }
 
-void TionLt::update_state_(tionlt_state_t &state) {
+void TionLt::flush_state_(const tionlt_state_t &state_) const {
+  tionlt_state_t state = state_;
   if (this->custom_fan_mode.has_value()) {
     state.fan_speed = this->get_fan_speed_();
   }
@@ -118,6 +117,8 @@ void TionLt::update_state_(tionlt_state_t &state) {
   }
 
   state.flags.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
+
+  TionApiLt::write_state(state);
 }
 
 }  // namespace tion
