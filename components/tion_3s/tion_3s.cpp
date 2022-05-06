@@ -83,6 +83,7 @@ void Tion3s::read(const tion3s_state_t &state) {
   } else {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
+  this->current_temperature = state.indoor_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
 
@@ -98,9 +99,6 @@ void Tion3s::read(const tion3s_state_t &state) {
   }
   if (this->buzzer_) {
     this->buzzer_->publish_state(state.flags.sound_state);
-  }
-  if (this->temp_in_) {
-    this->temp_in_->publish_state(state.indoor_temperature);
   }
   if (this->temp_out_) {
     this->temp_out_->publish_state(state.outdoor_temperature2);

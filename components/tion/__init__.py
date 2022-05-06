@@ -108,13 +108,6 @@ def tion_schema(tion_class, buzzer_class):
                         ),
                     }
                 ),
-                cv.Optional(CONF_TEMP_IN): sensor.sensor_schema(
-                    unit_of_measurement=UNIT_CELSIUS,
-                    accuracy_decimals=0,
-                    device_class=DEVICE_CLASS_TEMPERATURE,
-                    state_class=STATE_CLASS_MEASUREMENT,
-                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                ),
                 cv.Optional(CONF_TEMP_OUT): sensor.sensor_schema(
                     unit_of_measurement=UNIT_CELSIUS,
                     accuracy_decimals=0,

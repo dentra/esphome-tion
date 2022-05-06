@@ -127,7 +127,6 @@ class TionComponent : public PollingComponent {
   void set_version(text_sensor::TextSensor *version) { this->version_ = version; }
   void set_buzzer(switch_::Switch *buzzer) { this->buzzer_ = buzzer; }
   void set_led(switch_::Switch *led) { this->led_ = led; }
-  void set_temp_in(sensor::Sensor *temp_in) { this->temp_in_ = temp_in; }
   void set_temp_out(sensor::Sensor *temp_out) { this->temp_out_ = temp_out; }
   void set_heater_power(sensor::Sensor *heater_power) { this->heater_power_ = heater_power; }
   void set_airflow_counter(sensor::Sensor *airflow_counter) { this->airflow_counter_ = airflow_counter; }
@@ -141,7 +140,6 @@ class TionComponent : public PollingComponent {
   text_sensor::TextSensor *version_{};
   switch_::Switch *buzzer_{};
   switch_::Switch *led_{};
-  sensor::Sensor *temp_in_{};
   sensor::Sensor *temp_out_{};
   sensor::Sensor *heater_power_{};
   sensor::Sensor *airflow_counter_{};

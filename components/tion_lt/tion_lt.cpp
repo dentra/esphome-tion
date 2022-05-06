@@ -40,6 +40,7 @@ void TionLt::read(const tionlt_state_t &state) {
   } else {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
+  this->current_temperature = state.indoor_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
 
@@ -50,9 +51,6 @@ void TionLt::read(const tionlt_state_t &state) {
   }
   if (this->led_) {
     this->led_->publish_state(state.flags.led_state);
-  }
-  if (this->temp_in_) {
-    this->temp_in_->publish_state(state.indoor_temperature);
   }
   if (this->temp_out_) {
     this->temp_out_->publish_state(state.outdoor_temperature);
