@@ -15,6 +15,9 @@
 namespace esphome {
 namespace tion {
 
+// default boost time - 10 minutes
+#define DEFAULT_BOOST_TIME_SEC 10 * 60
+
 class TionBleNode : public ble_client::BLEClientNode {
  public:
   void gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,

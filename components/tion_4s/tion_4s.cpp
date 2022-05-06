@@ -40,9 +40,12 @@ void Tion4s::read(const tion4s_time_t &tion_time) {
 void Tion4s::read(const tion4s_turbo_t &turbo) {
   if ((this->update_flag_ & UPDATE_BOOST_ENABLE) != 0) {
     this->update_flag_ &= ~UPDATE_BOOST_ENABLE;
-    uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state : turbo.turbo_time;
+    uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
     if (turbo_time > 0) {
       this->set_turbo_time(turbo_time);
+      if (this->boost_time_left_) {
+        this->boost_time_left_->publish_state(100);
+      }
     } else {
       // fallback on error
       this->enable_preset_(this->saved_preset_);
@@ -71,7 +74,13 @@ void Tion4s::read(const tion4s_turbo_t &turbo) {
   }
 
   if (this->boost_time_left_) {
-    this->boost_time_left_->publish_state(turbo.turbo_time);
+    if (turbo.turbo_time == 0) {
+      this->boost_time_left_->publish_state(NAN);
+    } else {
+      uint16_t boost_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
+      this->boost_time_left_->publish_state(static_cast<float>(turbo.turbo_time) /
+                                            static_cast<float>(boost_time / 100));
+    }
   }
 
   this->publish_state();

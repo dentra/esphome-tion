@@ -8,8 +8,6 @@ namespace tion {
 
 static const char *const TAG = "tion";
 
-// default boost time - 10 minutes
-#define DEFAULT_BOOST_TIME_SEC 10 * 60
 // boost time update interval
 #define BOOST_TIME_UPDATE_INTERVAL_SEC 20
 
