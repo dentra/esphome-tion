@@ -56,7 +56,7 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
   }
 
   if (event == ESP_GATTC_REG_FOR_NOTIFY_EVT) {
-    ESP_LOGD(TAG, "Registring for notify complete");
+    ESP_LOGV(TAG, "Registring for notify complete");
     return;
   }
 
@@ -99,7 +99,7 @@ void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t 
     auto ble_sec_act = this->get_ble_encryption();
     if (ble_sec_act != 0) {
       auto err = esp_ble_set_encryption(param->connect.remote_bda, ble_sec_act);
-      ESP_LOGD(TAG, "Bonding complete: %s", YESNO(err == ESP_OK));
+      ESP_LOGV(TAG, "Bonding complete: %s", YESNO(err == ESP_OK));
     } else {
       ESP_LOGV(TAG, "Bonding skipped");
     }
