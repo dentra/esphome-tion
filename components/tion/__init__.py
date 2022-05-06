@@ -45,8 +45,7 @@ AUTO_LOAD = [
 ICON_AIR_FILTER = "mdi:air-filter"
 
 CONF_BUZZER = "buzzer"
-CONF_TEMP_IN = "temp_in"
-CONF_TEMP_OUT = "temp_out"
+CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_FILTER_DAYS_LEFT = "filter_days_left"
 CONF_BOOST_TIME = "boost_time"
 CONF_BOOST_TIME_LEFT = "boost_time_left"
@@ -107,7 +106,7 @@ def tion_schema(tion_class, buzzer_class):
                         ),
                     }
                 ),
-                cv.Optional(CONF_TEMP_OUT): sensor.sensor_schema(
+                cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                     unit_of_measurement=UNIT_CELSIUS,
                     accuracy_decimals=0,
                     device_class=DEVICE_CLASS_TEMPERATURE,
@@ -249,8 +248,7 @@ async def setup_tion_core(config):
     await climate.register_climate(var, config)
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
-    await setup_sensor(config, CONF_TEMP_IN, var.set_temp_in)
-    await setup_sensor(config, CONF_TEMP_OUT, var.set_temp_out)
+    await setup_sensor(config, CONF_OUTDOOR_TEMPERATURE, var.set_outdoor_temperature)
     await setup_sensor(config, CONF_FILTER_DAYS_LEFT, var.set_filter_days_left)
     await setup_text_sensor(config, CONF_VERSION, var.set_version)
     await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)

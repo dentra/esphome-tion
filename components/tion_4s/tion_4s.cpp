@@ -105,8 +105,8 @@ void Tion4s::read(const tion4s_state_t &state) {
   if (this->led_) {
     this->led_->publish_state(state.flags.led_state);
   }
-  if (this->temp_out_) {
-    this->temp_out_->publish_state(state.outdoor_temperature);
+  if (this->outdoor_temperature_) {
+    this->outdoor_temperature_->publish_state(state.outdoor_temperature);
   }
   if (this->heater_power_) {
     this->heater_power_->publish_state(state.heater_power());

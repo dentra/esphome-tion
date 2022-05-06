@@ -94,8 +94,8 @@ void Tion3s::read(const tion3s_state_t &state) {
   if (this->buzzer_) {
     this->buzzer_->publish_state(state.flags.sound_state);
   }
-  if (this->temp_out_) {
-    this->temp_out_->publish_state(state.outdoor_temperature2);
+  if (this->outdoor_temperature_) {
+    this->outdoor_temperature_->publish_state(state.outdoor_temperature2);
   }
   if (this->filter_days_left_) {
     this->filter_days_left_->publish_state(state.filter_days);
