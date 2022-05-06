@@ -40,8 +40,6 @@ const esp_bt_uuid_t &Tion3s::get_ble_char_tx() const { return BLE_TION3S_CHAR_TX
 const esp_bt_uuid_t &Tion3s::get_ble_char_rx() const { return BLE_TION3S_CHAR_RX; }
 
 void Tion3s::setup() {
-  TionClimateComponentWithBoost::setup();
-
   this->rtc_ = global_preferences->make_preference<int8_t>(fnv1_hash(TAG), true);
   int8_t loaded{};
   if (this->rtc_.load(&loaded)) {
@@ -86,11 +84,11 @@ void Tion3s::read(const tion3s_state_t &state) {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
   this->target_temperature = state.target_temperature;
-  this->set_fan_speed(state.fan_speed);
+  this->set_fan_speed_(state.fan_speed);
 
   if (this->preset == climate::CLIMATE_PRESET_BOOST && state.fan_speed != this->max_fan_speed_) {
     ESP_LOGW(TAG, "Dropping boost preset: %u", state.fan_speed);
-    this->cancel_boost();
+    this->cancel_boost_();
   }
 
   this->publish_state();
@@ -152,7 +150,7 @@ static int get_state_index(select::Select *select, size_t first) {
 
 void Tion3s::update_state_(tion3s_state_t &state) {
   if (this->custom_fan_mode.has_value()) {
-    state.fan_speed = this->get_fan_speed();
+    state.fan_speed = this->get_fan_speed_();
   }
 
   state.target_temperature = this->target_temperature;

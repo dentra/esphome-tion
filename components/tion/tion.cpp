@@ -147,81 +147,108 @@ climate::ClimateTraits TionClimate::traits() {
       climate::CLIMATE_MODE_HEAT,
       climate::CLIMATE_MODE_FAN_ONLY,
   });
-  for (char i = '1', max = i + this->max_fan_speed_; i < max; i++) {
-    char buf[2] = {i, 0};
-    traits.add_supported_custom_fan_mode(buf);
+  for (uint8_t i = 1, max = i + this->max_fan_speed_; i < max; i++) {
+    traits.add_supported_custom_fan_mode(this->fan_speed_to_mode_(i));
   }
-  traits.set_supported_presets({
-      climate_CLIMATE_PRESET_DEFAULT,
-      climate::CLIMATE_PRESET_BOOST,
-  });
+  if (!this->supported_presets_.empty()) {
+    traits.set_supported_presets(this->supported_presets_);
+    traits.add_supported_preset(climate::CLIMATE_PRESET_NONE);
+  }
   return traits;
 }
 
 void TionClimate::control(const climate::ClimateCall &call) {
+  bool preset_set = false;
+  if (call.get_preset().has_value()) {
+    const auto new_preset = *call.get_preset();
+    const auto old_preset = *this->preset;
+    if (new_preset != old_preset) {
+      this->cancel_preset_(old_preset);
+      preset_set = this->enable_preset_(new_preset);
+    }
+  }
+
   if (call.get_mode().has_value()) {
-    auto mode = *call.get_mode();
-    switch (mode) {
-      case climate::CLIMATE_MODE_OFF:
-      case climate::CLIMATE_MODE_HEAT:
-      case climate::CLIMATE_MODE_FAN_ONLY:
-        this->mode = mode;
-        ESP_LOGD(TAG, "Set mode %u", mode);
-        break;
-      default:
-        ESP_LOGW(TAG, "Unsupported mode: %d", mode);
-        return;
-    }
-  }
-
-  if (call.get_preset().has_value() && *call.get_preset() != *this->preset) {
-    const auto preset = *call.get_preset();
-    if (preset == climate::CLIMATE_PRESET_BOOST) {
-      this->enable_boost();
+    if (preset_set) {
+      ESP_LOGW(TAG, "%s preset enabled. Ignore change mode.",
+               LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
     } else {
-      this->cancel_boost();
-    }
-  }
-
-  if (call.get_fan_mode().has_value()) {
-    auto fan_mode = *call.get_fan_mode();
-    ESP_LOGW(TAG, "Unsupported fan mode: %d", fan_mode);
-  }
-
-  if (call.get_custom_fan_mode().has_value()) {
-    if (this->preset == climate::CLIMATE_PRESET_BOOST) {
-      ESP_LOGW(TAG, "Boost preset enabled. Ignore change fan speed.");
-    } else {
-      const auto fan_mode = *call.get_custom_fan_mode();
-      const auto fan_speed = *fan_mode.c_str() - '0';
-      if (fan_speed <= this->max_fan_speed_) {
-        this->custom_fan_mode = fan_mode;
-        ESP_LOGD(TAG, "Set fan mode %s", fan_mode.c_str());
-      } else {
-        ESP_LOGW(TAG, "Unsupported fan mode: %u from %u", fan_speed, this->max_fan_speed_);
+      auto mode = *call.get_mode();
+      switch (mode) {
+        case climate::CLIMATE_MODE_OFF:
+        case climate::CLIMATE_MODE_HEAT:
+        case climate::CLIMATE_MODE_FAN_ONLY:
+          this->mode = mode;
+          ESP_LOGD(TAG, "Set mode %u", mode);
+          break;
+        default:
+          ESP_LOGW(TAG, "Unsupported mode %d", mode);
+          return;
       }
     }
   }
 
+  if (call.get_custom_fan_mode().has_value()) {
+    if (preset_set) {
+      ESP_LOGW(TAG, "%s preset enabled. Ignore change fan speed.",
+               LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
+    } else {
+      this->set_fan_speed_(this->fan_mode_to_speed_(call.get_custom_fan_mode()));
+      this->preset = climate::CLIMATE_PRESET_NONE;
+    }
+  }
+
   if (call.get_target_temperature().has_value()) {
-    const auto target_temperature = *call.get_target_temperature();
-    this->target_temperature = target_temperature;
-    ESP_LOGD(TAG, "Set target temperature %f", target_temperature);
+    if (preset_set) {
+      ESP_LOGW(TAG, "%s preset enabled. Ignore change target temperature.",
+               LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
+    } else {
+      ESP_LOGD(TAG, "Set target temperature %f", target_temperature);
+      const auto target_temperature = *call.get_target_temperature();
+      this->target_temperature = target_temperature;
+      this->preset = climate::CLIMATE_PRESET_NONE;
+    }
   }
 
   this->write_state();
 }
 
-void TionClimate::set_fan_speed(uint8_t fan_speed) {
-  char fan_mode[2] = {static_cast<char>(fan_speed + '0'), 0};
-  this->custom_fan_mode = std::string(fan_mode);
+void TionClimate::set_fan_speed_(uint8_t fan_speed) {
+  if (fan_speed > 0 && fan_speed <= this->max_fan_speed_) {
+    ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
+    this->custom_fan_mode = this->fan_speed_to_mode_(fan_speed);
+  } else {
+    ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, this->max_fan_speed_);
+  }
 }
 
-uint8_t TionClimate::get_fan_speed() const {
-  if (this->custom_fan_mode.has_value()) {
-    return *this->custom_fan_mode.value().c_str() - '0';
+bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
+  if (preset == climate::CLIMATE_PRESET_BOOST) {
+    if (!this->enable_boost_()) {
+      return false;
+    }
+    this->saved_preset_ = *this->preset;
   }
-  return 0;
+
+  if (*this->preset == climate::CLIMATE_PRESET_NONE) {
+    this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
+    this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed_();
+    this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
+  }
+
+  this->mode = this->presets_[preset].mode;
+  this->set_fan_speed_(this->presets_[preset].fan_speed);
+  this->target_temperature = this->presets_[preset].target_temperature;
+  this->preset = preset;
+
+  return true;
+}
+
+void TionClimate::cancel_preset_(climate::ClimatePreset preset) {
+  if (preset == climate::CLIMATE_PRESET_BOOST) {
+    this->cancel_boost_();
+    this->enable_preset_(this->saved_preset_);
+  }
 }
 
 void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &status) {
@@ -235,29 +262,20 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
   ESP_LOGV(TAG, "Firmware version: %04X", status.firmware_version);
 }
 
-void TionClimateComponentWithBoost::setup() { this->preset = climate_CLIMATE_PRESET_DEFAULT; }
-
-void TionClimateComponentWithBoost::enable_boost() {
+bool TionClimateComponentWithBoost::enable_boost_() {
   uint32_t boost_time = this->boost_time_ ? this->boost_time_->state : DEFAULT_BOOST_TIME_SEC;
   if (boost_time == 0) {
     ESP_LOGW(TAG, "Boost time is not configured");
-    return;
+    return false;
   }
-
-  if (*this->preset != climate::CLIMATE_PRESET_BOOST) {
-    this->saved_preset_ = *this->preset;
-    this->saved_fan_speed_ = this->get_fan_speed();
-    this->preset = climate::CLIMATE_PRESET_BOOST;
-  }
-  this->set_fan_speed(this->max_fan_speed_);
 
   // if boost_time_left not configured, just schedule stop boost after boost_time
   if (this->boost_time_left_ == nullptr) {
     App.scheduler.set_timeout(this, ASH_BOOST, boost_time * 1000, [this]() {
-      this->cancel_boost();
+      this->cancel_boost_();
       this->write_state();
     });
-    return;
+    return true;
   }
 
   // if boost_time_left is configured, schedule update it
@@ -267,25 +285,23 @@ void TionClimateComponentWithBoost::enable_boost() {
     if (time_left > 0) {
       this->boost_time_left_->publish_state(time_left);
     } else {
-      this->cancel_boost();
+      this->cancel_boost_();
       this->write_state();
     }
   });
 
   this->boost_time_left_->publish_state(boost_time);
 
-  return;
+  return true;
 }
 
-void TionClimateComponentWithBoost::cancel_boost() {
+void TionClimateComponentWithBoost::cancel_boost_() {
   if (this->boost_time_left_) {
     App.scheduler.cancel_interval(this, ASH_BOOST);
   } else {
     App.scheduler.cancel_timeout(this, ASH_BOOST);
   }
-  this->set_fan_speed(this->saved_fan_speed_);
   this->boost_time_left_->publish_state(NAN);
-  this->preset = this->saved_preset_;
 }
 
 }  // namespace tion

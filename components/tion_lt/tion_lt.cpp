@@ -32,7 +32,7 @@ void TionLt::read(const tionlt_state_t &state) {
 
   if (*this->preset == climate::CLIMATE_PRESET_BOOST && state.fan_speed != this->max_fan_speed_) {
     ESP_LOGW(TAG, "Dropping boost preset: %u", state.fan_speed);
-    this->cancel_boost();
+    this->cancel_boost_();
   }
 
   if (state.flags.power_state) {
@@ -41,7 +41,7 @@ void TionLt::read(const tionlt_state_t &state) {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
   this->target_temperature = state.target_temperature;
-  this->set_fan_speed(state.fan_speed);
+  this->set_fan_speed_(state.fan_speed);
 
   this->publish_state();
 
@@ -107,7 +107,7 @@ void TionLt::read(const tionlt_state_t &state) {
 
 void TionLt::update_state_(tionlt_state_t &state) {
   if (this->custom_fan_mode.has_value()) {
-    state.fan_speed = this->get_fan_speed();
+    state.fan_speed = this->get_fan_speed_();
   }
 
   state.target_temperature = this->target_temperature;

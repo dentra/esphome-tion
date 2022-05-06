@@ -15,8 +15,6 @@
 namespace esphome {
 namespace tion {
 
-#define climate_CLIMATE_PRESET_DEFAULT climate::CLIMATE_PRESET_NONE
-
 class TionBleNode : public ble_client::BLEClientNode {
  public:
   void gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
@@ -51,6 +49,12 @@ template<class T> class Tion : public TionBase, public T {
   bool write_data(const uint8_t *data, uint16_t size) const override { return TionBase::write_data(data, size); }
 };
 
+struct tion_preset_t {
+  uint8_t fan_speed;
+  int8_t target_temperature;
+  climate::ClimateMode mode;
+};
+
 class TionClimate : public climate::Climate {
  public:
   climate::ClimateTraits traits() override;
@@ -58,13 +62,64 @@ class TionClimate : public climate::Climate {
 
   virtual bool write_state() = 0;
 
+  /**
+   * Update default preset.
+   * @param preset preset to update.
+   * @param mode mode to update. set to climate::CLIMATE_MODE_AUTO for skip update.
+   * @param fan_speed fan speed to update. set to 0 for skip update.
+   * @param target_temperature target temperature to update. set to 0 for skip update.
+   */
+  void update_preset(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed,
+                     int8_t target_temperature) {
+    if (preset > climate::CLIMATE_PRESET_NONE && preset <= climate::CLIMATE_PRESET_ACTIVITY) {
+      if (mode != climate::CLIMATE_MODE_AUTO) {
+        this->presets_[preset].mode = mode;
+      }
+      if (fan_speed != 0) {
+        this->presets_[preset].fan_speed = fan_speed;
+      }
+      if (target_temperature != 0) {
+        this->presets_[preset].target_temperature = target_temperature;
+      }
+      this->supported_presets_.insert(preset);
+    }
+  }
+
  protected:
   uint8_t max_fan_speed_ = 6;
-  void set_fan_speed(uint8_t fan_speed);
-  uint8_t get_fan_speed() const;
-  virtual void enable_boost() = 0;
-  virtual void cancel_boost() = 0;
-  climate::ClimatePreset saved_preset_{climate_CLIMATE_PRESET_DEFAULT};
+  void set_fan_speed_(uint8_t fan_speed);
+  uint8_t get_fan_speed_() const { return this->fan_mode_to_speed_(this->custom_fan_mode); }
+
+  static uint8_t fan_mode_to_speed_(const optional<std::string> &fan_mode) {
+    if (fan_mode.has_value()) {
+      return *fan_mode.value().c_str() - '0';
+    }
+    return 0;
+  }
+
+  static std::string fan_speed_to_mode_(uint8_t fan_speed) {
+    char fan_mode[2] = {static_cast<char>(fan_speed + '0'), 0};
+    return std::string(fan_mode);
+  }
+
+  bool enable_preset_(climate::ClimatePreset preset);
+  void cancel_preset_(climate::ClimatePreset preset);
+  virtual bool enable_boost_() = 0;
+  virtual void cancel_boost_() = 0;
+  climate::ClimatePreset saved_preset_{climate::CLIMATE_PRESET_NONE};
+
+  tion_preset_t presets_[climate::CLIMATE_PRESET_ACTIVITY + 1] = {
+      {},                                                                                  // NONE, saved data
+      {.fan_speed = 2, .target_temperature = 20, .mode = climate::CLIMATE_MODE_HEAT},      // HOME
+      {.fan_speed = 1, .target_temperature = 10, .mode = climate::CLIMATE_MODE_FAN_ONLY},  // AWAY
+      {.fan_speed = 6, .target_temperature = 10, .mode = climate::CLIMATE_MODE_FAN_ONLY},  // BOOST
+      {.fan_speed = 2, .target_temperature = 23, .mode = climate::CLIMATE_MODE_HEAT},      // COMFORT
+      {.fan_speed = 1, .target_temperature = 16, .mode = climate::CLIMATE_MODE_HEAT},      // ECO
+      {.fan_speed = 1, .target_temperature = 18, .mode = climate::CLIMATE_MODE_HEAT},      // SLEEP
+      {.fan_speed = 3, .target_temperature = 18, .mode = climate::CLIMATE_MODE_HEAT},      // ACTIVITY
+  };
+
+  std::set<climate::ClimatePreset> supported_presets_{};
 };
 
 class TionComponent : public PollingComponent {
@@ -78,6 +133,7 @@ class TionComponent : public PollingComponent {
   void set_airflow_counter(sensor::Sensor *airflow_counter) { this->airflow_counter_ = airflow_counter; }
   void set_filter_days_left(sensor::Sensor *filter_days_left) { this->filter_days_left_ = filter_days_left; }
   void set_filter_warnout(binary_sensor::BinarySensor *filter_warnout) { this->filter_warnout_ = filter_warnout; }
+
   void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
 
@@ -91,6 +147,7 @@ class TionComponent : public PollingComponent {
   sensor::Sensor *airflow_counter_{};
   sensor::Sensor *filter_days_left_{};
   binary_sensor::BinarySensor *filter_warnout_{};
+
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
 
@@ -103,14 +160,12 @@ class TionBoostTimeNumber : public number::Number {
   virtual void control(float value) { this->publish_state(value); }
 };
 
-class TionClimateComponentWithBoost : public TionComponent, public TionClimate {
- public:
-  void setup() override;
+class TionClimateComponent : public TionClimate, public TionComponent {};
 
+class TionClimateComponentWithBoost : public TionClimateComponent {
  protected:
-  uint8_t saved_fan_speed_{};
-  void enable_boost() override;
-  void cancel_boost() override;
+  bool enable_boost_() override;
+  void cancel_boost_() override;
 };
 
 }  // namespace tion

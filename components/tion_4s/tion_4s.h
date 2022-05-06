@@ -16,9 +16,8 @@ enum UpdateState : uint8_t {
   UPDATE_BOOST_CANCEL = 1 << 2,
 };
 
-class Tion4s : public TionComponent, public TionClimate, public Tion<TionApi4s> {
+class Tion4s : public TionClimateComponent, public Tion<TionApi4s> {
  public:
-  void setup() override;
   void update() override { this->parent_->set_enabled(true); }
 
   void on_ready() override;
@@ -37,14 +36,14 @@ class Tion4s : public TionComponent, public TionClimate, public Tion<TionApi4s> 
   void read(const tion4s_turbo_t &turbo) override;
   void read(const tion4s_time_t &time) override;
 
-  void enable_boost() override;
-  void cancel_boost() override;
-
  protected:
   switch_::Switch *recirculation_{};
 
   void update_state_(tion4s_state_t &state) const;
   uint32_t update_flag_{};
+
+  bool enable_boost_() override;
+  void cancel_boost_() override;
 };
 
 class Tion4sLedSwitch : public switch_::Switch {

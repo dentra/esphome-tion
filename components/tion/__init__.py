@@ -1,4 +1,5 @@
 import esphome.codegen as cg
+from esphome.cpp_generator import UnaryOpExpression
 import esphome.config_validation as cv
 from esphome.components import (
     ble_client,
@@ -15,6 +16,7 @@ from esphome.const import (
     CONF_ICON,
     CONF_ID,
     CONF_INVERTED,
+    CONF_PRESET_BOOST,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VERSION,
     DEVICE_CLASS_TEMPERATURE,
@@ -49,11 +51,42 @@ CONF_TEMP_OUT = "temp_out"
 CONF_FILTER_DAYS_LEFT = "filter_days_left"
 CONF_BOOST_TIME = "boost_time"
 CONF_BOOST_TIME_LEFT = "boost_time_left"
+CONF_PRESETS = "presets"
+CONF_PRESET_MODE = "mode"
+CONF_PRESET_FAN_SPEED = "fan_speed"
+CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
 
 UNIT_DAYS = "days"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
+
+
+PRESET_MODES = {
+    "off": climate.ClimateMode.CLIMATE_MODE_OFF,
+    "heat": climate.ClimateMode.CLIMATE_MODE_HEAT,
+    "fan_only": climate.ClimateMode.CLIMATE_MODE_FAN_ONLY,
+}
+
+PRESET_SCHEMA = cv.Schema(
+    {
+        cv.Optional(CONF_PRESET_MODE): cv.one_of(*PRESET_MODES, lower=True),
+        cv.Optional(CONF_PRESET_FAN_SPEED): cv.int_range(min=1, max=6),
+        cv.Optional(CONF_PRESET_TARGET_TEMPERATURE): cv.int_range(min=1, max=25),
+    }
+)
+
+PRESETS_SCHEMA = cv.Schema(
+    {
+        cv.Optional("home"): cv.Any(PRESET_SCHEMA, None),
+        cv.Optional("away"): cv.Any(PRESET_SCHEMA, None),
+        cv.Optional("boost"): cv.Any(PRESET_SCHEMA, None),
+        cv.Optional("comfort"): cv.Any(PRESET_SCHEMA, None),
+        cv.Optional("eco"): cv.Any(PRESET_SCHEMA, None),
+        cv.Optional("sleep"): cv.Any(PRESET_SCHEMA, None),
+        cv.Optional("activity"): cv.Any(PRESET_SCHEMA, None),
+    }
+)
 
 
 def tion_schema(tion_class, buzzer_class):
@@ -124,6 +157,7 @@ def tion_schema(tion_class, buzzer_class):
                     state_class=STATE_CLASS_NONE,
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
+                cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
             }
         )
         .extend(ble_client.BLE_CLIENT_SCHEMA)
@@ -195,6 +229,24 @@ async def setup_select(config, key, setter, parent, options):
     return slct
 
 
+async def setup_presets(config, key, setter) -> None:
+    """Setup presets"""
+    if key not in config:
+        return None
+    conf = config[key]
+    for _, (preset, options) in enumerate(conf.items()):
+        preset = climate.CLIMATE_PRESETS[preset.upper()]
+        options = options or {}
+        mode = (
+            PRESET_MODES[options[CONF_PRESET_MODE]]
+            if CONF_PRESET_MODE in options
+            else climate.ClimateMode.CLIMATE_MODE_AUTO
+        )
+        fan_speed = options.get(CONF_PRESET_FAN_SPEED, 0)
+        target_temperature = options.get(CONF_PRESET_TARGET_TEMPERATURE, 0)
+        cg.add(setter(preset, mode, fan_speed, target_temperature))
+
+
 async def setup_tion_core(config):
     """Setup core component properties"""
     var = cg.new_Pvariable(config[CONF_ID])
@@ -209,6 +261,7 @@ async def setup_tion_core(config):
     await setup_text_sensor(config, CONF_VERSION, var.set_version)
     await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 20, 1)
     await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
+    await setup_presets(config, CONF_PRESETS, var.update_preset)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

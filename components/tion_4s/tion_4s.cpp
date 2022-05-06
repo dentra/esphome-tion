@@ -10,8 +10,6 @@ namespace tion {
 
 static const char *const TAG = "tion_4s";
 
-void Tion4s::setup() { this->preset = climate_CLIMATE_PRESET_DEFAULT; }
-
 void Tion4s::on_ready() { this->request_dev_status(); }
 
 void Tion4s::read(const tion_dev_status_t &status) {
@@ -91,7 +89,7 @@ void Tion4s::read(const tion4s_state_t &state) {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
   this->target_temperature = state.target_temperature;
-  this->set_fan_speed(state.fan_speed);
+  this->set_fan_speed_(state.fan_speed);
   this->publish_state();
 
   if (this->buzzer_) {
@@ -174,16 +172,17 @@ void Tion4s::update_state_(tion4s_state_t &state) const {
   }
 
   if (this->custom_fan_mode.has_value()) {
-    state.fan_speed = this->get_fan_speed();
+    state.fan_speed = this->get_fan_speed_();
   }
 }
 
-void Tion4s::enable_boost() {
+bool Tion4s::enable_boost_() {
   // TODO update turbo state
   this->update_flag_ |= UPDATE_BOOST_ENABLE;
+  return true;
 }
 
-void Tion4s::cancel_boost() {
+void Tion4s::cancel_boost_() {
   // TODO update turbo state
   this->update_flag_ |= UPDATE_BOOST_CANCEL;
 }
