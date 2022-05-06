@@ -29,9 +29,12 @@ void Tion4s::read(const tion_dev_status_t &status) {
   this->request_state();
 };
 
-void Tion4s::read(const tion4s_time_t &time) {
-  auto tm = time::ESPTime::from_epoch_utc(time.unix_time);
-  ESP_LOGD(TAG, "Device time %s", tm.strftime("%F %T").c_str());
+void Tion4s::read(const tion4s_time_t &tion_time) {
+  time_t time = tion_time.get_time();
+  auto c_tm = ::gmtime(&time);
+  char buf[20] = {};
+  strftime(buf, sizeof(buf), "%F %T", c_tm);
+  ESP_LOGD(TAG, "Device time %s", buf);
 }
 
 void Tion4s::read(const tion4s_turbo_t &turbo) {

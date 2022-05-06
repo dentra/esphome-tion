@@ -1,7 +1,5 @@
 #pragma once
 
-#include "esphome/components/time/real_time_clock.h"
-
 #include "../tion-api/tion-api-4s.h"
 #include "../tion/tion.h"
 

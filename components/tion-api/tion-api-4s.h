@@ -79,6 +79,7 @@ struct tion4s_turbo_t {
 
 struct tion4s_time_t {
   int64_t unix_time;
+  time_t get_time() const { return unix_time / 1000000; }
 };
 
 #pragma pack(pop)
