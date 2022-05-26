@@ -56,7 +56,7 @@ struct tion4s_state_t {
   int8_t target_temperature;
   // скорость вентилятора 0-5
   uint8_t fan_speed;
-  int8_t indoor_temperature;
+  int8_t current_temperature;
   int8_t outdoor_temperature;
   int8_t pcb_ctl_temperature;
   int8_t pcb_pwr_temperature;

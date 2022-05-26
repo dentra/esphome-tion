@@ -19,7 +19,7 @@ struct tion_state_counters_t {
   // Calculated airflow_counter in m3.
   float airflow_counter() const { return airflow_counter_ * (15.0f / 3600.0f); }
   // Calculated filter days left
-  uint32_t fileter_days() const { return filter_time / 86400; }
+  uint32_t filter_days() const { return filter_time / 86400; }
 };
 
 struct tion_dev_status_t {

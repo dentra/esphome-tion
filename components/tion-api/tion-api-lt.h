@@ -37,7 +37,7 @@ struct tionlt_state_t {
   uint8_t gate_position;  // gate_state
   int8_t target_temperature;
   uint8_t fan_speed;
-  int8_t indoor_temperature;
+  int8_t current_temperature;
   int8_t outdoor_temperature;
   int8_t pcb_temperature;
   tion_state_counters_t counters;
