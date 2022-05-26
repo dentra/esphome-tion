@@ -10,6 +10,7 @@ struct tion3s_state_t {
   enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
   uint8_t fan_speed : 4;
   uint8_t /*GatePosition*/ gate_position : 4;
+  // настроенная температура подогрева
   int8_t target_temperature;
   struct Flags {
     bool heater_state : 1;
@@ -23,15 +24,21 @@ struct tion3s_state_t {
     bool preset_state : 1;
     uint8_t reserved : 7;
   } flags;
-  int8_t outdoor_temperature1;
-  int8_t outdoor_temperature2;
-  int8_t indoor_temperature;
+  int8_t unknown_temperature;
+  // текущая температура воздуха после нагревателя (т.е. текущая температура внутри помещения);
+  int8_t current_temperature;
+  // температура воздуха на входе в бризер (т.е. текущая температура на улице)
+  int8_t outdoor_temperature;
+  // остаточный ресурс фильтров в днях (то, что показывается в приложении как "время жизни фильтров")
   uint16_t filter_time;
   uint8_t hours;
   uint8_t minutes;
   uint8_t last_error;
-  uint8_t productivity;  // m3 per hour;
+  // текущая производительность бризера в кубометрах в час
+  uint8_t productivity;
+  // обратная предудущей метрика (т.е. сколько дней прошло с момента установки новых фильтров)
   uint16_t filter_days;
+  // текущая версия прошивки
   uint16_t firmware_version;
 };
 #pragma pack(pop)
