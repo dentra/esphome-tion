@@ -1,5 +1,4 @@
 #include "esphome/core/log.h"
-#include "esphome/core/application.h"
 #include "tion_lt.h"
 
 namespace esphome {
@@ -17,6 +16,7 @@ void TionLt::read(const tion_dev_status_t &status) {
   }
   this->read_dev_status_(status);
   this->request_state();
+  this->schedule_disconnect(this->state_timeout_);
 };
 
 void TionLt::read(const tionlt_state_t &state) {
@@ -25,6 +25,8 @@ void TionLt::read(const tionlt_state_t &state) {
     this->flush_state_(state);
     return;
   }
+
+  this->cancel_disconnect();
 
   this->max_fan_speed_ = state.max_fan_speed;
 
@@ -36,7 +38,7 @@ void TionLt::read(const tionlt_state_t &state) {
                  : state.heater_var > 0                  ? climate::CLIMATE_ACTION_HEATING
                                                          : climate::CLIMATE_ACTION_FAN;
 
-  this->current_temperature = state.indoor_temperature;
+  this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
 
@@ -61,12 +63,12 @@ void TionLt::read(const tionlt_state_t &state) {
     this->filter_warnout_->publish_state(state.flags.filter_wornout);
   }
   if (this->filter_days_left_) {
-    this->filter_days_left_->publish_state(state.counters.fileter_days());
+    this->filter_days_left_->publish_state(state.counters.filter_days());
   }
 
   ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state         : %s", ONOFF(state.flags.led_state));
-  ESP_LOGV(TAG, "indoor_temp       : %d", state.indoor_temperature);
+  ESP_LOGV(TAG, "current_temp      : %d", state.current_temperature);
   ESP_LOGV(TAG, "outdoor_temp      : %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "heater_power      : %f", state.heater_power());
   ESP_LOGV(TAG, "airflow_counter   : %f", state.counters.airflow_counter());
@@ -96,7 +98,7 @@ void TionLt::read(const tionlt_state_t &state) {
   ESP_LOGV(TAG, "test_type         : %u", state.test_type);
 
   // leave 3 sec connection left for end all of jobs
-  App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
+  this->schedule_disconnect();
 }
 
 void TionLt::flush_state_(const tionlt_state_t &state_) const {

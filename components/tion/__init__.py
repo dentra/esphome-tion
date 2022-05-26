@@ -53,6 +53,7 @@ CONF_PRESETS = "presets"
 CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
+CONF_STATE_TIMEOUT = "state_timeout"
 
 UNIT_DAYS = "days"
 
@@ -149,6 +150,9 @@ def tion_schema(tion_class, buzzer_class):
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
                 cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
+                cv.Optional(
+                    CONF_STATE_TIMEOUT, default="15s"
+                ): cv.positive_time_period_milliseconds,
             }
         )
         .extend(ble_client.BLE_CLIENT_SCHEMA)
@@ -254,6 +258,8 @@ async def setup_tion_core(config):
     await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
     await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
     await setup_presets(config, CONF_PRESETS, var.update_preset)
+
+    cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

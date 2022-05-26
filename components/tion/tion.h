@@ -143,6 +143,8 @@ class TionComponent : public PollingComponent {
   void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
 
+  void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; }
+
  protected:
   text_sensor::TextSensor *version_{};
   switch_::Switch *buzzer_{};
@@ -156,6 +158,8 @@ class TionComponent : public PollingComponent {
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
 
+  uint32_t state_timeout_{};
+
   void read_dev_status_(const dentra::tion::tion_dev_status_t &status);
 };
 
@@ -163,6 +167,20 @@ class TionBoostTimeNumber : public number::Number {
  public:
  protected:
   virtual void control(float value) { this->publish_state(value); }
+};
+
+class TionDisconnectMixinBase {
+ protected:
+  static void schedule_disconnect_(Component *c, ble_client::BLEClientNode *n, uint32_t timeout);
+  static void cancel_disconnect_(Component *c);
+};
+
+template<typename T> class TionDisconnectMixin : private TionDisconnectMixinBase {
+ public:
+  void schedule_disconnect(uint32_t timeout = 3000) {
+    schedule_disconnect_(static_cast<T *>(this), static_cast<T *>(this), timeout);
+  }
+  void cancel_disconnect() { cancel_disconnect_(static_cast<T *>(this)); }
 };
 
 class TionClimateComponent : public TionClimate, public TionComponent {};

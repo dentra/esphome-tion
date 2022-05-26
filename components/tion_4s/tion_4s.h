@@ -14,7 +14,7 @@ enum UpdateState : uint8_t {
   UPDATE_BOOST_CANCEL = 1 << 2,
 };
 
-class Tion4s : public TionClimateComponent, public Tion<TionApi4s> {
+class Tion4s : public TionClimateComponent, public Tion<TionApi4s>,public TionDisconnectMixin<Tion4s> {
  public:
   climate::ClimateTraits traits() override {
     auto traits = TionClimate::traits();

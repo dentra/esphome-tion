@@ -28,13 +28,13 @@ class Api3sTest : public TionsApi3s {
   void log_state(const tion3s_state_t &st) {
     LOGD("fan_speed=%u, gate_position=%u, target_temperature=%d, heater_state=%s, power_state=%s, timer_state=%s, "
          "sound_state=%s, auto_state=%s, ma_connect=%s, save=%s, ma_pairing=%s, preset_state=%s, "
-         "reserved=0x%02X, outdoor_temperature1=%d, outdoor_temperature2=%d, indoor_temperature=%d, filter_time=%u, "
+         "reserved=0x%02X, unknown_temperature=%d, outdoor_temperature=%d, current_temperature=%d, filter_time=%u, "
          "hours=%u, minutes=%u, last_error=%u, productivity=%u, filter_days=%u, firmware_version=%04X",
          st.fan_speed, st.gate_position, st.target_temperature, ONOFF(st.flags.heater_state),
          ONOFF(st.flags.power_state), ONOFF(st.flags.timer_state), ONOFF(st.flags.sound_state),
          ONOFF(st.flags.auto_state), ONOFF(st.flags.ma_connect), ONOFF(st.flags.save), ONOFF(st.flags.ma_pairing),
-         ONOFF(st.flags.preset_state), st.flags.reserved, st.outdoor_temperature1, st.outdoor_temperature2,
-         st.indoor_temperature, st.filter_time, st.hours, st.minutes, st.last_error, st.productivity, st.filter_days,
+         ONOFF(st.flags.preset_state), st.flags.reserved, st.unknown_temperature, st.outdoor_temperature,
+         st.current_temperature, st.filter_time, st.hours, st.minutes, st.last_error, st.productivity, st.filter_days,
          st.firmware_version);
   }
 };

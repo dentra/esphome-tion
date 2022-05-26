@@ -1,7 +1,6 @@
 #include <inttypes.h>
 
 #include "esphome/core/log.h"
-#include "esphome/core/application.h"
 
 #include "tion_4s.h"
 
@@ -27,6 +26,7 @@ void Tion4s::read(const tion_dev_status_t &status) {
   // this->request_timers();
 
   this->request_state();
+  this->schedule_disconnect(this->state_timeout_);
 };
 
 void Tion4s::read(const tion4s_time_t &tion_time) {
@@ -93,6 +93,8 @@ void Tion4s::read(const tion4s_state_t &state) {
     return;
   }
 
+  this->cancel_disconnect();
+
   this->max_fan_speed_ = state.max_fan_speed;
 
   this->mode = state.flags.power_state ? state.flags.heater_mode == tion4s_state_t::HEATER_MODE_HEATING
@@ -103,7 +105,7 @@ void Tion4s::read(const tion4s_state_t &state) {
                  : state.heater_var > 0                  ? climate::CLIMATE_ACTION_HEATING
                                                          : climate::CLIMATE_ACTION_FAN;
 
-  this->current_temperature = state.indoor_temperature;
+  this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
@@ -127,7 +129,7 @@ void Tion4s::read(const tion4s_state_t &state) {
     this->filter_warnout_->publish_state(state.flags.filter_wornout);
   }
   if (this->filter_days_left_) {
-    this->filter_days_left_->publish_state(state.counters.fileter_days());
+    this->filter_days_left_->publish_state(state.counters.filter_days());
   }
   if (this->recirculation_) {
     this->recirculation_->publish_state(state.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION);
@@ -135,7 +137,7 @@ void Tion4s::read(const tion4s_state_t &state) {
 
   ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
-  ESP_LOGV(TAG, "indoor_temp    : %d", state.indoor_temperature);
+  ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);
   ESP_LOGV(TAG, "outdoor_temp   : %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
   ESP_LOGV(TAG, "airflow_counter: %f", state.counters.airflow_counter());
@@ -161,7 +163,7 @@ void Tion4s::read(const tion4s_state_t &state) {
   ESP_LOGV(TAG, "errors         : %u", state.errors);
 
   // leave 3 sec connection left to end all of jobs
-  App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
+  this->schedule_disconnect();
 }
 
 void Tion4s::flush_state_(const tion4s_state_t &state_) const {

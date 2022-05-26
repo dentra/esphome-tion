@@ -11,7 +11,10 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class Tion3s : public TionClimateComponentWithBoost, public TionBleNode, public TionsApi3s {
+class Tion3s : public TionClimateComponentWithBoost,
+               public TionBleNode,
+               public TionsApi3s,
+               public TionDisconnectMixin<Tion3s> {
  public:
   void setup() override;
   void update() override {

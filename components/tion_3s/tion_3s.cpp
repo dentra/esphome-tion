@@ -1,5 +1,4 @@
 #include "esphome/core/log.h"
-#include "esphome/core/application.h"
 #include "esphome/components/esp32_ble_tracker/esp32_ble_tracker.h"
 
 #include "tion_3s.h"
@@ -57,6 +56,7 @@ void Tion3s::on_ready() {
   if (this->pair_state_ > 0) {
     bool res = this->request_state();
     ESP_LOGV(TAG, "Request state result: %s", YESNO(res));
+    this->schedule_disconnect(this->state_timeout_);
     return;
   }
 
@@ -66,7 +66,7 @@ void Tion3s::on_ready() {
     this->rtc_.save(&this->pair_state_);
   }
   ESP_LOGD(TAG, "Pairing complete: %s", YESNO(res));
-  App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
+  this->schedule_disconnect();
 }
 
 void Tion3s::read(const tion3s_state_t &state) {
@@ -77,12 +77,14 @@ void Tion3s::read(const tion3s_state_t &state) {
     return;
   }
 
+  this->cancel_disconnect();
+
   if (state.flags.power_state) {
     this->mode = state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY;
   } else {
     this->mode = climate::CLIMATE_MODE_OFF;
   }
-  this->current_temperature = state.indoor_temperature;
+  this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
 
@@ -95,10 +97,16 @@ void Tion3s::read(const tion3s_state_t &state) {
     this->buzzer_->publish_state(state.flags.sound_state);
   }
   if (this->outdoor_temperature_) {
-    this->outdoor_temperature_->publish_state(state.outdoor_temperature2);
+    this->outdoor_temperature_->publish_state(state.outdoor_temperature);
   }
   if (this->filter_days_left_) {
     this->filter_days_left_->publish_state(state.filter_days);
+  }
+  if (this->air_intake_) {
+    auto air_intake = this->air_intake_->at(state.gate_position);
+    if (air_intake.has_value()) {
+      this->air_intake_->publish_state(*air_intake);
+    }
   }
 
   ESP_LOGV(TAG, "fan_speed    : %u", state.fan_speed);
@@ -113,9 +121,9 @@ void Tion3s::read(const tion3s_state_t &state) {
   ESP_LOGV(TAG, "save         : %s", ONOFF(state.flags.save));
   ESP_LOGV(TAG, "ma_pairing   : %s", ONOFF(state.flags.ma_pairing));
   ESP_LOGV(TAG, "reserved     : 0x%02X", state.flags.reserved);
-  ESP_LOGV(TAG, "outdoor_temp1: %d", state.outdoor_temperature1);
-  ESP_LOGV(TAG, "outdoor_temp2: %d", state.outdoor_temperature2);
-  ESP_LOGV(TAG, "indoor_temp  : %d", state.indoor_temperature);
+  ESP_LOGV(TAG, "unknown_temp : %d", state.unknown_temperature);
+  ESP_LOGV(TAG, "outdoor_temp : %d", state.outdoor_temperature);
+  ESP_LOGV(TAG, "current_temp : %d", state.current_temperature);
   ESP_LOGV(TAG, "filter_time  : %u", state.filter_time);
   ESP_LOGV(TAG, "hours        : %u", state.hours);
   ESP_LOGV(TAG, "minutes      : %u", state.minutes);
@@ -125,19 +133,7 @@ void Tion3s::read(const tion3s_state_t &state) {
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 
   // leave 3 sec connection left for end all of jobs
-  App.scheduler.set_timeout(this, TAG, 3000, [this]() { this->parent_->set_enabled(false); });
-}
-
-static int get_state_index(select::Select *select, size_t first) {
-  if (select->state.empty()) {
-    return -1;
-  }
-  auto options = select->traits.get_options();
-  auto pos = std::find(options.begin(), options.end(), select->state);
-  if (pos == options.end()) {
-    return -1;
-  }
-  return std::distance(options.begin(), pos) + first;
+  this->schedule_disconnect();
 }
 
 void Tion3s::flush_state_(const tion3s_state_t &state_) const {
@@ -154,11 +150,12 @@ void Tion3s::flush_state_(const tion3s_state_t &state_) const {
     state.flags.sound_state = this->buzzer_->state;
   }
 
-  auto gate_position = get_state_index(this->air_intake_, tion3s_state_t::GATE_POSITION_INDOOR);
-  if (gate_position != -1) {
-    state.gate_position = gate_position;
+  if (this->air_intake_) {
+    auto air_intake = this->air_intake_->active_index();
+    if (air_intake.has_value()) {
+      state.gate_position = *air_intake;
+    }
   }
-
   TionsApi3s::write_state(state);
 }
 

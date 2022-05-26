@@ -8,7 +8,7 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt> {
+class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt>, public TionDisconnectMixin<TionLt> {
  public:
   climate::ClimateTraits traits() override {
     auto traits = TionClimate::traits();
