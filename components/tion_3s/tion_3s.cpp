@@ -54,6 +54,9 @@ void Tion3s::on_ready() {
   }
 
   if (this->pair_state_ > 0) {
+    if (this->exterimental_always_pair_) {
+      TionsApi3s::pair();
+    }
     bool res = this->request_state();
     ESP_LOGV(TAG, "Request state result: %s", YESNO(res));
     this->schedule_disconnect(this->state_timeout_);

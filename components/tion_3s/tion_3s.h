@@ -24,6 +24,9 @@ class Tion3s : public TionClimateComponentWithBoost,
   }
 
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
+  void set_exterimental_always_pair(bool exterimental_always_pair) {
+    this->exterimental_always_pair_ = exterimental_always_pair;
+  }
 
   const esp_bt_uuid_t &get_ble_service() const override;
   const esp_bt_uuid_t &get_ble_char_tx() const override;
@@ -58,6 +61,7 @@ class Tion3s : public TionClimateComponentWithBoost,
   void flush_state_(const tion3s_state_t &state) const;
   esp_ble_sec_act_t ble_sec_enc_{esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT};
   uint8_t saved_fan_speed_{};
+  bool exterimental_always_pair_{};
 };
 
 class Tion3sBuzzerSwitch : public switch_::Switch {

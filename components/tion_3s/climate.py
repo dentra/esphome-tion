@@ -1,4 +1,5 @@
 from esphome.cpp_types import PollingComponent
+import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import climate, switch, select
 from esphome.const import (
@@ -12,6 +13,7 @@ CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "select"]
 
 CONF_AIR_INTAKE = "air_intake"
+CONF_EXTERIMENTAL_ALWAYS_PAIR = "exterimental_always_pair"
 
 Tion3s = tion.tion_ns.class_("Tion3s", PollingComponent, climate.Climate)
 Tion3sBuzzerSwitch = tion.tion_ns.class_("Tion3sBuzzerSwitch", switch.Switch)
@@ -30,6 +32,7 @@ CONFIG_SCHEMA = tion.tion_schema(Tion3s, Tion3sBuzzerSwitch).extend(
                 ): cv.entity_category,
             }
         ),
+        cv.Optional(CONF_EXTERIMENTAL_ALWAYS_PAIR, default=False): cv.boolean,
     }
 )
 
@@ -40,3 +43,4 @@ async def to_code(config):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
+    cg.add(var.set_exterimental_always_pair(config[CONF_EXTERIMENTAL_ALWAYS_PAIR]))
