@@ -16,19 +16,14 @@ class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt>, pub
     return traits;
   }
 
-  void update() override { this->parent_->set_enabled(true); }
-
+  void update() override;
   void on_ready() override;
-
-  bool write_state() override {
-    this->publish_state();
-    this->dirty_ = true;
-    this->parent_->set_enabled(true);
-    return true;
-  };
+  bool write_state() override;
 
   void read(const tion_dev_status_t &status) override;
   void read(const tionlt_state_t &state) override;
+
+  void run_polling();
 
  protected:
   bool dirty_{};

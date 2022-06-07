@@ -54,6 +54,7 @@ CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
 CONF_STATE_TIMEOUT = "state_timeout"
+CONF_PERSISTENT_CONNECTION = "persistent_connection"
 
 UNIT_DAYS = "days"
 
@@ -153,6 +154,7 @@ def tion_schema(tion_class, buzzer_class):
                 cv.Optional(
                     CONF_STATE_TIMEOUT, default="15s"
                 ): cv.positive_time_period_milliseconds,
+                cv.Optional(CONF_PERSISTENT_CONNECTION, default=False): cv.boolean,
             }
         )
         .extend(ble_client.BLE_CLIENT_SCHEMA)
@@ -260,6 +262,7 @@ async def setup_tion_core(config):
     await setup_presets(config, CONF_PRESETS, var.update_preset)
 
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
+    cg.add(var.set_persistent_connection(config[CONF_PERSISTENT_CONNECTION]))
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

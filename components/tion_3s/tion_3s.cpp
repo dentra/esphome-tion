@@ -53,30 +53,34 @@ void Tion3s::on_ready() {
     return;
   }
 
-  if (this->pair_state_ > 0) {
-    if (this->exterimental_always_pair_) {
-      TionsApi3s::pair();
+  if (this->pair_state_ < 0) {
+    bool res = TionsApi3s::pair();
+    if (res) {
+      this->pair_state_ = 1;
+      this->rtc_.save(&this->pair_state_);
     }
-    bool res = this->request_state();
-    ESP_LOGV(TAG, "Request state result: %s", YESNO(res));
-    this->schedule_disconnect(this->state_timeout_);
+    ESP_LOGD(TAG, "Pairing complete: %s", YESNO(res));
+    this->schedule_disconnect();
     return;
   }
 
-  bool res = TionsApi3s::pair();
-  if (res) {
-    this->pair_state_ = 1;
-    this->rtc_.save(&this->pair_state_);
+  if (this->exterimental_always_pair_) {
+    TionsApi3s::pair();
   }
-  ESP_LOGD(TAG, "Pairing complete: %s", YESNO(res));
-  this->schedule_disconnect();
+
+  this->run_polling();
+}
+
+void Tion3s::run_polling() {
+  bool res = this->request_state();
+  ESP_LOGV(TAG, "Request state result: %s", YESNO(res));
+  this->schedule_disconnect(this->state_timeout_);
 }
 
 void Tion3s::read(const tion3s_state_t &state) {
   if (this->dirty_) {
     this->dirty_ = false;
     this->flush_state_(state);
-
     return;
   }
 
@@ -135,8 +139,9 @@ void Tion3s::read(const tion3s_state_t &state) {
   ESP_LOGV(TAG, "filter_days  : %u", state.filter_days);
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 
-  // leave 3 sec connection left for end all of jobs
-  this->schedule_disconnect();
+  if (!this->is_persistent_connection()) {
+    this->schedule_disconnect();
+  }
 }
 
 void Tion3s::flush_state_(const tion3s_state_t &state_) const {
@@ -165,8 +170,20 @@ void Tion3s::flush_state_(const tion3s_state_t &state_) const {
 bool Tion3s::write_state() {
   this->publish_state();
   this->dirty_ = true;
-  this->parent_->set_enabled(true);
+  if (this->is_persistent_connection() && this->is_connected()) {
+    this->request_state();
+  } else {
+    this->parent_->set_enabled(true);
+  }
   return true;
+}
+
+void Tion3s::update() {
+  if (this->is_persistent_connection() && this->is_connected()) {
+    this->run_polling();
+  } else if (this->pair_state_ > 0) {
+    this->parent_->set_enabled(true);
+  }
 }
 
 }  // namespace tion

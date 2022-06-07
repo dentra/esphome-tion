@@ -18,16 +18,18 @@ void Tion4s::read(const tion_dev_status_t &status) {
     return;
   }
   this->read_dev_status_(status);
-
   // this->request_errors();
   // this->request_test();
   this->request_time();
-  this->request_turbo();
   // this->request_timers();
+  this->run_polling();
+}
 
+void Tion4s::run_polling() {
+  this->request_turbo();
   this->request_state();
   this->schedule_disconnect(this->state_timeout_);
-};
+}
 
 void Tion4s::read(const tion4s_time_t &tion_time) {
   time_t time = tion_time.get_time();
@@ -38,8 +40,8 @@ void Tion4s::read(const tion4s_time_t &tion_time) {
 }
 
 void Tion4s::read(const tion4s_turbo_t &turbo) {
-  if ((this->update_flag_ & UPDATE_BOOST_ENABLE) != 0) {
-    this->update_flag_ &= ~UPDATE_BOOST_ENABLE;
+  if (this->is_dirty_(DIRTY_BOOST_ENABLE)) {
+    this->drop_dirty_(DIRTY_BOOST_ENABLE);
     uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
     if (turbo_time > 0) {
       this->set_turbo_time(turbo_time);
@@ -53,8 +55,8 @@ void Tion4s::read(const tion4s_turbo_t &turbo) {
     return;
   }
 
-  if ((this->update_flag_ & UPDATE_BOOST_CANCEL) != 0) {
-    this->update_flag_ &= ~UPDATE_BOOST_CANCEL;
+  if (this->is_dirty_(DIRTY_BOOST_CANCEL)) {
+    this->drop_dirty_(DIRTY_BOOST_CANCEL);
     if (turbo.turbo_time > 0) {
       this->set_turbo_time(0);
     }
@@ -87,8 +89,8 @@ void Tion4s::read(const tion4s_turbo_t &turbo) {
 }
 
 void Tion4s::read(const tion4s_state_t &state) {
-  if ((this->update_flag_ & UPDATE_STATE) != 0) {
-    this->update_flag_ &= ~UPDATE_STATE;
+  if (this->is_dirty_(DIRTY_STATE)) {
+    this->drop_dirty_(DIRTY_STATE);
     this->flush_state_(state);
     return;
   }
@@ -162,8 +164,9 @@ void Tion4s::read(const tion4s_state_t &state) {
   ESP_LOGV(TAG, "fan_time       : %u", state.counters.fan_time);
   ESP_LOGV(TAG, "errors         : %u", state.errors);
 
-  // leave 3 sec connection left to end all of jobs
-  this->schedule_disconnect();
+  if (!this->is_persistent_connection()) {
+    this->schedule_disconnect();
+  }
 }
 
 void Tion4s::flush_state_(const tion4s_state_t &state_) const {
@@ -196,13 +199,32 @@ void Tion4s::flush_state_(const tion4s_state_t &state_) const {
 
 bool Tion4s::enable_boost_() {
   // TODO update turbo state
-  this->update_flag_ |= UPDATE_BOOST_ENABLE;
+  this->set_dirty_(DIRTY_BOOST_ENABLE);
   return true;
 }
 
 void Tion4s::cancel_boost_() {
   // TODO update turbo state
-  this->update_flag_ |= UPDATE_BOOST_CANCEL;
+  this->set_dirty_(DIRTY_BOOST_CANCEL);
+}
+
+bool Tion4s::write_state() {
+  this->publish_state();
+  this->set_dirty_(DIRTY_STATE);
+  if (this->is_persistent_connection() && this->is_connected()) {
+    this->request_state();
+  } else {
+    this->parent_->set_enabled(true);
+  }
+  return true;
+}
+
+void Tion4s::update() {
+  if (this->is_persistent_connection() && this->is_connected()) {
+    this->run_polling();
+  } else {
+    this->parent_->set_enabled(true);
+  }
 }
 
 }  // namespace tion

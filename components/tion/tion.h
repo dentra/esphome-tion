@@ -32,6 +32,8 @@ class TionBleNode : public ble_client::BLEClientNode {
   virtual esp_ble_sec_act_t get_ble_encryption() const { return esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM; }
   virtual bool ble_reg_for_notify() const { return true; }
 
+  bool is_connected() const { return this->node_state == esp32_ble_tracker::ClientState::ESTABLISHED; }
+
  protected:
   uint16_t char_rx_;
   uint16_t char_tx_;
@@ -144,6 +146,9 @@ class TionComponent : public PollingComponent {
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
 
   void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; }
+  void set_persistent_connection(bool persistent_connection) { this->persistent_connection_ = persistent_connection; }
+
+  bool is_persistent_connection() const { return this->persistent_connection_; }
 
  protected:
   text_sensor::TextSensor *version_{};
@@ -159,6 +164,7 @@ class TionComponent : public PollingComponent {
   sensor::Sensor *boost_time_left_{};
 
   uint32_t state_timeout_{};
+  bool persistent_connection_{};
 
   void read_dev_status_(const dentra::tion::tion_dev_status_t &status);
 };
@@ -171,8 +177,8 @@ class TionBoostTimeNumber : public number::Number {
 
 class TionDisconnectMixinBase {
  protected:
-  static void schedule_disconnect_(Component *c, ble_client::BLEClientNode *n, uint32_t timeout);
-  static void cancel_disconnect_(Component *c);
+  static void schedule_disconnect_(TionComponent *c, ble_client::BLEClientNode *n, uint32_t timeout);
+  static void cancel_disconnect_(TionComponent *c);
 };
 
 template<typename T> class TionDisconnectMixin : private TionDisconnectMixinBase {

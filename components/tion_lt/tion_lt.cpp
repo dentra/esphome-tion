@@ -15,9 +15,13 @@ void TionLt::read(const tion_dev_status_t &status) {
     return;
   }
   this->read_dev_status_(status);
+  this->run_polling();
+}
+
+void TionLt::run_polling() {
   this->request_state();
   this->schedule_disconnect(this->state_timeout_);
-};
+}
 
 void TionLt::read(const tionlt_state_t &state) {
   if (this->dirty_) {
@@ -97,8 +101,9 @@ void TionLt::read(const tionlt_state_t &state) {
   ESP_LOGV(TAG, "btn_prs.fan_speed2: %d", state.button_presets.fan_speed[2]);
   ESP_LOGV(TAG, "test_type         : %u", state.test_type);
 
-  // leave 3 sec connection left for end all of jobs
-  this->schedule_disconnect();
+  if (!this->is_persistent_connection()) {
+    this->schedule_disconnect();
+  }
 }
 
 void TionLt::flush_state_(const tionlt_state_t &state_) const {
@@ -121,6 +126,25 @@ void TionLt::flush_state_(const tionlt_state_t &state_) const {
   state.flags.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
 
   TionApiLt::write_state(state);
+}
+
+bool TionLt::write_state() {
+  this->publish_state();
+  this->dirty_ = true;
+  if (this->is_persistent_connection() && this->is_connected()) {
+    this->request_state();
+  } else {
+    this->parent_->set_enabled(true);
+  }
+  return true;
+}
+
+void TionLt::update() {
+  if (this->is_persistent_connection() && this->is_connected()) {
+    this->run_polling();
+  } else {
+    this->parent_->set_enabled(true);
+  }
 }
 
 }  // namespace tion

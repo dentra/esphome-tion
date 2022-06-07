@@ -17,11 +17,7 @@ class Tion3s : public TionClimateComponentWithBoost,
                public TionDisconnectMixin<Tion3s> {
  public:
   void setup() override;
-  void update() override {
-    if (this->pair_state_ > 0) {
-      this->parent_->set_enabled(true);
-    }
-  }
+  void update() override;
 
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
   void set_exterimental_always_pair(bool exterimental_always_pair) {
@@ -52,6 +48,8 @@ class Tion3s : public TionClimateComponentWithBoost,
     this->pair_state_ = 0;
     this->parent_->set_enabled(false);
   }
+
+  void run_polling();
 
  protected:
   select::Select *air_intake_{};

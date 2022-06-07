@@ -270,13 +270,13 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
   ESP_LOGV(TAG, "Firmware version: %04X", status.firmware_version);
 }
 
-void TionDisconnectMixinBase::schedule_disconnect_(Component *c, ble_client::BLEClientNode *n, uint32_t timeout) {
+void TionDisconnectMixinBase::schedule_disconnect_(TionComponent *c, ble_client::BLEClientNode *n, uint32_t timeout) {
   if (timeout) {
     App.scheduler.set_timeout(c, TAG, timeout, [n]() { n->parent()->set_enabled(false); });
   }
 }
 
-void TionDisconnectMixinBase::cancel_disconnect_(Component *c) { App.scheduler.cancel_timeout(c, TAG); }
+void TionDisconnectMixinBase::cancel_disconnect_(TionComponent *c) { App.scheduler.cancel_timeout(c, TAG); }
 
 bool TionClimateComponentWithBoost::enable_boost_() {
   uint32_t boost_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;

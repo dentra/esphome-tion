@@ -1,6 +1,6 @@
 import esphome.config_validation as cv
 from esphome.cpp_types import PollingComponent
-from esphome.components import climate, switch, sensor
+from esphome.components import climate, switch
 
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
