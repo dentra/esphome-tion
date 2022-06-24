@@ -272,7 +272,10 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
 
 void TionDisconnectMixinBase::schedule_disconnect_(TionComponent *c, ble_client::BLEClientNode *n, uint32_t timeout) {
   if (timeout) {
-    App.scheduler.set_timeout(c, TAG, timeout, [n]() { n->parent()->set_enabled(false); });
+    App.scheduler.set_timeout(c, TAG, timeout, [n]() {
+      ESP_LOGV(TAG, "Disconnecting");
+      n->parent()->set_enabled(false);
+    });
   }
 }
 
