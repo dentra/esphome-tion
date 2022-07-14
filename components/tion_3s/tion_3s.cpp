@@ -161,7 +161,10 @@ void Tion3s::flush_state_(const tion3s_state_t &state_) const {
   if (this->air_intake_) {
     auto air_intake = this->air_intake_->active_index();
     if (air_intake.has_value()) {
-      state.gate_position = *air_intake;
+      if (*air_intake != state.gate_position) {
+        ESP_LOGD(TAG, "New gate position %u", *air_intake);
+        state.gate_position = *air_intake;
+      }
     }
   }
   TionsApi3s::write_state(state);

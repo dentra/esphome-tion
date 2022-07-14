@@ -213,8 +213,10 @@ void TionClimate::control(const climate::ClimateCall &call) {
 
 void TionClimate::set_fan_speed_(uint8_t fan_speed) {
   if (fan_speed > 0 && fan_speed <= this->max_fan_speed_) {
-    ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
-    this->custom_fan_mode = this->fan_speed_to_mode_(fan_speed);
+    if (this->get_fan_speed_() != fan_speed) {
+      ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
+      this->custom_fan_mode = this->fan_speed_to_mode_(fan_speed);
+    }
   } else {
     ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, this->max_fan_speed_);
   }

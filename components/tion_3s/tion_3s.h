@@ -78,7 +78,7 @@ class Tion3sAirIntakeSelect : public select::Select {
  public:
   explicit Tion3sAirIntakeSelect(Tion3s *parent) : parent_(parent) {}
   void control(const std::string &value) override {
-    this->publish_state(state);
+    this->publish_state(value);
     this->parent_->write_state();
   }
 
