@@ -171,27 +171,57 @@ void Tion4s::read(const tion4s_state_t &state) {
 
 void Tion4s::flush_state_(const tion4s_state_t &state_) const {
   tion4s_state_t state = state_;
-  state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
-  state.flags.heater_mode = this->mode == climate::CLIMATE_MODE_HEAT
-                                ? tion4s_state_t::HEATER_MODE_HEATING
-                                : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
-  if (this->recirculation_) {
-    state.gate_position = this->recirculation_->state ? tion4s_state_t::GATE_POSITION_RECIRCULATION
-                                                      : tion4s_state_t::GATE_POSITION_INFLOW;
+
+  auto power_state = this->mode != climate::CLIMATE_MODE_OFF;
+  if (state.flags.power_state != power_state) {
+    ESP_LOGD(TAG, "New power state %s", ONOFF(power_state));
+    state.flags.power_state = power_state;
   }
 
-  state.target_temperature = this->target_temperature;
+  auto heater_mode = this->mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
+                                                              : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
+  if (state.flags.heater_mode != heater_mode) {
+    ESP_LOGD(TAG, "New heater mode %s", ONOFF(heater_mode));
+    state.flags.heater_mode = heater_mode;
+  }
+
+  if (this->recirculation_) {
+    auto gate_position = this->recirculation_->state ? tion4s_state_t::GATE_POSITION_RECIRCULATION
+                                                     : tion4s_state_t::GATE_POSITION_INFLOW;
+    if (state.gate_position != gate_position) {
+      ESP_LOGD(TAG, "New gate position %u", gate_position);
+      state.gate_position = gate_position;
+    }
+  }
+
+  int8_t target_temperature = this->target_temperature;
+  if (state.target_temperature != target_temperature) {
+    ESP_LOGD(TAG, "New target temperature %d", target_temperature);
+    state.target_temperature = target_temperature;
+  }
 
   if (this->led_) {
-    state.flags.led_state = this->led_->state;
+    auto led_state = this->led_->state;
+    if (state.flags.led_state != led_state) {
+      ESP_LOGD(TAG, "New led state %s", ONOFF(led_state));
+      state.flags.led_state = led_state;
+    }
   }
 
   if (this->buzzer_) {
-    state.flags.sound_state = this->buzzer_->state;
+    auto sound_state = this->buzzer_->state;
+    if (state.flags.sound_state != sound_state) {
+      ESP_LOGD(TAG, "New sound state %s", ONOFF(sound_state));
+      state.flags.sound_state = sound_state;
+    }
   }
 
   if (this->custom_fan_mode.has_value()) {
-    state.fan_speed = this->get_fan_speed_();
+    auto fan_speed = this->get_fan_speed_();
+    if (state.fan_speed != fan_speed) {
+      ESP_LOGD(TAG, "New fan speed %u", fan_speed);
+      state.fan_speed = fan_speed;
+    }
   }
 
   TionApi4s::write_state(state);

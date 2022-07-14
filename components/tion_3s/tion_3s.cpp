@@ -147,34 +147,54 @@ void Tion3s::read(const tion3s_state_t &state) {
 void Tion3s::flush_state_(const tion3s_state_t &state_) const {
   tion3s_state_t state = state_;
   if (this->custom_fan_mode.has_value()) {
-    state.fan_speed = this->get_fan_speed_();
+    auto fan_speed = this->get_fan_speed_();
+    if (state.fan_speed != fan_speed) {
+      ESP_LOGD(TAG, "New fan speed %u", fan_speed);
+      state.fan_speed = fan_speed;
+    }
   }
 
-  state.target_temperature = this->target_temperature;
-  state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
+  int8_t target_temperature = this->target_temperature;
+  if (state.target_temperature != target_temperature) {
+    ESP_LOGD(TAG, "New target temperature %d", target_temperature);
+    state.target_temperature = target_temperature;
+  }
+
+  auto power_state = this->mode != climate::CLIMATE_MODE_OFF;
+  if (state.flags.power_state != power_state) {
+    ESP_LOGD(TAG, "New power state %s", ONOFF(power_state));
+    state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
+  }
 
   if (this->buzzer_) {
-    state.flags.sound_state = this->buzzer_->state;
+    auto sound_state = this->buzzer_->state;
+    if (state.flags.sound_state != sound_state) {
+      ESP_LOGD(TAG, "New sound state %s", ONOFF(sound_state));
+      state.flags.sound_state = this->buzzer_->state;
+    }
   }
 
   if (this->air_intake_) {
     auto air_intake = this->air_intake_->active_index();
-    if (air_intake.has_value()) {
-      if (*air_intake != state.gate_position) {
-        ESP_LOGD(TAG, "New gate position %u", *air_intake);
-        state.gate_position = *air_intake;
-      }
+    if (air_intake.has_value() && state.gate_position != *air_intake) {
+      ESP_LOGD(TAG, "New gate position %u", *air_intake);
+      state.gate_position = *air_intake;
     }
   }
 
-  // режим вентиляция изменить на обогрев можно только через выключение
-  if (state.flags.power_state && !state.flags.heater_state && this->mode == climate::CLIMATE_MODE_HEAT) {
-    state.flags.power_state = false;
-    TionsApi3s::write_state(state);
-    state.flags.power_state = true;
-  }
+  auto heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
+  if (state.flags.heater_state != heater_state) {
+    ESP_LOGD(TAG, "New heater state %s", ONOFF(heater_state));
 
-  state.flags.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
+    // режим вентиляция изменить на обогрев можно только через выключение
+    if (state.flags.power_state && !state.flags.heater_state && heater_state) {
+      state.flags.power_state = false;
+      TionsApi3s::write_state(state);
+      state.flags.power_state = true;
+    }
+
+    state.flags.heater_state = heater_state;
+  }
 
   TionsApi3s::write_state(state);
 }
