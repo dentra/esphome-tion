@@ -152,7 +152,6 @@ void Tion3s::flush_state_(const tion3s_state_t &state_) const {
 
   state.target_temperature = this->target_temperature;
   state.flags.power_state = this->mode != climate::CLIMATE_MODE_OFF;
-  state.flags.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
 
   if (this->buzzer_) {
     state.flags.sound_state = this->buzzer_->state;
@@ -167,6 +166,16 @@ void Tion3s::flush_state_(const tion3s_state_t &state_) const {
       }
     }
   }
+
+  // режим вентиляция изменить на обогрев можно только через выключение
+  if (state.flags.power_state && !state.flags.heater_state && this->mode == climate::CLIMATE_MODE_HEAT) {
+    state.flags.power_state = false;
+    TionsApi3s::write_state(state);
+    state.flags.power_state = true;
+  }
+
+  state.flags.heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
+
   TionsApi3s::write_state(state);
 }
 
