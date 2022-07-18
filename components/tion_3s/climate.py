@@ -13,7 +13,7 @@ CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "select"]
 
 CONF_AIR_INTAKE = "air_intake"
-CONF_EXTERIMENTAL_ALWAYS_PAIR = "exterimental_always_pair"
+CONF_EXTERIMENTAL_ALWAYS_PAIR = "experimental_always_pair"
 
 Tion3s = tion.tion_ns.class_("Tion3s", PollingComponent, climate.Climate)
 Tion3sBuzzerSwitch = tion.tion_ns.class_("Tion3sBuzzerSwitch", switch.Switch)
