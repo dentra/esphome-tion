@@ -106,8 +106,8 @@ void Tion3s::read(const tion3s_state_t &state) {
   if (this->outdoor_temperature_) {
     this->outdoor_temperature_->publish_state(state.outdoor_temperature);
   }
-  if (this->filter_days_left_) {
-    this->filter_days_left_->publish_state(state.filter_time);
+  if (this->filter_time_left_) {
+    this->filter_time_left_->publish_state(state.filter_time);
   }
   if (this->air_intake_) {
     auto air_intake = this->air_intake_->at(state.gate_position);

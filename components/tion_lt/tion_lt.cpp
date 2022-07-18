@@ -66,8 +66,8 @@ void TionLt::read(const tionlt_state_t &state) {
   if (this->filter_warnout_) {
     this->filter_warnout_->publish_state(state.flags.filter_wornout);
   }
-  if (this->filter_days_left_) {
-    this->filter_days_left_->publish_state(state.counters.filter_days());
+  if (this->filter_time_left_) {
+    this->filter_time_left_->publish_state(state.counters.filter_days());
   }
 
   ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));

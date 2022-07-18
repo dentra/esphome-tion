@@ -46,7 +46,7 @@ ICON_AIR_FILTER = "mdi:air-filter"
 
 CONF_BUZZER = "buzzer"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
-CONF_FILTER_DAYS_LEFT = "filter_days_left"
+CONF_FILTER_TIME_LEFT = "filter_time_left"
 CONF_BOOST_TIME = "boost_time"
 CONF_BOOST_TIME_LEFT = "boost_time_left"
 CONF_PRESETS = "presets"
@@ -124,7 +124,7 @@ def tion_schema(tion_class, buzzer_class):
                         ): cv.entity_category,
                     }
                 ),
-                cv.Optional(CONF_FILTER_DAYS_LEFT): sensor.sensor_schema(
+                cv.Optional(CONF_FILTER_TIME_LEFT): sensor.sensor_schema(
                     unit_of_measurement=UNIT_DAYS,
                     accuracy_decimals=0,
                     icon=ICON_AIR_FILTER,
@@ -255,7 +255,7 @@ async def setup_tion_core(config):
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
     await setup_sensor(config, CONF_OUTDOOR_TEMPERATURE, var.set_outdoor_temperature)
-    await setup_sensor(config, CONF_FILTER_DAYS_LEFT, var.set_filter_days_left)
+    await setup_sensor(config, CONF_FILTER_TIME_LEFT, var.set_filter_time_left)
     await setup_text_sensor(config, CONF_VERSION, var.set_version)
     await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
     await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
