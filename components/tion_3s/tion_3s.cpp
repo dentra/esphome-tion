@@ -64,7 +64,7 @@ void Tion3s::on_ready() {
     return;
   }
 
-  if (this->exterimental_always_pair_) {
+  if (this->experimental_always_pair_) {
     TionsApi3s::pair();
   }
 
