@@ -251,7 +251,7 @@ void TionClimate::cancel_preset_(climate::ClimatePreset preset) {
 }
 
 void TionComponent::setup() {
-  if (this->boost_time_ || std::isnan(this->boost_time_->state)) {
+  if (this->boost_time_ && std::isnan(this->boost_time_->state)) {
     auto call = this->boost_time_->make_call();
     call.set_value(DEFAULT_BOOST_TIME_SEC / 60);
     call.perform();
