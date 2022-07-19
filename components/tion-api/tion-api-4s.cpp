@@ -64,7 +64,7 @@ struct tion4s_state_set_t {
     bool last_com_source : 1;
     bool factory_reset : 1;
     bool error_reset : 1;
-    bool filter_teset : 1;
+    bool filter_reset : 1;
     bool ma : 1;
     bool ma_auto : 1;
     uint8_t reserved : 6;
@@ -280,7 +280,7 @@ bool TionApi4s::reset_filter(const tion4s_state_t &state) const {
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
-  st_set.filter_teset = true;
+  st_set.filter_reset = true;
   st_set.filter_time = 0;
   return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
 }
