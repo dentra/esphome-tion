@@ -64,7 +64,7 @@ void TionLt::read(const tionlt_state_t &state) {
     this->airflow_counter_->publish_state(state.counters.airflow_counter());
   }
   if (this->filter_warnout_) {
-    this->filter_warnout_->publish_state(state.flags.filter_wornout);
+    this->filter_warnout_->publish_state(state.flags.filter_warnout);
   }
   if (this->filter_time_left_) {
     this->filter_time_left_->publish_state(state.counters.filter_days());
@@ -76,7 +76,7 @@ void TionLt::read(const tionlt_state_t &state) {
   ESP_LOGV(TAG, "outdoor_temp      : %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "heater_power      : %f", state.heater_power());
   ESP_LOGV(TAG, "airflow_counter   : %f", state.counters.airflow_counter());
-  ESP_LOGV(TAG, "filter_wornout    : %s", ONOFF(state.flags.filter_wornout));
+  ESP_LOGV(TAG, "filter_warnout    : %s", ONOFF(state.flags.filter_warnout));
   ESP_LOGV(TAG, "filter_time       : %u", state.counters.filter_time);
   ESP_LOGV(TAG, "last_com_source   : %u", state.flags.last_com_source);
   ESP_LOGV(TAG, "auto_co2          : %s", ONOFF(state.flags.auto_co2));

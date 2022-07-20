@@ -23,7 +23,7 @@ struct tionlt_state_t {
     bool led_state : 1;
     uint8_t last_com_source : 1;
     // предупреждение о необходимости замены фильтра
-    bool filter_wornout : 1;
+    bool filter_warnout : 1;
     bool auto_co2 : 1;
     bool heater_state : 1;
     bool heater_present : 1;

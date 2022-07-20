@@ -39,7 +39,7 @@ struct tion4s_state_t {
     //
     uint8_t last_com_source : 1;
     // предупреждение о необходимости замены фильтра
-    bool filter_wornout : 1;
+    bool filter_warnout : 1;
     // мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW
     uint8_t /*HeaterPresent*/ heater_present : 3;
     // MagicAir control
