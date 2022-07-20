@@ -1,0 +1,3 @@
+button:
+  - platform: restart
+    name: $name Restart

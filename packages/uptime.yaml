@@ -1,0 +1,4 @@
+sensor:
+  - platform: uptime
+    name: "$name Uptime"
+    device_class: duration

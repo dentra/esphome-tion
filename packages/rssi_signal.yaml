@@ -1,0 +1,7 @@
+sensor:
+  - platform: ble_rssi
+    mac_address: $tion_mac_address
+    name: "$name RSSI"
+    filters:
+      throttle_average: 60s
+    entity_category: diagnostic

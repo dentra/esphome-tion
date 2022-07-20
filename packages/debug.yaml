@@ -1,0 +1,19 @@
+logger:
+  level: VERBOSE
+  logs:
+    ota: DEBUG
+    mdns: INFO
+    wifi: INFO
+    sntp: INFO
+    esp-idf: INFO
+    api.connection: INFO
+    api: INFO
+    button: INFO
+    switch: INFO
+    sensor: INFO
+    select: INFO
+    number: INFO
+    climate: INFO
+    text_sensor: INFO
+    binary_sensor: INFO
+    esp32_ble_tracker: INFO

@@ -1,0 +1,15 @@
+switch:
+  - platform: template
+    name: $name Persistent
+    lambda: return id(tion_climate).is_persistent_connection();
+    turn_on_action:
+      - lambda: |-
+          id(tion_ble_client).set_enabled(false);
+          id(tion_climate).set_persistent_connection(true);
+          id(tion_ble_client).set_enabled(true);
+    turn_off_action:
+      - lambda: |-
+          id(tion_ble_client).set_enabled(false);
+          id(tion_climate).set_persistent_connection(false);
+          id(tion_ble_client).set_enabled(true);
+    entity_category: config

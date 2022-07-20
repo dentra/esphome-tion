@@ -1,0 +1,6 @@
+substitutions:
+  framework_type: esp-idf
+
+external_components:
+  - source: github://pr#3594
+    components: ["esp32_ble_tracker"]
