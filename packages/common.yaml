@@ -4,6 +4,7 @@ substitutions:
   # framework settings: esp-idf or arduino
   framework_type: arduino
   node_add_mac_suffix: "true"
+  tion_version: 2022.7.0
   tion_source: github://dentra/esphome-tion@$tion_version
 
 esphome:
