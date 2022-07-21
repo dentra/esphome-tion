@@ -115,6 +115,9 @@ void Tion3s::read(const tion3s_state_t &state) {
       this->air_intake_->publish_state(*air_intake);
     }
   }
+  if (this->airflow_counter_) {
+    this->airflow_counter_->publish_state(state.productivity);
+  }
 
   ESP_LOGV(TAG, "fan_speed    : %u", state.fan_speed);
   ESP_LOGV(TAG, "gate_position: %u", state.gate_position);
