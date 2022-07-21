@@ -24,7 +24,7 @@ preferences:
 wifi:
   ap:
     ssid: "$name Fallback Hotspot"
-captive_portal:
+# captive_portal:
 
 api:
 
