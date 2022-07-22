@@ -3,11 +3,11 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2022.4.0",
+      "esphome_version": "2022.6.2",
       // additional APT dependicies
       "apt_deps": "bash-completion less libmbedtls-dev gdb",
       // additional PIP dependicies
-      "pip_deps": ""
+      "pip_deps": "pyserial_asyncio"
     }
   },
   "runArgs": [
@@ -79,6 +79,7 @@
   "remoteUser": "vscode",
   "mounts": [
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.esphome,type=volume",
+    "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/config/.esphome,type=volume",
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.pio,type=volume",
   ]
 }
