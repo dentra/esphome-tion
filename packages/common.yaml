@@ -42,5 +42,5 @@ external_components:
   - source: $tion_source
 
 ble_client:
-  - mac_address: $tion_mac_address
-    id: tion_ble_client
+  mac_address: $tion_mac_address
+  id: tion_ble_client
