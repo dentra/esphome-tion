@@ -10,6 +10,7 @@ secrets.yaml
 /include/
 /src/
 /lib/
+/config/
 /platformio.ini
 /partitions.csv
 CMakeListsPrivate.txt
@@ -22,3 +23,4 @@ CMakeLists.txt
 /.clang-format
 /.clang-tidy
 /.editorconfig
+/*-dev.yaml
