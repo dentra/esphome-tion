@@ -8,50 +8,21 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLt : public TionClimateComponentWithBoost, public Tion<TionApiLt>, public TionDisconnectMixin<TionLt> {
+class TionLt : public TionClimateComponent<TionApiLt, tionlt_state_t> {
  public:
+  explicit TionLt(TionVPort *vport) : TionClimateComponent(vport) {}
+
+  void dump_config() override;
+
   climate::ClimateTraits traits() override {
     auto traits = TionClimate::traits();
     traits.set_supports_action(true);
     return traits;
   }
 
-  void update() override;
-  void on_ready() override;
-  bool write_state() override;
-
-  void read(const tion_dev_status_t &status) override;
-  void read(const tionlt_state_t &state) override;
-
-  void run_polling();
-
- protected:
-  bool dirty_{};
-  void flush_state_(const tionlt_state_t &state) const;
-};
-
-class TionLtLedSwitch : public switch_::Switch {
- public:
-  explicit TionLtLedSwitch(TionLt *parent) : parent_(parent) {}
-  void write_state(bool state) override {
-    this->publish_state(state);
-    this->parent_->write_state();
-  }
-
- protected:
-  TionLt *parent_;
-};
-
-class TionLtBuzzerSwitch : public switch_::Switch {
- public:
-  explicit TionLtBuzzerSwitch(TionLt *parent) : parent_(parent) {}
-  void write_state(bool state) override {
-    this->publish_state(state);
-    this->parent_->write_state();
-  }
-
- protected:
-  TionLt *parent_;
+  void update_state(const tionlt_state_t &state) override;
+  void flush_state(const tionlt_state_t &state) const;
+  void dump_state(const tionlt_state_t &state) const override;
 };
 
 }  // namespace tion

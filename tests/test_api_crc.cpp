@@ -3,16 +3,14 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
-#include "inttypes.h"
-#include "byteswap.h"
+#include <cstddef>
 #include <random>
 #include <ctime>
 #include <chrono>
-
-#include <cstddef>
 #include <iostream>
 #include <new>
 #include <vector>
+#include "byteswap.h"
 
 #include "utils.h"
 
@@ -77,11 +75,11 @@ bool test_crc_data(const char *data) {
 
   auto tx_frame = from_hex(data);
 
-  uint16_t crc = bswap_16(crc16_ccitt_ffff(tx_frame.data(), tx_frame.size() - 2));
+  uint16_t crc = bswap_16(crc16_ccitt_false(tx_frame.data(), tx_frame.size() - 2));
   uint16_t chk = *((uint16_t *) (tx_frame.data() + tx_frame.size() - 2));
   test_check(res, crc, chk);
 
-  uint16_t zer = crc16_ccitt_ffff(tx_frame.data(), tx_frame.size());
+  uint16_t zer = crc16_ccitt_false(tx_frame.data(), tx_frame.size());
   test_check(res, zer, 0);
 
   return res;
@@ -89,7 +87,7 @@ bool test_crc_data(const char *data) {
 
 bool test_api_crc(bool print) {
   bool res = true;
-  // res = mk_test([&](bool) { return check_crc(crc16_ccitt_ffff, print); });
+  // res = mk_test([&](bool) { return check_crc(crc16_ccitt_false, print); });
 
   res &= test_crc_data("0C.00.3A.AD.32.33.01.00.00.00.CE.A6");
   res &= test_crc_data("0C.00.3A.AD.32.32.01.00.00.00.64.F7");

@@ -66,73 +66,56 @@ struct tion3s_frame_t {
 
 #pragma pack(pop)
 
-bool TionsApi3s::read_data(const uint8_t *data, uint16_t size) {
-  TION_LOGV(TAG, "Read data: %s", hexencode(data, size).c_str());
-  if (data == nullptr || size == 0) {
-    TION_LOGW(TAG, "Empy frame data");
-    return false;
-  }
-  if (size != sizeof(tion3s_frame_t)) {
-    TION_LOGW(TAG, "Invalid frame size %u", size);
-    return false;
-  }
-  auto frame = reinterpret_cast<const tion3s_frame_t *>(data);
-  if (frame->magic != FRAME_MAGIC) {
-    TION_LOGW(TAG, "Invalid frame crc %02X", data[size - 1]);
-    return false;
-  }
+uint16_t TionsApi3s::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 
-  if (frame->type == FRAME_TYPE_STATE_RSP || frame->type == FRAME_TYPE_STATE_SET_RSP) {
-    const void *frame_data = frame->data;
-    this->read(*static_cast<const tion3s_state_t *>(frame_data));
+bool TionsApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
+  // invalid size is never possible
+  // if (frame_data_size != sizeof(tion3s_state_t)) {
+  //   TION_LOGW(TAG, "Incorrect state data size: %u", frame_data_size);
+  //   return false;
+  // }
+
+  if (frame_type == FRAME_TYPE_STATE_RSP || frame_type == FRAME_TYPE_STATE_SET_RSP) {
+    this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
     return true;
   }
 
-  TION_LOGW(TAG, "Unknown frame type %04X", frame->type);
-
+  TION_LOGW(TAG, "Unknown frame type %04X", frame_type);
   return false;
 }
 
-bool TionsApi3s::write_frame_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) const {
-  tion3s_frame_t frame{.type = frame_type, .data = {}, .magic = FRAME_MAGIC};
-  if (frame_data_size <= sizeof(frame.data)) {
-    std::memcpy(frame.data, frame_data, frame_data_size);
-  }
-  return this->write_data(reinterpret_cast<const uint8_t *>(&frame), sizeof(frame));
-}
-
 bool TionsApi3s::pair() const {
-  TION_LOGD(TAG, "Enter pair mode");
+  TION_LOGD(TAG, "Request[] Pair");
   struct {
     uint8_t pair;
   } PACKED pair{.pair = 1};
-  return this->write_frame_(FRAME_TYPE_SRV_MODE_SET, &pair, sizeof(pair));
+  return this->write_frame(FRAME_TYPE_SRV_MODE_SET, pair);
 }
 
 bool TionsApi3s::request_state() const {
-  TION_LOGD(TAG, "Request state");
-  return this->write_(FRAME_TYPE_STATE_REQ);
+  TION_LOGD(TAG, "Request[] State");
+  return this->write_frame(FRAME_TYPE_STATE_REQ);
 }
 
 bool TionsApi3s::write_state(const tion3s_state_t &state) const {
-  TION_LOGD(TAG, "Write state");
+  TION_LOGD(TAG, "Request[] Write state");
   if (state.firmware_version == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
   auto mode = tion3s_state_set_t::create(state);
-  return this->write_frame_(FRAME_TYPE_STATE_SET, &mode, sizeof(mode));
+  return this->write_frame(FRAME_TYPE_STATE_SET, mode);
 }
 
 bool TionsApi3s::reset_filter(const tion3s_state_t &state) const {
-  TION_LOGD(TAG, "Reset filter");
+  TION_LOGD(TAG, "Request[] Reset filter");
   if (state.firmware_version == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
   auto mode = tion3s_state_set_t::create(state);
   mode.filter_time.reset = true;
-  return this->write_frame_(FRAME_TYPE_STATE_SET, &mode, sizeof(mode));
+  return this->write_frame(FRAME_TYPE_STATE_SET, mode);
 }
 
 }  // namespace tion

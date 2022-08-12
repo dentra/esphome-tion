@@ -15,22 +15,14 @@ AUTO_LOAD = ["tion", "number"]
 
 Tion4s = tion.tion_ns.class_("Tion4s", PollingComponent, climate.Climate)
 
-Tion4sLedSwitch = tion.tion_ns.class_("Tion4sLedSwitch", switch.Switch)
-Tion4sBuzzerSwitch = tion.tion_ns.class_("Tion4sBuzzerSwitch", switch.Switch)
-Tion4sRecirculationSwitch = tion.tion_ns.class_(
-    "Tion4sRecirculationSwitch", switch.Switch
-)
-
 CONF_RECIRCULATION = "recirculation"
 
 
-CONFIG_SCHEMA = tion_lt.tion_lt_schema(
-    Tion4s, Tion4sLedSwitch, Tion4sBuzzerSwitch
-).extend(
+CONFIG_SCHEMA = tion_lt.tion_lt_schema(Tion4s).extend(
     {
         cv.Optional(CONF_RECIRCULATION): switch.SWITCH_SCHEMA.extend(
             {
-                cv.GenerateID(): cv.declare_id(Tion4sRecirculationSwitch),
+                cv.GenerateID(): cv.declare_id(tion.TionSwitch),
                 cv.Optional(CONF_ICON, default="mdi:air-conditioner"): cv.icon,
                 cv.Optional(
                     CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG

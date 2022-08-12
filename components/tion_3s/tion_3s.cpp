@@ -8,84 +8,12 @@ namespace tion {
 
 static const char *const TAG = "tion_3s";
 
-#define DEFAULT_BOOST_TIME 10
-
-// application scheduler name
-static const char *const ASH_BOOST = "tion_3s-boost";
-
-// 6e400001-b5a3-f393-e0a9-e50e24dcca9e
-static const esp_bt_uuid_t BLE_TION3S_SERVICE{
-    .len = ESP_UUID_LEN_128,
-    .uuid = {
-        .uuid128 = {0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x01, 0x00, 0x40, 0x6E},
-    }};
-
-// 6e400002-b5a3-f393-e0a9-e50e24dcca9e
-static const esp_bt_uuid_t BLE_TION3S_CHAR_TX{
-    .len = ESP_UUID_LEN_128,
-    .uuid = {
-        .uuid128 = {0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x02, 0x00, 0x40, 0x6E},
-    }};
-
-// 6e400003-b5a3-f393-e0a9-e50e24dcca9e
-static const esp_bt_uuid_t BLE_TION3S_CHAR_RX{
-    .len = ESP_UUID_LEN_128,
-    .uuid = {
-        .uuid128 = {0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x03, 0x00, 0x40, 0x6E},
-    }};
-
-const esp_bt_uuid_t &Tion3s::get_ble_service() const { return BLE_TION3S_SERVICE; }
-const esp_bt_uuid_t &Tion3s::get_ble_char_tx() const { return BLE_TION3S_CHAR_TX; }
-const esp_bt_uuid_t &Tion3s::get_ble_char_rx() const { return BLE_TION3S_CHAR_RX; }
-
-void Tion3s::setup() {
-  this->rtc_ = global_preferences->make_preference<int8_t>(fnv1_hash(TAG), true);
-  int8_t loaded{};
-  if (this->rtc_.load(&loaded)) {
-    this->pair_state_ = loaded;
-  }
+void Tion3s::dump_config() {
+  this->dump_component_config(TAG, "Tion 3S");
+  LOG_SELECT("  ", "Air Intake", this->air_intake_);
 }
 
-void Tion3s::on_ready() {
-  if (this->pair_state_ == 0) {
-    ESP_LOGD(TAG, "Not paired yet");
-    this->parent_->set_enabled(false);
-    return;
-  }
-
-  if (this->pair_state_ < 0) {
-    bool res = TionsApi3s::pair();
-    if (res) {
-      this->pair_state_ = 1;
-      this->rtc_.save(&this->pair_state_);
-    }
-    ESP_LOGD(TAG, "Pairing complete: %s", YESNO(res));
-    this->schedule_disconnect();
-    return;
-  }
-
-  if (this->experimental_always_pair_) {
-    TionsApi3s::pair();
-  }
-
-  this->run_polling();
-}
-
-void Tion3s::run_polling() {
-  bool res = this->request_state();
-  ESP_LOGV(TAG, "Request state result: %s", YESNO(res));
-  this->schedule_disconnect(this->state_timeout_);
-}
-
-void Tion3s::read(const tion3s_state_t &state) {
-  if (this->dirty_) {
-    this->dirty_ = false;
-    this->flush_state_(state);
-    return;
-  }
-
-  this->cancel_disconnect();
-
+void Tion3s::update_state(const tion3s_state_t &state) {
   if (state.flags.power_state) {
     this->mode = state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY;
   } else {
@@ -118,7 +46,9 @@ void Tion3s::read(const tion3s_state_t &state) {
   if (this->airflow_counter_) {
     this->airflow_counter_->publish_state(state.productivity);
   }
+}
 
+void Tion3s::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "fan_speed    : %u", state.fan_speed);
   ESP_LOGV(TAG, "gate_position: %u", state.gate_position);
   ESP_LOGV(TAG, "target_temp  : %u", state.target_temperature);
@@ -141,13 +71,9 @@ void Tion3s::read(const tion3s_state_t &state) {
   ESP_LOGV(TAG, "productivity : %u", state.productivity);
   ESP_LOGV(TAG, "filter_days  : %u", state.filter_days);
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
-
-  if (!this->is_persistent_connection()) {
-    this->schedule_disconnect();
-  }
 }
 
-void Tion3s::flush_state_(const tion3s_state_t &state_) const {
+void Tion3s::flush_state(const tion3s_state_t &state_) const {
   tion3s_state_t state = state_;
   if (this->custom_fan_mode.has_value()) {
     auto fan_speed = this->get_fan_speed_();
@@ -200,25 +126,6 @@ void Tion3s::flush_state_(const tion3s_state_t &state_) const {
   }
 
   TionsApi3s::write_state(state);
-}
-
-bool Tion3s::write_state() {
-  this->publish_state();
-  this->dirty_ = true;
-  if (this->is_persistent_connection() && this->is_connected()) {
-    this->request_state();
-  } else {
-    this->parent_->set_enabled(true);
-  }
-  return true;
-}
-
-void Tion3s::update() {
-  if (this->is_persistent_connection() && this->is_connected()) {
-    this->run_polling();
-  } else if (this->pair_state_ > 0) {
-    this->parent_->set_enabled(true);
-  }
 }
 
 }  // namespace tion

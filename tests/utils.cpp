@@ -5,7 +5,7 @@
 
 #include "utils.h"
 
-static int char2int(char ch) {
+int char2int(char ch) {
   if (ch >= '0' && ch <= '9') {
     return ch - '0';
   }
@@ -116,13 +116,11 @@ void __attribute__((hot)) log_printf_(int level, const char *tag, int line, cons
 }
 
 void _test_check_failed(const char *file, int line, const char *msg, bool actual, bool expected) {
-  log_printf_(1, file, line, "FAILED  %s, actual = 0x%02X (%u), expected = 0x%02X (%u)", msg, actual, actual, expected,
-              expected);
+  log_printf_(1, file, line, "FAILED  %s, actual = %s, expected = %s", msg, TRUEFALSE(actual), TRUEFALSE(expected));
 }
 void _test_check_success(const char *file, int line, const char *msg, bool actual, bool expected) {
-  log_printf_(3, file, line, "SUCCESS %s, value = 0x%02X (%u)", msg, expected, expected);
+  log_printf_(3, file, line, "SUCCESS %s, %s", msg, TRUEFALSE(expected));
 }
-
 void _test_check_failed(const char *file, int line, const char *msg, uint8_t actual, uint8_t expected) {
   log_printf_(1, file, line, "FAILED  %s, actual = 0x%02X (%u), expected = 0x%02X (%u)", msg, actual, actual, expected,
               expected);

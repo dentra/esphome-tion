@@ -1,18 +1,17 @@
 #include <cstring>
 #include <cstdlib>
-#include <stdio.h>
 #include <string>
 #include <vector>
-#include "inttypes.h"
-#include "byteswap.h"
+#include <cstddef>
 #include <random>
 #include <ctime>
 #include <chrono>
 #include <functional>
-#include <cstddef>
 #include <iostream>
 #include <new>
 #include <vector>
+#include <stdio.h>
+#include "byteswap.h"
 #include <execinfo.h>
 
 #include "utils.h"
@@ -25,12 +24,13 @@
 #include "test_api_3s.h"
 
 bool test_cl(bool print);
+bool test_hw(bool print);
 
 int main(int argc, char const *argv[]) {
   dentra::tion::set_logger(printf_logger);
 
   auto tests = {
-      &test_api_crc, &test_api, &test_api_4s, &test_api_lt, &test_api_3s,
+      &test_api_crc, &test_api, &test_api_4s, &test_api_lt, &test_api_3s, &test_hw,
   };
   bool res = true;
   for (auto test : tests) {

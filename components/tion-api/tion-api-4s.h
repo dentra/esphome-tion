@@ -77,37 +77,37 @@ struct tion4s_turbo_t {
   uint8_t err_code;
 };
 
-struct tion4s_time_t {
-  int64_t unix_time;
-  time_t get_time() const { return unix_time / 1000000; }
-};
-
 #pragma pack(pop)
 
-class TionApi4s : public TionApi {
+class TionApi4s : public TionApi<tion4s_state_t> {
  public:
-  virtual void read(const tion_dev_status_t &status) {}
-  virtual void read(const tion4s_state_t &state) {}
-  virtual void read(const tion4s_turbo_t &turbo) {}
-  virtual void read(const tion4s_time_t &time) {}
+  explicit TionApi4s(TionFrameWriter *writer) : TionApi(writer) {}
 
-  void request_dev_status() override;
-  void request_state() override;
+  uint16_t get_state_type() const override;
 
-  void request_turbo();
-  void request_time();
-  void request_errors();
-  void request_test();
-  void request_timers();
+  virtual void on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {}
+  virtual void on_time(const time_t time, const uint32_t request_id) {}
 
-  bool write_state(const tion4s_state_t &state) const;
-  bool reset_filter(const tion4s_state_t &state) const;
-  bool factory_reset(const tion4s_state_t &state) const;
-  bool set_turbo_time(uint16_t time) const;
-  bool set_time(int64_t time) const;
+  bool request_dev_status() const override;
+  bool request_state() const override;
+
+  bool request_turbo() const;
+  bool request_time(const uint32_t request_id = 0) const;
+  bool request_errors() const;
+  bool request_test() const;
+  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 0) const;
+  bool request_timers(const uint32_t request_id = 0) const;
+
+  bool write_state(const tion4s_state_t &state, const uint32_t request_id = 0) const;
+  bool reset_filter(const tion4s_state_t &state, const uint32_t request_id = 0) const;
+  bool factory_reset(const tion4s_state_t &state, const uint32_t request_id = 0) const;
+  bool set_turbo_time(const uint16_t time, const uint32_t request_id = 0) const;
+  bool set_time(const time_t time, const uint32_t request_id) const;
+
+  bool send_heartbeat() const override;
 
  protected:
-  void read_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) override;
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override;
 };
 
 }  // namespace tion

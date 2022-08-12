@@ -1,4 +1,4 @@
-#include <inttypes.h>
+#include <cstddef>
 #include <cmath>
 
 #include "log.h"
@@ -11,10 +11,6 @@ namespace tion {
 static const char *const TAG = "tion-api-4s";
 
 enum {
-  NUM_OF_TIMERS = 6,
-};
-
-enum {
   FRAME_TYPE_STATE_SET = 0x3230,  // no save req
   FRAME_TYPE_STATE_RSP = 0x3231,
   FRAME_TYPE_STATE_REQ = 0x3232,
@@ -24,7 +20,7 @@ enum {
   FRAME_TYPE_DEV_STATUS_RSP = 0x3331,
 
   FRAME_TYPE_TEST_REQ = 0x3132,
-  FRAME_TYPE_TEST_RSP = 0x3131,
+  FRAME_TYPE_TEST_RSP = 0x3131,  // returns 440 bytes struct
 
   FRAME_TYPE_TIMER_SET = 0x3430,
   FRAME_TYPE_TIMER_REQ = 0x3432,
@@ -44,9 +40,12 @@ enum {
   FRAME_TYPE_CURR_TEST_REQ = 0x3832,
   FRAME_TYPE_CURR_TEST_RSP = 0x3831,
 
-  FRAME_TYPE_TURBO_SET = 0x4130,
-  FRAME_TYPE_TURBO_REQ = 0x4132,
-  FRAME_TYPE_TURBO_RSP = 0x4131,
+  FRAME_TYPE_TURBO_SET = 0x4130,  // BLE Only
+  FRAME_TYPE_TURBO_REQ = 0x4132,  // BLE Only
+  FRAME_TYPE_TURBO_RSP = 0x4131,  // BLE Only
+
+  FRAME_TYPE_HEARTBIT_REQ = 0x3932,  // every 3 sec
+  FRAME_TYPE_HEARTBIT_RSP = 0x3931,
 };
 
 #pragma pack(push, 1)
@@ -73,6 +72,8 @@ struct tion4s_state_set_t {
   // температрура нагревателя.
   int8_t target_temperature;
   uint8_t fan_speed;
+  // filter time in days
+  // TODO возможно должен/может быть uint16_t
   uint32_t filter_time;
 
   static tion4s_state_set_t create(const tion4s_state_t &state) {
@@ -93,33 +94,44 @@ struct tion4s_state_set_t {
   }
 };
 
+struct tion4s_time_t {
+  int64_t unix_time;
+};
+
 struct tion4s_errors_t {
-  enum { ERROR_TYPE_NUMBER = 32u };
-  uint8_t er[ERROR_TYPE_NUMBER];
+  enum { ERROR_TYPES_COUNT = 32u };
+  uint8_t er[ERROR_TYPES_COUNT];
+};
+
+struct tion4s_timers_state_t {
+  enum { TIMERS_COUNT = 12 };
+  struct {
+    bool active : 8;
+  } timers[TIMERS_COUNT];
 };
 
 struct tion4s_timer_settings_t {
   struct {
-    uint8_t monday : 1;
-    uint8_t tuesday : 1;
-    uint8_t wednesday : 1;
-    uint8_t thursday : 1;
-    uint8_t friday : 1;
-    uint8_t saturday : 1;
-    uint8_t sunday : 1;
-    uint8_t reserved : 1;
+    bool monday : 1;
+    bool tuesday : 1;
+    bool wednesday : 1;
+    bool thursday : 1;
+    bool friday : 1;
+    bool saturday : 1;
+    bool sunday : 1;
+    bool reserved : 1;
     uint8_t hours;
     uint8_t minutes;
-  } timer_time;
+  } schedule;
   struct {
-    uint8_t power_state : 1;
-    uint8_t sound_state : 1;
-    uint8_t led_state : 1;
-    uint8_t heater_mode : 1;  // 0 - temperature maintenance, 1 - heating //!!!отличается от HeaterMode!!!
-    uint8_t timer_state : 1;  /* on/off */
+    bool power_state : 1;
+    bool sound_state : 1;
+    bool led_state : 1;
+    bool heater_state : 1;
+    bool timer_state : 1;
     uint8_t reserved : 3;
-  } timer_flags;
-  int8_t target_temp;
+  };
+  int8_t target_temperature;
   uint8_t fan_state;
   uint8_t device_mode;
 };
@@ -143,12 +155,21 @@ float tion4s_state_t::heater_power() const {
   }
 }
 
-void TionApi4s::read_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) {
-  TION_LOGV(TAG, "read frame data 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+uint16_t TionApi4s::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
+
+bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
-  if (false) {
-    // just pretty formatting
-  } else if (frame_type == FRAME_TYPE_STATE_RSP) {
+
+  if (frame_type == FRAME_TYPE_HEARTBIT_RSP) {
+    if (frame_data_size != sizeof(tion_heartbeat_t)) {
+      TION_LOGW(TAG, "Incorrect heartbeat response data size: %u", frame_data_size);
+    } else {
+      this->on_heartbeat(*static_cast<const tion_heartbeat_t *>(frame_data));
+    }
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_STATE_RSP) {
     struct state_frame_t {
       uint32_t request_id;
       tion4s_state_t state;
@@ -156,15 +177,13 @@ void TionApi4s::read_(uint16_t frame_type, const void *frame_data, uint16_t fram
     if (frame_data_size != sizeof(state_frame_t)) {
       TION_LOGW(TAG, "Incorrect state response data size: %u", frame_data_size);
     } else {
-      this->read(static_cast<const state_frame_t *>(frame_data)->state);
+      auto frame = static_cast<const state_frame_t *>(frame_data);
+      this->on_state(frame->state, frame->request_id);
     }
-  } else if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
-    if (frame_data_size != sizeof(tion_dev_status_t)) {
-      TION_LOGW(TAG, "Incorrect device status response data size: %u", frame_data_size);
-    } else {
-      this->read(*static_cast<const tion_dev_status_t *>(frame_data));
-    }
-  } else if (frame_type == FRAME_TYPE_TURBO_RSP) {
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_TURBO_RSP) {
     struct turbo_frame_t {
       uint32_t request_id;
       tion4s_turbo_t turbo;
@@ -172,9 +191,22 @@ void TionApi4s::read_(uint16_t frame_type, const void *frame_data, uint16_t fram
     if (frame_data_size != sizeof(turbo_frame_t)) {
       TION_LOGW(TAG, "Incorrect turbo response data size: %u", frame_data_size);
     } else {
-      this->read(static_cast<const turbo_frame_t *>(frame_data)->turbo);
+      auto frame = static_cast<const turbo_frame_t *>(frame_data);
+      this->on_turbo(frame->turbo, frame->request_id);
     }
-  } else if (frame_type == FRAME_TYPE_TIME_RSP) {
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
+    if (frame_data_size != sizeof(tion_dev_status_t)) {
+      TION_LOGW(TAG, "Incorrect device status response data size: %u", frame_data_size);
+    } else {
+      this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
+    }
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_TIME_RSP) {
     struct time_frame_t {
       uint32_t request_id;
       tion4s_time_t time;
@@ -182,29 +214,13 @@ void TionApi4s::read_(uint16_t frame_type, const void *frame_data, uint16_t fram
     if (frame_data_size != sizeof(time_frame_t)) {
       TION_LOGW(TAG, "Incorrect time response data size: %u", frame_data_size);
     } else {
-      this->read(static_cast<const time_frame_t *>(frame_data)->time);
+      auto frame = static_cast<const time_frame_t *>(frame_data);
+      this->on_time(frame->time.unix_time, frame->request_id);
     }
-  } else if (frame_type == FRAME_TYPE_ERR_CNT_RSP) {
-    struct error_frame_t {
-      uint32_t request_id;
-      tion4s_errors_t cnt;
-    } PACKED;
-    if (frame_data_size != sizeof(error_frame_t)) {
-      TION_LOGW(TAG, "Incorrect error response data size: %u", frame_data_size);
-    } else {
-      // auto &err_data = *static_cast<const error_frame_t *>(frame_data);
-      // for (uint32_t i = 0; i < ERROR_TYPE_NUMBER; i++) {
-      //   TION_LOGV(TAG, "err_cnt[%u]: %u", i, err_data.cnt.er[i]);
-      // }
-    }
-  } else if (frame_type == FRAME_TYPE_TEST_RSP) {
-    if (frame_data_size != sizeof(uint32_t)) {
-      TION_LOGW(TAG, "Incorrect test response data size: %u", frame_data_size);
-    } else {
-      // auto &test_type = *static_cast<const uint32_t *>(frame_data);
-      // TION_LOGV(TAG, "test_type: %u", test_type);
-    }
-  } else if (frame_type == FRAME_TYPE_TIMER_RSP) {
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_TIMER_RSP) {
     struct timer_settings_frame_t {
       uint32_t request_id;
       uint8_t timer_id;
@@ -213,68 +229,113 @@ void TionApi4s::read_(uint16_t frame_type, const void *frame_data, uint16_t fram
     if (frame_data_size != sizeof(timer_settings_frame_t)) {
       TION_LOGW(TAG, "Incorrect timer response data size: %u", frame_data_size);
     } else {
-      // auto &timer_set = *static_cast<const timer_settings_frame_t *>(frame_data);
-      // TION_LOGV(TAG, "timer[%u].device_mode: %u", timer_set.timer_id, timer_set.timer.device_mode);
-      // TION_LOGV(TAG, "timer[%u].target_temp: %d", timer_set.timer_id, timer_set.timer.target_temp);
-      // TION_LOGV(TAG, "timer[%u].fan_state: %u", timer_set.timer_id, timer_set.timer.fan_state);
-      // timer[timer_set.timer_id] = timer_set.timer;
+      auto frame = static_cast<const timer_settings_frame_t *>(frame_data);
+      // this->on_timer(frame->timer_id, frame->timer, frame->request_id);
     }
-  } else if (frame_type == FRAME_TYPE_TIMERS_STATE_RSP) {
-    TION_LOGW(TAG, "FRAME_TYPE_TIMERS_STATE_RSP response: %s", hexencode(frame_data, frame_data_size).c_str());
-  } else {
-    TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+    return true;
   }
-}
 
-void TionApi4s::request_dev_status() {
-  TION_LOGD(TAG, "Request device status");
-  this->write_(FRAME_TYPE_DEV_STATUS_REQ);
-}
-
-void TionApi4s::request_state() {
-  TION_LOGD(TAG, "Request state");
-  this->write_(FRAME_TYPE_STATE_REQ);
-}
-
-void TionApi4s::request_turbo() {
-  TION_LOGD(TAG, "Request turbo");
-  this->write_(FRAME_TYPE_TURBO_REQ);
-}
-
-void TionApi4s::request_time() {
-  TION_LOGD(TAG, "Request time");
-  this->write_(FRAME_TYPE_TIME_REQ);
-}
-
-void TionApi4s::request_errors() {
-  TION_LOGD(TAG, "Request errors");
-  this->write_(FRAME_TYPE_ERR_CNT_REQ);
-}
-
-void TionApi4s::request_test() {
-  TION_LOGD(TAG, "Request test");
-  this->write_(FRAME_TYPE_TEST_REQ);
-}
-
-void TionApi4s::request_timers() {
-  TION_LOGD(TAG, "Request timers");
-  for (uint8_t timer_id = 0; timer_id < NUM_OF_TIMERS; timer_id++) {
-    this->write_(FRAME_TYPE_TIMER_REQ, timer_id, this->next_command_id());
+  if (frame_type == FRAME_TYPE_TIMERS_STATE_RSP) {
+    struct timers_state_frame_t {
+      uint32_t request_id;
+      tion4s_timers_state_t timers_state;
+    } PACKED;
+    if (frame_data_size != sizeof(timers_state_frame_t)) {
+      TION_LOGW(TAG, "Incorrect timers state response data size: %u", frame_data_size);
+    } else {
+      auto frame = static_cast<const timers_state_frame_t *>(frame_data);
+      // this->on_timers_state(frame->timers_state, frame->request_id);
+    }
+    return true;
   }
+
+  if (frame_type == FRAME_TYPE_ERR_CNT_RSP) {
+    struct error_frame_t {
+      uint32_t request_id;
+      tion4s_errors_t errors;
+    } PACKED;
+    if (frame_data_size != sizeof(error_frame_t)) {
+      TION_LOGW(TAG, "Incorrect error response data size: %u", frame_data_size);
+    } else {
+      auto frame = *static_cast<const error_frame_t *>(frame_data);
+      // this->on_errors(frame->errors, frame->request_id);
+    }
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_TEST_RSP) {
+    if (frame_data_size != sizeof(uint32_t)) {
+      TION_LOGW(TAG, "Incorrect test response data size: %u", frame_data_size);
+    } else {
+      // auto test_type = static_cast<const uint32_t *>(frame_data);
+      // TION_LOGV(TAG, "test_type: %u", test_type);
+    }
+    return true;
+  }
+
+  TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+  return false;
 }
 
-bool TionApi4s::write_state(const tion4s_state_t &state) const {
-  TION_LOGD(TAG, "Write state");
+bool TionApi4s::request_dev_status() const {
+  TION_LOGD(TAG, "Request[] Device status");
+  return this->write_frame(FRAME_TYPE_DEV_STATUS_REQ);
+}
+
+bool TionApi4s::request_state() const {
+  TION_LOGD(TAG, "Request[] State");
+  return this->write_frame(FRAME_TYPE_STATE_REQ);
+}
+
+bool TionApi4s::request_turbo() const {
+  TION_LOGD(TAG, "Request[] Turbo");
+  // TODO проверить, возможно необходимо/можно послыать request_id
+  return this->write_frame(FRAME_TYPE_TURBO_REQ);
+}
+
+bool TionApi4s::request_time(const uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Time", request_id);
+  return this->write_frame(FRAME_TYPE_TIME_REQ, request_id);
+}
+
+bool TionApi4s::request_errors() const {
+  TION_LOGD(TAG, "Request[] Errors");
+  return this->write_frame(FRAME_TYPE_ERR_CNT_REQ);
+}
+
+bool TionApi4s::request_test() const {
+  TION_LOGD(TAG, "Request[] Test");
+  return this->write_frame(FRAME_TYPE_TEST_REQ);
+}
+
+bool TionApi4s::request_timers(const uint32_t request_id) const {
+  bool res = true;
+  for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
+    res &= this->request_timer(timer_id, request_id);
+  }
+  return res;
+}
+
+bool TionApi4s::request_timer(const uint8_t timer_id, const uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Timer", request_id);
+  struct {
+    uint8_t timer_id;
+  } PACKED timer{.timer_id = timer_id};
+  return this->write_frame(FRAME_TYPE_TIMER_REQ, timer, request_id);
+}
+
+bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Write state", request_id);
   if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
-  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApi4s::reset_filter(const tion4s_state_t &state) const {
-  TION_LOGD(TAG, "Reset filter");
+bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Reset filter", request_id);
   if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -282,33 +343,42 @@ bool TionApi4s::reset_filter(const tion4s_state_t &state) const {
   auto st_set = tion4s_state_set_t::create(state);
   st_set.filter_reset = true;
   st_set.filter_time = 0;
-  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApi4s::factory_reset(const tion4s_state_t &state) const {
-  TION_LOGD(TAG, "Factory reset");
+bool TionApi4s::factory_reset(const tion4s_state_t &state, const uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Factory reset", request_id);
   if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
   st_set.factory_reset = true;
-  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApi4s::set_turbo_time(uint16_t time) const {
-  TION_LOGD(TAG, "Set turbo time %u", time);
+bool TionApi4s::set_turbo_time(const uint16_t time, const uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Set turbo time %u", request_id, time);
   struct {
     uint16_t time;
     uint8_t err_code;
   } PACKED turbo{.time = time, .err_code = 0};
-  return this->write_(FRAME_TYPE_TURBO_SET, turbo, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_TURBO_SET, turbo, request_id);
 };
 
-bool TionApi4s::set_time(int64_t time) const {
-  TION_LOGD(TAG, "Set time %" PRId64, time);
+bool TionApi4s::set_time(const time_t time, const uint32_t request_id) const {
+#if INTPTR_MAX == INT32_MAX
+  TION_LOGD(TAG, "Request[%u] Set time %ld", request_id, time);
+#else
+  TION_LOGD(TAG, "Request[%u] Set time %lld", request_id, time);
+#endif
   tion4s_time_t tm{.unix_time = time};
-  return this->write_(FRAME_TYPE_TIME_SET, tm, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_TIME_SET, tm, request_id);
+}
+
+bool TionApi4s::send_heartbeat() const {
+  TION_LOGV(TAG, "Request[] Heartbeat");
+  return this->write_frame(FRAME_TYPE_HEARTBIT_REQ);
 }
 
 }  // namespace tion

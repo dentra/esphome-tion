@@ -1,7 +1,9 @@
 from esphome.cpp_types import PollingComponent
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import climate, switch, select, sensor
+import esphome.final_validate as fv
+from esphome.core import ID
+from esphome.components import climate, select, sensor
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -10,23 +12,21 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     UNIT_CUBIC_METER,
 )
-from .. import tion  # pylint: disable=relative-beyond-top-level
+from .. import tion, vport  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "select"]
 
 CONF_AIR_INTAKE = "air_intake"
-CONF_EXPERIMENTAL_ALWAYS_PAIR = "experimental_always_pair"
 CONF_PRODUCTIVITY = "productivity"
 UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/h"
 
 Tion3s = tion.tion_ns.class_("Tion3s", PollingComponent, climate.Climate)
-Tion3sBuzzerSwitch = tion.tion_ns.class_("Tion3sBuzzerSwitch", switch.Switch)
 Tion3sAirIntakeSelect = tion.tion_ns.class_("Tion3sAirIntakeSelect", select.Select)
 
 OPTIONS_AIR_INTAKE = ["Indoor", "Mixed", "Outdoor"]
 
-CONFIG_SCHEMA = tion.tion_schema(Tion3s, Tion3sBuzzerSwitch).extend(
+CONFIG_SCHEMA = tion.tion_schema(Tion3s).extend(
     {
         cv.Optional(CONF_AIR_INTAKE): select.SELECT_SCHEMA.extend(
             {
@@ -37,7 +37,6 @@ CONFIG_SCHEMA = tion.tion_schema(Tion3s, Tion3sBuzzerSwitch).extend(
                 ): cv.entity_category,
             }
         ),
-        cv.Optional(CONF_EXPERIMENTAL_ALWAYS_PAIR, default=False): cv.boolean,
         cv.Optional(CONF_PRODUCTIVITY): sensor.sensor_schema(
             unit_of_measurement=UNIT_CUBIC_METER_PER_HOUR,
             accuracy_decimals=2,
@@ -55,5 +54,6 @@ async def to_code(config):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
-    cg.add(var.set_experimental_always_pair(config[CONF_EXPERIMENTAL_ALWAYS_PAIR]))
+    vport_parent = await vport.vport_get_var(config)
+    cg.add(vport_parent.set_api(var))
     await tion.setup_sensor(config, CONF_PRODUCTIVITY, var.set_airflow_counter)

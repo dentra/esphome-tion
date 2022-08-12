@@ -1,6 +1,8 @@
+#include <cstddef>
+
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
-#include "inttypes.h"
+
 #include "tion.h"
 
 namespace esphome {
@@ -13,126 +15,6 @@ static const char *const TAG = "tion";
 
 // application scheduler name
 static const char *const ASH_BOOST = "tion-boost";
-
-// 98f00001-3788-83ea-453e-f52244709ddb
-static const esp_bt_uuid_t BLE_TION_SERVICE{
-    .len = ESP_UUID_LEN_128,
-    .uuid = {
-        .uuid128 = {0xDB, 0x9D, 0x70, 0x44, 0x22, 0xF5, 0x3E, 0x45, 0xEA, 0x83, 0x88, 0x37, 0x01, 0x00, 0xF0, 0x98},
-    }};
-
-// 98f00002-3788-83ea-453e-f52244709ddb
-static const esp_bt_uuid_t BLE_TION_CHAR_TX{
-    .len = ESP_UUID_LEN_128,
-    .uuid = {
-        .uuid128 = {0xDB, 0x9D, 0x70, 0x44, 0x22, 0xF5, 0x3E, 0x45, 0xEA, 0x83, 0x88, 0x37, 0x02, 0x00, 0xF0, 0x98},
-    }};
-
-// 98f00003-3788-83ea-453e-f52244709ddb
-static const esp_bt_uuid_t BLE_TION_CHAR_RX{
-    .len = ESP_UUID_LEN_128,
-    .uuid = {
-        .uuid128 = {0xDB, 0x9D, 0x70, 0x44, 0x22, 0xF5, 0x3E, 0x45, 0xEA, 0x83, 0x88, 0x37, 0x03, 0x00, 0xF0, 0x98},
-    }};
-
-void TionBleNode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
-                                      esp_ble_gattc_cb_param_t *param) {
-  if (event == ESP_GATTC_NOTIFY_EVT) {
-    ESP_LOGV(TAG, "Got notify for handle %04u: %s", param->notify.handle,
-             format_hex_pretty(param->notify.value, param->notify.value_len).c_str());
-    if (param->notify.handle == this->char_rx_) {
-      this->read_data(param->notify.value, param->notify.value_len);
-    }
-    return;
-  }
-
-  if (event == ESP_GATTC_WRITE_DESCR_EVT) {
-    ESP_LOGV(TAG, "write_char_descr at 0x%x complete 0x%02x", param->write.handle, param->write.status);
-    this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
-    this->on_ready();
-    return;
-  }
-
-  if (event == ESP_GATTC_REG_FOR_NOTIFY_EVT) {
-    ESP_LOGV(TAG, "Registring for notify complete");
-    return;
-  }
-
-  if (event == ESP_GATTC_SEARCH_CMPL_EVT) {
-    auto ble_service = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_service());
-
-    auto ble_char_tx = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_char_tx());
-    auto tx = this->parent()->get_characteristic(ble_service, ble_char_tx);
-    if (tx == nullptr) {
-      ESP_LOGE(TAG, "Can't discover TX characteristics");
-      return;
-    }
-    this->char_tx_ = tx->handle;
-
-    auto ble_char_rx = esp32_ble_tracker::ESPBTUUID::from_uuid(this->get_ble_char_rx());
-    auto rx = this->parent()->get_characteristic(ble_service, ble_char_rx);
-    if (rx == nullptr) {
-      ESP_LOGE(TAG, "Can't discover RX characteristics");
-      return;
-    }
-    this->char_rx_ = rx->handle;
-
-    ESP_LOGD(TAG, "Discovering complete");
-    ESP_LOGV(TAG, "  TX handle 0x%x", this->char_tx_);
-    ESP_LOGV(TAG, "  RX handle 0x%x", this->char_rx_);
-
-    if (this->ble_reg_for_notify()) {
-      auto err = esp_ble_gattc_register_for_notify(this->parent_->gattc_if, this->parent_->remote_bda, this->char_rx_);
-      ESP_LOGV(TAG, "Register for notify 0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
-    } else {
-      this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
-      this->on_ready();
-    }
-
-    return;
-  }
-
-  if (event == ESP_GATTC_CONNECT_EVT) {
-    // let device to pair
-    auto ble_sec_act = this->get_ble_encryption();
-    if (ble_sec_act != 0) {
-      auto err = esp_ble_set_encryption(param->connect.remote_bda, ble_sec_act);
-      ESP_LOGV(TAG, "Bonding complete: %s", YESNO(err == ESP_OK));
-    } else {
-      ESP_LOGV(TAG, "Bonding skipped");
-    }
-    return;
-  }
-
-#ifdef ESPHOME_LOG_HAS_VERBOSE
-  if (event == ESP_GATTC_WRITE_CHAR_EVT) {
-    ESP_LOGV(TAG, "write_char at 0x%x complete 0x%02x", param->write.handle, param->write.status);
-    return;
-  }
-
-  if (event == ESP_GATTC_ENC_CMPL_CB_EVT) {
-    ESP_LOGV(TAG, "esp_ble_set_encryption complete");
-    return;
-  }
-#endif
-}
-
-bool TionBleNode::write_data(const uint8_t *data, uint16_t size) const {
-  ESP_LOGV(TAG, "write_data to 0x%x: %s", this->char_tx_, format_hex_pretty(data, size).c_str());
-#ifdef ESPHOME_LOG_HAS_VERBOSE
-  esp_gatt_write_type_t write_type = ESP_GATT_WRITE_TYPE_RSP;
-#else
-  esp_gatt_write_type_t write_type = ESP_GATT_WRITE_TYPE_NO_RSP;
-#endif
-  return esp_ble_gattc_write_char(this->parent_->gattc_if, this->parent_->conn_id, this->char_tx_, size,
-                                  const_cast<uint8_t *>(data), write_type, ESP_GATT_AUTH_REQ_NONE) == ESP_OK;
-}
-
-const esp_bt_uuid_t &TionBase::get_ble_service() const { return BLE_TION_SERVICE; }
-
-const esp_bt_uuid_t &TionBase::get_ble_char_tx() const { return BLE_TION_CHAR_TX; }
-
-const esp_bt_uuid_t &TionBase::get_ble_char_rx() const { return BLE_TION_CHAR_RX; }
 
 climate::ClimateTraits TionClimate::traits() {
   auto traits = climate::ClimateTraits();
@@ -208,7 +90,7 @@ void TionClimate::control(const climate::ClimateCall &call) {
     }
   }
 
-  this->write_state();
+  this->write_climate_state();
 }
 
 void TionClimate::set_fan_speed_(uint8_t fan_speed) {
@@ -260,7 +142,7 @@ void TionComponent::setup() {
   }
 }
 
-void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &status) {
+void TionComponent::update_dev_status_(const dentra::tion::tion_dev_status_t &status) {
   if (this->version_ != nullptr) {
     this->version_->publish_state(str_snprintf("%04X", 4, status.firmware_version));
   }
@@ -271,18 +153,7 @@ void TionComponent::read_dev_status_(const dentra::tion::tion_dev_status_t &stat
   ESP_LOGV(TAG, "Firmware version: %04X", status.firmware_version);
 }
 
-void TionDisconnectMixinBase::schedule_disconnect_(TionComponent *c, ble_client::BLEClientNode *n, uint32_t timeout) {
-  if (timeout) {
-    App.scheduler.set_timeout(c, TAG, timeout, [n]() {
-      ESP_LOGV(TAG, "Disconnecting");
-      n->parent()->set_enabled(false);
-    });
-  }
-}
-
-void TionDisconnectMixinBase::cancel_disconnect_(TionComponent *c) { App.scheduler.cancel_timeout(c, TAG); }
-
-bool TionClimateComponentWithBoost::enable_boost_() {
+bool TionClimateComponentBase::enable_boost_() {
   uint32_t boost_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
   if (boost_time == 0) {
     ESP_LOGW(TAG, "Boost time is not configured");
@@ -294,7 +165,7 @@ bool TionClimateComponentWithBoost::enable_boost_() {
     ESP_LOGD(TAG, "Schedule boost timeout for %u s", boost_time);
     App.scheduler.set_timeout(this, ASH_BOOST, boost_time * 1000, [this]() {
       this->cancel_preset_(*this->preset);
-      this->write_state();
+      this->write_climate_state();
     });
     return true;
   }
@@ -313,14 +184,14 @@ bool TionClimateComponentWithBoost::enable_boost_() {
       this->boost_time_left_->publish_state(static_cast<float>(time_left) / static_cast<float>(boost_time / 100));
     } else {
       this->cancel_preset_(*this->preset);
-      this->write_state();
+      this->write_climate_state();
     }
   });
 
   return true;
 }
 
-void TionClimateComponentWithBoost::cancel_boost_() {
+void TionClimateComponentBase::cancel_boost_() {
   if (this->boost_time_left_) {
     ESP_LOGV(TAG, "Cancel boost interval");
     App.scheduler.cancel_interval(this, ASH_BOOST);
@@ -329,6 +200,20 @@ void TionClimateComponentWithBoost::cancel_boost_() {
     App.scheduler.cancel_timeout(this, ASH_BOOST);
   }
   this->boost_time_left_->publish_state(NAN);
+}
+
+void TionClimateComponentBase::dump_component_config(const char *TAG, const char *component) const {
+  LOG_CLIMATE(component, "", this);
+  LOG_TEXT_SENSOR("  ", "Version", this->version_);
+  LOG_SWITCH("  ", "Buzzer", this->buzzer_);
+  LOG_SWITCH("  ", "Led", this->led_);
+  LOG_SENSOR("  ", "Outdoor Temperature", this->outdoor_temperature_);
+  LOG_SENSOR("  ", "Heater Power", this->heater_power_);
+  LOG_SENSOR("  ", "Airflow Counter", this->airflow_counter_);
+  LOG_SENSOR("  ", "Filter Time Left", this->filter_time_left_);
+  LOG_BINARY_SENSOR("  ", "Filter Warnout", this->filter_warnout_);
+  LOG_NUMBER("  ", "Boost Time", this->boost_time_);
+  LOG_SENSOR("  ", "Boost Time Left", this->boost_time_left_);
 }
 
 }  // namespace tion

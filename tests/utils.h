@@ -8,9 +8,11 @@
 #include <stdarg.h>  // va_list
 
 #define ONOFF(b) ((b) ? "ON" : "OFF")
+#define TRUEFALSE(b) ((b) ? "TRUE" : "FALSE")
 
 using test_fn_t = std::function<bool(bool)>;
 
+int char2int(char ch);
 std::vector<uint8_t> from_hex(const std::string &hex);
 std::string hex(const void *data, uint32_t size, char sep = 0, bool add_size = false);
 inline std::string hexencode(const void *data, uint32_t size) { return hex(data, size, '.', true); }

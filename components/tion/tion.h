@@ -1,13 +1,15 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/components/ble_client/ble_client.h"
+
 #include "esphome/components/climate/climate.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/number/number.h"
+
+#include "../vport/vport.h"
 
 #include "../tion-api/log.h"
 #include "../tion-api/tion-api.h"
@@ -17,42 +19,6 @@ namespace tion {
 
 // default boost time - 10 minutes
 #define DEFAULT_BOOST_TIME_SEC 10 * 60
-
-class TionBleNode : public ble_client::BLEClientNode {
- public:
-  void gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
-                           esp_ble_gattc_cb_param_t *param) override;
-  virtual void on_ready() = 0;
-  virtual void read_data(const uint8_t *data, uint16_t size) = 0;
-  virtual bool write_data(const uint8_t *data, uint16_t size) const;
-
-  virtual const esp_bt_uuid_t &get_ble_service() const = 0;
-  virtual const esp_bt_uuid_t &get_ble_char_tx() const = 0;
-  virtual const esp_bt_uuid_t &get_ble_char_rx() const = 0;
-  virtual esp_ble_sec_act_t get_ble_encryption() const { return esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM; }
-  virtual bool ble_reg_for_notify() const { return true; }
-
-  bool is_connected() const { return this->node_state == esp32_ble_tracker::ClientState::ESTABLISHED; }
-
- protected:
-  uint16_t char_rx_;
-  uint16_t char_tx_;
-};
-
-class TionBase : public TionBleNode {
- public:
-  const esp_bt_uuid_t &get_ble_service() const override;
-  const esp_bt_uuid_t &get_ble_char_tx() const override;
-  const esp_bt_uuid_t &get_ble_char_rx() const override;
-};
-
-template<class T> class Tion : public TionBase, public T {
-  static_assert(std::is_base_of<dentra::tion::TionApi, T>::value, "T must derived from dentra::tion::TionApi class");
-
- public:
-  void read_data(const uint8_t *data, uint16_t size) override { T::read_data(data, size); }
-  bool write_data(const uint8_t *data, uint16_t size) const override { return TionBase::write_data(data, size); }
-};
 
 struct tion_preset_t {
   uint8_t fan_speed;
@@ -65,7 +31,7 @@ class TionClimate : public climate::Climate {
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;
 
-  virtual bool write_state() = 0;
+  virtual bool write_climate_state() = 0;
 
   /**
    * Update default preset.
@@ -127,7 +93,7 @@ class TionClimate : public climate::Climate {
   std::set<climate::ClimatePreset> supported_presets_{};
 };
 
-class TionComponent : public PollingComponent {
+class TionComponent : public Component {
  public:
   void setup() override;
 
@@ -145,11 +111,6 @@ class TionComponent : public PollingComponent {
   void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
 
-  void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; }
-  void set_persistent_connection(bool persistent_connection) { this->persistent_connection_ = persistent_connection; }
-
-  bool is_persistent_connection() const { return this->persistent_connection_; }
-
  protected:
   text_sensor::TextSensor *version_{};
   switch_::Switch *buzzer_{};
@@ -163,10 +124,86 @@ class TionComponent : public PollingComponent {
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
 
-  uint32_t state_timeout_{};
-  bool persistent_connection_{};
+  void update_dev_status_(const dentra::tion::tion_dev_status_t &status);
+};
 
-  void read_dev_status_(const dentra::tion::tion_dev_status_t &status);
+class TionClimateComponentBase : public TionClimate, public TionComponent, public vport::VPortListener<uint16_t> {
+ public:
+  void dump_component_config(const char *TAG, const char *component) const;
+
+  /// Device is connected and ready to receive command requests.
+  virtual bool on_ready() = 0;
+  /// Time to request device state.
+  virtual bool on_poll() const = 0;
+
+  virtual bool send_heartbeat() const = 0;
+
+ protected:
+  enum : uint8_t {
+    DIRTY_STATE = 1 << 0,
+  };
+  uint8_t dirty_flag_{};
+  bool is_dirty_(uint8_t flag) { return (this->dirty_flag_ & flag) != 0; }
+  void set_dirty_(uint8_t flag) { this->dirty_flag_ |= flag; }
+  void drop_dirty_(uint8_t flag) { this->dirty_flag_ &= ~flag; }
+
+  bool enable_boost_() override;
+  void cancel_boost_() override;
+};
+
+class TionVPort {
+ public:
+  enum Type { VPORT_BLE, VPORT_UART };
+  virtual dentra::tion::TionProtocol *get_protocol() const = 0;
+  virtual void schedule_poll() = 0;
+  void set_state_frame_type(uint16_t state_frame_type) { this->state_frame_type_ = state_frame_type; }
+  virtual Type get_vport_type() const = 0;
+
+ protected:
+  uint16_t state_frame_type_;
+};
+
+/**
+ * @param A TionApi implementation.
+ * @param S Tion state struct.
+ */
+template<class A, class S> class TionClimateComponent : public TionClimateComponentBase, public A {
+  // static_assert(std::is_base_of<dentra::tion::TionApi, A>::value, "A must derived from dentra::tion::TionApi class");
+
+ public:
+  explicit TionClimateComponent(TionVPort *vport) : A(vport->get_protocol()), vport_(vport) {
+    vport_->set_state_frame_type(this->get_state_type());
+  }
+
+  bool write_climate_state() override {
+    this->publish_state();
+    this->set_dirty_(DIRTY_STATE);
+    this->vport_->schedule_poll();
+    return true;
+  }
+
+  virtual void update_state(const S &state) = 0;
+  virtual void dump_state(const S &state) const = 0;
+  virtual void flush_state(const S &state) const = 0;
+
+  void on_state(const S &state, const uint32_t request_id) override {
+    if (this->is_dirty_(DIRTY_STATE)) {
+      this->drop_dirty_(DIRTY_STATE);
+      this->flush_state(state);
+      return;
+    }
+    this->update_state(state);
+    this->dump_state(state);
+  }
+
+  bool on_ready() override { return this->request_dev_status(); }
+  bool on_poll() const override { return this->request_state(); }
+  void on_dev_status(const dentra::tion::tion_dev_status_t &status) override { this->update_dev_status_(status); }
+  void on_frame_data(uint16_t type, const void *data, size_t size) override { this->read_frame(type, data, size); }
+  bool send_heartbeat() const override { return A::send_heartbeat(); }
+
+ protected:
+  TionVPort *vport_;
 };
 
 class TionBoostTimeNumber : public number::Number {
@@ -175,26 +212,16 @@ class TionBoostTimeNumber : public number::Number {
   virtual void control(float value) { this->publish_state(value); }
 };
 
-class TionDisconnectMixinBase {
- protected:
-  static void schedule_disconnect_(TionComponent *c, ble_client::BLEClientNode *n, uint32_t timeout);
-  static void cancel_disconnect_(TionComponent *c);
-};
-
-template<typename T> class TionDisconnectMixin : private TionDisconnectMixinBase {
+class TionSwitch : public switch_::Switch {
  public:
-  void schedule_disconnect(uint32_t timeout = 3000) {
-    schedule_disconnect_(static_cast<T *>(this), static_cast<T *>(this), timeout);
+  explicit TionSwitch(TionClimate *parent) : parent_(parent) {}
+  void write_state(bool state) override {
+    this->publish_state(state);
+    this->parent_->write_climate_state();
   }
-  void cancel_disconnect() { cancel_disconnect_(static_cast<T *>(this)); }
-};
 
-class TionClimateComponent : public TionClimate, public TionComponent {};
-
-class TionClimateComponentWithBoost : public TionClimateComponent {
  protected:
-  bool enable_boost_() override;
-  void cancel_boost_() override;
+  TionClimate *parent_;
 };
 
 }  // namespace tion

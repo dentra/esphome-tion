@@ -33,7 +33,7 @@ struct tionlt_state_set_t {
     bool led_state : 1;
     uint8_t auto_co2 : 1;
     uint8_t heater_state : 1;
-    uint8_t last_com_source : 1;  // или last_com_source, или save
+    uint8_t last_com_source : 1;  // last_com_source или save
     bool factory_reset : 1;
     bool error_reset : 1;
     bool filter_reset : 1;
@@ -43,7 +43,7 @@ struct tionlt_state_set_t {
   uint8_t gate_position;
   int8_t target_temperature;
   uint8_t fan_speed;
-  _button_presets button_presets;
+  tionlt_state_t::button_presets_t button_presets;
   uint16_t filter_time;
   uint8_t test_type;
 
@@ -72,12 +72,11 @@ struct tionlt_state_set_t {
 
 float tionlt_state_t::heater_power() const { return flags.heater_present ? heater_var * (0.01f * 1000.0f) : 0.0f; }
 
-void TionApiLt::read_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) {
-  TION_LOGV(TAG, "read frame data 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+uint16_t TionApiLt::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
+
+bool TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
-  if (false) {
-    // just pretty formatting
-  } else if (frame_type == FRAME_TYPE_STATE_RSP) {
+  if (frame_type == FRAME_TYPE_STATE_RSP) {
     struct state_frame_t {
       uint32_t request_id;
       tionlt_state_t state;
@@ -85,43 +84,52 @@ void TionApiLt::read_(uint16_t frame_type, const void *frame_data, uint16_t fram
     if (frame_data_size != sizeof(state_frame_t)) {
       TION_LOGW(TAG, "Incorrect state response data size: %u", frame_data_size);
     } else {
-      this->read(static_cast<const state_frame_t *>(frame_data)->state);
+      auto frame = static_cast<const state_frame_t *>(frame_data);
+      this->on_state(frame->state, frame->request_id);
     }
-  } else if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
+    return true;
+  }
+
+  if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
     if (frame_data_size != sizeof(tion_dev_status_t)) {
       TION_LOGW(TAG, "Incorrect device status response data size: %u", frame_data_size);
     } else {
-      this->read(*static_cast<const tion_dev_status_t *>(frame_data));
+      this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
     }
-  } else if (frame_type == FRAME_TYPE_AUTOKIV_PARAM_RSP) {
-    TION_LOGW(TAG, "FRAME_TYPE_AUTOKIV_PARAM_RSP response: %s", hexencode(frame_data, frame_data_size).c_str());
-  } else {
-    TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+    return true;
   }
+
+  if (frame_type == FRAME_TYPE_AUTOKIV_PARAM_RSP) {
+    TION_LOGW(TAG, "FRAME_TYPE_AUTOKIV_PARAM_RSP response: %s", hexencode(frame_data, frame_data_size).c_str());
+    return true;
+  }
+
+  TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+  return false;
 }
 
-void TionApiLt::request_dev_status() {
-  TION_LOGD(TAG, "Request device status");
-  this->write_(FRAME_TYPE_DEV_STATUS_REQ);
+bool TionApiLt::request_dev_status() const {
+  TION_LOGD(TAG, "Request[] device status");
+  return this->write_frame(FRAME_TYPE_DEV_STATUS_REQ);
 }
 
-void TionApiLt::request_state() {
-  TION_LOGD(TAG, "Request state");
-  this->write_(FRAME_TYPE_STATE_REQ);
+bool TionApiLt::request_state() const {
+  TION_LOGD(TAG, "Request[] state");
+  return this->write_frame(FRAME_TYPE_STATE_REQ);
 }
 
-bool TionApiLt::write_state(const tionlt_state_t &state) const {
-  TION_LOGD(TAG, "Write state");
+bool TionApiLt::write_state(const tionlt_state_t &state, uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Write state", request_id);
   if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state);
-  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApiLt::reset_filter(const tionlt_state_t &state) const {
-  TION_LOGD(TAG, "Reset filter");
+bool TionApiLt::reset_filter(const tionlt_state_t &state, uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Reset filter", request_id);
   if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -129,18 +137,18 @@ bool TionApiLt::reset_filter(const tionlt_state_t &state) const {
   auto st_set = tionlt_state_set_t::create(state);
   st_set.filter_reset = true;
   st_set.filter_time = 0;
-  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApiLt::factory_reset(const tionlt_state_t &state) const {
-  TION_LOGD(TAG, "Factory reset");
+bool TionApiLt::factory_reset(const tionlt_state_t &state, uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%u] Factory reset", request_id);
   if (state.counters.work_time == 0) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state);
   st_set.factory_reset = true;
-  return this->write_(FRAME_TYPE_STATE_SET, st_set, this->next_command_id());
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
 }  // namespace tion

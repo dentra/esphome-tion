@@ -24,13 +24,13 @@ CONF_AIRFLOW_COUNTER = "airflow_counter"
 CONF_FILTER_WARNOUT = "filter_warnout"
 
 
-def tion_lt_schema(tion_class, led_class, buzzer_class):
+def tion_lt_schema(tion_class):
     """Declare base tion lt schema"""
-    return tion.tion_schema(tion_class, buzzer_class).extend(
+    return tion.tion_schema(tion_class).extend(
         {
             cv.Optional(CONF_LED): switch.SWITCH_SCHEMA.extend(
                 {
-                    cv.GenerateID(): cv.declare_id(led_class),
+                    cv.GenerateID(): cv.declare_id(tion.TionSwitch),
                     cv.Optional(CONF_ICON, default="mdi:led-on"): cv.icon,
                     cv.Optional(
                         CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG

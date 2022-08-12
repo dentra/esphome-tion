@@ -6,32 +6,9 @@ namespace tion {
 
 static const char *const TAG = "tion_lt";
 
-void TionLt::on_ready() { this->request_dev_status(); }
+void TionLt::dump_config() { this->dump_component_config(TAG, "Tion Lite"); }
 
-void TionLt::read(const tion_dev_status_t &status) {
-  if (status.device_type != tion_dev_status_t::BRLT) {
-    this->parent_->set_enabled(false);
-    ESP_LOGE(TAG, "Unsupported device type %04X", status.device_type);
-    return;
-  }
-  this->read_dev_status_(status);
-  this->run_polling();
-}
-
-void TionLt::run_polling() {
-  this->request_state();
-  this->schedule_disconnect(this->state_timeout_);
-}
-
-void TionLt::read(const tionlt_state_t &state) {
-  if (this->dirty_) {
-    this->dirty_ = false;
-    this->flush_state_(state);
-    return;
-  }
-
-  this->cancel_disconnect();
-
+void TionLt::update_state(const tionlt_state_t &state) {
   this->max_fan_speed_ = state.max_fan_speed;
 
   this->mode = state.flags.power_state
@@ -69,7 +46,9 @@ void TionLt::read(const tionlt_state_t &state) {
   if (this->filter_time_left_) {
     this->filter_time_left_->publish_state(state.counters.filter_days());
   }
+}
 
+void TionLt::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state         : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp      : %d", state.current_temperature);
@@ -100,13 +79,9 @@ void TionLt::read(const tionlt_state_t &state) {
   ESP_LOGV(TAG, "btn_prs.temp2     : %d", state.button_presets.temp[2]);
   ESP_LOGV(TAG, "btn_prs.fan_speed2: %d", state.button_presets.fan_speed[2]);
   ESP_LOGV(TAG, "test_type         : %u", state.test_type);
-
-  if (!this->is_persistent_connection()) {
-    this->schedule_disconnect();
-  }
 }
 
-void TionLt::flush_state_(const tionlt_state_t &state_) const {
+void TionLt::flush_state(const tionlt_state_t &state_) const {
   tionlt_state_t state = state_;
   if (this->custom_fan_mode.has_value()) {
     auto fan_speed = this->get_fan_speed_();
@@ -150,26 +125,7 @@ void TionLt::flush_state_(const tionlt_state_t &state_) const {
     state.flags.heater_state = heater_state;
   }
 
-  TionApiLt::write_state(state);
-}
-
-bool TionLt::write_state() {
-  this->publish_state();
-  this->dirty_ = true;
-  if (this->is_persistent_connection() && this->is_connected()) {
-    this->request_state();
-  } else {
-    this->parent_->set_enabled(true);
-  }
-  return true;
-}
-
-void TionLt::update() {
-  if (this->is_persistent_connection() && this->is_connected()) {
-    this->run_polling();
-  } else {
-    this->parent_->set_enabled(true);
-  }
+  TionApiLt::write_state(state, 1);
 }
 
 }  // namespace tion

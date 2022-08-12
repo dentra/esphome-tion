@@ -7,12 +7,6 @@ namespace tion {
 
 #pragma pack(push, 1)
 
-struct _button_presets {
-  enum { PRESET_NUMBER = 3 };
-  int8_t temp[PRESET_NUMBER];
-  uint8_t fan_speed[PRESET_NUMBER];
-};
-
 struct tionlt_state_t {
   struct {
     // состояние (power state)
@@ -48,7 +42,11 @@ struct tionlt_state_t {
       uint8_t er[ERROR_TYPE_NUMBER];
     } cnt;
   } errors;
-  _button_presets button_presets;
+  struct button_presets_t {
+    enum { PRESET_NUMBER = 3 };
+    int8_t temp[PRESET_NUMBER];
+    uint8_t fan_speed[PRESET_NUMBER];
+  } button_presets;
   uint8_t max_fan_speed;
   uint8_t heater_var;
   uint8_t test_type;
@@ -57,20 +55,21 @@ struct tionlt_state_t {
 
 #pragma pack(pop)
 
-class TionApiLt : public TionApi {
+class TionApiLt : public TionApi<tionlt_state_t> {
  public:
-  virtual void read(const tion_dev_status_t &status) {}
-  virtual void read(const tionlt_state_t &state) {}
+  explicit TionApiLt(TionFrameWriter *writer) : TionApi(writer) {}
 
-  void request_dev_status() override;
-  void request_state() override;
+  uint16_t get_state_type() const override;
 
-  bool write_state(const tionlt_state_t &state) const;
-  bool reset_filter(const tionlt_state_t &state) const;
-  bool factory_reset(const tionlt_state_t &state) const;
+  bool request_dev_status() const override;
+  bool request_state() const override;
+
+  bool write_state(const tionlt_state_t &state, uint32_t request_id = 0) const;
+  bool reset_filter(const tionlt_state_t &state, uint32_t request_id = 0) const;
+  bool factory_reset(const tionlt_state_t &state, uint32_t request_id = 0) const;
 
  protected:
-  void read_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) override;
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override;
 };
 
 }  // namespace tion

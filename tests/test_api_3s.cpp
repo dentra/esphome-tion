@@ -2,23 +2,43 @@
 #include <vector>
 #include "utils.h"
 
-#include "test_api.h"
 #include "../components/tion-api/tion-api-3s.h"
+#include "../components/tion-api/tion-api-ble-3s.h"
 
 using namespace dentra::tion;
 
 static std::vector<uint8_t> wr_data_;
 
-class Api3sTest : public TionsApi3s {
+class Ble3sProtocolTest : public dentra::tion::TionBle3sProtocol {
  public:
-  bool write_data(const uint8_t *data, uint16_t size) const override {
+  bool write_data(const uint8_t *data, size_t size) const override {
     LOGD("Writting data: %s", hexencode(data, size).c_str());
     wr_data_.insert(wr_data_.end(), data, data + size);
     return true;
   }
+  bool read_data(const std::vector<uint8_t> &data) {
+    return dentra::tion::TionBle3sProtocol::read_data(data.data(), data.size());
+  }
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override {
+    return this->reader_->read_frame(frame_type, frame_data, frame_data_size);
+  }
+  template<class T, typename std::enable_if<std::is_base_of<TionFrameReader, T>::value, bool>::type = true>
+  void set_api(T *api) {
+    this->reader_ = api;
+  }
+
+ protected:
+  dentra::tion::TionFrameReader *reader_{};
+};
+
+class Api3sTest : public TionsApi3s {
+ public:
+  Api3sTest(Ble3sProtocolTest *writer) : TionsApi3s(writer) {}
+  uint16_t get_state_type() const override { return 0; }
+  bool request_dev_status() const override { return true; }
 
   tion3s_state_t state{};
-  void read(const tion3s_state_t &state) {
+  void on_state(const tion3s_state_t &state, uint32_t request_id) override {
     LOGD("Received tion3s_state_t %s", hexencode(&state, sizeof(state)).c_str());
     this->log_state(state);
     this->state = state;
@@ -42,7 +62,9 @@ class Api3sTest : public TionsApi3s {
 bool test_api_3s(bool print) {
   bool res = true;
 
-  Api3sTest api;
+  Ble3sProtocolTest p;
+  Api3sTest api(&p);
+  p.set_api(&api);
 
   wr_data_.clear();
   api.request_state();
@@ -73,7 +95,7 @@ bool test_api_3s(bool print) {
 
   tion3s_state_t copy = api.state;
   api.state = {};
-  test_check(res, api.read_data(from_hex("B3.10.21.17.0B.00.00.00.00.4F.00.0E.2D.00.00.00.00.FF.FF.5A")), true);
+  test_check(res, p.read_data(from_hex("B3.10.21.17.0B.00.00.00.00.4F.00.0E.2D.00.00.00.00.FF.FF.5A")), true);
   test_check(res, std::vector<uint8_t>((uint8_t *) &api.state, (uint8_t *) &api.state + sizeof(api.state)),
              std::vector<uint8_t>((uint8_t *) &copy, (uint8_t *) &copy + sizeof(copy)));
 

@@ -14,7 +14,7 @@ LIBS=(
     mbedcrypto
 )
 
-FLAGS="-rdynamic"
+FLAGS="-rdynamic -fno-rtti"
 
 if [ "$1" != "debug" ]; then
   FLAGS="-O3 $FLAGS"

@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome.core import CORE, ID
 from esphome.components import (
-    ble_client,
     climate,
     switch,
     sensor,
@@ -20,18 +20,18 @@ from esphome.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_CONFIG,
-    PLATFORM_ESP32,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_NONE,
     UNIT_CELSIUS,
     UNIT_MINUTE,
     UNIT_PERCENT,
 )
+from .. import vport  # pylint: disable=relative-beyond-top-level
 
 
 CODEOWNERS = ["@dentra"]
-ESP_PLATFORMS = [PLATFORM_ESP32]
-DEPENDENCIES = ["ble_client"]
+# ESP_PLATFORMS = [PLATFORM_ESP32]
+# DEPENDENCIES = ["ble_client"]
 AUTO_LOAD = [
     "tion-api",
     "sensor",
@@ -40,6 +40,7 @@ AUTO_LOAD = [
     "binary_sensor",
     "number",
     "select",
+    "climate",
 ]
 
 ICON_AIR_FILTER = "mdi:air-filter"
@@ -53,14 +54,12 @@ CONF_PRESETS = "presets"
 CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
-CONF_STATE_TIMEOUT = "state_timeout"
-CONF_PERSISTENT_CONNECTION = "persistent_connection"
 
 UNIT_DAYS = "days"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
-
+TionSwitch = tion_ns.class_("TionSwitch", switch.Switch)
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -89,77 +88,69 @@ PRESETS_SCHEMA = cv.Schema(
 )
 
 
-def tion_schema(tion_class, buzzer_class):
+def tion_schema(tion_class):
     """Declare base tion schema"""
-    return (
-        climate.CLIMATE_SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(tion_class),
-                cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
-                cv.Optional(CONF_BUZZER): switch.SWITCH_SCHEMA.extend(
-                    {
-                        cv.GenerateID(): cv.declare_id(buzzer_class),
-                        cv.Optional(CONF_ICON, default="mdi:volume-high"): cv.icon,
-                        cv.Optional(
-                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                        ): cv.entity_category,
-                        cv.Optional(CONF_INVERTED): cv.invalid(
-                            "Inverted mode is not supported"
-                        ),
-                    }
-                ),
-                cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
-                    unit_of_measurement=UNIT_CELSIUS,
-                    accuracy_decimals=0,
-                    device_class=DEVICE_CLASS_TEMPERATURE,
-                    state_class=STATE_CLASS_MEASUREMENT,
-                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                ),
-                cv.Optional(CONF_VERSION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
-                    {
-                        cv.GenerateID(): cv.declare_id(text_sensor.TextSensor),
-                        cv.Optional(CONF_ICON, default="mdi:git"): cv.icon,
-                        cv.Optional(
-                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_DIAGNOSTIC
-                        ): cv.entity_category,
-                    }
-                ),
-                cv.Optional(CONF_FILTER_TIME_LEFT): sensor.sensor_schema(
-                    unit_of_measurement=UNIT_DAYS,
-                    accuracy_decimals=0,
-                    icon=ICON_AIR_FILTER,
-                    state_class=STATE_CLASS_NONE,
-                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                ),
-                cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
-                    {
-                        cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
-                        cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
-                        cv.Optional(
-                            CONF_UNIT_OF_MEASUREMENT, default=UNIT_MINUTE
-                        ): cv.string_strict,
-                        cv.Optional(
-                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                        ): cv.entity_category,
-                    }
-                ),
-                cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
-                    unit_of_measurement=UNIT_PERCENT,
-                    accuracy_decimals=1,
-                    icon="mdi:clock-end",
-                    state_class=STATE_CLASS_NONE,
-                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-                ),
-                cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
-                cv.Optional(
-                    CONF_STATE_TIMEOUT, default="15s"
-                ): cv.positive_time_period_milliseconds,
-                cv.Optional(CONF_PERSISTENT_CONNECTION, default=False): cv.boolean,
-            }
-        )
-        .extend(ble_client.BLE_CLIENT_SCHEMA)
-        .extend(cv.polling_component_schema("60s"))
-    )
+    return climate.CLIMATE_SCHEMA.extend(
+        {
+            cv.GenerateID(): cv.declare_id(tion_class),
+            cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
+            cv.Optional(CONF_BUZZER): switch.SWITCH_SCHEMA.extend(
+                {
+                    cv.GenerateID(): cv.declare_id(TionSwitch),
+                    cv.Optional(CONF_ICON, default="mdi:volume-high"): cv.icon,
+                    cv.Optional(
+                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
+                    ): cv.entity_category,
+                    cv.Optional(CONF_INVERTED): cv.invalid(
+                        "Inverted mode is not supported"
+                    ),
+                }
+            ),
+            cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
+                unit_of_measurement=UNIT_CELSIUS,
+                accuracy_decimals=0,
+                device_class=DEVICE_CLASS_TEMPERATURE,
+                state_class=STATE_CLASS_MEASUREMENT,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_VERSION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
+                {
+                    cv.GenerateID(): cv.declare_id(text_sensor.TextSensor),
+                    cv.Optional(CONF_ICON, default="mdi:git"): cv.icon,
+                    cv.Optional(
+                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_DIAGNOSTIC
+                    ): cv.entity_category,
+                }
+            ),
+            cv.Optional(CONF_FILTER_TIME_LEFT): sensor.sensor_schema(
+                unit_of_measurement=UNIT_DAYS,
+                accuracy_decimals=0,
+                icon=ICON_AIR_FILTER,
+                state_class=STATE_CLASS_NONE,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
+                {
+                    cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
+                    cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
+                    cv.Optional(
+                        CONF_UNIT_OF_MEASUREMENT, default=UNIT_MINUTE
+                    ): cv.string_strict,
+                    cv.Optional(
+                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
+                    ): cv.entity_category,
+                }
+            ),
+            cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
+                unit_of_measurement=UNIT_PERCENT,
+                accuracy_decimals=1,
+                icon="mdi:clock-end",
+                state_class=STATE_CLASS_NONE,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+            cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
+        }
+    ).extend(vport.VPORT_CLIENT_SCHEMA)
 
 
 async def setup_binary_sensor(config, key, setter):
@@ -248,10 +239,12 @@ async def setup_presets(config, key, setter) -> None:
 
 async def setup_tion_core(config):
     """Setup core component properties"""
-    var = cg.new_Pvariable(config[CONF_ID])
+    vport_parent = await vport.vport_get_var(config)
+    var = cg.new_Pvariable(config[CONF_ID], vport_parent)
     await cg.register_component(var, config)
-    await ble_client.register_ble_node(var, config)
     await climate.register_climate(var, config)
+    cg.add(vport_parent.add_listener(var))
+    cg.add(vport_parent.set_state_type(var.get_state_type()))
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
     await setup_sensor(config, CONF_OUTDOOR_TEMPERATURE, var.set_outdoor_temperature)
@@ -260,9 +253,6 @@ async def setup_tion_core(config):
     await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
     await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
     await setup_presets(config, CONF_PRESETS, var.update_preset)
-
-    cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
-    cg.add(var.set_persistent_connection(config[CONF_PERSISTENT_CONNECTION]))
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

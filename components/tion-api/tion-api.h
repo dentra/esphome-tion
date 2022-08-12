@@ -1,6 +1,6 @@
 #pragma once
 
-#include <inttypes.h>
+#include <cstddef>
 #include <vector>
 
 namespace dentra {
@@ -31,55 +31,76 @@ struct tion_dev_status_t {
   uint8_t reserved[16];
 };
 
+struct tion_heartbeat_t {
+  uint8_t unknown;  // always 1
+};
+
 #pragma pack(pop)
 
-class TionApi {
+class TionFrameReader {
  public:
-  // main point to read data from BLE
-  void read_data(const uint8_t *data, uint16_t size);
-  // main point to read data from BLE
-  void read_data(const std::vector<uint8_t> &data) { this->read_data(data.data(), data.size()); }
-  // main point to write data to BLE
-  virtual bool write_data(const uint8_t *data, uint16_t size) const = 0;
+  virtual bool read_frame(uint16_t type, const void *data, size_t size) = 0;
+};
 
-  // virtual void read(const tion_dev_status_t &status) = 0;
+class TionFrameWriter {
+ public:
+  virtual bool write_frame(uint16_t type, const void *data, size_t size) const = 0;
+};
 
-  virtual void request_dev_status() = 0;
-  virtual void request_state() = 0;
+class TionApiBase : public TionFrameReader {
+ public:
+  explicit TionApiBase(TionFrameWriter *writer) : writer_(writer) {}
+
+  virtual uint16_t get_state_type() const = 0;
+
+  /// Write any frame data.
+  bool write_frame(uint16_t type, const void *data, size_t size) const;
+  /// Write a frame with empty data.
+  bool write_frame(uint16_t type) const { return this->write_frame(type, nullptr, 0); }
+  /// Write a frame with empty data and request_id (4S and Lite only).
+  bool write_frame(uint16_t type, uint32_t request_id) const {
+    return this->write_frame(type, &request_id, sizeof(request_id));
+  }
+  /// Write a frame data struct.
+  template<class T, typename std::enable_if<std::is_class<T>::value, bool>::type = true>
+  bool write_frame(uint16_t type, const T &data) const {
+    return this->write_frame(type, &data, sizeof(data));
+  }
+  /// Write a frame data struct with request id (4S and Lite only).
+  template<class T, typename std::enable_if<std::is_class<T>::value, bool>::type = true>
+  bool write_frame(uint16_t type, const T &data, uint32_t request_id) const {
+    struct {
+      uint32_t request_id;
+      T data;
+    } __attribute__((__packed__)) req{.request_id = request_id, .data = data};
+    return this->write_frame(type, &req, sizeof(req));
+  }
 
  protected:
-  std::vector<uint8_t> rx_buf_;
+  TionFrameWriter *writer_;
+};
 
-  // the loweest level of reading data. read BLE packets
-  void read_packet_(uint8_t packet_type, const uint8_t *data, uint16_t size);
-  // the middle level of reading data
-  void read_frame_(const void *data, uint32_t size);
-  // the highest level of reading data
-  virtual void read_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) = 0;
+template<class S> class TionApi : public TionApiBase {
+ public:
+  explicit TionApi(TionFrameWriter *writer) : TionApiBase(writer) {}
 
-  // write any frame data
-  bool write_frame_(uint16_t frame_type, const void *frame_data, uint16_t frame_data_size) const;
+  /// Response to send_heartbeat command request.
+  virtual void on_heartbeat(const tion_heartbeat_t &heartbeat) {}
+  /// Send heartbeat commmand request.
+  virtual bool send_heartbeat() const { return false; }
+  /// Response to request_dev_status command request.
+  virtual void on_dev_status(const tion_dev_status_t &status) {}
+  /// Request device for its status.
+  virtual bool request_dev_status() const = 0;
+  /// Response to request_state command request.
+  virtual void on_state(const S &state, uint32_t request_id) {}
+  /// Request device for its state.
+  virtual bool request_state() const = 0;
+};
 
-  // write a frame with empty data
-  bool write_(uint16_t frame_type) const { return this->write_frame_(frame_type, nullptr, 0); }
-
-  // write a frame data
-  template<class T> bool write_(uint16_t frame_type, const T &frame_data) const {
-    return this->write_frame_(frame_type, &frame_data, sizeof(frame_data));
-  }
-
-  // write a frame data with command id
-  template<class T> bool write_(uint16_t frame_type, const T &frame_data, uint32_t command_id) const {
-    struct {
-      uint32_t command_id;
-      T data;
-    } __attribute__((packed)) req{.command_id = command_id, .data = frame_data};
-    return this->write_frame_(frame_type, &req, sizeof(req));
-  }
-
-  bool write_packet_(const void *data, uint16_t size) const;
-
-  uint32_t next_command_id() const { return 1; }
+class TionProtocol : public TionFrameWriter, public TionFrameReader {
+ public:
+  virtual bool write_data(const uint8_t *data, size_t size) const = 0;
 };
 
 }  // namespace tion
