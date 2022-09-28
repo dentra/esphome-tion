@@ -14,11 +14,12 @@ CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "number"]
 
 Tion4s = tion.tion_ns.class_("Tion4s", PollingComponent, climate.Climate)
+TionApi4s = tion.tion_ns.class_("TionApi4s")
 
 CONF_RECIRCULATION = "recirculation"
 
 
-CONFIG_SCHEMA = tion_lt.tion_lt_schema(Tion4s).extend(
+CONFIG_SCHEMA = tion_lt.tion_lt_schema(Tion4s, TionApi4s).extend(
     {
         cv.Optional(CONF_RECIRCULATION): switch.SWITCH_SCHEMA.extend(
             {

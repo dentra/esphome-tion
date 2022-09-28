@@ -1,55 +1,68 @@
 
 #include "utils.h"
 #include "../components/tion-api/tion-api-4s.h"
-
 #include "test_api_4s.h"
+#include "test_vport.h"
 
 using namespace dentra::tion;
 
 static std::vector<uint8_t> wr_data_;
 
-class BleProtocol4sTest : public BleProtocolTest {
+class Api4sTest {
+  using this_type = Api4sTest;
+
  public:
-  bool write_data(const uint8_t *data, size_t size) const override {
+  TionApi4s api;
+
+  explicit Api4sTest(TestTionBleLtProtocol *protocol) {
+    protocol->reader.set<Api4sTest, &Api4sTest::read_frame>(*this);
+    protocol->writer.set<Api4sTest, &Api4sTest::write_data>(*this);
+
+    this->api.writer.set<TionBleLtProtocol, &TionBleLtProtocol::write_frame>(*protocol);
+    this->api.on_state.set<Api4sTest, &Api4sTest::on_state>(*this);
+    this->api.on_dev_status.set<Api4sTest, &Api4sTest::on_dev_status>(*this);
+    this->api.on_turbo.set<Api4sTest, &Api4sTest::on_turbo>(*this);
+    this->api.on_time.set<Api4sTest, &Api4sTest::on_time>(*this);
+  }
+
+  uint16_t received_struct_ = {};
+
+  bool write_data(const uint8_t *data, size_t size) {
     LOGD("Writting data: %s", hexencode(data, size).c_str());
     wr_data_.insert(wr_data_.end(), data, data + size);
     return true;
   }
-};
 
-class Api4sTest : public TionApi4s {
- public:
-  explicit Api4sTest(BleProtocol4sTest *writer) : TionApi4s(writer) {}
+  bool read_frame(uint16_t type, const void *data, size_t size) { return this->api.read_frame(type, data, size); }
 
-  uint16_t received_struct_ = {};
+  void on_state(const tion4s_state_t &state, uint32_t request_id) {
+    this->received_struct_ = STATE;
+    LOGD("Received tion_state_t");
+  }
 
-  void on_dev_status(const tion_dev_status_t &dev_status) override {
-    received_struct_ = DEV_STATUS;
+  void on_dev_status(const tion_dev_status_t &dev_status) {
+    this->received_struct_ = DEV_STATUS;
     LOGD("Received tion_dev_status_t");
   };
-  void on_state(const tion4s_state_t &state, uint32_t request_id) override {
-    received_struct_ = STATE;
-    LOGD("Received tion_state_t");
-  };
-  void on_turbo(const tion4s_turbo_t &turbo_state, uint32_t request_id) override {
-    received_struct_ = TURBO;
+
+  void on_turbo(const tion4s_turbo_t &turbo_state, const uint32_t request_id) {
+    this->received_struct_ = TURBO;
     LOGD("Received tion_turbo_state_t");
   };
-  void on_time(const time_t time, uint32_t request_id) override {
-    received_struct_ = TIME;
+
+  void on_time(const time_t time, const uint32_t request_id) {
+    this->received_struct_ = TIME;
     LOGD("Received tion_time_t");
   };
-
- protected:
 };
 
 bool test_api_4s(bool print) {
   bool res = true;
 
-  BleProtocol4sTest p;
+  TestTionBleLtProtocol p;
   for (auto data : test_4s_data) {
     Api4sTest t4s(&p);
-    p.set_api(&t4s);
+    // p.set_api(&t4s);
     for (auto d : data.frames) {
       p.read_data(from_hex(d));
     }
@@ -57,22 +70,22 @@ bool test_api_4s(bool print) {
   }
 
   Api4sTest t4s(&p);
-  p.set_api(&t4s);
+  // p.set_api(&t4s);
 
   wr_data_.clear();
-  t4s.request_state();
+  t4s.api.request_state();
   test_check(res, wr_data_, from_hex("80.0C.00.3A.AD 32.32 01.00.00.00 64.F7"));
 
   wr_data_.clear();
-  t4s.request_dev_status();
+  t4s.api.request_dev_status();
   test_check(res, wr_data_, from_hex("80.0C.00.3A.AD 32.33 01.00.00.00 CE.A6"));
 
   wr_data_.clear();
-  t4s.request_timer(0, 1);
+  t4s.api.request_timer(0, 1);
   test_check(res, wr_data_, from_hex("80.11.00.3A.AD 32.34 01.00.00.00 01.00.00.00.00 DB.D5"));
 
   wr_data_.clear();
-  t4s.request_timers(1);
+  t4s.api.request_timers(1);
   test_check(res, wr_data_,
              from_hex("80.11.00.3A.AD.32.34.01.00.00.00.01.00.00.00.00.DB.D5"
                       "80.11.00.3A.AD.32.34.01.00.00.00.01.00.00.00.01.CB.F4"

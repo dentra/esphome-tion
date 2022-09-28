@@ -11,22 +11,25 @@ using namespace dentra::tion;
 
 // static std::vector<uint8_t> wr_data_;
 
-bool BleProtocolTest::write_data(const uint8_t *data, size_t size) const {
-  LOGD("Writting data: %s", hexencode(data, size).c_str());
-  return true;
-}
-
-class ApiTest : public dentra::tion::TionApi<tion4s_state_t> {
+class ApiTest {
  public:
-  ApiTest(BleProtocolTest *w) : TionApi(w) {}
-  uint16_t get_state_type() const override { return 0; }
-  bool request_dev_status() const override { return false; }
-  bool request_state() const override { return false; }
+  dentra::tion::TionApiBase<tion4s_state_t> api_;
+
+  ApiTest(TestTionBleLtProtocol *w) {
+    w->reader.set<ApiTest, &ApiTest::read_frame>(*this);
+    w->writer.set<ApiTest, &ApiTest::write_data>(*this);
+  }
+
+  bool write_data(const uint8_t *data, size_t size) {
+    LOGD("Writting data: %s", hexencode(data, size).c_str());
+    // wr_data_.insert(wr_data_.end(), data, data + size);
+    return true;
+  }
 
   uint16_t received_frame_type = {};
   uint16_t received_frame_size = {};
 
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override {
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
     LOGD("Received frame data 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
     received_frame_type = frame_type;
     received_frame_size = frame_data_size;
@@ -37,10 +40,9 @@ class ApiTest : public dentra::tion::TionApi<tion4s_state_t> {
 bool test_api(bool print) {
   bool res = true;
 
-  BleProtocolTest p;
+  TestTionBleLtProtocol p;
   for (auto data : test_4s_data) {
     ApiTest t(&p);
-    p.set_api(&t);
     for (auto d : data.frames) {
       p.read_data(from_hex(d));
     }

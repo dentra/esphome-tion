@@ -76,7 +76,10 @@ bool TionsApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t 
   // }
 
   if (frame_type == FRAME_TYPE_STATE_RSP || frame_type == FRAME_TYPE_STATE_SET_RSP) {
-    this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
+    TION_LOGD(TAG, "Response[] State (%04X)", frame_type);
+    if (this->on_state) {
+      this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
+    }
     return true;
   }
 

@@ -43,21 +43,18 @@ struct tion3s_state_t {
 };
 #pragma pack(pop)
 
-class TionsApi3s : public TionApi<tion3s_state_t> {
+class TionsApi3s : public TionApiBase<tion3s_state_t> {
  public:
-  explicit TionsApi3s(TionFrameWriter *writer) : TionApi(writer) {}
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
-  uint16_t get_state_type() const override;
+  uint16_t get_state_type() const;
 
-  bool request_dev_status() const override { return false; }
+  bool request_dev_status() const { return false; }
 
   bool pair() const;
   bool request_state() const;
   bool write_state(const tion3s_state_t &state) const;
   bool reset_filter(const tion3s_state_t &state) const;
-
- protected:
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override;
 };
 
 }  // namespace tion

@@ -2,6 +2,9 @@
 
 #include <cstddef>
 #include <vector>
+#include <type_traits>
+
+#include <etl/delegate.h>
 
 namespace dentra {
 namespace tion {
@@ -24,34 +27,19 @@ struct tion_state_counters_t {
 
 struct tion_dev_status_t {
   uint8_t work_mode;  // system_mode
-  enum : uint16_t { IRM = 0x8001, BRLT = 0x8002, BR4S = 0x8003 } device_type;
-  uint16_t device_subtype;  // always 0
+  enum : uint32_t { IRM = 0x8001, BRLT = 0x8002, BR4S = 0x8003 } device_type;
   uint16_t firmware_version;
   uint16_t hardware_version;
   uint8_t reserved[16];
 };
 
-struct tion_heartbeat_t {
-  uint8_t unknown;  // always 1
-};
-
 #pragma pack(pop)
 
-class TionFrameReader {
- public:
-  virtual bool read_frame(uint16_t type, const void *data, size_t size) = 0;
-};
+class TionApiBaseWriter {
+  using writer_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
 
-class TionFrameWriter {
  public:
-  virtual bool write_frame(uint16_t type, const void *data, size_t size) const = 0;
-};
-
-class TionApiBase : public TionFrameReader {
- public:
-  explicit TionApiBase(TionFrameWriter *writer) : writer_(writer) {}
-
-  virtual uint16_t get_state_type() const = 0;
+  writer_type writer{};
 
   /// Write any frame data.
   bool write_frame(uint16_t type, const void *data, size_t size) const;
@@ -77,30 +65,31 @@ class TionApiBase : public TionFrameReader {
   }
 
  protected:
-  TionFrameWriter *writer_;
 };
 
-template<class S> class TionApi : public TionApiBase {
- public:
-  explicit TionApi(TionFrameWriter *writer) : TionApiBase(writer) {}
+template<class state_type> class TionApiBase : public TionApiBaseWriter {
+  /// Callback listener for response to request_dev_status command request.
+  using on_dev_status_type = etl::delegate<void(const tion_dev_status_t &dev_status)>;
+  /// Callback listener for response to request_state command request.
+  using on_state_type = etl::delegate<void(const state_type &state, uint32_t request_id)>;
+  /// Callback listener for response to send_heartbeat command request.
+  using on_heartbeat_type = etl::delegate<void(uint8_t unknown)>;
 
-  /// Response to send_heartbeat command request.
-  virtual void on_heartbeat(const tion_heartbeat_t &heartbeat) {}
-  /// Send heartbeat commmand request.
-  virtual bool send_heartbeat() const { return false; }
-  /// Response to request_dev_status command request.
-  virtual void on_dev_status(const tion_dev_status_t &status) {}
-  /// Request device for its status.
-  virtual bool request_dev_status() const = 0;
-  /// Response to request_state command request.
-  virtual void on_state(const S &state, uint32_t request_id) {}
-  /// Request device for its state.
-  virtual bool request_state() const = 0;
+ public:
+  on_dev_status_type on_dev_status{};
+  on_state_type on_state{};
+#ifdef TION_ENABLE_HEARTBEAT
+  on_heartbeat_type on_heartbeat{};
+#endif
 };
 
-class TionProtocol : public TionFrameWriter, public TionFrameReader {
+class TionProtocol {
+  using writer_type = etl::delegate<bool(const uint8_t *data, size_t size)>;
+  using reader_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
+
  public:
-  virtual bool write_data(const uint8_t *data, size_t size) const = 0;
+  reader_type reader{};
+  writer_type writer{};
 };
 
 }  // namespace tion

@@ -77,37 +77,101 @@ struct tion4s_turbo_t {
   uint8_t err_code;
 };
 
+#ifdef TION_ENABLE_SCHEDULER
+struct tion4s_timers_state_t {
+  enum { TIMERS_COUNT = 12u };
+  struct {
+    bool active : 8;
+  } timers[TIMERS_COUNT];
+};
+
+/// Timer settings.
+struct tion4s_timer_t {
+  struct {
+    bool monday : 1;
+    bool tuesday : 1;
+    bool wednesday : 1;
+    bool thursday : 1;
+    bool friday : 1;
+    bool saturday : 1;
+    bool sunday : 1;
+    bool reserved : 1;
+    uint8_t hours;
+    uint8_t minutes;
+  } schedule;
+  struct {
+    bool power_state : 1;
+    bool sound_state : 1;
+    bool led_state : 1;
+    bool heater_state : 1;
+    bool timer_state : 1;
+    uint8_t reserved : 3;
+  };
+  int8_t target_temperature;
+  uint8_t fan_state;
+  uint8_t device_mode;
+};
+#endif
 #pragma pack(pop)
 
-class TionApi4s : public TionApi<tion4s_state_t> {
+class TionApi4s : public TionApiBase<tion4s_state_t> {
+  /// Callback listener for response to request_turbo command request.
+  using on_turbo_type = etl::delegate<void(const tion4s_turbo_t &turbo, const uint32_t request_id)>;
+#ifdef TION_ENABLE_SCHEDULER
+  /// Callback listener for response to request_time command request.
+  using on_time_type = etl::delegate<void(const time_t time, uint32_t request_id)>;
+  /// Callback listener for response to request_timer command request.
+  using on_timer_type =
+      etl::delegate<void(const uint8_t timer_id, const tion4s_timer_t &timers_state, uint32_t request_id)>;
+  /// Callback listener for response to request_timers_state command request.
+  using on_timers_state_type = etl::delegate<void(const tion4s_timers_state_t &timers_state, uint32_t request_id)>;
+#endif
  public:
-  explicit TionApi4s(TionFrameWriter *writer) : TionApi(writer) {}
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
-  uint16_t get_state_type() const override;
-
-  virtual void on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {}
-  virtual void on_time(const time_t time, const uint32_t request_id) {}
-
-  bool request_dev_status() const override;
-  bool request_state() const override;
-
-  bool request_turbo() const;
-  bool request_time(const uint32_t request_id = 0) const;
-  bool request_errors() const;
-  bool request_test() const;
-  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 0) const;
-  bool request_timers(const uint32_t request_id = 0) const;
+  uint16_t get_state_type() const;
+  bool request_dev_status() const;
+  bool request_state() const;
 
   bool write_state(const tion4s_state_t &state, const uint32_t request_id = 0) const;
   bool reset_filter(const tion4s_state_t &state, const uint32_t request_id = 0) const;
   bool factory_reset(const tion4s_state_t &state, const uint32_t request_id = 0) const;
-  bool set_turbo_time(const uint16_t time, const uint32_t request_id = 0) const;
+
+#ifdef TION_ENABLE_PRESETS
+  bool request_turbo() const;
+
+  /// Callback listener for response to request_turbo command request.
+  on_turbo_type on_turbo{};
+  bool set_turbo(const uint16_t time, const uint32_t request_id = 0) const;
+#endif
+
+#ifdef TION_ENABLE_HEARTBEAT
+  bool send_heartbeat() const;
+#endif
+
+#ifdef TION_ENABLE_SCHEDULER
+  bool request_time(const uint32_t request_id = 0) const;
+
+  /// Callback listener for response to request_time command request.
+  on_time_type on_time{};
   bool set_time(const time_t time, const uint32_t request_id) const;
 
-  bool send_heartbeat() const override;
+  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 0) const;
 
- protected:
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override;
+  /// Callback listener for response to request_timer command request.
+  on_timer_type on_timer{};
+  /// Request all timers.
+  bool request_timers(const uint32_t request_id = 0) const;
+
+  bool request_timers_state(const uint32_t request_id = 0) const;
+  /// Callback listener for response to request_timers_state command request.
+  on_timers_state_type on_timers_state{};
+
+#endif
+#ifdef TION_ENABLE_DIAGNOSTIC
+  bool request_errors() const;
+  bool request_test() const;
+#endif
 };
 
 }  // namespace tion

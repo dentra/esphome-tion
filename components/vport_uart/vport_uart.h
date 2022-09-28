@@ -7,7 +7,9 @@
 namespace esphome {
 namespace vport {
 
-template<typename T> class VPortUARTComponent : public VPortComponent<T> {
+#define VPORT_UART_LOG(TAG, port_name) VPORT_LOG(TAG, port_name);
+
+template<typename frame_type> class VPortUARTComponent : public VPortComponent<frame_type> {
  public:
   explicit VPortUARTComponent(uart::UARTComponent *uart) : uart_(uart) {}
 

@@ -18,7 +18,7 @@ CONFIG_SCHEMA = (
     .extend(
         {
             cv.GenerateID(CONF_PROTOCOL_ID): cv.declare_id(VPortTionUartProtocol),
-            cv.Optional(CONF_HEARTBEAT_INTERVAL, default="3s"): cv.All(
+            cv.Optional(CONF_HEARTBEAT_INTERVAL, default="5s"): cv.All(
                 cv.positive_time_period_milliseconds,
                 cv.Range(min=cv.TimePeriod(seconds=1), min_included=False),
             ),
@@ -29,7 +29,8 @@ CONFIG_SCHEMA = (
 
 async def to_code(config):
     uart_parent = await cg.get_variable(config[uart.CONF_UART_ID])
-    var = cg.new_Pvariable(config[CONF_ID], uart_parent)
+    prot = cg.new_Pvariable(config[CONF_PROTOCOL_ID])
+    var = cg.new_Pvariable(config[CONF_ID], uart_parent, prot)
     await cg.register_component(var, config)
     cg.add(var.set_heartbeat_interval(config[CONF_HEARTBEAT_INTERVAL]))
-    cg.new_Pvariable(config[CONF_PROTOCOL_ID], var)
+    cg.add_build_flag("-DTION_ENABLE_HEARTBEAT")

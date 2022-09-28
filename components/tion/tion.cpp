@@ -30,14 +30,17 @@ climate::ClimateTraits TionClimate::traits() {
   for (uint8_t i = 1, max = i + this->max_fan_speed_; i < max; i++) {
     traits.add_supported_custom_fan_mode(this->fan_speed_to_mode_(i));
   }
+#ifdef TION_ENABLE_PRESETS
   if (!this->supported_presets_.empty()) {
     traits.set_supported_presets(this->supported_presets_);
     traits.add_supported_preset(climate::CLIMATE_PRESET_NONE);
   }
+#endif
   return traits;
 }
 
 void TionClimate::control(const climate::ClimateCall &call) {
+#ifdef TION_ENABLE_PRESETS
   bool preset_set = false;
   if (call.get_preset().has_value()) {
     const auto new_preset = *call.get_preset();
@@ -47,12 +50,16 @@ void TionClimate::control(const climate::ClimateCall &call) {
       preset_set = this->enable_preset_(new_preset);
     }
   }
+#endif
 
   if (call.get_mode().has_value()) {
+#ifdef TION_ENABLE_PRESETS
     if (preset_set) {
       ESP_LOGW(TAG, "%s preset enabled. Ignore change mode.",
                LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
-    } else {
+    } else
+#endif
+    {
       auto mode = *call.get_mode();
       switch (mode) {
         case climate::CLIMATE_MODE_OFF:
@@ -69,20 +76,26 @@ void TionClimate::control(const climate::ClimateCall &call) {
   }
 
   if (call.get_custom_fan_mode().has_value()) {
+#ifdef TION_ENABLE_PRESETS
     if (preset_set) {
       ESP_LOGW(TAG, "%s preset enabled. Ignore change fan speed.",
                LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
-    } else {
+    } else
+#endif
+    {
       this->set_fan_speed_(this->fan_mode_to_speed_(call.get_custom_fan_mode()));
       this->preset = climate::CLIMATE_PRESET_NONE;
     }
   }
 
   if (call.get_target_temperature().has_value()) {
+#ifdef TION_ENABLE_PRESETS
     if (preset_set) {
       ESP_LOGW(TAG, "%s preset enabled. Ignore change target temperature.",
                LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
-    } else {
+    } else
+#endif
+    {
       ESP_LOGD(TAG, "Set target temperature %f", target_temperature);
       const auto target_temperature = *call.get_target_temperature();
       this->target_temperature = target_temperature;
@@ -103,6 +116,7 @@ void TionClimate::set_fan_speed_(uint8_t fan_speed) {
   }
 }
 
+#ifdef TION_ENABLE_PRESETS
 bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
   ESP_LOGD(TAG, "Enable preset %s", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
   if (preset == climate::CLIMATE_PRESET_BOOST) {
@@ -133,26 +147,36 @@ void TionClimate::cancel_preset_(climate::ClimatePreset preset) {
     this->enable_preset_(this->saved_preset_);
   }
 }
+#endif
 
 void TionComponent::setup() {
-  if (this->boost_time_ && std::isnan(this->boost_time_->state)) {
+#ifdef TION_ENABLE_PRESETS
+  if (this->boost_time_) {
+    this->rtc_ = global_preferences->make_preference<uint8_t>(fnv1_hash(TAG));
+    uint8_t boost_time;
+    if (!this->rtc_.load(&boost_time)) {
+      boost_time = DEFAULT_BOOST_TIME_SEC / 60;
+    }
     auto call = this->boost_time_->make_call();
-    call.set_value(DEFAULT_BOOST_TIME_SEC / 60);
+    call.set_value(boost_time);
     call.perform();
   }
+#endif
 }
 
 void TionComponent::update_dev_status_(const dentra::tion::tion_dev_status_t &status) {
   if (this->version_ != nullptr) {
     this->version_->publish_state(str_snprintf("%04X", 4, status.firmware_version));
   }
+#if TION_LOG_LEVEL >= TION_LOG_LEVEL_VERBOSE
   ESP_LOGV(TAG, "Work Mode       : %02X", status.work_mode);
   ESP_LOGV(TAG, "Device type     : %04X", status.device_type);
-  ESP_LOGV(TAG, "Device sub-type : %04X", status.device_subtype);
   ESP_LOGV(TAG, "Hardware version: %04X", status.hardware_version);
   ESP_LOGV(TAG, "Firmware version: %04X", status.firmware_version);
+#endif
 }
 
+#ifdef TION_ENABLE_PRESETS
 bool TionClimateComponentBase::enable_boost_() {
   uint32_t boost_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
   if (boost_time == 0) {
@@ -163,7 +187,7 @@ bool TionClimateComponentBase::enable_boost_() {
   // if boost_time_left not configured, just schedule stop boost after boost_time
   if (this->boost_time_left_ == nullptr) {
     ESP_LOGD(TAG, "Schedule boost timeout for %u s", boost_time);
-    App.scheduler.set_timeout(this, ASH_BOOST, boost_time * 1000, [this]() {
+    this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() {
       this->cancel_preset_(*this->preset);
       this->write_climate_state();
     });
@@ -172,7 +196,7 @@ bool TionClimateComponentBase::enable_boost_() {
 
   // if boost_time_left is configured, schedule update it
   ESP_LOGD(TAG, "Schedule boost interval up to %u s", boost_time);
-  App.scheduler.set_interval(this, ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this, boost_time]() {
+  this->set_interval(ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this, boost_time]() {
     int time_left;
     if (std::isnan(this->boost_time_left_->state)) {
       time_left = boost_time;
@@ -194,15 +218,16 @@ bool TionClimateComponentBase::enable_boost_() {
 void TionClimateComponentBase::cancel_boost_() {
   if (this->boost_time_left_) {
     ESP_LOGV(TAG, "Cancel boost interval");
-    App.scheduler.cancel_interval(this, ASH_BOOST);
+    this->cancel_interval(ASH_BOOST);
   } else {
     ESP_LOGV(TAG, "Cancel boost timeout");
-    App.scheduler.cancel_timeout(this, ASH_BOOST);
+    this->cancel_timeout(ASH_BOOST);
   }
   this->boost_time_left_->publish_state(NAN);
 }
+#endif
 
-void TionClimateComponentBase::dump_component_config(const char *TAG, const char *component) const {
+void TionClimateComponentBase::dump_settings(const char *TAG, const char *component) const {
   LOG_CLIMATE(component, "", this);
   LOG_TEXT_SENSOR("  ", "Version", this->version_);
   LOG_SWITCH("  ", "Buzzer", this->buzzer_);
@@ -212,8 +237,10 @@ void TionClimateComponentBase::dump_component_config(const char *TAG, const char
   LOG_SENSOR("  ", "Airflow Counter", this->airflow_counter_);
   LOG_SENSOR("  ", "Filter Time Left", this->filter_time_left_);
   LOG_BINARY_SENSOR("  ", "Filter Warnout", this->filter_warnout_);
+#ifdef TION_ENABLE_PRESETS
   LOG_NUMBER("  ", "Boost Time", this->boost_time_);
   LOG_SENSOR("  ", "Boost Time Left", this->boost_time_left_);
+#endif
 }
 
 }  // namespace tion

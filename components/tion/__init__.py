@@ -1,6 +1,8 @@
+from esphome import core
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.core import CORE, ID
+from esphome.cpp_generator import MockObj, MockObjClass
 from esphome.components import (
     climate,
     switch,
@@ -33,6 +35,7 @@ CODEOWNERS = ["@dentra"]
 # ESP_PLATFORMS = [PLATFORM_ESP32]
 # DEPENDENCIES = ["ble_client"]
 AUTO_LOAD = [
+    "etl",
     "tion-api",
     "sensor",
     "switch",
@@ -45,6 +48,7 @@ AUTO_LOAD = [
 
 ICON_AIR_FILTER = "mdi:air-filter"
 
+CONF_TION_API_ID = "tion_api_id"
 CONF_BUZZER = "buzzer"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_FILTER_TIME_LEFT = "filter_time_left"
@@ -88,11 +92,12 @@ PRESETS_SCHEMA = cv.Schema(
 )
 
 
-def tion_schema(tion_class):
+def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
     """Declare base tion schema"""
     return climate.CLIMATE_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(tion_class),
+            cv.GenerateID(CONF_TION_API_ID): cv.declare_id(tion_api_class),
             cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
             cv.Optional(CONF_BUZZER): switch.SWITCH_SCHEMA.extend(
                 {
@@ -219,11 +224,12 @@ async def setup_select(config, key, setter, parent, options):
     return slct
 
 
-async def setup_presets(config, key, setter) -> None:
+async def setup_presets(config, key, setter) -> bool:
     """Setup presets"""
     if key not in config:
         return None
     conf = config[key]
+    has_presets = False
     for _, (preset, options) in enumerate(conf.items()):
         preset = climate.CLIMATE_PRESETS[preset.upper()]
         options = options or {}
@@ -235,24 +241,48 @@ async def setup_presets(config, key, setter) -> None:
         fan_speed = options.get(CONF_PRESET_FAN_SPEED, 0)
         target_temperature = options.get(CONF_PRESET_TARGET_TEMPERATURE, 0)
         cg.add(setter(preset, mode, fan_speed, target_temperature))
+        if not has_presets:
+            has_presets = True
+            cg.add_build_flag("-DTION_ENABLE_PRESETS")
+    return has_presets
+
+
+def _type_by_id(platform: str, find_id: str) -> core.ID:
+    for _, item in enumerate(core.CORE.config[platform]):
+        item_id: core.ID = item["id"]
+        if str(item_id.id) == str(find_id):
+            return item_id.type
+    return None
 
 
 async def setup_tion_core(config):
     """Setup core component properties"""
-    vport_parent = await vport.vport_get_var(config)
-    var = cg.new_Pvariable(config[CONF_ID], vport_parent)
+    prt = await vport.vport_get_var(config)
+    api = cg.new_Pvariable(config[CONF_TION_API_ID])
+    var = cg.new_Pvariable(config[CONF_ID], api, prt)
     await cg.register_component(var, config)
     await climate.register_climate(var, config)
-    cg.add(vport_parent.add_listener(var))
-    cg.add(vport_parent.set_state_type(var.get_state_type()))
+
+    cg.add(prt.set_cc(var))
+    cg.add(prt.set_state_type(api.get_state_type()))
+    cg.add(var.set_vport_type(prt.get_vport_type()))
+    cg.add(prt.register_api_writer(api))
+
+    # TODO remove sample
+    # prt_type = _type_by_id("vport", prt.base).base
+    # print("*", prt_type, prt.base)
+    # cg.add(
+    #     api.writer.set.template(prt_type, MockObj(f"&{prt_type}::write_frame", ""))()
+    # )
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
     await setup_sensor(config, CONF_OUTDOOR_TEMPERATURE, var.set_outdoor_temperature)
     await setup_sensor(config, CONF_FILTER_TIME_LEFT, var.set_filter_time_left)
     await setup_text_sensor(config, CONF_VERSION, var.set_version)
-    await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
-    await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
-    await setup_presets(config, CONF_PRESETS, var.update_preset)
+    has_presets = await setup_presets(config, CONF_PRESETS, var.update_preset)
+    if has_presets and "boost" in config[CONF_PRESETS]:
+        await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
+        await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

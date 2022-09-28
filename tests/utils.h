@@ -10,6 +10,8 @@
 #define ONOFF(b) ((b) ? "ON" : "OFF")
 #define TRUEFALSE(b) ((b) ? "TRUE" : "FALSE")
 
+#define PACKED __attribute__((packed))
+
 using test_fn_t = std::function<bool(bool)>;
 
 int char2int(char ch);
@@ -61,6 +63,8 @@ void _test_check_success(const char *file, int line, const char *msg, const std:
   log_printf_(1, __FILE__, __LINE__, (std::string(TAG) + ": " + fmt).c_str(), ##__VA_ARGS__)
 
 uint8_t fast_random_8();
+
+std::string str_snprintf(const char *fmt, size_t len, ...);
 
 // minimal C++11 allocator with debug output
 template<class Tp> struct NAlloc {

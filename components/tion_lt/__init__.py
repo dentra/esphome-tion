@@ -1,5 +1,6 @@
 from esphome.cpp_types import PollingComponent
 import esphome.config_validation as cv
+from esphome.cpp_generator import MockObjClass
 from esphome.components import switch, sensor, binary_sensor
 from esphome.const import (
     CONF_DEVICE_CLASS,
@@ -24,9 +25,9 @@ CONF_AIRFLOW_COUNTER = "airflow_counter"
 CONF_FILTER_WARNOUT = "filter_warnout"
 
 
-def tion_lt_schema(tion_class):
+def tion_lt_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
     """Declare base tion lt schema"""
-    return tion.tion_schema(tion_class).extend(
+    return tion.tion_schema(tion_class, tion_api_class).extend(
         {
             cv.Optional(CONF_LED): switch.SWITCH_SCHEMA.extend(
                 {

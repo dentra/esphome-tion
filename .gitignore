@@ -23,4 +23,5 @@ CMakeLists.txt
 /.clang-format
 /.clang-tidy
 /.editorconfig
+/.pylintrc
 /*-dev.yaml

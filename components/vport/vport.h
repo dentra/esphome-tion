@@ -2,32 +2,51 @@
 
 #include <cstddef>
 #include <vector>
-#include "esphome/core/component.h"
+#include <type_traits>
+#include <etl/delegate.h>
 
 namespace esphome {
 namespace vport {
 
-template<typename T> class VPortListener {
+template<typename frame_type> class VPortCodec {
  public:
-  /// Read the data array from vport with specified type and size.
-  virtual void on_frame_data(T type, const void *data, size_t size) = 0;
+  bool decode(const uint8_t *data, size_t size);
+  bool encode(frame_type type, const void *data, size_t size);
 };
 
-template<typename T> class VPort {
- public:
-  void add_listener(VPortListener<T> *listener) { this->listeners_.push_back(listener); }
+template<typename frame_type> class VPort {
+  using on_ready_type = etl::delegate<bool()>;
+  using on_update_type = etl::delegate<bool()>;
+  using on_frame_type = etl::delegate<bool(frame_type type, const void *data, size_t size)>;
 
-  void fire_listeners(T type, const void *data, size_t size) const {
-    for (auto listener : this->listeners_) {
-      listener->on_frame_data(type, data, size);
+ public:
+  void fire_frame(frame_type type, const void *data, size_t size) const {
+    if (this->on_frame) {
+      this->on_frame(type, data, size);
     }
   }
 
- protected:
-  std::vector<VPortListener<T> *> listeners_;
-};
+  void fire_poll() {
+    if (this->on_update) {
+      this->on_update();
+    }
+  }
 
-template<typename T> class VPortComponent : public VPort<T>, public PollingComponent {};
+  void fire_ready() {
+    if (this->on_ready) {
+      if (!this->on_ready()) {
+        return;
+      }
+    }
+    if (this->on_update) {
+      this->on_update();
+    }
+  }
+
+  on_ready_type on_ready{};
+  on_update_type on_update{};
+  on_frame_type on_frame{};
+};
 
 }  // namespace vport
 }  // namespace esphome

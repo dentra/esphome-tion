@@ -16,46 +16,58 @@ enum : uint8_t {
 };
 
 void Tion4s::dump_config() {
-  this->dump_component_config(TAG, "Tion 4S");
+  this->dump_settings(TAG, "Tion 4S");
   LOG_SWITCH("  ", "Recirculation", this->recirculation_);
 }
 
 bool Tion4s::on_ready() {
   bool res = true;
-  res &= this->request_dev_status();
-  res &= this->request_time();
-  // res &=this->request_errors();
-  // res &=this->request_test();
-  res &= this->request_time();
-  // res &=this->request_timers();
+  res &= this->api_->request_dev_status();
+#ifdef TION_ENABLE_SCHEDULER
+  res &= this->api_->request_time();
+  // res &= this->api_->request_timers();
+  // res &= this->api_->request_timers_state();
+#endif
+  // res &= this->api_->request_errors();
+  // res &= this->api_->request_test();
   return res;
 }
 
-bool Tion4s::on_poll() const {
+bool Tion4s::on_update() {
   bool res = true;
-  res &= this->request_state();
-  if (vport_->get_vport_type() == TionVPort::VPORT_BLE) {
-    res &= this->request_turbo();
+  res &= this->api_->request_state();
+#ifdef TION_ENABLE_PRESETS
+  if (this->vport_type_ == TionVPortType::VPORT_BLE) {
+    res &= this->api_->request_turbo();
   }
+#endif
   return res;
 }
 
+#ifdef TION_ENABLE_SCHEDULER
 void Tion4s::on_time(const time_t time, const uint32_t request_id) {
   auto c_tm = std::gmtime(&time);
   char buf[20] = {};
-  strftime(buf, sizeof(buf), "%F %T", c_tm);
+  std::strftime(buf, sizeof(buf), "%F %T", c_tm);
   ESP_LOGD(TAG, "Device UTC time: %s", buf);
   c_tm = std::localtime(&time);
-  strftime(buf, sizeof(buf), "%F %T", c_tm);
+  std::strftime(buf, sizeof(buf), "%F %T", c_tm);
   ESP_LOGD(TAG, "Device local time: %s", buf);
 }
+#endif
 
+#ifdef TION_ENABLE_PRESETS
 void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
+  if (this->vport_type_ != TionVPortType::VPORT_BLE) {
+    // Only BLE supports native turbo mode.
+    return;
+  }
+
   if (this->is_dirty_(DIRTY_BOOST_ENABLE)) {
     this->drop_dirty_(DIRTY_BOOST_ENABLE);
     uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
     if (turbo_time > 0) {
-      this->set_turbo_time(turbo_time, 1);
+      this->api_->set_turbo(turbo_time, 1);
       if (this->boost_time_left_) {
         this->boost_time_left_->publish_state(100);
       }
@@ -69,7 +81,7 @@ void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
   if (this->is_dirty_(DIRTY_BOOST_CANCEL)) {
     this->drop_dirty_(DIRTY_BOOST_CANCEL);
     if (turbo.turbo_time > 0) {
-      this->set_turbo_time(0, 1);
+      this->api_->set_turbo(0, 1);
     }
     return;
   }
@@ -98,6 +110,7 @@ void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
 
   this->publish_state();
 }
+#endif
 
 void Tion4s::update_state(const tion4s_state_t &state) {
   this->max_fan_speed_ = state.max_fan_speed;
@@ -225,19 +238,28 @@ void Tion4s::flush_state(const tion4s_state_t &state_) const {
     }
   }
 
-  TionApi4s::write_state(state, 1);
+  this->api_->write_state(state, 1);
 }
 
+#ifdef TION_ENABLE_PRESETS
 bool Tion4s::enable_boost_() {
+  if (this->vport_type_ != TionVPortType::VPORT_BLE) {
+    return TionClimateComponent::enable_boost_();
+  }
   // TODO update turbo state
   this->set_dirty_(DIRTY_BOOST_ENABLE);
   return true;
 }
 
 void Tion4s::cancel_boost_() {
+  if (this->vport_type_ != TionVPortType::VPORT_BLE) {
+    TionClimateComponent::cancel_boost_();
+    return;
+  }
   // TODO update turbo state
   this->set_dirty_(DIRTY_BOOST_CANCEL);
 }
+#endif
 
 }  // namespace tion
 }  // namespace esphome

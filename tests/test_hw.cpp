@@ -206,7 +206,7 @@ class StringUart {
 
   virtual ~StringUart() { delete this->data_; }
 
-  bool read_array(void *data, size_t size) {
+  bool read_array_(void *data, size_t size) {
     if (this->pos_ + size > this->size_) {
       return false;
     }
@@ -215,15 +215,34 @@ class StringUart {
     return true;
   }
 
-  int available() const {
+  int available_() const {
     int av = this->size_ - this->pos_;
-    return av - 1;
+    return av;
   }
+
+  bool read_array(void *data, size_t size) {
+    if (size > this->available()) {
+      return false;
+    }
+    return this->read_array_(data, size);
+  }
+
+  int available() const {
+    auto av = this->available_();
+    return this->av_ < av ? this->av_ : av;
+  }
+
+  void inc_av() {
+    if (this->av_ < this->available_()) {
+      this->av_++;
+    }
+  }
+
   int read() {
     uint8_t ch;
     return this->read_byte(&ch) ? ch : -1;
   }
-  bool read_byte(uint8_t *ch) { return read_array(ch, 1); }
+  bool read_byte(uint8_t *ch) { return this->available() > 0 ? this->read_array(ch, 1) : false; }
   bool peek_byte(uint8_t *data) {
     if (this->available()) {
       *data = this->data_[this->pos_];
@@ -236,8 +255,9 @@ class StringUart {
   size_t size_{};
   size_t pos_{};
   char *data_;
+  size_t av_ = 1;
 };
-
+/* TODO implement
 class Tion4sHWApiTest : public TionApi4s {
  public:
   explicit Tion4sHWApiTest(TionFrameWriter *writer) : TionApi4s(writer) {}
@@ -251,19 +271,20 @@ class Tion4sHWApiTest : public TionApi4s {
     return check_cmd(type, data, size, check_fn_ok);
   }
 };
+*/
 
 class StringUartIO : public StringUart, public TionUartReader {
  public:
   explicit StringUartIO(const char *data) : StringUart(data) {}
   int available() override { return StringUart::available(); }
-  bool peek_byte(uint8_t *data) override { return StringUart::peek_byte(data); }
   bool read_array(void *data, size_t size) override { return StringUart::read_array(data, size); }
 };
 
+/* TODO implement
 class FakeUartReader : public StringUartIO, public TionUartProtocol {
  public:
   explicit FakeUartReader(const char *data) : StringUartIO(data) {}
-  void set_api(dentra::tion::TionFrameReader *api) { this->reader_ = api; }
+  void set_api(TionFrameReader *api) { this->reader_ = api; }
   bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override {
     return this->reader_->read_frame(frame_type, frame_data, frame_data_size);
   }
@@ -297,6 +318,7 @@ bool test_long2() {
   printf("done\n");
   return true;
 }
+*/
 
 void start();
 bool test_hw(bool print) {
@@ -328,129 +350,90 @@ bool test_hw(bool print) {
     // api.request_dev_status();
   */
   start();
+
   return res;
 }
 
-template<typename T> class VPortListener {
- public:
-  /// Read the data array from vport with specified type and size.
-  /// FIXME возможно переименовать в on_frame_data
-  virtual void on_frame_data(T type, const void *data, size_t size) = 0;
-};
+#include "test_vport.h"
 
-template<typename T> class VPort {
+class StringUartVPort : public TionVPortComponent<TionUartProtocol> {
  public:
-  void add_listener(VPortListener<T> *listener) { this->listeners_.push_back(listener); }
-
-  void fire_listeners(T type, const void *data, size_t size) const {
-    printf("[VPort] fire_listeners: %04X, data: %s\n", type, hexencode(data, size).c_str());
-    for (auto listener : this->listeners_) {
-      listener->on_frame_data(type, data, size);
+  StringUartVPort(const char *data, TionUartProtocol *protocol) : TionVPortComponent(protocol), io_(data) {}
+  void loop() override {
+    while (this->io_.available_() > 0) {
+      this->protocol_->read_uart_data(&this->io_);
+      this->io_.inc_av();
+      this->io_.inc_av();
     }
   }
 
  protected:
-  std::vector<VPortListener<T> *> listeners_;
+  StringUartIO io_;
 };
 
-template<typename T> class VPortComponent : public VPort<T> {
- public:
-  virtual void loop() = 0;
-};
+template<class VPortT, class ProtocolT> class TestTion4s {
+  using this_type = TestTion4s<VPortT, ProtocolT>;
 
-template<class P> class TionVPortComponent : public VPortComponent<uint16_t> {
  public:
-  void set_protocol(P *protocol) { this->protocol_ = protocol; }
+  explicit TestTion4s(VPortT *vport, ProtocolT *protocol) {
+    vport->on_frame.template set<this_type, &this_type::on_frame>(*this);
 
- protected:
-  P *protocol_{};
-};
-
-class StringUartVPort : public TionVPortComponent<TionUartProtocol>, public StringUartIO {
- public:
-  StringUartVPort(const char *data) : StringUartIO(data) {}
-  void loop() override { this->protocol_->read_uart_data(this); }
-};
-
-class StringBleVPort : public TionVPortComponent<TionBleLtProtocol> {
- public:
-  StringBleVPort(const char *data) : data_(data) {}
-  bool write_ble_data(const uint8_t *data, uint16_t size) const {
-    printf("[StringBleVPort] write_ble_data: %s\n", hexencode(data, size).c_str());
-    return true;
+    this->api_.writer.set<ProtocolT, &ProtocolT::write_frame>(*protocol);
+    this->api_.on_state.set<this_type, &this_type::on_state>(*this);
+    this->api_.on_heartbeat.set<this_type, &this_type::on_heartbeat>(*this);
   }
-  void loop() override {
-    auto data = from_hex(this->data_);
-    this->protocol_->read_data(data.data(), data.size());
+
+  void on_state(const tion4s_state_t &state, uint32_t request_id) {}
+
+  void on_heartbeat(uint8_t unknown) { this->api_.send_heartbeat(); }
+
+  bool on_frame(uint16_t type, const void *data, size_t size) {
+    printf("[TestTion4s] Reading type: %04X, data: %s\n", type, hexencode(data, size).c_str());
+    return this->api_.read_frame(type, data, size);
+  }
+
+  void run() {
+    this->api_.send_heartbeat();
+    this->api_.request_turbo();
   }
 
  protected:
-  const char *data_;
-};
-
-class VPortUartProtocol : public TionUartProtocol {
- public:
-  VPortUartProtocol(StringUartVPort *vport) : parent_(vport) {}
-  bool read_frame(uint16_t type, const void *data, size_t size) override {
-    parent_->fire_listeners(type, data, size);
-    return true;
-  }
-  bool write_data(const uint8_t *data, size_t size) const override {
-    printf("[VPortUartProtocol] write_data: %s\n", hexencode(data, size).c_str());
-    return true;
-  }
-
- protected:
-  StringUartVPort *parent_;
-};
-
-class VPortBleLtProtocol : public TionBleLtProtocol {
- public:
-  VPortBleLtProtocol(StringBleVPort *vport) : parent_(vport) {}
-  bool read_frame(uint16_t type, const void *data, size_t size) override {
-    parent_->fire_listeners(type, data, size);
-    return true;
-  }
-  bool write_data(const uint8_t *data, size_t size) const override {
-    printf("[VPortBleLtProtocol] write_data: %s\n", hexencode(data, size).c_str());
-    return true;
-  }
-
- protected:
-  StringBleVPort *parent_;
-};
-
-class TestTion4sApi : public TionApi4s, public VPortListener<uint16_t> {
- public:
-  explicit TestTion4sApi(TionFrameWriter *writer) : TionApi4s(writer) {}
-  void on_frame_data(uint16_t type, const void *data, size_t size) override {
-    printf("[TestTion4sApi] Reading type: %04X, data: %s\n", type, hexencode(data, size).c_str());
-    this->read_frame(type, data, size);
-  }
-  void on_heartbeat(const tion_heartbeat_t &heartbeat) override { send_heartbeat(); }
+  TionApi4s api_;
 };
 
 void start_uart() {
-  StringUartVPort uart_vport("3A 0800 3139 00 E82B");
-  VPortUartProtocol uart_protocol(&uart_vport);
-  uart_vport.set_protocol(&uart_protocol);
-  TestTion4sApi api(&uart_protocol);
-  uart_vport.add_listener(&api);
+  TionUartProtocol uart_protocol;
+  StringUartVPort uart_vport("3A 0800 3139 00 E82B", &uart_protocol);
+  TestTion4s<StringUartVPort, TionUartProtocol> test(&uart_vport, &uart_protocol);
   uart_vport.loop();
-  api.send_heartbeat();
-  api.request_turbo();
+  test.run();
 }
+
 void start_ble() {
-  StringBleVPort ble_vport("80 0D00 3AAD 3139 01000000 00 184B");
-  VPortBleLtProtocol ble_protocol(&ble_vport);
-  ble_vport.set_protocol(&ble_protocol);
-  TestTion4sApi api(&ble_protocol);
-  ble_vport.add_listener(&api);
+  TionBleLtProtocol ble_protocol;
+  StringBleVPort ble_vport("80 0D00 3AAD 3139 01000000 00 184B", &ble_protocol);
+  TestTion4s<StringBleVPort, TionBleLtProtocol> test(&ble_vport, &ble_protocol);
   ble_vport.loop();
-  api.send_heartbeat();
-  api.request_turbo();
+  test.run();
 }
+
+#include "etl/circular_buffer.h"
+#include "etl/vector.h"
+#include "etl/vector.h"
+
 void start() {
   start_uart();
   start_ble();
+
+  etl::circular_buffer<std::vector<uint8_t>, 5> cb;
+  for (int i = 0; i < 10; i++) {
+    cb.push(std::vector<uint8_t>({1, 2, 3}));
+  }
+
+  printf("* %s\n", hexencode(cb.front().data(), cb.front().size()).c_str());
+  cb.pop();
+
+  for (auto x : cb) {
+    printf("%s\n", hexencode(x.data(), x.size()).c_str());
+  }
 }

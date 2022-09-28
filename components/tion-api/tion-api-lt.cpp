@@ -85,7 +85,10 @@ bool TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       TION_LOGW(TAG, "Incorrect state response data size: %u", frame_data_size);
     } else {
       auto frame = static_cast<const state_frame_t *>(frame_data);
-      this->on_state(frame->state, frame->request_id);
+      TION_LOGD(TAG, "Response[%u] State", frame->request_id);
+      if (this->on_state) {
+        this->on_state(frame->state, frame->request_id);
+      }
     }
     return true;
   }
@@ -94,7 +97,10 @@ bool TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     if (frame_data_size != sizeof(tion_dev_status_t)) {
       TION_LOGW(TAG, "Incorrect device status response data size: %u", frame_data_size);
     } else {
-      this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
+      TION_LOGD(TAG, "Response[] Device status");
+      if (this->on_dev_status) {
+        this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
+      }
     }
     return true;
   }

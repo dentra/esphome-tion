@@ -7,8 +7,9 @@ CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion"]
 
 TionLt = tion.tion_ns.class_("TionLt", PollingComponent, climate.Climate)
+TionApiLt = tion.tion_ns.class_("TionApiLt")
 
-CONFIG_SCHEMA = tion_lt_schema(TionLt)
+CONFIG_SCHEMA = tion_lt_schema(TionLt, TionApiLt)
 
 
 async def to_code(config):

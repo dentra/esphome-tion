@@ -1,15 +1,15 @@
 #pragma once
 
-#include "tion-api-ble.h"
+#include "tion-api.h"
 
 namespace dentra {
 namespace tion {
 
-class TionBleLtProtocol : public TionBleProtocol {
+class TionBleLtProtocol : public TionProtocol {
  public:
-  bool read_data(const uint8_t *data, size_t size) override;
+  bool read_data(const uint8_t *data, size_t size);
 
-  bool write_frame(uint16_t type, const void *data, size_t size) const override;
+  bool write_frame(uint16_t type, const void *data, size_t size);
 
   const char *get_ble_service() const;
   const char *get_ble_char_tx() const;

@@ -4,41 +4,35 @@
 
 #include "../components/tion-api/tion-api-3s.h"
 #include "../components/tion-api/tion-api-ble-3s.h"
-
+#include "test_api.h"
 using namespace dentra::tion;
 
 static std::vector<uint8_t> wr_data_;
 
-class Ble3sProtocolTest : public dentra::tion::TionBle3sProtocol {
+class Api3sTest {
+  using this_type = Api3sTest;
+
  public:
-  bool write_data(const uint8_t *data, size_t size) const override {
+  TionsApi3s api;
+  tion3s_state_t state{};
+
+  Api3sTest(TestTionBle3sProtocol *protocol) {
+    protocol->reader.set<Api3sTest, &Api3sTest::read_frame>(*this);
+    protocol->writer.set<Api3sTest, &Api3sTest::write_data>(*this);
+
+    this->api.writer.set<TionBle3sProtocol, &TionBle3sProtocol::write_frame>(*protocol);
+    this->api.on_state.set<Api3sTest, &Api3sTest::on_state>(*this);
+  }
+
+  bool read_frame(uint16_t type, const void *data, size_t size) { return this->api.read_frame(type, data, size); }
+
+  bool write_data(const uint8_t *data, size_t size) {
     LOGD("Writting data: %s", hexencode(data, size).c_str());
     wr_data_.insert(wr_data_.end(), data, data + size);
     return true;
   }
-  bool read_data(const std::vector<uint8_t> &data) {
-    return dentra::tion::TionBle3sProtocol::read_data(data.data(), data.size());
-  }
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override {
-    return this->reader_->read_frame(frame_type, frame_data, frame_data_size);
-  }
-  template<class T, typename std::enable_if<std::is_base_of<TionFrameReader, T>::value, bool>::type = true>
-  void set_api(T *api) {
-    this->reader_ = api;
-  }
 
- protected:
-  dentra::tion::TionFrameReader *reader_{};
-};
-
-class Api3sTest : public TionsApi3s {
- public:
-  Api3sTest(Ble3sProtocolTest *writer) : TionsApi3s(writer) {}
-  uint16_t get_state_type() const override { return 0; }
-  bool request_dev_status() const override { return true; }
-
-  tion3s_state_t state{};
-  void on_state(const tion3s_state_t &state, uint32_t request_id) override {
+  void on_state(const tion3s_state_t &state, uint32_t request_id) {
     LOGD("Received tion3s_state_t %s", hexencode(&state, sizeof(state)).c_str());
     this->log_state(state);
     this->state = state;
@@ -62,41 +56,40 @@ class Api3sTest : public TionsApi3s {
 bool test_api_3s(bool print) {
   bool res = true;
 
-  Ble3sProtocolTest p;
-  Api3sTest api(&p);
-  p.set_api(&api);
+  TestTionBle3sProtocol p;
+  Api3sTest test(&p);
 
   wr_data_.clear();
-  api.request_state();
+  test.api.request_state();
   test_check(res, wr_data_, from_hex("3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A"));
 
-  api.state.firmware_version = 0xFFFF;
+  test.state.firmware_version = 0xFFFF;
 
   wr_data_.clear();
-  api.write_state(api.state);
+  test.api.write_state(test.state);
   test_check(res, wr_data_, from_hex("3D.02.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A"));
 
   wr_data_.clear();
-  api.reset_filter(api.state);
+  test.api.reset_filter(test.state);
   test_check(res, wr_data_, from_hex("3D.02.00.00.00.00.00.02.00.00.00.00.00.00.00.00.00.00.00.5A"));
 
   wr_data_.clear();
-  api.state.fan_speed = 1;
-  api.state.flags.heater_state = true;
-  api.state.flags.power_state = true;
-  api.state.flags.sound_state = true;
-  api.state.target_temperature = 23;
-  api.state.filter_time = 79;
-  api.state.hours = 14;
-  api.state.minutes = 45;
-  api.state.gate_position = tion3s_state_t::GATE_POSITION_OUTDOOR;
-  api.write_state(api.state);
+  test.state.fan_speed = 1;
+  test.state.flags.heater_state = true;
+  test.state.flags.power_state = true;
+  test.state.flags.sound_state = true;
+  test.state.target_temperature = 23;
+  test.state.filter_time = 79;
+  test.state.hours = 14;
+  test.state.minutes = 45;
+  test.state.gate_position = tion3s_state_t::GATE_POSITION_OUTDOOR;
+  test.api.write_state(test.state);
   test_check(res, wr_data_, from_hex("3D.02.01.17.02.0B.00.00.4F.00.00.00.00.00.00.00.00.00.00.5A"));
 
-  tion3s_state_t copy = api.state;
-  api.state = {};
+  tion3s_state_t copy = test.state;
+  test.state = {};
   test_check(res, p.read_data(from_hex("B3.10.21.17.0B.00.00.00.00.4F.00.0E.2D.00.00.00.00.FF.FF.5A")), true);
-  test_check(res, std::vector<uint8_t>((uint8_t *) &api.state, (uint8_t *) &api.state + sizeof(api.state)),
+  test_check(res, std::vector<uint8_t>((uint8_t *) &test.state, (uint8_t *) &test.state + sizeof(test.state)),
              std::vector<uint8_t>((uint8_t *) &copy, (uint8_t *) &copy + sizeof(copy)));
 
   return res;

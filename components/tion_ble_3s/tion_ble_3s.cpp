@@ -6,13 +6,13 @@ namespace tion {
 
 static const char *const TAG = "tion_ble_3s";
 
-void Tion3sBLEVPort::dump_config() {
-  this->dump_component_config(TAG);
+void Tion3sBLEVPortBase::dump_config() {
+  this->dump_settings(TAG);
   ESP_LOGCONFIG(TAG, "  Always Pair (experimental): %s", ONOFF(this->experimental_always_pair_));
   ESP_LOGCONFIG(TAG, "  Paired: %s", ONOFF(this->pair_state_ > 0));
 }
 
-void Tion3sBLEVPort::setup() {
+void Tion3sBLEVPortBase::setup() {
   this->rtc_ = global_preferences->make_preference<int8_t>(fnv1_hash("tion_3s"), true);
   int8_t loaded{};
   if (this->rtc_.load(&loaded)) {
@@ -20,27 +20,27 @@ void Tion3sBLEVPort::setup() {
   }
 }
 
-void Tion3sBLEVPort::update() {
+void Tion3sBLEVPortBase::update() {
   if (this->is_connected() && this->pair_state_ > 0) {
-    TionBLEVPort::update();
+    TionBLEVPortBase::update();
   } else {
     ESP_LOGW(TAG, "Pairing required");
     this->disconnect();
   }
 }
 
-void Tion3sBLEVPort::pair() {
+void Tion3sBLEVPortBase::pair() {
   this->pair_state_ = -1;
   this->connect();
 }
 
-void Tion3sBLEVPort::reset_pair() {
+void Tion3sBLEVPortBase::reset_pair() {
   this->pair_state_ = 0;
   this->rtc_.save(&this->pair_state_);
   this->disconnect();
 }
 
-void Tion3sBLEVPort::on_ble_ready() {
+void Tion3sBLEVPortBase::on_ble_ready() {
   if (this->api_ == nullptr) {
     ESP_LOGD(TAG, "Tion API is not configured");
     return;
@@ -65,7 +65,7 @@ void Tion3sBLEVPort::on_ble_ready() {
     this->api_->pair();
   }
 
-  TionBLEVPort::on_ble_ready();
+  TionBLEVPortBase::on_ble_ready();
 }
 
 }  // namespace tion

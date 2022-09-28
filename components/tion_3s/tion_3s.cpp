@@ -9,7 +9,7 @@ namespace tion {
 static const char *const TAG = "tion_3s";
 
 void Tion3s::dump_config() {
-  this->dump_component_config(TAG, "Tion 3S");
+  this->dump_settings(TAG, "Tion 3S");
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
 }
 
@@ -118,14 +118,14 @@ void Tion3s::flush_state(const tion3s_state_t &state_) const {
     // режим вентиляция изменить на обогрев можно только через выключение
     if (state.flags.power_state && !state.flags.heater_state && heater_state) {
       state.flags.power_state = false;
-      TionsApi3s::write_state(state);
+      this->api_->write_state(state);
       state.flags.power_state = true;
     }
 
     state.flags.heater_state = heater_state;
   }
 
-  TionsApi3s::write_state(state);
+  this->api_->write_state(state);
 }
 
 }  // namespace tion

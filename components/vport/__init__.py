@@ -2,6 +2,8 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.cpp_generator import MockObjClass
 
+AUTO_LOAD = ["etl"]
+
 IS_PLATFORM_COMPONENT = True
 
 CONF_VPORT_ID = "vport_id"
@@ -27,3 +29,6 @@ def vport_schema(vport_class: MockObjClass, default_update_interval):
 
 async def vport_get_var(config):
     return await cg.get_variable(config[CONF_VPORT_ID])
+
+
+# TODO setup update interval here

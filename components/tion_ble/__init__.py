@@ -14,7 +14,7 @@ TionBLEVPort = tion.tion_ns.class_("TionBLEVPort", cg.PollingComponent, vport.VP
 
 def tion_ble_schema(vport_class: MockObjClass, protocol_class: MockObjClass):
     return (
-        vport.vport_schema(vport_class, "60s")
+        vport.vport_schema(vport_class.template(protocol_class), "60s")
         .extend(ble_client.BLE_CLIENT_SCHEMA)
         .extend(
             {
@@ -29,10 +29,10 @@ def tion_ble_schema(vport_class: MockObjClass, protocol_class: MockObjClass):
 
 
 async def setup_tion_ble(config):
-    var = cg.new_Pvariable(config[CONF_ID])
+    prot = cg.new_Pvariable(config[CONF_PROTOCOL_ID])
+    var = cg.new_Pvariable(config[CONF_ID], prot)
     await cg.register_component(var, config)
     await ble_client.register_ble_node(var, config)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
     cg.add(var.set_persistent_connection(config[CONF_PERSISTENT_CONNECTION]))
-    cg.new_Pvariable(config[CONF_PROTOCOL_ID], var)
     return var

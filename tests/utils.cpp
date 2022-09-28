@@ -156,3 +156,18 @@ void _test_check_success(const char *file, int line, const char *msg, const std:
               msg, hexencode(actual.data(), actual.size()).c_str(),
               hexencode(expected.data(), expected.size()).c_str());
 }
+
+std::string str_snprintf(const char *fmt, size_t len, ...) {
+  std::string str;
+  va_list args;
+
+  str.resize(len);
+  va_start(args, len);
+  size_t out_length = vsnprintf(&str[0], len + 1, fmt, args);
+  va_end(args);
+
+  if (out_length < len)
+    str.resize(out_length);
+
+  return str;
+}

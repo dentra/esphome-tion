@@ -31,8 +31,8 @@ struct tionlt_state_t {
   uint8_t gate_position;  // gate_state
   int8_t target_temperature;
   uint8_t fan_speed;
-  int8_t current_temperature;
   int8_t outdoor_temperature;
+  int8_t current_temperature;
   int8_t pcb_temperature;
   tion_state_counters_t counters;
   struct {
@@ -55,21 +55,18 @@ struct tionlt_state_t {
 
 #pragma pack(pop)
 
-class TionApiLt : public TionApi<tionlt_state_t> {
+class TionApiLt : public TionApiBase<tionlt_state_t> {
  public:
-  explicit TionApiLt(TionFrameWriter *writer) : TionApi(writer) {}
+  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
-  uint16_t get_state_type() const override;
+  uint16_t get_state_type() const;
 
-  bool request_dev_status() const override;
-  bool request_state() const override;
+  bool request_dev_status() const;
+  bool request_state() const;
 
   bool write_state(const tionlt_state_t &state, uint32_t request_id = 0) const;
   bool reset_filter(const tionlt_state_t &state, uint32_t request_id = 0) const;
   bool factory_reset(const tionlt_state_t &state, uint32_t request_id = 0) const;
-
- protected:
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) override;
 };
 
 }  // namespace tion

@@ -9,7 +9,7 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/number/number.h"
 
-#include "../vport/vport.h"
+#include "../vport/vport_component.h"
 
 #include "../tion-api/log.h"
 #include "../tion-api/tion-api.h"
@@ -17,6 +17,7 @@
 namespace esphome {
 namespace tion {
 
+#ifdef TION_ENABLE_PRESETS
 // default boost time - 10 minutes
 #define DEFAULT_BOOST_TIME_SEC 10 * 60
 
@@ -25,6 +26,7 @@ struct tion_preset_t {
   int8_t target_temperature;
   climate::ClimateMode mode;
 };
+#endif
 
 class TionClimate : public climate::Climate {
  public:
@@ -32,7 +34,7 @@ class TionClimate : public climate::Climate {
   void control(const climate::ClimateCall &call) override;
 
   virtual bool write_climate_state() = 0;
-
+#ifdef TION_ENABLE_PRESETS
   /**
    * Update default preset.
    * @param preset preset to update.
@@ -55,7 +57,7 @@ class TionClimate : public climate::Climate {
       this->supported_presets_.insert(preset);
     }
   }
-
+#endif
  protected:
   uint8_t max_fan_speed_ = 6;
   void set_fan_speed_(uint8_t fan_speed);
@@ -72,7 +74,7 @@ class TionClimate : public climate::Climate {
     char fan_mode[2] = {static_cast<char>(fan_speed + '0'), 0};
     return std::string(fan_mode);
   }
-
+#ifdef TION_ENABLE_PRESETS
   bool enable_preset_(climate::ClimatePreset preset);
   void cancel_preset_(climate::ClimatePreset preset);
   virtual bool enable_boost_() = 0;
@@ -91,6 +93,7 @@ class TionClimate : public climate::Climate {
   };
 
   std::set<climate::ClimatePreset> supported_presets_{};
+#endif
 };
 
 class TionComponent : public Component {
@@ -124,19 +127,23 @@ class TionComponent : public Component {
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
 
+#ifdef TION_ENABLE_PRESETS
+  ESPPreferenceObject rtc_;
+#endif
+
   void update_dev_status_(const dentra::tion::tion_dev_status_t &status);
 };
 
-class TionClimateComponentBase : public TionClimate, public TionComponent, public vport::VPortListener<uint16_t> {
+enum TionVPortType : uint8_t { VPORT_BLE, VPORT_UART, VPORT_TCP };
+
+class TionClimateComponentBase : public TionClimate, public TionComponent {
  public:
-  void dump_component_config(const char *TAG, const char *component) const;
-
-  /// Device is connected and ready to receive command requests.
-  virtual bool on_ready() = 0;
-  /// Time to request device state.
-  virtual bool on_poll() const = 0;
-
+  void dump_settings(const char *TAG, const char *component) const;
+#ifdef TION_ENABLE_HEARTBEAT
   virtual bool send_heartbeat() const = 0;
+#endif
+
+  void set_vport_type(TionVPortType vport_type) { this->vport_type_ = vport_type; }
 
  protected:
   enum : uint8_t {
@@ -146,64 +153,66 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
   bool is_dirty_(uint8_t flag) { return (this->dirty_flag_ & flag) != 0; }
   void set_dirty_(uint8_t flag) { this->dirty_flag_ |= flag; }
   void drop_dirty_(uint8_t flag) { this->dirty_flag_ &= ~flag; }
-
+#ifdef TION_ENABLE_PRESETS
   bool enable_boost_() override;
   void cancel_boost_() override;
-};
+#endif
 
-class TionVPort {
- public:
-  enum Type { VPORT_BLE, VPORT_UART };
-  virtual dentra::tion::TionProtocol *get_protocol() const = 0;
-  virtual void schedule_poll() = 0;
-  void set_state_frame_type(uint16_t state_frame_type) { this->state_frame_type_ = state_frame_type; }
-  virtual Type get_vport_type() const = 0;
-
- protected:
-  uint16_t state_frame_type_;
+  TionVPortType vport_type_{};
 };
 
 /**
- * @param A TionApi implementation.
- * @param S Tion state struct.
+ * @param tion_api_type TionApi implementation.
+ * @param tion_state_type Tion state struct.
  */
-template<class A, class S> class TionClimateComponent : public TionClimateComponentBase, public A {
-  // static_assert(std::is_base_of<dentra::tion::TionApi, A>::value, "A must derived from dentra::tion::TionApi class");
+template<class tion_api_type, class tion_state_type> class TionClimateComponent : public TionClimateComponentBase {
+  static_assert(std::is_base_of<dentra::tion::TionApiBase<tion_state_type>, tion_api_type>::value,
+                "tion_api_type is not derived from TionApiBase");
+
+  using this_type = TionClimateComponent<tion_api_type, tion_state_type>;
 
  public:
-  explicit TionClimateComponent(TionVPort *vport) : A(vport->get_protocol()), vport_(vport) {
-    vport_->set_state_frame_type(this->get_state_type());
+  explicit TionClimateComponent(tion_api_type *api, vport::VPortComponent<uint16_t> *vport) : api_(api), vport_(vport) {
+    vport->on_ready.set<tion_api_type, &tion_api_type::request_dev_status>(*api);
+    vport->on_update.set<tion_api_type, &tion_api_type::request_state>(*api);
+    vport->on_frame.set<tion_api_type, &tion_api_type::read_frame>(*api);
+
+    this->api_->on_dev_status.template set<this_type, &this_type::on_dev_status>(*this);
+    this->api_->on_state.template set<this_type, &this_type::on_state>(*this);
   }
 
   bool write_climate_state() override {
     this->publish_state();
     this->set_dirty_(DIRTY_STATE);
-    this->vport_->schedule_poll();
+    this->vport_->update();
     return true;
   }
 
-  virtual void update_state(const S &state) = 0;
-  virtual void dump_state(const S &state) const = 0;
-  virtual void flush_state(const S &state) const = 0;
+  virtual void update_state(const tion_state_type &state) = 0;
+  virtual void dump_state(const tion_state_type &state) const = 0;
+  virtual void flush_state(const tion_state_type &state) const = 0;
 
-  void on_state(const S &state, const uint32_t request_id) override {
+  void on_state(const tion_state_type &state, const uint32_t request_id) {
     if (this->is_dirty_(DIRTY_STATE)) {
       this->drop_dirty_(DIRTY_STATE);
       this->flush_state(state);
       return;
     }
     this->update_state(state);
+#if TION_LOG_LEVEL >= TION_LOG_LEVEL_VERBOSE
     this->dump_state(state);
+#endif
   }
 
-  bool on_ready() override { return this->request_dev_status(); }
-  bool on_poll() const override { return this->request_state(); }
-  void on_dev_status(const dentra::tion::tion_dev_status_t &status) override { this->update_dev_status_(status); }
-  void on_frame_data(uint16_t type, const void *data, size_t size) override { this->read_frame(type, data, size); }
-  bool send_heartbeat() const override { return A::send_heartbeat(); }
+  void on_dev_status(const dentra::tion::tion_dev_status_t &status) { this->update_dev_status_(status); }
+
+#ifdef TION_ENABLE_HEARTBEAT
+  bool send_heartbeat() const { return this->api_->send_heartbeat(); }
+#endif
 
  protected:
-  TionVPort *vport_;
+  tion_api_type *api_;
+  vport::VPortComponent<uint16_t> *vport_;
 };
 
 class TionBoostTimeNumber : public number::Number {

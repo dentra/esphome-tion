@@ -85,6 +85,10 @@ bool TionBleLtProtocol::read_packet_(uint8_t packet_type, const uint8_t *data, s
 
 bool TionBleLtProtocol::read_frame_(const void *data, uint32_t size) {
   TION_LOGV(TAG, "Read frame: %s", hexencode(data, size).c_str());
+  if (!this->reader) {
+    TION_LOGE(TAG, "Reader is not configured");
+    return false;
+  }
 
   const tion_frame_t *frame = static_cast<const tion_frame_t *>(data);
   if (frame->magic_number != BLE_PACKET_MAGIC) {
@@ -101,10 +105,10 @@ bool TionBleLtProtocol::read_frame_(const void *data, uint32_t size) {
     return false;
   }
 
-  return this->read_frame(frame->type, frame->data, frame->size - sizeof(tion_frame_t));
+  return this->reader(frame->type, frame->data, frame->size - sizeof(tion_frame_t));
 }
 
-bool TionBleLtProtocol::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) const {
+bool TionBleLtProtocol::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   TION_LOGV(TAG, "Write frame 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
 
   uint16_t frame_size = frame_data_size + sizeof(tion_frame_t);
@@ -135,7 +139,12 @@ bool TionBleLtProtocol::write_frame(uint16_t frame_type, const void *frame_data,
 bool TionBleLtProtocol::write_packet_(const void *data, uint16_t size) const {
   TION_LOGV(TAG, "Write BLE packet: %s", hexencode(data, size).c_str());
 
-  uint32_t data_packet_size = BLE_MAX_MTU_SIZE - 1;
+  if (!this->writer) {
+    TION_LOGE(TAG, "Writer is not configured");
+    return false;
+  }
+
+  size_t data_packet_size = BLE_MAX_MTU_SIZE - 1;
   const uint8_t *data_ptr = static_cast<const uint8_t *>(data);
 
   uint8_t buf[BLE_MAX_MTU_SIZE];
@@ -146,7 +155,7 @@ bool TionBleLtProtocol::write_packet_(const void *data, uint16_t size) const {
   std::memcpy(&buf[1], data_ptr, data_packet_size);
   data_ptr += data_packet_size;
 
-  if (!this->write_data(buf, data_packet_size + 1)) {
+  if (!this->writer(buf, data_packet_size + 1)) {
     TION_LOGW(TAG, "Can't write packet");
     return false;
   }
@@ -158,7 +167,7 @@ bool TionBleLtProtocol::write_packet_(const void *data, uint16_t size) const {
     std::memcpy(&buf[1], data_ptr, data_packet_size);
     data_ptr += data_packet_size;
 
-    if (!this->write_data(buf, data_packet_size + 1)) {
+    if (!this->writer(buf, data_packet_size + 1)) {
       TION_LOGW(TAG, "Can't write packet");
       return false;
     }

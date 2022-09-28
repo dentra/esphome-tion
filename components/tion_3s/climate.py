@@ -1,8 +1,6 @@
 from esphome.cpp_types import PollingComponent
 import esphome.codegen as cg
 import esphome.config_validation as cv
-import esphome.final_validate as fv
-from esphome.core import ID
 from esphome.components import climate, select, sensor
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
@@ -22,11 +20,12 @@ CONF_PRODUCTIVITY = "productivity"
 UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/h"
 
 Tion3s = tion.tion_ns.class_("Tion3s", PollingComponent, climate.Climate)
+TionApi3s = tion.tion_ns.class_("TionApi3s")
 Tion3sAirIntakeSelect = tion.tion_ns.class_("Tion3sAirIntakeSelect", select.Select)
 
 OPTIONS_AIR_INTAKE = ["Indoor", "Mixed", "Outdoor"]
 
-CONFIG_SCHEMA = tion.tion_schema(Tion3s).extend(
+CONFIG_SCHEMA = tion.tion_schema(Tion3s, TionApi3s).extend(
     {
         cv.Optional(CONF_AIR_INTAKE): select.SELECT_SCHEMA.extend(
             {
@@ -54,6 +53,7 @@ async def to_code(config):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
-    vport_parent = await vport.vport_get_var(config)
-    cg.add(vport_parent.set_api(var))
+    api = await cg.get_variable(config[tion.CONF_TION_API_ID])
+    prt = await vport.vport_get_var(config)
+    cg.add(prt.set_api(api))
     await tion.setup_sensor(config, CONF_PRODUCTIVITY, var.set_airflow_counter)

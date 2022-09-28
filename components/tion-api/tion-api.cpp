@@ -13,13 +13,13 @@ namespace tion {
 
 static const char *const TAG = "tion-api";
 
-bool TionApiBase::write_frame(uint16_t type, const void *data, size_t size) const {
+bool TionApiBaseWriter::write_frame(uint16_t type, const void *data, size_t size) const {
   TION_LOGV(TAG, "Write frame 0x%04X: %s", type, hexencode(data, size).c_str());
-  if (this->writer_ == nullptr) {
+  if (!this->writer) {
     TION_LOGE(TAG, "Writer is not configured");
     return false;
   }
-  return this->writer_->write_frame(type, data, size);
+  return this->writer(type, data, size);
 }
 
 // void TionProtocol::read_frame(uint16_t type, const void *data, size_t size) const {

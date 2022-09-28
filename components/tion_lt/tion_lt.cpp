@@ -6,7 +6,7 @@ namespace tion {
 
 static const char *const TAG = "tion_lt";
 
-void TionLt::dump_config() { this->dump_component_config(TAG, "Tion Lite"); }
+void TionLt::dump_config() { this->dump_settings(TAG, "Tion Lite"); }
 
 void TionLt::update_state(const tionlt_state_t &state) {
   this->max_fan_speed_ = state.max_fan_speed;
@@ -125,7 +125,7 @@ void TionLt::flush_state(const tionlt_state_t &state_) const {
     state.flags.heater_state = heater_state;
   }
 
-  TionApiLt::write_state(state, 1);
+  this->api_->write_state(state, 1);
 }
 
 }  // namespace tion
