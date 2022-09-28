@@ -3,7 +3,7 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2022.8.0",
+      "esphome_version": "2022.9.1",
       // additional APT dependicies
       "apt_deps": "bash-completion less libmbedtls-dev gdb",
       // additional PIP dependicies
@@ -44,13 +44,13 @@
         "when": "$(basename).py"
       },
       "**/__pycache__": true,
-      ".esphome": true,
+      ".esphome": false,
       ".pio": true
     },
     "files.associations": {
       "**/.vscode/*.json": "jsonc"
     },
-    "C_Cpp.clang_format_path": "/usr/bin/clang-format-11",
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format-11"
   },
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
@@ -60,12 +60,15 @@
     "ms-python.python",
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",
+    "VisualStudioExptTeam.intellicode-api-usage-examples",
     // yaml
     "redhat.vscode-yaml",
     // esphome yaml
     "esphome.esphome-vscode",
     // editorconfig
     "editorconfig.editorconfig",
+    // fixme and todo tree
+    "Gruntfuggly.todo-tree"
   ],
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
@@ -81,5 +84,6 @@
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.esphome,type=volume",
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/config/.esphome,type=volume",
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.pio,type=volume",
+    "source=vscode-${containerWorkspaceFolderBasename},target=/esphome/.temp,type=volume"
   ]
 }
