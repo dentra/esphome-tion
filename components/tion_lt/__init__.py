@@ -3,10 +3,10 @@ import esphome.config_validation as cv
 from esphome.cpp_generator import MockObjClass
 from esphome.components import switch, sensor, binary_sensor
 from esphome.const import (
-    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     DEVICE_CLASS_POWER,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     CONF_ICON,
@@ -57,7 +57,7 @@ def tion_lt_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
             ),
             cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.binary_sensor_schema(
                 device_class=DEVICE_CLASS_PROBLEM,
-                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                entity_category=ENTITY_CATEGORY_NONE,
             ),
         }
     )

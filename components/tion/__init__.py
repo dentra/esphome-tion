@@ -133,7 +133,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                 accuracy_decimals=0,
                 icon=ICON_AIR_FILTER,
                 state_class=STATE_CLASS_NONE,
-                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                entity_category=ENTITY_CATEGORY_NONE,
             ),
             cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
                 {
