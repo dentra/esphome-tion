@@ -39,23 +39,31 @@ wifi:
   ssid: $wifi_ssid
   password: $wifi_password
 
-button:
-  - platform: template
-    name: "$name Pair"
-    on_press:
-      lambda: id(tion_climate).pair();
-    entity_category: config
-  ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
-  # - platform: template
-  #   name: "$name Reset Pair"
-  #   on_press:
-  #     lambda: id(tion_climate).reset_pair();
-  #   entity_category: config
+ble_client:
+  mac_address: $tion_mac_address
+  id: tion_ble_client
 
+# Virtual port configuration
+vport:
+  - platform: tion_ble_3s
+    id: tion3s_ble_vport
+    ble_client_id: tion_ble_client
+    # Optional, How often query device state. Default: 60s.
+    update_interval: 60s
+    # Optional, Do not disconnect after receiving state. Default: false.
+    persistent_connection: false
+    # Optional, Timeout to reconnect if no state answer received. Default: 15s.
+    state_timeout: 15s
+    # Optional, Sena a pair command after every connect (experimental feature)
+    #experimental_always_pair: false
+    # Optional, Allow to disable other BLE device scanning when breezer is already connected.
+    disable_scan: false
+
+# Main component configuration.
 climate:
   - platform: tion_3s
     id: tion_climate
-    ble_client_id: tion_ble_client
+    vport_id: tion3s_ble_vport
     name: "$name"
     # Optional, Buzzer control switch.
     buzzer:
@@ -75,12 +83,6 @@ climate:
     # Optional, Tion firmware version.
     version:
       name: "$name Version"
-    # Optional, Timeout to reconnect if no state answer received. Default: 15s.
-    state_timeout: 15s
-    # Optional, How often query device state. Default: 60s.
-    update_interval: 60s
-    # Optional, Do not disconnect after receiving state. Default: false.
-    persistent_connection: false
     # Optional, Enable presets. Default: <empty>
     # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
     # Defaults:
@@ -107,3 +109,16 @@ climate:
     # Optional, display remaining boost time
     boost_time_left:
       name: $name Boost Time Left
+
+button:
+  - platform: template
+    name: "$name Pair"
+    on_press:
+      lambda: id(tion3s_ble_vport).pair();
+    entity_category: config
+  ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
+  # - platform: template
+  #   name: "$name Reset Pair"
+  #   on_press:
+  #     lambda: id(tion3s_ble_vport).reset_pair();
+  #   entity_category: config

@@ -6,13 +6,13 @@
 [![Support author][donate-me-shield]][donate-me]
 [![PayPal.Me][paypal-me-shield]][paypal-me]
 
-[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.7.0&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.10.0&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
 [license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2022.6&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2022.9&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
@@ -31,7 +31,7 @@
 
 English version of this page is available [here](README.md).
 
-Компонет ESPHome для управления бризерами `Tion 4S`, `Tion Lite` и `Tion 3S` с помощью ESP32 через BLE протокол.
+Компонет ESPHome для управления бризерами `Tion 4S`, `Tion Lite` и `Tion 3S` с помощью ESP32 через BLE протокол и бризером `Tion 4S` посредсвом прямого подключения через интеграционный разъем с помощью стика ESP32/ESP8266 (как уточняйте в чате [Telegram][telegram]).
 
 На текущий момент компонент построен на платформе `climate` и позволяет контролировать:
 

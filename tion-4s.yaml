@@ -39,11 +39,30 @@ wifi:
   ssid: $wifi_ssid
   password: $wifi_password
 
+ble_client:
+  mac_address: $tion_mac_address
+  id: tion_ble_client
+
+# Virtual port configuration
+vport:
+  - platform: tion_ble
+    id: tion4s_ble_vport
+    ble_client_id: tion_ble_client
+    # Optional, How often query device state. Default: 60s.
+    update_interval: 60s
+    # Optional, Do not disconnect after receiving state. Default: false.
+    persistent_connection: false
+    # Optional, Timeout to reconnect if no state answer received. Default: 15s.
+    state_timeout: 15s
+    # Optional, Allow to disable other BLE device scanning when breezer is already connected.
+    disable_scan: false
+
 # Main component configuration.
 climate:
   - platform: tion_4s
-    ble_client_id: tion_ble_client
     name: "$name"
+    # Optional, virtual port id. Default: autodetect
+    vport_id: tion4s_ble_vport
     # Optional, Buzzer control switch.
     buzzer:
       name: "$name Buzzer"
@@ -71,12 +90,6 @@ climate:
     # Optional, Tion firmware version.
     version:
       name: "$name Version"
-    # Optional, Timeout to reconnect if no state answer received. Default: 15s.
-    state_timeout: 15s
-    # Optional, How often query device state. Default: 60s.
-    update_interval: 60s
-    # Optional, Do not disconnect after receiving state. Default: false.
-    persistent_connection: false
     # Optional, Enable presets. Default: <empty>
     # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
     # Defaults:
@@ -90,13 +103,13 @@ climate:
     # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
     presets:
       # enable and override "home" preset
-      home: { fan_speed: 2, target_temperature: 15, mode: heat }
+      home: { fan_speed: 2, target_temperature: 16, mode: heat }
       # enable "away" preset
       away:
       # enable "boost" preset
       boost:
       # enable and override "sleep" preset
-      sleep: { fan_speed: 1, target_temperature: 15, mode: heat }
+      sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
     # Optional, configure boost time
     boost_time:
       name: $name Boost Time

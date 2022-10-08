@@ -6,13 +6,13 @@
 [![Support author][donate-me-shield]][donate-me]
 [![PayPal.Me][paypal-me-shield]][paypal-me]
 
-[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.7.0&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.10.0&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
 [license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2022.6&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2022.9&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
@@ -31,7 +31,7 @@
 
 Версия на русском языке доступна [здесь](README_ru.md).
 
-This is a ESPHome component to control `Tion 4S`, `Tion Lite` and `Tion 3S` Breezers from ESP32 via BLE protocol.
+This is a ESPHome component to control `Tion 4S`, `Tion Lite` and `Tion 3S` Breezers from ESP32 via BLE protocol and `Tion 4S` breezer via ingergation port with any ESP32/ESP8266 dongle.
 
 At this moment the componet is build using climate platform and allows to control:
 

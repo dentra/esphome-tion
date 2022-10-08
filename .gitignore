@@ -15,6 +15,7 @@ secrets.yaml
 /partitions.csv
 CMakeListsPrivate.txt
 CMakeLists.txt
+Doxygen
 
 /compile_commands.json
 /.clang_complete
