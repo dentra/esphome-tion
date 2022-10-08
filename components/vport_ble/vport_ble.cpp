@@ -69,7 +69,16 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
     } else {
       ESP_LOGV(TAG, "Bonding skipped");
     }
+    if (this->disable_scan_) {
+      esp32_ble_tracker::global_esp32_ble_tracker->stop_scan();
+    }
     return;
+  }
+
+  if (event == ESP_GATTC_DISCONNECT_EVT) {
+    if (this->disable_scan_) {
+      esp32_ble_tracker::global_esp32_ble_tracker->start_scan();
+    }
   }
 
 #ifdef ESPHOME_LOG_HAS_VERBOSE

@@ -51,6 +51,7 @@ class VPortBLENode : public ble_client::BLEClientNode {
 
   void set_persistent_connection(bool persistent_connection) { this->persistent_connection_ = persistent_connection; }
   bool is_persistent_connection() const { return this->persistent_connection_; }
+  void set_disable_scan(bool disable_scan) { this->disable_scan_ = disable_scan; }
 #ifdef VPORT_BLE_ENABLE_QUEUE
   size_t get_max_queue_size() const { return 20; }
 #endif
@@ -62,6 +63,7 @@ class VPortBLENode : public ble_client::BLEClientNode {
   esp32_ble_tracker::ESPBTUUID ble_char_rx_{};
   esp_ble_sec_act_t ble_sec_act_{esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT_MITM};
   bool persistent_connection_{};
+  bool disable_scan_{};
 #ifdef VPORT_BLE_ENABLE_QUEUE
   std::vector<std::vector<uint8_t>> waited_;
   // TODO move to circular_buffer

@@ -8,6 +8,7 @@ from esphome.const import CONF_ID
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_PERSISTENT_CONNECTION = "persistent_connection"
 CONF_PROTOCOL_ID = "protocol_id"
+CONF_DISABLE_SCAN = "disable_scan"
 
 TionBLEVPort = tion.tion_ns.class_("TionBLEVPort", cg.PollingComponent, vport.VPort)
 
@@ -23,6 +24,7 @@ def tion_ble_schema(vport_class: MockObjClass, protocol_class: MockObjClass):
                     CONF_STATE_TIMEOUT, default="15s"
                 ): cv.positive_time_period_milliseconds,
                 cv.Optional(CONF_PERSISTENT_CONNECTION, default=False): cv.boolean,
+                cv.Optional(CONF_DISABLE_SCAN, default=False): cv.boolean,
             }
         )
     )
@@ -35,4 +37,5 @@ async def setup_tion_ble(config):
     await ble_client.register_ble_node(var, config)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
     cg.add(var.set_persistent_connection(config[CONF_PERSISTENT_CONNECTION]))
+    cg.add(var.set_disable_scan(config[CONF_DISABLE_SCAN]))
     return var
