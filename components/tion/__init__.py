@@ -22,6 +22,7 @@ from esphome.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_NONE,
     UNIT_CELSIUS,
@@ -116,7 +117,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                 accuracy_decimals=0,
                 device_class=DEVICE_CLASS_TEMPERATURE,
                 state_class=STATE_CLASS_MEASUREMENT,
-                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                entity_category=ENTITY_CATEGORY_NONE,
             ),
             cv.Optional(CONF_VERSION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
                 {
@@ -151,7 +152,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                 accuracy_decimals=1,
                 icon="mdi:clock-end",
                 state_class=STATE_CLASS_NONE,
-                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                entity_category=ENTITY_CATEGORY_NONE,
             ),
             cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
         }
