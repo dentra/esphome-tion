@@ -1,4 +1,8 @@
 #include "esphome/core/log.h"
+#include "esphome/core/defines.h"
+#ifdef USE_OTA
+#include "esphome/components/ota/ota_component.h"
+#endif
 
 #include "tion_uart.h"
 
@@ -18,6 +22,10 @@ void TionUARTVPort::setup() {
   this->fire_ready();
   if (this->heartbeat_interval_ > 0 && this->cc_ != nullptr) {
     this->set_interval(this->heartbeat_interval_, [this]() { this->cc_->send_heartbeat(); });
+#ifdef USE_OTA
+    ota::global_ota_component->add_on_state_callback(
+        [this](ota::OTAState, float, uint8_t) { this->cc_->send_heartbeat(); });
+#endif
   }
 }
 

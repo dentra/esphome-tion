@@ -34,3 +34,5 @@ async def to_code(config):
     await cg.register_component(var, config)
     cg.add(var.set_heartbeat_interval(config[CONF_HEARTBEAT_INTERVAL]))
     cg.add_build_flag("-DTION_ENABLE_HEARTBEAT")
+    # enable ota subscription
+    cg.add_define("USE_OTA_STATE_CALLBACK")
