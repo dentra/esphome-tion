@@ -21,10 +21,11 @@ void Tion3sBLEVPortBase::setup() {
 }
 
 void Tion3sBLEVPortBase::update() {
-  if (this->is_connected() && this->pair_state_ > 0) {
+  if (!this->is_connected() || this->pair_state_ > 0) {
     TionBLEVPortBase::update();
   } else {
-    ESP_LOGW(TAG, "Pairing required");
+    ESP_LOGW(TAG, "Pairing required. [pair_state: %d, is_connected: %s", this->pair_state_,
+             YESNO(this->is_connected()));
     this->disconnect();
   }
 }
