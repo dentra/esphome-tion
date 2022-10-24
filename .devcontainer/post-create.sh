@@ -37,7 +37,7 @@ sedi "/src_dir/s/esphome/\./" ".esphome/$pio_ini"
 sedi "/sdkconfig_path/s/.temp/.esphome/" ".esphome/$pio_ini"
 
 # add project specific defines
-defines=(TION_ENABLE_HEARTBEAT TION_ENABLE_PRESETS TION_ENABLE_SCHEDULER TION_ENABLE_DIAGNOSTIC)
+defines=(TION_ENABLE_HEARTBEAT TION_ENABLE_PRESETS TION_ENABLE_SCHEDULER TION_ENABLE_DIAGNOSTIC USE_VPORT_BLE USE_VPORT_UART)
 for d in "${defines[@]}" ; do
   defines_r="$defines_r\n    -D$d"
 done
