@@ -8,11 +8,22 @@
 namespace esphome {
 namespace vport {
 
-template<typename frame_type> class VPortCodec {
- public:
-  bool decode(const uint8_t *data, size_t size);
-  bool encode(frame_type type, const void *data, size_t size);
-};
+// TODO implement
+// template<typename frame_type> class VPortCodec {
+//  public:
+//   bool decode(const uint8_t *data, size_t size);
+//   bool encode(frame_type type, const void *data, size_t size);
+// };
+
+// TODO implement
+// template<typename frame_type> class VPortProtocol {
+//   using writer_type = etl::delegate<bool(const uint8_t *data, size_t size)>;
+//   using reader_type = etl::delegate<bool(frame_type type, const void *data, size_t size)>;
+
+//  public:
+//   reader_type reader{};
+//   writer_type writer{};
+// };
 
 template<typename frame_type> class VPort {
   using on_ready_type = etl::delegate<bool()>;

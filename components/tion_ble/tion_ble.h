@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../vport_ble/vport_ble.h"
+#include "../vport/vport_ble.h"
 #include "../tion/tion.h"
 #include "../tion-api/tion-api-ble-lt.h"
 #include "../tion-api/tion-api-ble.h"
@@ -8,12 +8,14 @@
 namespace esphome {
 namespace tion {
 
-class TionBLEVPortBase : public vport::VPortBLEComponent<uint16_t> {
-  using parent_type = vport::VPortBLEComponent<uint16_t>;
+class TionBLEVPortBase : public vport::VPortBLEComponentBase<uint16_t> {
+  using parent_type = vport::VPortBLEComponentBase<uint16_t>;
 
  public:
   void dump_config() override;
   void update() override;
+
+  bool should_disconnect(uint16_t type) override { return type != 0 && this->state_type_ == type; }
 
   void set_state_type(uint16_t state_type) { this->state_type_ = state_type; }
   void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; }
@@ -32,40 +34,19 @@ class TionBLEVPortBase : public vport::VPortBLEComponent<uint16_t> {
   void dump_settings(const char *TAG) const;
 };
 
-template<class protocol_type, class base_type> class TionBLEVPortT : public base_type {
+template<class protocol_type, class base_type>
+class TionBLEVPortT : public vport::VPortBLEComponent<uint16_t, protocol_type, base_type> {
   static_assert(std::is_base_of<TionBLEVPortBase, base_type>::value, "base_type is not derived from TionBLEVPortBase");
 
-  using this_type = TionBLEVPortT<protocol_type, base_type>;
-
  public:
-  explicit TionBLEVPortT(protocol_type *protocol) : protocol_(protocol) {
-    protocol_->reader.template set<base_type, &base_type::read_frame>(*this);
-    protocol_->writer.template set<base_type, &base_type::write_data>(*this);
-
-    this->set_ble_service(protocol->get_ble_service());
-    this->set_ble_char_tx(protocol->get_ble_char_tx());
-    this->set_ble_char_rx(protocol->get_ble_char_rx());
-    if (protocol->get_ble_encryption() != 0) {
-      this->set_ble_encryption(protocol->get_ble_encryption());
-    }
-  }
-
-  bool on_ble_data(const uint8_t *data, uint16_t size) override { return this->protocol_->read_data(data, size); }
-
-  bool should_disconnect(uint16_t type) override { return type != 0 && this->state_type_ == type; }
-
-  bool write_frame(uint16_t type, const void *data, size_t size) {
-    return this->protocol_->write_frame(type, data, size);
-  }
+  explicit TionBLEVPortT(protocol_type *protocol)
+      : vport::VPortBLEComponent<uint16_t, protocol_type, base_type>(protocol) {}
 
   // TODO move to python?
   void register_api_writer(dentra::tion::TionApiBaseWriter *api) {
-    api->writer.set<this_type, &this_type::write_frame>(*this);
-    // api->writer.set<protocol_type, &protocol_type::write_frame>(*this->protocol_);
+    // this->setup_frame_writer(api->writer);
+    api->writer.set<protocol_type, &protocol_type::write_frame>(*this->protocol_);
   }
-
- protected:
-  protocol_type *protocol_;
 };
 
 template<class protocol_type> class TionBLEVPort final : public TionBLEVPortT<protocol_type, TionBLEVPortBase> {

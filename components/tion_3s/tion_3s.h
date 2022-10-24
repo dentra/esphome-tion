@@ -13,7 +13,7 @@ using namespace dentra::tion;
 
 using TionApi3s = dentra::tion::TionsApi3s;
 
-class Tion3s : public TionClimateComponent<TionsApi3s, tion3s_state_t> {
+class Tion3s final : public TionClimateComponent<TionsApi3s, tion3s_state_t> {
  public:
   explicit Tion3s(TionsApi3s *api, vport::VPortComponent<uint16_t> *vport) : TionClimateComponent(api, vport) {}
 

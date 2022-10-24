@@ -3,7 +3,8 @@ from .. import tion, tion_ble  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
 ESP_PLATFORMS = [PLATFORM_ESP32]
-AUTO_LOAD = ["vport_ble", "tion"]
+DEPENDENCIES = ["ble_client"]
+AUTO_LOAD = ["vport", "tion"]
 
 
 VPortTionBleLtProtocol = tion.tion_ns.class_("VPortTionBleLtProtocol")

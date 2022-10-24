@@ -10,7 +10,7 @@ using namespace dentra::tion;
 
 using TionApi4s = dentra::tion::TionApi4s;
 
-class Tion4s : public TionClimateComponent<TionApi4s, tion4s_state_t> {
+class Tion4s final : public TionClimateComponent<TionApi4s, tion4s_state_t> {
  public:
   explicit Tion4s(TionApi4s *api, vport::VPortComponent<uint16_t> *vport) : TionClimateComponent(api, vport) {
     vport->on_ready.set<Tion4s, &Tion4s::on_ready>(*this);

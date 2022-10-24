@@ -1,7 +1,7 @@
 #pragma once
-
+#ifdef USE_VPORT_BLE
 #include "esphome/components/ble_client/ble_client.h"
-#include "../vport/vport_component.h"
+#include "vport_component.h"
 
 // #define VPORT_BLE_ENABLE_QUEUE
 #ifdef VPORT_BLE_ENABLE_QUEUE
@@ -74,9 +74,7 @@ class VPortBLENode : public ble_client::BLEClientNode {
   void on_ble_ready_();
 };
 
-template<typename frame_type> class VPortBLEComponent : public VPortComponent<frame_type>, public VPortBLENode {
-  using this_type = VPortBLEComponent<frame_type>;
-
+template<typename frame_type> class VPortBLEComponentBase : public VPortComponent<frame_type>, public VPortBLENode {
  public:
   void schedule_disconnect(uint32_t timeout = 3000) { VPortBLENode::schedule_disconnect(this, timeout); }
   void cancel_disconnect() { VPortBLENode::cancel_disconnect(this); }
@@ -102,5 +100,51 @@ template<typename frame_type> class VPortBLEComponent : public VPortComponent<fr
   }
 };
 
+/// Requires following protocol class.
+/// interface ProtocolClass {
+///   using writer_type = etl::delegate<bool(const uint8_t *data, size_t size)>;
+///   using reader_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
+///  public:
+///   reader_type reader{};
+///   writer_type writer{};
+///   bool write_frame(uint16_t type, const void *data, size_t size);
+///   bool read_data(const uint8_t *data, size_t size);
+///   const char *get_ble_service() const;
+///   const char *get_ble_char_tx() const;
+///   const char *get_ble_char_rx() const;
+///   esp_ble_sec_act_t get_ble_encryption() const;
+/// }
+template<typename frame_type, class protocol_type, class base_type> class VPortBLEComponent : public base_type {
+  static_assert(std::is_base_of<VPortBLEComponentBase<frame_type>, base_type>::value,
+                "base_type is not derived from VPortBLEComponentBase");
+
+  using this_type = VPortBLEComponent<frame_type, protocol_type, base_type>;
+  using component_type = VPortBLEComponentBase<frame_type>;
+
+ public:
+  explicit VPortBLEComponent(protocol_type *protocol) : protocol_(protocol) {
+    protocol_->reader.template set<component_type, &component_type::read_frame>(*this);
+    protocol_->writer.template set<component_type, &component_type::write_data>(*this);
+
+    this->set_ble_service(protocol->get_ble_service());
+    this->set_ble_char_tx(protocol->get_ble_char_tx());
+    this->set_ble_char_rx(protocol->get_ble_char_rx());
+    if (protocol->get_ble_encryption() != 0) {
+      this->set_ble_encryption(protocol->get_ble_encryption());
+    }
+  }
+
+  bool on_ble_data(const uint8_t *data, uint16_t size) override { return this->protocol_->read_data(data, size); }
+
+  // using writer_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
+  // void setup_frame_writer(writer_type &writer) {
+  //   writer.set<protocol_type, &protocol_type::write_frame>(*this->protocol_);
+  // }
+
+ protected:
+  protocol_type *protocol_;
+};
+
 }  // namespace vport
 }  // namespace esphome
+#endif

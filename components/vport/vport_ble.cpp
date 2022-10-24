@@ -1,3 +1,4 @@
+#ifdef USE_VPORT_BLE
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
 #include "vport_ble.h"
@@ -151,3 +152,4 @@ void VPortBLENode::cancel_disconnect(Component *component) { App.scheduler.cance
 
 }  // namespace vport
 }  // namespace esphome
+#endif

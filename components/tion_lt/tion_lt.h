@@ -8,7 +8,7 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLt : public TionClimateComponent<TionApiLt, tionlt_state_t> {
+class TionLt final : public TionClimateComponent<TionApiLt, tionlt_state_t> {
  public:
   explicit TionLt(TionApiLt *api, vport::VPortComponent<uint16_t> *vport) : TionClimateComponent(api, vport) {}
 

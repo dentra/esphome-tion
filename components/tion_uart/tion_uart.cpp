@@ -19,29 +19,19 @@ void TionUARTVPort::dump_config() {
 }
 
 void TionUARTVPort::setup() {
-  this->fire_ready();
+  TionUARTVPortBase::setup();
+
   if (this->heartbeat_interval_ > 0 && this->cc_ != nullptr) {
     this->set_interval(this->heartbeat_interval_, [this]() { this->cc_->send_heartbeat(); });
 #ifdef USE_OTA
-    ota::global_ota_component->add_on_state_callback(
-        [this](ota::OTAState, float, uint8_t) { this->cc_->send_heartbeat(); });
+    // additionally send heartbean when OTA starts and before ESP restart.
+    ota::global_ota_component->add_on_state_callback([this](ota::OTAState state, float, uint8_t) {
+      if (state != ota::OTAState::OTA_IN_PROGRESS) {
+        this->cc_->send_heartbeat();
+      }
+    });
 #endif
   }
-}
-
-void TionUARTVPort::update() { this->fire_poll(); }
-
-bool TionUARTVPort::read_frame(uint16_t type, const void *data, size_t size) {
-  ESP_LOGV(TAG, "Read frame 0x%04X: %s", type, format_hex_pretty(static_cast<const uint8_t *>(data), size).c_str());
-  this->fire_frame(type, data, size);
-  return true;
-}
-
-bool TionUARTVPort::write_data(const uint8_t *data, size_t size) {
-  ESP_LOGV(TAG, "Write data: %s", format_hex_pretty(data, size).c_str());
-  this->uart_->write_array(data, size);
-  this->uart_->flush();
-  return true;
 }
 
 }  // namespace tion

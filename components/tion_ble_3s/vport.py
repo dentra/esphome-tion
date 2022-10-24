@@ -5,7 +5,8 @@ from .. import vport, tion, tion_ble  # pylint: disable=relative-beyond-top-leve
 
 CODEOWNERS = ["@dentra"]
 ESP_PLATFORMS = [PLATFORM_ESP32]
-AUTO_LOAD = ["tion_ble", "vport_ble", "tion"]
+DEPENDENCIES = ["ble_client"]
+AUTO_LOAD = ["tion_ble", "vport", "tion"]
 
 CONF_EXPERIMENTAL_ALWAYS_PAIR = "experimental_always_pair"
 
