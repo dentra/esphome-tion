@@ -49,7 +49,7 @@ class TionsApi3s : public TionApiBase<tion3s_state_t> {
 
   uint16_t get_state_type() const;
 
-  bool request_dev_status() const { return false; }
+  bool request_dev_status() const { return true; }
 
   bool pair() const;
   bool request_state() const;

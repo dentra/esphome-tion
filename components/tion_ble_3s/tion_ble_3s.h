@@ -27,7 +27,13 @@ class Tion3sBLEVPortBase : public TionBLEVPortBase {
   // VPortBLEComponent implementation
   void on_ble_ready() override;
 
-  bool ble_reg_for_notify() const override { return this->pair_state_ > 0; }
+  bool ble_reg_for_notify() const override {
+    // при постоянном подключении требуется попреподключение иначе мы никогде не получим notify
+    if (this->is_persistent_connection()) {
+      return true;
+    }
+    return this->pair_state_ > 0;
+  }
 
   bool write_data(const uint8_t *data, size_t size) { return parent_type::write_data(data, size); }
   bool read_frame(uint16_t type, const void *data, size_t size) { return parent_type::read_frame(type, data, size); }
@@ -36,7 +42,7 @@ class Tion3sBLEVPortBase : public TionBLEVPortBase {
   ESPPreferenceObject rtc_;
   int8_t pair_state_{};  // 0: not paired, >0: paired, <0: pairing
   bool experimental_always_pair_{};
-  dentra::tion::TionsApi3s *api_;
+  dentra::tion::TionsApi3s *api_{};
 };
 
 class VPortTionBle3sProtocol final : public dentra::tion::TionBleProtocol<dentra::tion::TionBle3sProtocol> {
