@@ -81,7 +81,9 @@ template<typename frame_type> class VPortBLEComponentBase : public VPortComponen
 
   void on_ble_ready() override {
     this->fire_ready();
-    this->schedule_disconnect();
+    if (!this->is_persistent_connection()) {
+      this->schedule_disconnect();
+    }
   }
 
   virtual bool should_disconnect(frame_type type) = 0;
