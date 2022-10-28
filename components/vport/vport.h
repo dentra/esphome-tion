@@ -31,32 +31,19 @@ template<typename frame_type> class VPort {
   using on_frame_type = etl::delegate<bool(frame_type type, const void *data, size_t size)>;
 
  public:
-  void fire_frame(frame_type type, const void *data, size_t size) const {
-    if (this->on_frame) {
-      this->on_frame(type, data, size);
-    }
-  }
+  void fire_frame(frame_type type, const void *data, size_t size) const { this->on_frame(type, data, size); }
 
-  void fire_poll() {
-    if (this->on_update) {
-      this->on_update();
-    }
-  }
+  void fire_poll() { this->on_update(); }
 
   void fire_ready() {
-    if (this->on_ready) {
-      if (!this->on_ready()) {
-        return;
-      }
-    }
-    if (this->on_update) {
+    if (this->on_ready()) {
       this->on_update();
     }
   }
 
-  on_ready_type on_ready{};
-  on_update_type on_update{};
-  on_frame_type on_frame{};
+  on_ready_type on_ready{[]() { return true; }};
+  on_update_type on_update{[]() { return true; }};
+  on_frame_type on_frame{[](frame_type, const void *, size_t) { return true; }};
 };
 
 }  // namespace vport
