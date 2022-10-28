@@ -6,7 +6,7 @@
 [![Support author][donate-me-shield]][donate-me]
 [![PayPal.Me][paypal-me-shield]][paypal-me]
 
-[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.10.0&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.10.1&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
 [license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
