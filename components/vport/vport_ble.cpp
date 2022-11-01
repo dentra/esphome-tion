@@ -8,9 +8,27 @@ namespace vport {
 
 static const char *const TAG = "vport_ble";
 
+static inline bool check_conn_id(VPortBLENode *node, esp_gattc_cb_event_t event, uint16_t conn_id) {
+  if (conn_id != node->parent()->get_conn_id()) {
+    ESP_LOGD(TAG, "[%s][%u] Unexpected param conn_id=%u, open conn_id=%u", node->parent()->address_str().c_str(), event,
+             conn_id, node->parent()->get_conn_id());
+    return false;
+  }
+  return true;
+}
+
 void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
                                        esp_ble_gattc_cb_param_t *param) {
+  if (gattc_if != this->parent()->get_gattc_if()) {
+    ESP_LOGD(TAG, "[%s][%u] Unexpected param gattc_if=%u, open gattc_if=%u", this->parent()->address_str().c_str(),
+             event, gattc_if, this->parent()->get_gattc_if());
+    return;
+  }
+
   if (event == ESP_GATTC_NOTIFY_EVT) {
+    if (!check_conn_id(this, event, param->notify.conn_id)) {
+      return;
+    }
     ESP_LOGV(TAG, "Got notify for handle %04u: %s", param->notify.handle,
              format_hex_pretty(param->notify.value, param->notify.value_len).c_str());
     if (param->notify.handle == this->char_rx_) {
@@ -20,18 +38,20 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_WRITE_DESCR_EVT) {
+    if (!check_conn_id(this, event, param->write.conn_id)) {
+      return;
+    }
     ESP_LOGV(TAG, "write_char_descr at 0x%x complete 0x%02x", param->write.handle, param->write.status);
     this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
     this->on_ble_ready_();
     return;
   }
 
-  if (event == ESP_GATTC_REG_FOR_NOTIFY_EVT) {
-    ESP_LOGV(TAG, "Registring for notify complete");
-    return;
-  }
-
   if (event == ESP_GATTC_SEARCH_CMPL_EVT) {
+    if (!check_conn_id(this, event, param->search_cmpl.conn_id)) {
+      return;
+    }
+
     auto tx = this->parent()->get_characteristic(this->ble_service_, this->ble_char_tx_);
     if (tx == nullptr) {
       ESP_LOGE(TAG, "Can't discover TX characteristics");
@@ -51,7 +71,7 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
     ESP_LOGV(TAG, "  RX handle 0x%x", this->char_rx_);
 
     if (this->ble_reg_for_notify()) {
-      auto err = esp_ble_gattc_register_for_notify(this->parent_->get_gattc_if(), this->parent_->get_remote_bda(),
+      auto err = esp_ble_gattc_register_for_notify(this->parent()->get_gattc_if(), this->parent()->get_remote_bda(),
                                                    this->char_rx_);
       ESP_LOGV(TAG, "Register for notify 0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
     } else {
@@ -63,6 +83,10 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_CONNECT_EVT) {
+    if (!check_conn_id(this, event, param->connect.conn_id)) {
+      return;
+    }
+
     // let the device to do pair
     if (this->ble_sec_act_ != 0) {
       auto err = esp_ble_set_encryption(param->connect.remote_bda, this->ble_sec_act_);
@@ -77,13 +101,25 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_DISCONNECT_EVT) {
+    if (!check_conn_id(this, event, param->disconnect.conn_id)) {
+      return;
+    }
+
     if (this->disable_scan_) {
       esp32_ble_tracker::global_esp32_ble_tracker->start_scan();
     }
   }
 
 #ifdef ESPHOME_LOG_HAS_VERBOSE
+  if (event == ESP_GATTC_REG_FOR_NOTIFY_EVT) {
+    ESP_LOGV(TAG, "Registring for notify complete");
+    return;
+  }
+
   if (event == ESP_GATTC_WRITE_CHAR_EVT) {
+    if (!check_conn_id(this, event, param->write.conn_id)) {
+      return;
+    }
     ESP_LOGV(TAG, "write_char at 0x%x complete 0x%02x", param->write.handle, param->write.status);
     return;
   }

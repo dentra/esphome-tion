@@ -8,7 +8,7 @@ static const char *const TAG = "tion_ble";
 
 void TionBLEVPortBase::dump_config() { this->dump_settings(TAG); }
 
-void TionBLEVPortBase::dump_settings(const char *TAG) const {
+void TionBLEVPortBase::dump_settings(const char *TAG) {
   VPORT_BLE_LOG(TAG, "Tion BLE");
   ESP_LOGCONFIG(TAG, "  State timeout: %s",
                 this->state_timeout_ > 0 ? (to_string(this->state_timeout_ / 1000) + "s").c_str() : ONOFF(false));

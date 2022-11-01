@@ -31,7 +31,7 @@ class TionBLEVPortBase : public vport::VPortBLEComponentBase<uint16_t> {
   uint32_t state_timeout_{};
   uint16_t state_type_{};
   TionClimateComponentBase *cc_{};
-  void dump_settings(const char *TAG) const;
+  void dump_settings(const char *TAG);
 };
 
 template<class protocol_type, class base_type>

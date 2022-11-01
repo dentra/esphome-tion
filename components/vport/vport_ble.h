@@ -13,6 +13,7 @@ namespace vport {
 
 #define VPORT_BLE_LOG(tag, port_name) \
   VPORT_LOG(tag, port_name); \
+  ESP_LOGCONFIG(tag, "  MAC Address: %s", this->parent()->address_str().c_str()); \
   ESP_LOGCONFIG(tag, "  BLE Service: %s", this->ble_service_.to_string().c_str()); \
   ESP_LOGCONFIG(tag, "  BLE Char TX: %s", this->ble_char_tx_.to_string().c_str()); \
   ESP_LOGCONFIG(tag, "  BLE Char RX: %s", this->ble_char_rx_.to_string().c_str()); \
