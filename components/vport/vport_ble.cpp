@@ -8,25 +8,34 @@ namespace vport {
 
 static const char *const TAG = "vport_ble";
 
-static inline bool check_conn_id(VPortBLENode *node, esp_gattc_cb_event_t event, uint16_t conn_id) {
-  if (conn_id != node->parent()->get_conn_id()) {
-    ESP_LOGD(TAG, "[%s][%u] Unexpected param conn_id=%u, open conn_id=%u", node->parent()->address_str().c_str(), event,
-             conn_id, node->parent()->get_conn_id());
+static inline bool check_conn_id(ble_client::BLEClient *ble_client, esp_gattc_cb_event_t event, uint16_t conn_id) {
+#ifdef ESPHOME_LOG_HAS_VERBOSE
+  if (conn_id != ble_client->get_conn_id()) {
+    ESP_LOGD(TAG, "[%s][%u] Unexpected param conn_id=%u, open conn_id=%u", ble_client->address_str().c_str(), event,
+             conn_id, ble_client->get_conn_id());
     return false;
   }
   return true;
+#endif
 }
 
 void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
                                        esp_ble_gattc_cb_param_t *param) {
-  if (gattc_if != this->parent()->get_gattc_if()) {
-    ESP_LOGD(TAG, "[%s][%u] Unexpected param gattc_if=%u, open gattc_if=%u", this->parent()->address_str().c_str(),
-             event, gattc_if, this->parent()->get_gattc_if());
+  auto ble_client = this->parent_;
+
+#ifdef ESPHOME_LOG_HAS_VERBOSE
+  // This should not be happen, but with bluetooth_proxy ESPHome broke it.
+  // So do additional checks in verbose mode.
+  // Also check_conn_id for it.
+  if (gattc_if != ble_client->get_gattc_if()) {
+    ESP_LOGD(TAG, "[%s][%u] Unexpected param gattc_if=%u, open gattc_if=%u", ble_client->address_str().c_str(), event,
+             gattc_if, ble_client->get_gattc_if());
     return;
   }
+#endif
 
   if (event == ESP_GATTC_NOTIFY_EVT) {
-    if (!check_conn_id(this, event, param->notify.conn_id)) {
+    if (!check_conn_id(ble_client, event, param->notify.conn_id)) {
       return;
     }
     ESP_LOGV(TAG, "Got notify for handle %04u: %s", param->notify.handle,
@@ -38,7 +47,7 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_WRITE_DESCR_EVT) {
-    if (!check_conn_id(this, event, param->write.conn_id)) {
+    if (!check_conn_id(ble_client, event, param->write.conn_id)) {
       return;
     }
     ESP_LOGV(TAG, "write_char_descr at 0x%x complete 0x%02x", param->write.handle, param->write.status);
@@ -48,18 +57,18 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_SEARCH_CMPL_EVT) {
-    if (!check_conn_id(this, event, param->search_cmpl.conn_id)) {
+    if (!check_conn_id(ble_client, event, param->search_cmpl.conn_id)) {
       return;
     }
 
-    auto tx = this->parent()->get_characteristic(this->ble_service_, this->ble_char_tx_);
+    auto tx = ble_client->get_characteristic(this->ble_service_, this->ble_char_tx_);
     if (tx == nullptr) {
       ESP_LOGE(TAG, "Can't discover TX characteristics");
       return;
     }
     this->char_tx_ = tx->handle;
 
-    auto rx = this->parent()->get_characteristic(this->ble_service_, this->ble_char_rx_);
+    auto rx = ble_client->get_characteristic(this->ble_service_, this->ble_char_rx_);
     if (rx == nullptr) {
       ESP_LOGE(TAG, "Can't discover RX characteristics");
       return;
@@ -71,8 +80,8 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
     ESP_LOGV(TAG, "  RX handle 0x%x", this->char_rx_);
 
     if (this->ble_reg_for_notify()) {
-      auto err = esp_ble_gattc_register_for_notify(this->parent()->get_gattc_if(), this->parent()->get_remote_bda(),
-                                                   this->char_rx_);
+      auto err =
+          esp_ble_gattc_register_for_notify(ble_client->get_gattc_if(), ble_client->get_remote_bda(), this->char_rx_);
       ESP_LOGV(TAG, "Register for notify 0x%x complete: %s", this->char_rx_, YESNO(err == ESP_OK));
     } else {
       this->node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
@@ -83,7 +92,7 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_CONNECT_EVT) {
-    if (!check_conn_id(this, event, param->connect.conn_id)) {
+    if (!check_conn_id(ble_client, event, param->connect.conn_id)) {
       return;
     }
 
@@ -101,7 +110,7 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_DISCONNECT_EVT) {
-    if (!check_conn_id(this, event, param->disconnect.conn_id)) {
+    if (!check_conn_id(ble_client, event, param->disconnect.conn_id)) {
       return;
     }
 
@@ -117,15 +126,16 @@ void VPortBLENode::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t
   }
 
   if (event == ESP_GATTC_WRITE_CHAR_EVT) {
-    if (!check_conn_id(this, event, param->write.conn_id)) {
+    if (!check_conn_id(ble_client, event, param->write.conn_id)) {
       return;
     }
-    ESP_LOGV(TAG, "write_char at 0x%x complete 0x%02x", param->write.handle, param->write.status);
+    ESP_LOGV(TAG, "Complete write_char to 0x%x, status=0x%02x", param->write.conn_id, param->write.handle,
+             param->write.status);
     return;
   }
 
   if (event == ESP_GATTC_ENC_CMPL_CB_EVT) {
-    ESP_LOGV(TAG, "esp_ble_set_encryption complete");
+    ESP_LOGV(TAG, "Complete esp_ble_set_encryption");
     return;
   }
 #endif
@@ -171,7 +181,8 @@ bool VPortBLENode::write_ble_data_(const uint8_t *data, uint16_t size) const {
 #else
   auto write_type = ESP_GATT_WRITE_TYPE_NO_RSP;
 #endif
-  return esp_ble_gattc_write_char(this->parent_->get_gattc_if(), this->parent_->get_conn_id(), this->char_tx_, size,
+  auto ble_client = this->parent_;
+  return esp_ble_gattc_write_char(ble_client->get_gattc_if(), ble_client->get_conn_id(), this->char_tx_, size,
                                   const_cast<uint8_t *>(data), write_type, ESP_GATT_AUTH_REQ_NONE) == ESP_OK;
 }
 
