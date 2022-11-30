@@ -13,6 +13,7 @@ esphome:
   project:
     name: "dentra.tion"
     version: "$tion_version ($framework_type)"
+  min_version: 2022.11.3
 
 esp32:
   board: $board
