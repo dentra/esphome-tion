@@ -41,11 +41,13 @@ void TionUartProtocol::read_uart_data(TionUartReader *io) {
 #endif
     if (is_ok || (io->read_array(&magic, 1) && magic == FRAME_HEADER)) {
       if (!this->read_frame_(io)) {
+        tion_yield();
         break;
       }
     } else {
       TION_LOGW(TAG, "Unxepected byte: 0x%02X", magic);
     }
+    tion_yield();
   }
 }
 
@@ -82,7 +84,7 @@ bool TionUartProtocol::read_frame_(TionUartReader *io) {
 
   auto crc = dentra::tion::crc16_ccitt_false(frame, frame->size);
   if (crc != 0) {
-    TION_LOGW(TAG, "Invalid frame CRC %04X for frame %s", crc, hexencode(frame, frame->size).c_str());
+    TION_LOGW(TAG, "Invalid CRC %04X for frame %s", crc, hexencode(frame, frame->size).c_str());
     return true;
   }
 
@@ -133,15 +135,17 @@ bool TionUartProtocol::read_frame_(TionUartReader *io) {
 
   auto crc = dentra::tion::crc16_ccitt_false(frame, frame->size);
   if (crc != 0) {
-    TION_LOGW(TAG, "Invalid frame CRC %04X for frame %s", crc, hexencode(frame, frame->size).c_str());
+    TION_LOGW(TAG, "Invalid CRC %04X for frame %s", crc, hexencode(frame, frame->size).c_str());
     this->reset_buf_();
-    return true;
+    // let perfrom read next frame on next loop
+    return false;
   }
 
   auto frame_data_size = frame->size - sizeof(tion_uart_frame_t);
   this->reader(frame->type, frame->data, frame_data_size);
   this->reset_buf_();
-  return true;
+  // let perfrom read next frame on next loop
+  return false;
 }
 
 void TionUartProtocol::reset_buf_() { std::memset(this->buf_, 0, sizeof(this->buf_)); }

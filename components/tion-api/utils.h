@@ -6,7 +6,11 @@
 
 #ifdef TION_ESPHOME
 #include "esphome/core/helpers.h"
-#define tion_hexencode esphome::format_hex_pretty
+#include "esphome/core/hal.h"
+#define tion_hexencode(data, size) esphome::format_hex_pretty(data, size)
+#define tion_yield() esphome::yield()
+#else
+#define tion_yield()
 #endif
 
 namespace dentra {
