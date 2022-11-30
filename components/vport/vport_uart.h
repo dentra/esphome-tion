@@ -27,7 +27,9 @@ template<typename frame_type, class protocol_type> class VPortUARTComponent : pu
     this->protocol_->writer.template set<this_type, &this_type::write_data>(*this);
   }
 
-  void setup() override { this->fire_ready(); }
+  void setup() override {
+    this->defer([this] { this->fire_ready(); });
+  }
   void update() override { this->fire_poll(); }
 
   // using writer_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
@@ -35,7 +37,7 @@ template<typename frame_type, class protocol_type> class VPortUARTComponent : pu
   //   writer.set<protocol_type, &protocol_type::write_frame>(*this->protocol_);
   // }
 
-  bool read_frame(uint16_t type, const void *data, size_t size) {
+  bool read_frame(frame_type type, const void *data, size_t size) {
     this->fire_frame(type, data, size);
     return true;
   }
