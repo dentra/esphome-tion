@@ -2,6 +2,8 @@
 
 set -e
 
+source $(dirname $0)/post-create-env
+
 sedi() {
   expr=$1
   file=$2
@@ -23,25 +25,36 @@ done
 
 pio_ini=platformio.ini
 
-files=($pio_ini .clang-format .clang-tidy .editorconfig .pylintrc)
+files=($pio_ini .clang-format .clang-tidy .editorconfig pylintrc)
 for f in "${files[@]}" ; do
-  if [ ! -f "$f" ] || [ "$f" = "$pio_ini" ]; then
+  #if [ ! -f "$f" ] || [ "$f" = "$pio_ini" ]; then
     curl -Ls "https://github.com/esphome/esphome/raw/dev/$f" -o ".esphome/$f"
     ln -svf ".esphome/$f" "$f"
-  fi
+  #fi
 done
+
+pio_ini=".esphome/$pio_ini"
 
 # replace "esphome" to "." in src_dir. esphome linked at post-start.sh
-sedi "/src_dir/s/esphome/\./" ".esphome/$pio_ini"
+sedi "/src_dir/s/esphome/\./" "$pio_ini"
 # replace ".temp" to ".esphome in "sdkconfig_path"
-sedi "/sdkconfig_path/s/.temp/.esphome/" ".esphome/$pio_ini"
+sedi "/sdkconfig_path/s/.temp/.esphome/" "$pio_ini"
 
-# add project specific defines
-defines=(TION_ENABLE_HEARTBEAT TION_ENABLE_PRESETS TION_ENABLE_SCHEDULER TION_ENABLE_DIAGNOSTIC USE_VPORT_BLE USE_VPORT_UART)
+
+sedi "s/-DESPHOME_LOG_LEVEL/\${prj.build_flags}\n    -DESPHOME_LOG_LEVEL/" "$pio_ini"
+sedi "s/esphome\/noise-c@/\${prj.lib_deps}\n    esphome\/noise-c@/" "$pio_ini"
+
+echo "" >> "$pio_ini"
+echo "# project specific settings" >> "$pio_ini"
+echo "[prj]" >> "$pio_ini"
+echo "build_flags =" >> "$pio_ini"
 for d in "${defines[@]}" ; do
-  defines_r="$defines_r\n    -D$d"
+  echo "    -D$d" >> "$pio_ini"
 done
-sedi "s/ESPHOME_LOG_LEVEL_VERY_VERBOSE/ESPHOME_LOG_LEVEL_VERY_VERBOSE$defines_r/" ".esphome/$pio_ini"
+echo "lib_deps =" >> "$pio_ini"
+for d in "${lib_deps[@]}" ; do
+  echo "    $d" >> "$pio_ini"
+done
 
 cpp_json=.vscode/c_cpp_properties.json
 #if [ ! -f $cpp_json ]; then
@@ -58,4 +71,3 @@ fi
 
 # additionally remove annoying pio ide recomendations
 sedi "/platformio.platformio-ide/d" .vscode/extensions.json
-

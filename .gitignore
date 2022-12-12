@@ -25,4 +25,5 @@ Doxygen
 /.clang-tidy
 /.editorconfig
 /.pylintrc
+/pylintrc
 /*-dev.yaml

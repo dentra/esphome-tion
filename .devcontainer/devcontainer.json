@@ -3,9 +3,9 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2022.10.0",
+      "esphome_version": "2022.11.4",
       // additional APT dependicies
-      "apt_deps": "bash-completion less libmbedtls-dev gdb",
+      "apt_deps": "bash-completion less libmbedtls-dev gdb ccache",
       // additional PIP dependicies
       "pip_deps": "pyserial_asyncio"
     }
@@ -45,7 +45,17 @@
       },
       "**/__pycache__": true,
       ".esphome": false,
+      "*/.esphome": true,
       ".pio": true
+    },
+    "files.watcherExclude": {
+      "**/.git/objects/**": true,
+      "**/.git/subtree-cache/**": true,
+      "**/node_modules/*/**": true,
+      "**/.hg/store/**": true,
+      "**/.esphome/**": true,
+      ".pio/**": true,
+      "esphome/**": true
     },
     "files.associations": {
       "**/.vscode/*.json": "jsonc"
