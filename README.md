@@ -29,69 +29,72 @@
 
 # Tion
 
-Версия на русском языке доступна [здесь](README_ru.md).
+English version of this page is available [here](README.md).
 
-This is a ESPHome component to control `Tion 4S`, `Tion Lite` and `Tion 3S` Breezers from ESP32 via BLE protocol and `Tion 4S` breezer via ingergation port with any ESP32/ESP8266 dongle.
+Компонет ESPHome для управления бризерами `Tion 4S`, `Tion Lite` и `Tion 3S` с помощью ESP32 через BLE протокол и бризером `Tion 4S` посредсвом прямого подключения через интеграционный разъем с помощью стика ESP32/ESP8266 (как уточняйте в чате [Telegram][telegram]).
 
-At this moment the componet is build using climate platform and allows to control:
+На текущий момент компонент построен на платформе `climate` и позволяет контролировать:
 
-* On/Off
-* Heater On/Off
-* Target temperature
-* Fan speed
-* Buzzer
-* Led (4S and Lite only)
-* Inflow/Recirculation (4S only)
-* Inflow/Recirculation/Mixed (3S only)
-* Presets
-* Boost preset time
+* Включение/Выключение
+* Включение/Выключение обогрева
+* Выставление целевой температуры нагрева
+* Установка скорости притока воздуха
+* Управление звуковыми оповещениями
+* Управление световымы оповещениями (только для 4S и Lite)
+* Переключение режима приток/рециркуляция (только для 4S)
+* Переключение режима приток/рециркуляция/смешанный (только для 3S)
+* Поддержка пресетов
+* Настройка времени пресета `Турбо`
 
-And additionaly monitor:
+Дополнительно осуществляется мониториг следующих показателей:
 
-* Temperature inside
-* Temperature outside
-* Heater power (4S and Lite only)
-* Filter time left
-* Filter warnout state (4S and Lite only)
-* Boost time left
-* Airflow counter (4S and Lite only)
-* Current productivity (3S only)
-* Version
+* Температура снаружи
+* Температура внутри
+* Текущая потребяемая мощность нагревателя (только для 4S и Lite)
+* Оставшееся время жизни фильтров
+* Индикация о требущейся замене/очистке фильтра (только для 4S и Lite)
+* Оставшееся время работы режима `Турбо`
+* Счетчик прошедшего воздуха (только для 4S и Lite)
+* Текущая производительностью бризера (только для 3S)
+* Версия програмного обеспечения бризера
 
-## Firmware
+## Прошивка
 
-You can find sample configuration files for [Tion 4S](tion-4s.yaml), [Tion Lite](tion-lt.yaml) and [Tion 3S](tion-3s.yaml) (they are self-descriptive).
+Вы можете загрузить и использовать примеры конфигурации для [Tion 4S](tion-4s.yaml), [Tion Lite](tion-lt.yaml) и [Tion 3S](tion-3s.yaml), все файлы с подробным описанием (на английском)
 
-* Download the necessary configuration for your breezer
-* Modify `substitutions` section for your preferred values
-* Change the set of packages to your needs
-* Place the modified file in the ESPHome config directory
-* Run the build and firmware upload of your configuration
-* Add the device that appears to the Home Assistant
+* Скачайте конфигурацию соотствующую модели вашего бризера
+* Измените секцию `substitutions` согласно вашим предпочтениям
+* Измените набор подключаемых пакетов по вашему вкусу
+* Поместите модифицированный файл в директорию с конфигурацией ESPHome
+* Запустите сборку и прошивку вашей конфигурации
+* Добавьте появившееся устройство в Home Assistant
 
-## Usage
-After flashing firmware and before first run you need to enter your Breezer into the pairing mode (please follow the manual) and only then start ESP.
+## Использование
+После [прошивки](#прошивка) и перед первым использование вам необъходимо ввести свой бризер в режим сопряжения (см. инструкцию) и только потом включать ESP.
 
-Additionally for `Tion 3S` you need to push `Pair` button.
+Дополнительно, только для `Tion 3S`, необходимо нажать кнопку `Pair` в Home Assistant.
 
 >
-> ### **WARNING: Everything that you do, you do at your own risk!**
+> ### **ВНИМАНИЕ: Все что вы делаете вы делаете только на свой страх и риск!**
 >
 
-## Roadmap
+## Планы на будущее
 
-* Reset filters support.
-* Support connection via hardware UART.
+* Поддержка физического подключения через интеграционный разъем для `Tion 4S` (так же исследую возможность для 3S и Lite).
+* Управление сбросом ресура фильтров
+* Автоматическое управление притоком от внешнего датчика CO2
 
-## Issue reporting
+## Решение проблем и поддержка новых функций
 
-Feel free to open issues for bug reporting and feature requests. Will accept English and Russian language.
+Не стесняйтесь открывать [задачи](https://github.com/dentra/esphome-tion/issues) для сообщений об ошибках и запросов новых функций.
 
-## Your thanks
+Так же вы можете воспользоваться [группой в Telegram](https://t.me/esphome_tion).
 
-If this project was useful to you or you want to support its further development you can always leave your thanks
-via [Card2Card](https://www.tinkoff.ru/cf/3dZPaLYDBAI ) or [PayPal](https://paypal.me/dentra0 ).
+## Ваша благодарность
 
-## Commercial use
+Если этот проект оказался для вас полезен и/или вы хотите поддержать его дальнейше развитие, то всегда можно оставить вашу благодарность
+через [Card2Card](https://www.tinkoff.ru/cf/3dZPaLYDBAI) или [PayPal](https://paypal.me/dentra0).
 
-For questions of commercial use or custom development/improvement, please contact me by mail dennis.trachuk at gmail.com
+## Коммерческое использование
+
+По вопросам коммерческого использования или заказной разработки/доработки, обращийтесь по почте dennis.trachuk на gmail.com
