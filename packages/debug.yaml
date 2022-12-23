@@ -18,3 +18,7 @@ logger:
     binary_sensor: INFO
     esp32_ble_tracker: INFO
     json: INFO
+    uptime.sensor: INFO
+    wifi_signal.sensor: INFO
+    wifi_esp32: INFO
+    esp32.preferences: INFO
