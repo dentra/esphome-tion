@@ -3,7 +3,7 @@
 #include "esphome/core/defines.h"
 
 #ifdef USE_TION_HALF_DUPLEX
-#pragma message("USE_TION_HALF_DUPLEX")
+// #pragma message("USE_TION_HALF_DUPLEX")
 #include "esphome/core/application.h"
 #endif
 
