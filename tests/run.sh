@@ -1,42 +1,29 @@
 #!/bin/bash
 
-SRCS=(
-    tests/*.cpp
-    components/tion-api/*.cpp
-)
-
-LIBS=(
-    mbedtls
-    mbedcrypto
-)
-
-FLAGS=(
-  -rdynamic # exports the symbols of an executable, used for obtain a backtrace and print it to stdout
-  -fno-rtti
-  -fno-exceptions
-)
+ESPHOME_LIB_DIR="$WORKSPACE_DIR/.esphome/include"
+ARDUINO_LIB_DIR="$WORKSPACE_DIR/.esphome/libdeps/esp32-arduino/"
 
 DEFS=(
+  TION_ESPHOME
   TION_LOG_LEVEL=6
   TION_ENABLE_TESTS
   TION_ENABLE_HEARTBEAT
   TION_ENABLE_PRESETS
   TION_ENABLE_SCHEDULER
   TION_ENABLE_DIAGNOSTIC
+  USE_VPORT_UART
+  USE_VPORT_BLE
 )
 
-if [ "$1" != "debug" ]; then
-  FLAGS="-O3 $FLAGS"
-else
-  FLAGS="-g3 $FLAGS"
-fi
+SRCS=(
+  "$ESPHOME_LIB_DIR/esphome-components/esphome/components/vport/*.cpp"
+)
 
-OUT=.esphome/main.out
+SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi)/.+\\.cpp$"
 
-g++ ${FLAGS[@]} ${SRCS[@]/#/-g } ${DEFS[@]/#/-D} -o $OUT ${LIBS[@]/#/-l} -I ".esphome/libdeps/esp32-arduino/Embedded Template Library/include"
+INCS=(
+  "$ESPHOME_LIB_DIR/esphome-components"
+  "$ARDUINO_LIB_DIR/Embedded Template Library/include"
+)
 
-if [ $? -eq 0 -a "$1" != "debug" -a "$1" != "info" ]; then
-size $OUT
-$OUT
-fi
-
+.  $(dirname $0)/_cloak/runner.sh

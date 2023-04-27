@@ -16,6 +16,8 @@
 
 #include "../components/tion-api/crc.h"
 
+DEFINE_TAG;
+
 #define NUM_REPEATS 3
 
 #ifndef bswap_16
@@ -23,6 +25,8 @@
 #endif
 
 using namespace dentra::tion;
+
+using test_fn_t = std::function<bool(bool)>;
 
 using crc_fn_t = std::function<uint16_t(const void *, uint16_t)>;
 
@@ -32,7 +36,7 @@ bool check_crc(crc_fn_t &&crc_fn, bool print) {
     buf[i] = fast_random_8();
   }
   if (print)
-    printf("src: %s\n", hexencode(&buf, sizeof(buf)).c_str());
+    printf("src: %s\n", hexencode_cstr(&buf, sizeof(buf)));
 
   uint16_t crc = bswap_16(crc_fn(buf, sizeof(buf)));
   if (print)
@@ -42,7 +46,7 @@ bool check_crc(crc_fn_t &&crc_fn, bool print) {
   std::memcpy(bufc, &buf, sizeof(bufc));
   std::memcpy(bufc + sizeof(buf), &crc, sizeof(crc));
   if (print)
-    printf("chk: %s\n", hexencode(&bufc, sizeof(bufc)).c_str());
+    printf("chk: %s\n", hexencode_cstr(&bufc, sizeof(bufc)));
 
   crc = crc_fn(bufc, sizeof(bufc));
   if (print)
@@ -73,19 +77,19 @@ bool mk_test(test_fn_t &&func) {
 bool test_crc_data(const char *data) {
   bool res = true;
 
-  auto tx_frame = from_hex(data);
+  auto tx_frame = cloak::from_hex(data);
 
   uint16_t crc = bswap_16(crc16_ccitt_false(tx_frame.data(), tx_frame.size() - 2));
   uint16_t chk = *((uint16_t *) (tx_frame.data() + tx_frame.size() - 2));
-  test_check(res, crc, chk);
+  res &= cloak::check_data_(crc, chk);
 
   uint16_t zer = crc16_ccitt_false(tx_frame.data(), tx_frame.size());
-  test_check(res, zer, 0);
+  res &= cloak::check_data_(zer, 0);
 
   return res;
 }
 
-bool test_api_crc(bool print) {
+bool test_api_crc() {
   bool res = true;
   // res = mk_test([&](bool) { return check_crc(crc16_ccitt_false, print); });
 
@@ -99,3 +103,5 @@ bool test_api_crc(bool print) {
 
   return res;
 }
+
+REGISTER_TEST(test_api_crc);

@@ -1,52 +1,56 @@
 #pragma once
-#include "../components/vport/vport.h"
-#include "../components/tion-api/tion-api-ble-lt.h"
-#include "../components/tion-api/tion-api-uart.h"
-using namespace esphome::vport;
-using namespace dentra::tion;
-#include "utils.h"
 
+#include <type_traits>
 #include "etl/delegate.h"
 
-template<typename frame_type> class VPortComponent : public VPort<frame_type> {
+#include "../components/tion_3s/vport/tion_3s_vport.h"
+#include "../components/tion_lt/vport/tion_lt_vport.h"
+#include "../components/tion_4s/vport/tion_4s_vport.h"
+#include "../components/tion_4s_uart/tion_4s_uart.h"
+#include "../components/tion_3s_uart/tion_3s_uart.h"
+
+#include "utils.h"
+
+using Tion4sUartIOTest = esphome::tion::Tion4sUartIO;
+using Tion3sUartIOTest = esphome::tion::Tion3sUartIO;
+
+class TionLtBleIOTest : public esphome::tion::TionLtBleIO, public cloak::Cloak {
  public:
-  virtual void loop() = 0;
-};
-
-template<class protocol_type> class TionVPortComponent : public VPortComponent<uint16_t> {
-  static_assert(std::is_base_of<dentra::tion::TionProtocol, protocol_type>::value,
-                "ProtocolT must derived from dentra::tion::TionProtocol class");
-
-  using this_type = TionVPortComponent<protocol_type>;
-
- public:
-  explicit TionVPortComponent(protocol_type *protocol) : protocol_(protocol) {
-    protocol->reader.template set<this_type, &this_type::read_frame>(*this);
-    protocol->writer.template set<this_type, &this_type::write_data>(*this);
+  explicit TionLtBleIOTest(esphome::ble_client::BLEClient *client) {
+    this->set_ble_client_parent(client);
+    using this_t = typename std::remove_pointer_t<decltype(this)>;
+    this->protocol_.writer.template set<this_t, &this_t::write_>(*this);
   }
 
-  bool read_frame(uint16_t type, const void *data, size_t size) {
-    this->fire_frame(type, data, size);
-    return true;
-  }
-
-  bool write_data(const uint8_t *data, size_t size) {
-    printf("[TionVPortComponent] write_data: %s\n", hexencode(data, size).c_str());
-    return true;
-  }
+  void test_data_push(const uint8_t *data, size_t size) override { this->on_ble_data(data, size); }
+  void test_data_push(const std::vector<uint8_t> &data) override { cloak::Cloak::test_data_push(data); }
 
  protected:
-  protocol_type *protocol_;
+  bool write_(const uint8_t *data, size_t size) {
+    printf("[TionLtBleIOTest] BLE TX: %s\n", hexencode_cstr(data, size));
+    this->cloak_data_.insert(this->cloak_data_.end(), data, data + size);
+    return true;
+  }
 };
 
-class StringBleVPort : public TionVPortComponent<TionBleLtProtocol> {
+using Tion4sBleIOTest = TionLtBleIOTest;
+
+class Tion3sBleIOTest : public esphome::tion::Tion3sBleIO, public cloak::Cloak {
  public:
-  StringBleVPort(const char *data, TionBleLtProtocol *protocol) : TionVPortComponent(protocol), data_(data) {}
-  void loop() override {
-    auto data = from_hex(this->data_);
-    this->protocol_->read_data(data.data(), data.size());
+  explicit Tion3sBleIOTest(esphome::ble_client::BLEClient *client) {
+    this->set_ble_client_parent(client);
+    using this_t = typename std::remove_pointer_t<decltype(this)>;
+    this->protocol_.writer.template set<this_t, &this_t::write_>(*this);
   }
 
+  void test_data_push(const uint8_t *data, size_t size) override { this->on_ble_data(data, size); }
+  void test_data_push(const std::vector<uint8_t> &data) override { cloak::Cloak::test_data_push(data); }
+  void test_data_push(const std::string &hex_data) { this->test_data_push(cloak::from_hex(hex_data)); }
+
  protected:
-  const char *data_;
+  bool write_(const uint8_t *data, size_t size) {
+    printf("[TionBle3sIO] BLE TX: %s\n", hexencode_cstr(data, size));
+    this->cloak_data_.insert(this->cloak_data_.end(), data, data + size);
+    return true;
+  }
 };
