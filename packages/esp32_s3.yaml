@@ -1,0 +1,22 @@
+substitutions:
+  framework_type: esp-idf
+  board: esp32-s3-devkitc-1
+
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+
+wifi:
+  power_save_mode: none
+
+logger:
+  # Make sure logging is not using the serial port
+  baud_rate: 0
+
+uart:
+  id: uart_bus
+  tx_pin: GPIO20
+  rx_pin: GPIO19
+  baud_rate: 9600
+
+esp32_usb_dis:
