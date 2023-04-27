@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <ctime>
+#include <cmath>
 
 #include "tion_4s.h"
 
@@ -10,38 +11,9 @@ namespace tion {
 
 static const char *const TAG = "tion_4s";
 
-enum : uint8_t {
-  DIRTY_BOOST_ENABLE = 1 << 1,
-  DIRTY_BOOST_CANCEL = 1 << 2,
-};
-
 void Tion4s::dump_config() {
   this->dump_settings(TAG, "Tion 4S");
   LOG_SWITCH("  ", "Recirculation", this->recirculation_);
-}
-
-bool Tion4s::on_ready() {
-  bool res = true;
-  res &= this->api_->request_dev_status();
-#ifdef TION_ENABLE_SCHEDULER
-  res &= this->api_->request_time();
-  // res &= this->api_->request_timers();
-  // res &= this->api_->request_timers_state();
-#endif
-  // res &= this->api_->request_errors();
-  // res &= this->api_->request_test();
-  return res;
-}
-
-bool Tion4s::on_update() {
-  bool res = true;
-  res &= this->api_->request_state();
-#ifdef TION_ENABLE_PRESETS
-  if (this->vport_type_ == TionVPortType::VPORT_BLE) {
-    res &= this->api_->request_turbo();
-  }
-#endif
-  return res;
 }
 
 #ifdef TION_ENABLE_SCHEDULER
@@ -59,30 +31,7 @@ void Tion4s::on_time(const time_t time, const uint32_t request_id) {
 #ifdef TION_ENABLE_PRESETS
 void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
-    // Only BLE supports native turbo mode.
-    return;
-  }
-
-  if (this->is_dirty_(DIRTY_BOOST_ENABLE)) {
-    this->drop_dirty_(DIRTY_BOOST_ENABLE);
-    uint16_t turbo_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
-    if (turbo_time > 0) {
-      this->api_->set_turbo(turbo_time, 1);
-      if (this->boost_time_left_) {
-        this->boost_time_left_->publish_state(100);
-      }
-    } else {
-      // fallback on error
-      this->enable_preset_(this->saved_preset_);
-    }
-    return;
-  }
-
-  if (this->is_dirty_(DIRTY_BOOST_CANCEL)) {
-    this->drop_dirty_(DIRTY_BOOST_CANCEL);
-    if (turbo.turbo_time > 0) {
-      this->api_->set_turbo(0, 1);
-    }
+    ESP_LOGW(TAG, "Only BLE supports native turbo mode. Please report.");
     return;
   }
 
@@ -102,7 +51,7 @@ void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
     if (turbo.turbo_time == 0) {
       this->boost_time_left_->publish_state(NAN);
     } else {
-      uint16_t boost_time = this->boost_time_ ? this->boost_time_->state * 60 : DEFAULT_BOOST_TIME_SEC;
+      auto boost_time = this->get_boost_time();
       this->boost_time_left_->publish_state(static_cast<float>(turbo.turbo_time) /
                                             static_cast<float>(boost_time / 100));
     }
@@ -112,7 +61,9 @@ void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
 }
 #endif
 
-void Tion4s::update_state(const tion4s_state_t &state) {
+void Tion4s::update_state() {
+  const auto &state = this->state_;
+
   this->max_fan_speed_ = state.max_fan_speed;
 
   this->mode = state.flags.power_state ? state.flags.heater_mode == tion4s_state_t::HEATER_MODE_HEATING
@@ -154,7 +105,8 @@ void Tion4s::update_state(const tion4s_state_t &state) {
   }
 }
 
-void Tion4s::dump_state(const tion4s_state_t &state) const {
+void Tion4s::dump_state() const {
+  const auto &state = this->state_;
   ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);
@@ -183,8 +135,8 @@ void Tion4s::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "errors         : %u", state.errors);
 }
 
-void Tion4s::flush_state(const tion4s_state_t &state_) const {
-  tion4s_state_t state = state_;
+void Tion4s::flush_state() {
+  auto &state = this->state_;
 
   auto power_state = this->mode != climate::CLIMATE_MODE_OFF;
   if (state.flags.power_state != power_state) {
@@ -199,6 +151,12 @@ void Tion4s::flush_state(const tion4s_state_t &state_) const {
     state.flags.heater_mode = heater_mode;
   }
 
+  int8_t target_temperature = this->target_temperature;
+  if (state.target_temperature != target_temperature) {
+    ESP_LOGD(TAG, "New target temperature %d", target_temperature);
+    state.target_temperature = target_temperature;
+  }
+
   if (this->recirculation_) {
     auto gate_position = this->recirculation_->state ? tion4s_state_t::GATE_POSITION_RECIRCULATION
                                                      : tion4s_state_t::GATE_POSITION_INFLOW;
@@ -206,12 +164,6 @@ void Tion4s::flush_state(const tion4s_state_t &state_) const {
       ESP_LOGD(TAG, "New gate position %u", gate_position);
       state.gate_position = gate_position;
     }
-  }
-
-  int8_t target_temperature = this->target_temperature;
-  if (state.target_temperature != target_temperature) {
-    ESP_LOGD(TAG, "New target temperature %d", target_temperature);
-    state.target_temperature = target_temperature;
   }
 
   if (this->led_) {
@@ -246,8 +198,17 @@ bool Tion4s::enable_boost_() {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
     return TionClimateComponent::enable_boost_();
   }
-  // TODO update turbo state
-  this->set_dirty_(DIRTY_BOOST_ENABLE);
+
+  auto boost_time = this->get_boost_time();
+  if (boost_time == 0) {
+    return false;
+  }
+
+  this->api_->set_turbo(boost_time, 1);
+  if (this->boost_time_left_) {
+    this->boost_time_left_->publish_state(100);
+  }
+
   return true;
 }
 
@@ -256,8 +217,7 @@ void Tion4s::cancel_boost_() {
     TionClimateComponent::cancel_boost_();
     return;
   }
-  // TODO update turbo state
-  this->set_dirty_(DIRTY_BOOST_CANCEL);
+  this->api_->set_turbo(0, 1);
 }
 #endif
 

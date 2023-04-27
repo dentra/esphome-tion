@@ -8,9 +8,9 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLt final : public TionClimateComponent<TionApiLt, tionlt_state_t> {
+class TionLt : public TionClimateComponent<TionApiLt, tionlt_state_t> {
  public:
-  explicit TionLt(TionApiLt *api, vport::VPortComponent<uint16_t> *vport) : TionClimateComponent(api, vport) {}
+  explicit TionLt(TionApiLt *api) : TionClimateComponent(api) {}
 
   void dump_config() override;
 
@@ -20,9 +20,9 @@ class TionLt final : public TionClimateComponent<TionApiLt, tionlt_state_t> {
     return traits;
   }
 
-  void update_state(const tionlt_state_t &state) override;
-  void flush_state(const tionlt_state_t &state) const;
-  void dump_state(const tionlt_state_t &state) const override;
+  void update_state() override;
+  void dump_state() const override;
+  void flush_state() override;
 };
 
 }  // namespace tion

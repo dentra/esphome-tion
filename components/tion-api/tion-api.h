@@ -36,12 +36,11 @@ struct tion_dev_status_t {
 #pragma pack(pop)
 
 class TionApiBaseWriter {
-  using writer_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
-
  public:
-  writer_type writer{};
+  using writer_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
+  void set_writer(writer_type &&writer) { this->writer_ = std::move(writer); }
 
-  /// Write any frame data.
+  // Write any frame data.
   bool write_frame(uint16_t type, const void *data, size_t size) const;
   /// Write a frame with empty data.
   bool write_frame(uint16_t type) const { return this->write_frame(type, nullptr, 0); }
@@ -65,6 +64,7 @@ class TionApiBaseWriter {
   }
 
  protected:
+  writer_type writer_{};
 };
 
 template<class state_type> class TionApiBase : public TionApiBaseWriter {
@@ -75,21 +75,51 @@ template<class state_type> class TionApiBase : public TionApiBaseWriter {
   /// Callback listener for response to send_heartbeat command request.
   using on_heartbeat_type = etl::delegate<void(uint8_t unknown)>;
 
+
  public:
+  using on_ready_type = etl::delegate<void()>;
+  /// Set callback listener for monitoring ready state
+  void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = std::move(on_ready); }
+
   on_dev_status_type on_dev_status{};
   on_state_type on_state{};
 #ifdef TION_ENABLE_HEARTBEAT
   on_heartbeat_type on_heartbeat{};
 #endif
+ protected:
+  on_ready_type on_ready_{};
 };
 
-class TionProtocol {
-  using writer_type = etl::delegate<bool(const uint8_t *data, size_t size)>;
-  using reader_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
+template<class data_type> struct tion_frame_t {
+  uint16_t type;
+  data_type data;
+  constexpr static size_t head_size() { return sizeof(type); }
+} __attribute__((__packed__));
+using tion_any_frame_t = tion_frame_t<uint8_t[0]>;
 
+template<class data_type> struct tion_ble_frame_t {
+  uint16_t type;
+  uint32_t ble_request_id;  // always 1
+  data_type data;
+  constexpr static size_t head_size() { return sizeof(type) + sizeof(ble_request_id); }
+} __attribute__((__packed__));
+
+using tion_any_ble_frame_t = tion_ble_frame_t<uint8_t[0]>;
+
+template<class frame_spec_t> class TionProtocol {
  public:
+  // using frame_spec_type = frame_spec_t;
+  typedef frame_spec_t frame_spec_type;
+
+  using reader_type = etl::delegate<void(const frame_spec_t &data, size_t size)>;
+  // TODO move to protected
   reader_type reader{};
+  void set_reader(reader_type &&reader) { this->reader = std::move(reader); }
+
+  using writer_type = etl::delegate<bool(const uint8_t *data, size_t size)>;
+  // TODO move to protected
   writer_type writer{};
+  void set_writer(writer_type &&writer) { this->writer = std::move(writer); }
 };
 
 }  // namespace tion

@@ -8,21 +8,19 @@ static const char *const TAG = "tion_lt";
 
 void TionLt::dump_config() { this->dump_settings(TAG, "Tion Lite"); }
 
-void TionLt::update_state(const tionlt_state_t &state) {
+void TionLt::update_state() {
+  const auto &state = this->state_;
   this->max_fan_speed_ = state.max_fan_speed;
 
   this->mode = state.flags.power_state
                    ? state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY
                    : climate::CLIMATE_MODE_OFF;
-
   this->action = this->mode == climate::CLIMATE_MODE_OFF ? climate::CLIMATE_ACTION_OFF
                  : state.heater_var > 0                  ? climate::CLIMATE_ACTION_HEATING
                                                          : climate::CLIMATE_ACTION_FAN;
-
   this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
-
   this->publish_state();
 
   if (this->buzzer_) {
@@ -48,7 +46,8 @@ void TionLt::update_state(const tionlt_state_t &state) {
   }
 }
 
-void TionLt::dump_state(const tionlt_state_t &state) const {
+void TionLt::dump_state() const {
+  const auto &state = this->state_;
   ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state         : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp      : %d", state.current_temperature);
@@ -81,8 +80,9 @@ void TionLt::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "test_type         : %u", state.test_type);
 }
 
-void TionLt::flush_state(const tionlt_state_t &state_) const {
-  tionlt_state_t state = state_;
+void TionLt::flush_state() {
+  auto &state = this->state_;
+
   if (this->custom_fan_mode.has_value()) {
     auto fan_speed = this->get_fan_speed_();
     if (state.fan_speed != fan_speed) {

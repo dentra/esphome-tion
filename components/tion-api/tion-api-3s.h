@@ -40,21 +40,28 @@ struct tion3s_state_t {
   uint16_t filter_days;
   // текущая версия прошивки
   uint16_t firmware_version;
+
+  bool is_initialized() const { return this->firmware_version != 0; }
 };
+
 #pragma pack(pop)
 
-class TionsApi3s : public TionApiBase<tion3s_state_t> {
+class TionApi3s : public TionApiBase<tion3s_state_t> {
  public:
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
+  void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
   uint16_t get_state_type() const;
 
-  bool request_dev_status() const { return true; }
+  bool request_dev_status() const { return false; }
 
   bool pair() const;
   bool request_state() const;
   bool write_state(const tion3s_state_t &state) const;
   bool reset_filter(const tion3s_state_t &state) const;
+
+#ifdef TION_ENABLE_HEARTBEAT
+  bool send_heartbeat() const { return false; }
+#endif
 };
 
 }  // namespace tion

@@ -15,13 +15,14 @@ static const char *const TAG = "tion-api";
 
 bool TionApiBaseWriter::write_frame(uint16_t type, const void *data, size_t size) const {
   TION_LOGV(TAG, "Write frame 0x%04X: %s", type, hexencode(data, size).c_str());
-  if (!this->writer) {
+  if (!this->writer_) {
     TION_LOGE(TAG, "Writer is not configured");
     return false;
   }
-  return this->writer(type, data, size);
+  return this->writer_(type, data, size);
 }
 
+// TODO remove
 // void TionProtocol::read_frame(uint16_t type, const void *data, size_t size) const {
 //   TION_LOGV(TAG, "Read frame 0x%04X: %s", type, hexencode(data, size).c_str());
 //   if (this->reader_ == nullptr) {

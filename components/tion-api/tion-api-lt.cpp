@@ -74,7 +74,7 @@ float tionlt_state_t::heater_power() const { return flags.heater_present ? heate
 
 uint16_t TionApiLt::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 
-bool TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
+void TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
   if (frame_type == FRAME_TYPE_STATE_RSP) {
     struct state_frame_t {
@@ -90,7 +90,7 @@ bool TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_state(frame->state, frame->request_id);
       }
     }
-    return true;
+    return;
   }
 
   if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
@@ -102,16 +102,15 @@ bool TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
       }
     }
-    return true;
+    return;
   }
 
   if (frame_type == FRAME_TYPE_AUTOKIV_PARAM_RSP) {
     TION_LOGW(TAG, "FRAME_TYPE_AUTOKIV_PARAM_RSP response: %s", hexencode(frame_data, frame_data_size).c_str());
-    return true;
+    return;
   }
 
   TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
-  return false;
 }
 
 bool TionApiLt::request_dev_status() const {
@@ -126,7 +125,7 @@ bool TionApiLt::request_state() const {
 
 bool TionApiLt::write_state(const tionlt_state_t &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%u] Write state", request_id);
-  if (state.counters.work_time == 0) {
+  if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
@@ -136,7 +135,7 @@ bool TionApiLt::write_state(const tionlt_state_t &state, uint32_t request_id) co
 
 bool TionApiLt::reset_filter(const tionlt_state_t &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%u] Reset filter", request_id);
-  if (state.counters.work_time == 0) {
+  if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
@@ -148,7 +147,7 @@ bool TionApiLt::reset_filter(const tionlt_state_t &state, uint32_t request_id) c
 
 bool TionApiLt::factory_reset(const tionlt_state_t &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%u] Factory reset", request_id);
-  if (state.counters.work_time == 0) {
+  if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }

@@ -127,7 +127,7 @@ float tion4s_state_t::heater_power() const {
 
 uint16_t TionApi4s::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 
-bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
+void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
 #ifdef TION_ENABLE_HEARTBEAT
   if (frame_type == FRAME_TYPE_HEARTBIT_RSP) {
@@ -143,7 +143,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_heartbeat(frame->unknown);
       }
     }
-    return true;
+    return;
   }
 #endif
   if (frame_type == FRAME_TYPE_STATE_RSP) {
@@ -160,7 +160,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_state(frame->state, frame->request_id);
       }
     }
-    return true;
+    return;
   }
 #ifdef TION_ENABLE_PRESETS
   if (frame_type == FRAME_TYPE_TURBO_RSP) {
@@ -177,7 +177,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_turbo(frame->turbo, frame->request_id);
       }
     }
-    return true;
+    return;
   }
 #endif
   if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
@@ -189,7 +189,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
       }
     }
-    return true;
+    return;
   }
 #ifdef TION_ENABLE_SCHEDULER
   if (frame_type == FRAME_TYPE_TIME_RSP) {
@@ -206,7 +206,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_time(frame->time.unix_time, frame->request_id);
       }
     }
-    return true;
+    return;
   }
 
   if (frame_type == FRAME_TYPE_TIMER_RSP) {
@@ -224,7 +224,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_timer(frame->timer_id, frame->timer, frame->request_id);
       }
     }
-    return true;
+    return;
   }
 
   if (frame_type == FRAME_TYPE_TIMERS_STATE_RSP) {
@@ -241,7 +241,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
         this->on_timers_state(frame->timers_state, frame->request_id);
       }
     }
-    return true;
+    return;
   }
 #endif
 #ifdef TION_ENABLE_DIAGNOSTIC
@@ -257,7 +257,7 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       TION_LOGD(TAG, "Response[%u] Errors", frame->request_id);
       // this->on_errors(frame->errors, frame->request_id);
     }
-    return true;
+    return;
   }
 
   if (frame_type == FRAME_TYPE_TEST_RSP) {
@@ -269,11 +269,10 @@ bool TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     } else {
       TION_LOGD(TAG, "Response[] Test");
     }
-    return true;
+    return;
   }
 #endif
   TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
-  return false;
 }
 
 bool TionApi4s::request_dev_status() const {
@@ -295,7 +294,7 @@ bool TionApi4s::request_turbo() const {
 #endif
 bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%u] Write state", request_id);
-  if (state.counters.work_time == 0) {
+  if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
@@ -305,7 +304,7 @@ bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_
 
 bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%u] Reset filter", request_id);
-  if (state.counters.work_time == 0) {
+  if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }
@@ -317,7 +316,7 @@ bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request
 
 bool TionApi4s::factory_reset(const tion4s_state_t &state, const uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%u] Factory reset", request_id);
-  if (state.counters.work_time == 0) {
+  if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
   }

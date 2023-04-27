@@ -5,7 +5,7 @@
 namespace dentra {
 namespace tion {
 
-class TionBle3sProtocol : public TionProtocol {
+class TionBle3sProtocol : public TionProtocol<tion_any_frame_t> {
  public:
   bool read_data(const uint8_t *data, size_t size);
 

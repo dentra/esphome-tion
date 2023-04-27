@@ -10,12 +10,9 @@ using namespace dentra::tion;
 
 using TionApi4s = dentra::tion::TionApi4s;
 
-class Tion4s final : public TionClimateComponent<TionApi4s, tion4s_state_t> {
+class Tion4s : public TionClimateComponent<TionApi4s, tion4s_state_t> {
  public:
-  explicit Tion4s(TionApi4s *api, vport::VPortComponent<uint16_t> *vport) : TionClimateComponent(api, vport) {
-    vport->on_ready.set<Tion4s, &Tion4s::on_ready>(*this);
-    vport->on_update.set<Tion4s, &Tion4s::on_update>(*this);
-  }
+  explicit Tion4s(TionApi4s *api) : TionClimateComponent(api) {}
 
   void dump_config() override;
 
@@ -27,17 +24,35 @@ class Tion4s final : public TionClimateComponent<TionApi4s, tion4s_state_t> {
 
   void set_recirculation(switch_::Switch *recirculation) { this->recirculation_ = recirculation; }
 
-  bool on_ready();
-  bool on_update();
+#ifdef TION_ENABLE_PRESETS
+  void update() override {
+    TionClimateComponent::update();
+    if (this->vport_type_ == TionVPortType::VPORT_BLE) {
+      this->api_->request_turbo();
+    }
+  }
+#endif
+
+#ifdef TION_ENABLE_SCHEDULER
+  void on_ready() {
+    TionClimateComponent::on_ready();
+
+    // scheduler specific init commands
+    this->api_->request_time();
+    // this->api_->request_timers();
+    // this->api_->request_timers_state();
+  }
+#endif
+
 #ifdef TION_ENABLE_PRESETS
   void on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id);
 #endif
 #ifdef TION_ENABLE_SCHEDULER
   void on_time(const time_t time, const uint32_t request_id);
 #endif
-  void update_state(const tion4s_state_t &state) override;
-  void flush_state(const tion4s_state_t &state) const override;
-  void dump_state(const tion4s_state_t &state) const override;
+  void update_state() override;
+  void dump_state() const override;
+  void flush_state() override;
 
  protected:
   switch_::Switch *recirculation_{};

@@ -20,14 +20,14 @@ from esphome.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VERSION,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_DURATION,
     ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_NONE,
     UNIT_CELSIUS,
     UNIT_MINUTE,
-    UNIT_PERCENT,
+    UNIT_SECOND,
 )
 from .. import vport  # pylint: disable=relative-beyond-top-level
 
@@ -49,7 +49,10 @@ AUTO_LOAD = [
 
 ICON_AIR_FILTER = "mdi:air-filter"
 
+CONF_TION_API_BASE_ID = "tion_api_base_id"
 CONF_TION_API_ID = "tion_api_id"
+CONF_STATE_TIMEOUT = "state_timeout"
+
 CONF_BUZZER = "buzzer"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 CONF_FILTER_TIME_LEFT = "filter_time_left"
@@ -60,11 +63,12 @@ CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
 
-UNIT_DAYS = "days"
+UNIT_DAYS = "d"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
 TionSwitch = tion_ns.class_("TionSwitch", switch.Switch)
+TionVPortApi = tion_ns.class_("TionVPortApi")
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -95,68 +99,85 @@ PRESETS_SCHEMA = cv.Schema(
 
 def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
     """Declare base tion schema"""
-    return climate.CLIMATE_SCHEMA.extend(
+    return (
+        climate.CLIMATE_SCHEMA.extend(
+            {
+                cv.GenerateID(): cv.declare_id(tion_class),
+                cv.GenerateID(CONF_TION_API_BASE_ID): cv.declare_id(tion_api_class),
+                cv.GenerateID(CONF_TION_API_ID): cv.declare_id(TionVPortApi),
+                cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
+                cv.Optional(CONF_BUZZER): switch.SWITCH_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TionSwitch),
+                        cv.Optional(CONF_ICON, default="mdi:volume-high"): cv.icon,
+                        cv.Optional(
+                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
+                        ): cv.entity_category,
+                        cv.Optional(CONF_INVERTED): cv.invalid(
+                            "Inverted mode is not supported"
+                        ),
+                    }
+                ),
+                cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
+                    unit_of_measurement=UNIT_CELSIUS,
+                    accuracy_decimals=0,
+                    device_class=DEVICE_CLASS_TEMPERATURE,
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    entity_category=ENTITY_CATEGORY_NONE,
+                ),
+                cv.Optional(CONF_VERSION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(text_sensor.TextSensor),
+                        cv.Optional(CONF_ICON, default="mdi:git"): cv.icon,
+                        cv.Optional(
+                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_DIAGNOSTIC
+                        ): cv.entity_category,
+                    }
+                ),
+                cv.Optional(CONF_FILTER_TIME_LEFT): sensor.sensor_schema(
+                    unit_of_measurement=UNIT_DAYS,
+                    accuracy_decimals=0,
+                    icon=ICON_AIR_FILTER,
+                    device_class=DEVICE_CLASS_DURATION,
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    entity_category=ENTITY_CATEGORY_NONE,
+                ),
+                cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
+                    {
+                        cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
+                        cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
+                        cv.Optional(
+                            CONF_UNIT_OF_MEASUREMENT, default=UNIT_MINUTE
+                        ): cv.string_strict,
+                        cv.Optional(
+                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
+                        ): cv.entity_category,
+                    }
+                ),
+                cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
+                    unit_of_measurement=UNIT_SECOND,
+                    accuracy_decimals=1,
+                    icon="mdi:clock-end",
+                    device_class=DEVICE_CLASS_DURATION,
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    entity_category=ENTITY_CATEGORY_NONE,
+                ),
+                cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
+            }
+        )
+        .extend(vport.VPORT_CLIENT_SCHEMA)
+        .extend(cv.polling_component_schema("60s"))
+    )
+
+
+def tion_vport_ble_schema(vport_class: MockObjClass, io_class: MockObjClass):
+    return vport.vport_ble_schema(vport_class, io_class, "60s").extend(
         {
-            cv.GenerateID(): cv.declare_id(tion_class),
-            cv.GenerateID(CONF_TION_API_ID): cv.declare_id(tion_api_class),
-            cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
-            cv.Optional(CONF_BUZZER): switch.SWITCH_SCHEMA.extend(
-                {
-                    cv.GenerateID(): cv.declare_id(TionSwitch),
-                    cv.Optional(CONF_ICON, default="mdi:volume-high"): cv.icon,
-                    cv.Optional(
-                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                    ): cv.entity_category,
-                    cv.Optional(CONF_INVERTED): cv.invalid(
-                        "Inverted mode is not supported"
-                    ),
-                }
-            ),
-            cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
-                unit_of_measurement=UNIT_CELSIUS,
-                accuracy_decimals=0,
-                device_class=DEVICE_CLASS_TEMPERATURE,
-                state_class=STATE_CLASS_MEASUREMENT,
-                entity_category=ENTITY_CATEGORY_NONE,
-            ),
-            cv.Optional(CONF_VERSION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
-                {
-                    cv.GenerateID(): cv.declare_id(text_sensor.TextSensor),
-                    cv.Optional(CONF_ICON, default="mdi:git"): cv.icon,
-                    cv.Optional(
-                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_DIAGNOSTIC
-                    ): cv.entity_category,
-                }
-            ),
-            cv.Optional(CONF_FILTER_TIME_LEFT): sensor.sensor_schema(
-                unit_of_measurement=UNIT_DAYS,
-                accuracy_decimals=0,
-                icon=ICON_AIR_FILTER,
-                state_class=STATE_CLASS_NONE,
-                entity_category=ENTITY_CATEGORY_NONE,
-            ),
-            cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
-                {
-                    cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
-                    cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
-                    cv.Optional(
-                        CONF_UNIT_OF_MEASUREMENT, default=UNIT_MINUTE
-                    ): cv.string_strict,
-                    cv.Optional(
-                        CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                    ): cv.entity_category,
-                }
-            ),
-            cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
-                unit_of_measurement=UNIT_PERCENT,
-                accuracy_decimals=1,
-                icon="mdi:clock-end",
-                state_class=STATE_CLASS_NONE,
-                entity_category=ENTITY_CATEGORY_NONE,
-            ),
-            cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
+            cv.Optional(
+                CONF_STATE_TIMEOUT, default="15s"
+            ): cv.positive_time_period_milliseconds,
         }
-    ).extend(vport.VPORT_CLIENT_SCHEMA)
+    )
 
 
 async def setup_binary_sensor(config, key, setter):
@@ -248,33 +269,27 @@ async def setup_presets(config, key, setter) -> bool:
     return has_presets
 
 
-def _type_by_id(platform: str, find_id: str) -> core.ID:
-    for _, item in enumerate(core.CORE.config[platform]):
-        item_id: core.ID = item["id"]
-        if str(item_id.id) == str(find_id):
-            return item_id.type
-    return None
-
-
 async def setup_tion_core(config):
     """Setup core component properties"""
+
     prt = await vport.vport_get_var(config)
-    api = cg.new_Pvariable(config[CONF_TION_API_ID])
-    var = cg.new_Pvariable(config[CONF_ID], api, prt)
+    api = cg.new_Pvariable(
+        config[CONF_TION_API_ID],
+        cg.TemplateArguments(
+            # cg.MockObj(prt_io_id.type, "::").frame_spec_type,
+            vport.vport_find(config).type.class_("frame_spec_type"),
+            config[CONF_TION_API_BASE_ID].type,
+        ),
+        prt,
+    )
+    var = cg.new_Pvariable(config[CONF_ID], api)
     await cg.register_component(var, config)
     await climate.register_climate(var, config)
 
-    cg.add(prt.set_cc(var))
+    # FIXME check and replace/remove
+    cg.add(prt.set_api(api))
     cg.add(prt.set_state_type(api.get_state_type()))
     cg.add(var.set_vport_type(prt.get_vport_type()))
-    cg.add(prt.register_api_writer(api))
-
-    # TODO remove sample
-    # prt_type = _type_by_id("vport", prt.base).base
-    # print("*", prt_type, prt.base)
-    # cg.add(
-    #     api.writer.set.template(prt_type, MockObj(f"&{prt_type}::write_frame", ""))()
-    # )
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
     await setup_sensor(config, CONF_OUTDOOR_TEMPERATURE, var.set_outdoor_temperature)
@@ -288,4 +303,10 @@ async def setup_tion_core(config):
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")
 
+    return var
+
+
+async def setup_tion_vport_ble(config):
+    var = await vport.setup_vport_ble(config)
+    cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
     return var

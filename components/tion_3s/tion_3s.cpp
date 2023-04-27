@@ -13,16 +13,15 @@ void Tion3s::dump_config() {
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
 }
 
-void Tion3s::update_state(const tion3s_state_t &state) {
-  if (state.flags.power_state) {
-    this->mode = state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY;
-  } else {
-    this->mode = climate::CLIMATE_MODE_OFF;
-  }
+void Tion3s::update_state() {
+  const auto &state = this->state_;
+
+  this->mode = state.flags.power_state
+                   ? state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY
+                   : climate::CLIMATE_MODE_OFF;
   this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
-
   this->publish_state();
 
   if (this->version_) {
@@ -48,7 +47,8 @@ void Tion3s::update_state(const tion3s_state_t &state) {
   }
 }
 
-void Tion3s::dump_state(const tion3s_state_t &state) const {
+void Tion3s::dump_state() const {
+  const auto &state = this->state_;
   ESP_LOGV(TAG, "fan_speed    : %u", state.fan_speed);
   ESP_LOGV(TAG, "gate_position: %u", state.gate_position);
   ESP_LOGV(TAG, "target_temp  : %u", state.target_temperature);
@@ -73,8 +73,9 @@ void Tion3s::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 }
 
-void Tion3s::flush_state(const tion3s_state_t &state_) const {
-  tion3s_state_t state = state_;
+void Tion3s::flush_state() {
+  auto &state = this->state_;
+
   if (this->custom_fan_mode.has_value()) {
     auto fan_speed = this->get_fan_speed_();
     if (state.fan_speed != fan_speed) {

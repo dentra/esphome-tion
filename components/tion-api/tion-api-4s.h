@@ -69,6 +69,7 @@ struct tion4s_state_t {
   uint8_t heater_var;
 
   float heater_power() const;
+  bool is_initialized() const { return this->counters.work_time != 0; }
 };
 
 struct tion4s_turbo_t {
@@ -127,7 +128,7 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   using on_timers_state_type = etl::delegate<void(const tion4s_timers_state_t &timers_state, uint32_t request_id)>;
 #endif
  public:
-  bool read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
+  void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
   uint16_t get_state_type() const;
   bool request_dev_status() const;

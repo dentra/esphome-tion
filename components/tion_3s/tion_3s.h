@@ -4,30 +4,28 @@
 
 #include "../tion-api/tion-api-3s.h"
 #include "../tion/tion.h"
-#include "../tion_ble/tion_ble.h"
 
 namespace esphome {
 namespace tion {
 
 using namespace dentra::tion;
 
-using TionApi3s = dentra::tion::TionsApi3s;
+using TionApi3s = dentra::tion::TionApi3s;
 
-class Tion3s final : public TionClimateComponent<TionsApi3s, tion3s_state_t> {
+class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
  public:
-  explicit Tion3s(TionsApi3s *api, vport::VPortComponent<uint16_t> *vport) : TionClimateComponent(api, vport) {}
+  explicit Tion3s(TionApi3s *api) : TionClimateComponent(api) {}
 
   void dump_config() override;
 
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
 
-  void update_state(const tion3s_state_t &state) override;
-  void flush_state(const tion3s_state_t &state) const;
-  void dump_state(const tion3s_state_t &state) const override;
+  void update_state() override;
+  void dump_state() const override;
+  void flush_state() override;
 
  protected:
   select::Select *air_intake_{};
-  uint8_t saved_fan_speed_{};
 };
 
 class Tion3sAirIntakeSelect : public select::Select {

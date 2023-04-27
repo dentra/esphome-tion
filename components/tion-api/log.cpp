@@ -1,8 +1,8 @@
 #include "log.h"
-
+#ifndef TION_ESPHOME
 namespace dentra {
 namespace tion {
-#ifndef TION_ESPHOME
+
 static logger_fn_t logger_ = nullptr;
 void set_logger(const logger_fn_t &&logger) { logger_ = std::move(logger); }
 
@@ -15,6 +15,7 @@ void __attribute__((hot)) tion_log_printf_(int level, const char *tag, int line,
   logger_(level, tag, line, format, arg);
   va_end(arg);
 }
-#endif
+
 }  // namespace tion
 }  // namespace dentra
+#endif

@@ -29,13 +29,11 @@ enum tion_packet_type_t : uint8_t {
 };
 
 #pragma pack(push, 1)
-struct tion_frame_t {
+struct _raw_tion_ble_frame_t {
   uint16_t size;
   uint8_t magic_number;
-  uint8_t random_number;           // always 0xAD
-  uint16_t type;                   // frame type
-  uint32_t request_id;             // id of request
-  uint8_t data[sizeof(uint16_t)];  // crc16 size
+  uint8_t random_number;                             // always 0xAD
+  tion_ble_frame_t<uint8_t[sizeof(uint16_t)]> data;  // sizeof(uint16_t) is crc16 size
 };
 #pragma pack(pop)
 
@@ -83,6 +81,7 @@ bool TionBleLtProtocol::read_packet_(uint8_t packet_type, const uint8_t *data, s
   return false;
 }
 
+// TODO remove return type
 bool TionBleLtProtocol::read_frame_(const void *data, uint32_t size) {
   TION_LOGV(TAG, "Read frame: %s", hexencode(data, size).c_str());
   if (!this->reader) {
@@ -90,7 +89,7 @@ bool TionBleLtProtocol::read_frame_(const void *data, uint32_t size) {
     return false;
   }
 
-  const tion_frame_t *frame = static_cast<const tion_frame_t *>(data);
+  const _raw_tion_ble_frame_t *frame = static_cast<const _raw_tion_ble_frame_t *>(data);
   if (frame->magic_number != BLE_PACKET_MAGIC) {
     TION_LOGW(TAG, "Invalid magic number: 0x%02X", frame->magic_number);
     return false;
@@ -104,36 +103,28 @@ bool TionBleLtProtocol::read_frame_(const void *data, uint32_t size) {
     TION_LOGW(TAG, "Invalid frame crc: %04X", crc);
     return false;
   }
-
-  return this->reader(frame->type, frame->data, frame->size - sizeof(tion_frame_t));
+  this->reader(*reinterpret_cast<const tion_any_ble_frame_t *>(&frame->data),
+               frame->size - sizeof(_raw_tion_ble_frame_t) + sizeof(tion_any_ble_frame_t));
+  return true;
 }
 
 bool TionBleLtProtocol::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   TION_LOGV(TAG, "Write frame 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
 
-  uint16_t frame_size = frame_data_size + sizeof(tion_frame_t);
+  uint8_t tx_buf[frame_data_size + sizeof(_raw_tion_ble_frame_t)];
+  auto tx_frame = reinterpret_cast<_raw_tion_ble_frame_t *>(tx_buf);
 
-  auto tx_frame = static_cast<tion_frame_t *>(std::malloc(frame_size));
-  if (tx_frame == nullptr) {
-    TION_LOGE(TAG, "Can't allocate %u bytes", frame_size);
-    return false;
-  }
-
-  tx_frame->type = frame_type;
-  tx_frame->size = frame_size;
-  tx_frame->request_id = 1;  // TODO можно инкрементировать и проверять в ответе
   tx_frame->magic_number = BLE_PACKET_MAGIC;
   tx_frame->random_number = 0xAD;
-  std::memcpy(tx_frame->data, frame_data, frame_data_size);
+  tx_frame->size = sizeof(tx_buf);
+  tx_frame->data.type = frame_type;
+  tx_frame->data.ble_request_id = 1;  // TODO возможно можно инкрементировать и проверять в ответе
+  std::memcpy(tx_frame->data.data, frame_data, frame_data_size);
 
-  uint16_t crc = __builtin_bswap16(crc16_ccitt_false(tx_frame, frame_size - sizeof(crc)));
-  std::memcpy(&tx_frame->data[frame_data_size], &crc, sizeof(crc));
+  uint16_t crc = __builtin_bswap16(crc16_ccitt_false(tx_frame, sizeof(tx_buf) - sizeof(crc)));
+  std::memcpy(&tx_frame->data.data[frame_data_size], &crc, sizeof(crc));
 
-  bool res = this->write_packet_(tx_frame, frame_size);
-
-  std::free(tx_frame);
-
-  return res;
+  return this->write_packet_(tx_frame, sizeof(tx_buf));
 }
 
 bool TionBleLtProtocol::write_packet_(const void *data, uint16_t size) const {

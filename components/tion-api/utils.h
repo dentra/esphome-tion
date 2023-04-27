@@ -13,6 +13,11 @@
 #define tion_yield()
 #endif
 
+#if !__has_builtin(__builtin_bswap16)
+#include <byteswap.h>
+#define __builtin_bswap16 __bswap_16
+#endif
+
 namespace dentra {
 namespace tion {
 
