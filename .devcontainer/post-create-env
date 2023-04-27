@@ -1,3 +1,6 @@
+# platformio env
+pio_env=esp32-arduino
+
 # project specific defines
 defines=(
     TION_ESPHOME
@@ -13,3 +16,13 @@ defines=(
 lib_deps=(
   "etlcpp/Embedded Template Library"
 )
+
+# project additional includes
+includes=(
+)
+
+# project external components
+external_components=(
+  "github://dentra/esphome-components@2023.2.0"
+)
+

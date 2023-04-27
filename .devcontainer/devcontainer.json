@@ -3,97 +3,96 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2022.11.4",
+      "esphome_version": "2023.4.1",
       // additional APT dependicies
-      "apt_deps": "bash-completion less libmbedtls-dev gdb ccache",
+      "apt_deps": "bash-completion less libmbedtls-dev gdb ccache cmake",
       // additional PIP dependicies
-      "pip_deps": "pyserial_asyncio"
+      "pip_deps": "pyserial_asyncio",
+      // workspace dir
+      "workspace_dir": "${containerWorkspaceFolder}"
     }
   },
   "runArgs": [
+    // "--name",
+    // "vscode-${containerWorkspaceFolderBasename}",
     "-e",
     "ESPHOME_DASHBOARD_USE_PING=1"
   ],
   //"appPort": 6052,
-  // Set *default* container specific settings.json values on container create.
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "diffEditor.ignoreTrimWhitespace": true,
-    "files.autoSave": "onFocusChange",
-    "files.trimTrailingWhitespace": true,
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "editor.formatOnPaste": false,
-    "python.pythonPath": "/usr/bin/python3",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.languageServer": "Pylance",
-    "python.formatting.provider": "black",
-    "yaml.customTags": [
-      "!secret scalar",
-      "!lambda scalar",
-      "!include_dir_named scalar",
-      "!include_dir_list scalar",
-      "!include_dir_merge_list scalar",
-      "!include_dir_merge_named scalar"
-    ],
-    "files.exclude": {
-      "**/.git": true,
-      "**/.DS_Store": true,
-      "**/*.pyc": {
-        "when": "$(basename).py"
+  "customizations": {
+    "vscode": {
+      // Set *default* container specific settings.json values on container create.
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "diffEditor.ignoreTrimWhitespace": true,
+        "files.autoSave": "onFocusChange",
+        "files.trimTrailingWhitespace": true,
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.formatOnPaste": false,
+        "python.pythonPath": "/usr/bin/python3",
+        "python.linting.pylintEnabled": true,
+        "python.linting.enabled": true,
+        "python.languageServer": "Pylance",
+        "python.formatting.provider": "black",
+        "yaml.customTags": [
+          "!secret scalar",
+          "!lambda scalar",
+          "!include_dir_named scalar",
+          "!include_dir_list scalar",
+          "!include_dir_merge_list scalar",
+          "!include_dir_merge_named scalar"
+        ],
+        "files.exclude": {
+          "**/.git": true,
+          "**/.DS_Store": true,
+          "**/*.pyc": {
+            "when": "$(basename).py"
+          },
+          "**/__pycache__": true,
+          ".esphome": false,
+          "*/.esphome": true,
+          ".pio": true
+        },
+        "files.watcherExclude": {
+          "**/.git/objects/**": true,
+          "**/.git/subtree-cache/**": true,
+          "**/.esphome/**": true,
+          ".pio/**": true,
+          "esphome/**": true
+        },
+        "files.associations": {
+          "**/.vscode/*.json": "jsonc"
+        },
+        "C_Cpp.clang_format_path": "/usr/bin/clang-format-13",
+        "C_Cpp.default.browse.databaseFilename": "${workspaceFolder}/.esphome/vscode/c_cpp_browse.db"
       },
-      "**/__pycache__": true,
-      ".esphome": false,
-      "*/.esphome": true,
-      ".pio": true
-    },
-    "files.watcherExclude": {
-      "**/.git/objects/**": true,
-      "**/.git/subtree-cache/**": true,
-      "**/node_modules/*/**": true,
-      "**/.hg/store/**": true,
-      "**/.esphome/**": true,
-      ".pio/**": true,
-      "esphome/**": true
-    },
-    "files.associations": {
-      "**/.vscode/*.json": "jsonc"
-    },
-    "C_Cpp.clang_format_path": "/usr/bin/clang-format-11"
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        // cpp
+        "ms-vscode.cpptools",
+        "twxs.cmake",
+        // python
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "visualstudioexptteam.vscodeintellicode",
+        "VisualStudioExptTeam.intellicode-api-usage-examples",
+        // yaml
+        "redhat.vscode-yaml",
+        // esphome yaml
+        "esphome.esphome-vscode",
+        // editorconfig
+        "editorconfig.editorconfig",
+        // fixme and todo tree
+        "Gruntfuggly.todo-tree"
+      ],
+    }
   },
-  // Add the IDs of extensions you want installed when the container is created.
-  "extensions": [
-    // cpp
-    "ms-vscode.cpptools",
-    // python
-    "ms-python.python",
-    "ms-python.vscode-pylance",
-    "visualstudioexptteam.vscodeintellicode",
-    "VisualStudioExptTeam.intellicode-api-usage-examples",
-    // yaml
-    "redhat.vscode-yaml",
-    // esphome yaml
-    "esphome.esphome-vscode",
-    // editorconfig
-    "editorconfig.editorconfig",
-    // fixme and todo tree
-    "Gruntfuggly.todo-tree"
-  ],
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-  "postCreateCommand": [
-    ".devcontainer/post-create.sh"
-  ],
-  "postStartCommand": [
-    ".devcontainer/post-start.sh"
-  ],
-  // Comment out this line to run as root instead.
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "postStartCommand": ".devcontainer/post-start.sh",
   "remoteUser": "vscode",
   "mounts": [
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.esphome,type=volume",
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/config/.esphome,type=volume",
-    "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.pio,type=volume",
-    "source=vscode-${containerWorkspaceFolderBasename},target=/esphome/.temp,type=volume"
   ]
 }
