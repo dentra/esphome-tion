@@ -4,28 +4,24 @@
 [![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
 [![Telegram][telegram-shield]][telegram]
 [![Support author][donate-me-shield]][donate-me]
-[![PayPal.Me][paypal-me-shield]][paypal-me]
 
-[version-shield]: https://img.shields.io/static/v1?label=Version&message=2022.10.1&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2022.10.1&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
-[license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
+[license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
 [esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2022.9&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
-[open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
+[open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
 [open-in-vscode]: https://open.vscode.dev/dentra/esphome-tion
 
-[telegram-shield]: https://img.shields.io/static/v1?label=+&message=Telegram&logo=telegram
+[telegram-shield]: https://img.shields.io/static/v1?label=+&message=Телеграм&logo=telegram
 [telegram]: https://t.me/esphome_tion
 
-[donate-me-shield]: https://img.shields.io/static/v1?label=+&message=Donate
+[donate-me-shield]: https://img.shields.io/static/v1?label=+&message=Поддержать+автора
 [donate-me]: https://www.tinkoff.ru/cf/3dZPaLYDBAI
-
-[paypal-me-shield]: https://img.shields.io/static/v1?label=+&message=PayPal.Me&logo=paypal
-[paypal-me]: https://paypal.me/dentra0
 
 # Tion
 
@@ -92,8 +88,7 @@ English version of this page is available [here](README.md).
 
 ## Ваша благодарность
 
-Если этот проект оказался для вас полезен и/или вы хотите поддержать его дальнейше развитие, то всегда можно оставить вашу благодарность
-через [Card2Card](https://www.tinkoff.ru/cf/3dZPaLYDBAI) или [PayPal](https://paypal.me/dentra0).
+Если этот проект оказался для вас полезен и/или вы хотите поддержать его дальнейше развитие, то всегда можно оставить вашу благодарность [переводом на карту](https://www.tinkoff.ru/cf/3dZPaLYDBAI).
 
 ## Коммерческое использование
 
