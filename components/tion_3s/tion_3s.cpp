@@ -1,5 +1,4 @@
 #include "esphome/core/log.h"
-#include "esphome/components/esp32_ble_tracker/esp32_ble_tracker.h"
 
 #include "tion_3s.h"
 

@@ -4,12 +4,10 @@ from .. import vport, tion  # pylint: disable=relative-beyond-top-level
 
 AUTO_LOAD = ["vport", "tion"]
 
-Tion3sUartVPort = tion.tion_ns.class_(
-    "Tion3sUartVPort", cg.Component, vport.VPort
-)
+Tion3sUartVPort = tion.tion_ns.class_("Tion3sUartVPort", cg.Component, vport.VPort)
 Tion3sUartIO = tion.tion_ns.class_("Tion3sUartIO")
 
-CONFIG_SCHEMA = vport.vport_uart_schema(Tion3sUartVPort, Tion3sUartIO, "5s")
+CONFIG_SCHEMA = vport.vport_uart_schema(Tion3sUartVPort, Tion3sUartIO, None)
 
 
 async def to_code(config):
