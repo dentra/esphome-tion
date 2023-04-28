@@ -1,6 +1,14 @@
 substitutions:
   framework_type: esp-idf
   board: lolin_s2_mini
+  tx_pin: GPIO20
+  rx_pin: GPIO19
+  baud_rate: "9600"
+
+esp32:
+  board: $board
+  framework:
+    type: $framework_type
 
 esphome:
   platformio_options:
@@ -15,6 +23,6 @@ logger:
 
 uart:
   id: uart_bus
-  tx_pin: GPIO20
-  rx_pin: GPIO19
-  baud_rate: 9600
+  tx_pin: $tx_pin
+  rx_pin: $rx_pin
+  baud_rate: $baud_rate

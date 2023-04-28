@@ -1,0 +1,19 @@
+substitutions:
+  board: esp01_1m
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: "9600"
+
+esp8266:
+  board: $board
+  restore_from_flash: true
+
+logger:
+  # Make sure logging is not using the serial port
+  baud_rate: 0
+
+uart:
+  id: uart_bus
+  tx_pin: $tx_pin
+  rx_pin: $rx_pin
+  baud_rate: $baud_rate

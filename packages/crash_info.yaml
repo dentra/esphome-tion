@@ -2,15 +2,15 @@ crash_info:
   id: crash_info_ptr
   indicator:
     id: crash_info_state_ptr
-    name: $name Crash state
+    name: Crash state
   store_in_flash: false # test save in flash, may lead to not to save because of using dynamic memory
   store_free_heap: false
-  max_stack_frames_size: 40
+  max_stack_frames_size: 60
 
 text_sensor:
   - platform: template
     id: crash_info_stack_frames_ptr
-    name: $name Crash stack frames
+    name: Crash stack frames
     lambda: |-
       if (!id(crash_info_stack_frames_ptr).has_state()) {
         if (id(crash_info_state_ptr).state) {
@@ -23,7 +23,7 @@ text_sensor:
 
 button:
   - platform: template
-    name: $name Reset crash state
+    name: Reset crash state
     on_press:
       lambda: id(crash_info_ptr).reset();
     entity_category: diagnostic
