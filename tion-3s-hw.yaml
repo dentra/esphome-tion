@@ -1,0 +1,110 @@
+substitutions:
+  node_name: tion-3s
+  friendly_name: $node_name
+  # board
+  board: esp01_1m
+  # uart configuration
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: "115200"
+  # component version
+  project_version: master
+  # wifi settings.
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+  wifi_ap_password: !secret wifi_password
+
+packages:
+  tion:
+    url: https://github.com/dentra/esphome-tion
+    ref: master # cant use substitutions here
+    files:
+      # - packages/debug.yaml
+      - packages/wifi_signal.yaml
+      - packages/uptime.yaml
+      - packages/restart.yaml
+      - packages/esp8266.yaml
+
+# uart:
+#   debug:
+#     after:
+#       bytes: 20
+#     sequence:
+#       - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+esphome:
+  name: $node_name
+  friendly_name: $friendly_name
+
+wifi:
+  ssid: $wifi_ssid
+  password: $wifi_password
+  ap:
+    ssid: "$friendly_name Hotspot"
+    password: $wifi_ap_password
+
+ota:
+api:
+
+external_components:
+  - source: github://dentra/esphome-components@2023.2.0
+    components: [crash_info, etl, otax, vport, esp32_usb_dis]
+  - source: github://dentra/esphome-tion@$project_version
+    refresh: 1h
+
+otax:
+  enabled:
+    name: OTA Enabled
+
+vport:
+  - platform: tion_3s_uart
+
+climate:
+  - platform: tion_3s
+    name: none
+    # Optional, Buzzer control switch.
+    buzzer:
+      name: "Buzzer"
+    # Optional, Temperatire of air before heater, °C (celsius).
+    outdoor_temperature:
+      name: "Outdoor Temperature"
+    # Optional, Current productivity, m³/h (cubic meters per hour).
+    productivity:
+      name: "Productivity"
+    # Optional, Filter time left counter, days.
+    filter_time_left:
+      name: "Filter Time Left"
+    # Optional, Air Intake control.
+    air_intake:
+      name: "Air Intake"
+    # Optional, Tion firmware version.
+    version:
+      name: "Version"
+    # Optional, Enable presets. Default: <empty>
+    # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
+    # Defaults:
+    #   home    : { fan_speed: 2, target_temperature: 20, mode: heat }
+    #   away    : { fan_speed: 1, target_temperature: 10, mode: fan_only }
+    #   boost   : { fan_speed: 6, target_temperature: 10, mode: fan_only }
+    #   comfort : { fan_speed: 2, target_temperature: 23, mode: heat }
+    #   eco     : { fan_speed: 1, target_temperature: 16, mode: heat }
+    #   sleep   : { fan_speed: 1, target_temperature: 18, mode: heat }
+    #   activity: { fan_speed: 3, target_temperature: 18, mode: heat }
+    # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
+    presets:
+      # enable and override "home" preset
+      home: { fan_speed: 2, target_temperature: 20, mode: heat }
+      # enable "away" preset
+      away:
+      # enable "boost" preset
+      boost:
+      # enable and override "sleep" preset
+      sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
+    # Optional, configure boost time
+    boost_time:
+      name: "Boost Time"
+    # Optional, display remaining boost time
+    boost_time_left:
+      name: "Boost Time Left"
+    # Optional, How often query device state. Default: 60s.
+    update_interval: 60s
