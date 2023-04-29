@@ -138,7 +138,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                     unit_of_measurement=UNIT_DAYS,
                     accuracy_decimals=0,
                     icon=ICON_AIR_FILTER,
-                    device_class=DEVICE_CLASS_DURATION,
+                    # device_class=DEVICE_CLASS_DURATION,
                     state_class=STATE_CLASS_MEASUREMENT,
                     entity_category=ENTITY_CATEGORY_NONE,
                 ),
