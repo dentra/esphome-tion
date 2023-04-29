@@ -79,9 +79,9 @@ bool test_api_3s() {
   res &= cloak::check_data("write_state firmware_version", io,
                            "3D.02.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  api.reset_filter(comp.state);
+  api.reset_filter();
   res &= cloak::check_data("write_state firmware_version", io,
-                           "3D.02.00.00.00.00.00.02.00.00.00.00.00.00.00.00.00.00.00.5A");
+                           "3D.04.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   comp.state.fan_speed = 1;
   comp.state.flags.heater_state = true;
@@ -157,8 +157,8 @@ bool test_uart_3s() {
   res &= cloak::check_data("send_heartbeat call", api.send_heartbeat(), false);
   res &= cloak::check_data("request_dev_status call", api.request_dev_status(), false);
 
-  res &= cloak::check_data("reset_filter call", api.reset_filter({.firmware_version = 0xFFFF}), true);
-  res &= cloak::check_data("reset_filter data", uart, "3D.02.00.00.00.00.00.02.00.00.00.00.00.00.00.00.00.00.00.5A");
+  res &= cloak::check_data("reset_filter call", api.reset_filter(), true);
+  res &= cloak::check_data("reset_filter data", uart, "3D.04.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   return res;
 }

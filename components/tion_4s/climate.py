@@ -3,9 +3,6 @@ from esphome.cpp_types import PollingComponent
 from esphome.components import climate, switch
 
 from esphome.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_ICON,
-    CONF_INVERTED,
     ENTITY_CATEGORY_CONFIG,
 )
 from .. import tion, tion_lt  # pylint: disable=relative-beyond-top-level
@@ -21,17 +18,11 @@ CONF_RECIRCULATION = "recirculation"
 
 CONFIG_SCHEMA = tion_lt.tion_lt_schema(Tion4s, TionApi4s).extend(
     {
-        cv.Optional(CONF_RECIRCULATION): switch.SWITCH_SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(tion.TionSwitch),
-                cv.Optional(CONF_ICON, default="mdi:air-conditioner"): cv.icon,
-                cv.Optional(
-                    CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                ): cv.entity_category,
-                cv.Optional(CONF_INVERTED): cv.invalid(
-                    "Inverted mode is not supported"
-                ),
-            }
+        cv.Optional(CONF_RECIRCULATION): switch.switch_schema(
+            tion.TionSwitch,
+            icon="mdi:air-conditioner",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+            block_inverted=True,
         ),
     }
 )

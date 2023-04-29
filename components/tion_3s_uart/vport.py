@@ -12,7 +12,6 @@ CONFIG_SCHEMA = vport.vport_uart_schema(Tion3sUartVPort, Tion3sUartIO, None)
 
 async def to_code(config):
     await vport.setup_vport_uart(config)
-    cg.add_build_flag("-DTION_ENABLE_HEARTBEAT")
     # enable ota subscription
     cg.add_define("USE_OTA_STATE_CALLBACK")
 

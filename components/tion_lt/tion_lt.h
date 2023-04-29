@@ -23,6 +23,8 @@ class TionLt : public TionClimateComponent<TionApiLt, tionlt_state_t> {
   void update_state() override;
   void dump_state() const override;
   void flush_state() override;
+
+  void reset_filter() { this->api_->reset_filter(this->state_); }
 };
 
 }  // namespace tion

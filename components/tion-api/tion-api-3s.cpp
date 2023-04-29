@@ -34,7 +34,6 @@ enum {
   FRAME_TYPE_ALARM_OFF_SET_REQ = FRAME_TYPE_REQ(0xB),
 };
 
-
 #pragma pack(push, 1)
 
 struct tion3s_frame_t {
@@ -115,15 +114,9 @@ bool TionApi3s::write_state(const tion3s_state_t &state) const {
   return this->write_frame(FRAME_TYPE_STATE_SET_REQ, mode);
 }
 
-bool TionApi3s::reset_filter(const tion3s_state_t &state) const {
+bool TionApi3s::reset_filter() const {
   TION_LOGD(TAG, "Request[] Reset filter");
-  if (!state.is_initialized()) {
-    TION_LOGW(TAG, "State is not initialized");
-    return false;
-  }
-  auto mode = tion3s_state_set_t::create(state);
-  mode.filter_time.reset = true;
-  return this->write_frame(FRAME_TYPE_STATE_SET_REQ, mode);
+  return this->write_frame(FRAME_TYPE_FILTER_TIME_RESET_REQ);
 }
 
 }  // namespace tion

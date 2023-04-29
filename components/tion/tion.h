@@ -106,5 +106,14 @@ class TionSwitch : public switch_::Switch {
   TionClimate *parent_;
 };
 
+template<class parent_t> class TionResetFilterButton : public button::Button {
+ public:
+  explicit TionResetFilterButton(parent_t *parent) : parent_(parent) {}
+  void press_action() override { this->parent_->reset_filter(); }
+
+ protected:
+  parent_t *parent_;
+};
+
 }  // namespace tion
 }  // namespace esphome

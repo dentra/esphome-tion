@@ -8,6 +8,7 @@
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/number/number.h"
+#include "esphome/components/button/button.h"
 
 #include "../tion-api/tion-api.h"
 
@@ -30,6 +31,7 @@ class TionComponent : public PollingComponent {
 
   void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
+  void set_reset_filter(button::Button *reset_filter) { this->reset_filter_ = reset_filter; };
 
  protected:
   text_sensor::TextSensor *version_{};
@@ -43,6 +45,7 @@ class TionComponent : public PollingComponent {
 
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
+  button::Button *reset_filter_{};
 
 #ifdef TION_ENABLE_PRESETS
   ESPPreferenceObject rtc_;

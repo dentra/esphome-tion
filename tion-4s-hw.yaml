@@ -102,4 +102,8 @@ climate:
     # Optional, display remaining boost time
     boost_time_left:
       name: "Boost Time Left"
+    # Optional, How often query device state. Default: 60s.
     update_interval: 30s
+    # Optional, reset filter button
+    reset_filter:
+      name: "Reset Filter"

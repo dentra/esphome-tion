@@ -24,6 +24,8 @@ class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
   void dump_state() const override;
   void flush_state() override;
 
+  void reset_filter() { this->api_->reset_filter(); }
+
  protected:
   select::Select *air_intake_{};
 };

@@ -2,8 +2,6 @@ from esphome.cpp_types import PollingComponent
 import esphome.config_validation as cv
 from esphome.components import climate, select, sensor
 from esphome.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_ICON,
     ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
@@ -26,14 +24,10 @@ OPTIONS_AIR_INTAKE = ["Indoor", "Mixed", "Outdoor"]
 
 CONFIG_SCHEMA = tion.tion_schema(Tion3s, TionApi3s).extend(
     {
-        cv.Optional(CONF_AIR_INTAKE): select.SELECT_SCHEMA.extend(
-            {
-                cv.GenerateID(): cv.declare_id(Tion3sAirIntakeSelect),
-                cv.Optional(CONF_ICON, default="mdi:air-conditioner"): cv.icon,
-                cv.Optional(
-                    CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                ): cv.entity_category,
-            }
+        cv.Optional(CONF_AIR_INTAKE): select.select_schema(
+            Tion3sAirIntakeSelect,
+            icon="mdi:air-conditioner",
+            entity_category=ENTITY_CATEGORY_CONFIG,
         ),
         cv.Optional(CONF_PRODUCTIVITY): sensor.sensor_schema(
             unit_of_measurement=UNIT_CUBIC_METER_PER_HOUR,

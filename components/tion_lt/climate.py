@@ -1,5 +1,5 @@
 from esphome.cpp_types import PollingComponent
-from esphome.components import climate, switch
+from esphome.components import climate
 from . import tion_lt_schema, setup_tion_lt
 from .. import tion  # pylint: disable=relative-beyond-top-level
 

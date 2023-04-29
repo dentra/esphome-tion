@@ -1,8 +1,6 @@
-from esphome import core
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.core import CORE, ID
-from esphome.cpp_generator import MockObj, MockObjClass
+from esphome.cpp_generator import MockObjClass
 from esphome.components import (
     climate,
     switch,
@@ -11,13 +9,11 @@ from esphome.components import (
     binary_sensor,
     number,
     select,
+    button,
 )
 from esphome.const import (
-    CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_ID,
-    CONF_INVERTED,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_VERSION,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_DURATION,
@@ -45,6 +41,7 @@ AUTO_LOAD = [
     "number",
     "select",
     "climate",
+    "button",
 ]
 
 ICON_AIR_FILTER = "mdi:air-filter"
@@ -62,6 +59,7 @@ CONF_PRESETS = "presets"
 CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
+CONF_RESET_FILER = "reset_filter"
 
 UNIT_DAYS = "d"
 
@@ -69,6 +67,7 @@ tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
 TionSwitch = tion_ns.class_("TionSwitch", switch.Switch)
 TionVPortApi = tion_ns.class_("TionVPortApi")
+TionResetFilterButton = tion_ns.class_("TionResetFilterButton", button.Button)
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -106,17 +105,11 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                 cv.GenerateID(CONF_TION_API_BASE_ID): cv.declare_id(tion_api_class),
                 cv.GenerateID(CONF_TION_API_ID): cv.declare_id(TionVPortApi),
                 cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
-                cv.Optional(CONF_BUZZER): switch.SWITCH_SCHEMA.extend(
-                    {
-                        cv.GenerateID(): cv.declare_id(TionSwitch),
-                        cv.Optional(CONF_ICON, default="mdi:volume-high"): cv.icon,
-                        cv.Optional(
-                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                        ): cv.entity_category,
-                        cv.Optional(CONF_INVERTED): cv.invalid(
-                            "Inverted mode is not supported"
-                        ),
-                    }
+                cv.Optional(CONF_BUZZER): switch.switch_schema(
+                    TionSwitch,
+                    icon="mdi:volume-high",
+                    entity_category=ENTITY_CATEGORY_CONFIG,
+                    block_inverted=True,
                 ),
                 cv.Optional(CONF_OUTDOOR_TEMPERATURE): sensor.sensor_schema(
                     unit_of_measurement=UNIT_CELSIUS,
@@ -125,14 +118,10 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                     state_class=STATE_CLASS_MEASUREMENT,
                     entity_category=ENTITY_CATEGORY_NONE,
                 ),
-                cv.Optional(CONF_VERSION): text_sensor.TEXT_SENSOR_SCHEMA.extend(
-                    {
-                        cv.GenerateID(): cv.declare_id(text_sensor.TextSensor),
-                        cv.Optional(CONF_ICON, default="mdi:git"): cv.icon,
-                        cv.Optional(
-                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_DIAGNOSTIC
-                        ): cv.entity_category,
-                    }
+                cv.Optional(CONF_VERSION): text_sensor.text_sensor_schema(
+                    text_sensor.TextSensor,
+                    icon="mdi:git",
+                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
                 cv.Optional(CONF_FILTER_TIME_LEFT): sensor.sensor_schema(
                     unit_of_measurement=UNIT_DAYS,
@@ -142,17 +131,11 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                     state_class=STATE_CLASS_MEASUREMENT,
                     entity_category=ENTITY_CATEGORY_NONE,
                 ),
-                cv.Optional(CONF_BOOST_TIME): number.NUMBER_SCHEMA.extend(
-                    {
-                        cv.GenerateID(): cv.declare_id(TionBoostTimeNumber),
-                        cv.Optional(CONF_ICON, default="mdi:clock-fast"): cv.icon,
-                        cv.Optional(
-                            CONF_UNIT_OF_MEASUREMENT, default=UNIT_MINUTE
-                        ): cv.string_strict,
-                        cv.Optional(
-                            CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG
-                        ): cv.entity_category,
-                    }
+                cv.Optional(CONF_BOOST_TIME): number.number_schema(
+                    TionBoostTimeNumber,
+                    icon="mdi:clock-fast",
+                    unit_of_measurement=UNIT_MINUTE,
+                    entity_category=ENTITY_CATEGORY_CONFIG,
                 ),
                 cv.Optional(CONF_BOOST_TIME_LEFT): sensor.sensor_schema(
                     unit_of_measurement=UNIT_SECOND,
@@ -163,6 +146,11 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                     entity_category=ENTITY_CATEGORY_NONE,
                 ),
                 cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
+                cv.Optional(CONF_RESET_FILER): button.button_schema(
+                    TionResetFilterButton.template(tion_class),
+                    icon="mdi:air-filter",
+                    entity_category=ENTITY_CATEGORY_CONFIG,
+                ),
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -184,9 +172,7 @@ async def setup_binary_sensor(config, key, setter):
     """Setup binary sensor"""
     if key not in config:
         return None
-    conf = config[key]
-    sens = cg.new_Pvariable(conf[CONF_ID])
-    await binary_sensor.register_binary_sensor(sens, conf)
+    sens = await binary_sensor.new_binary_sensor(config[key])
     cg.add(setter(sens))
     return sens
 
@@ -195,9 +181,7 @@ async def setup_switch(config, key, setter, parent):
     """Setup switch"""
     if key not in config:
         return None
-    conf = config[key]
-    swch = cg.new_Pvariable(conf[CONF_ID], parent)
-    await switch.register_switch(swch, conf)
+    swch = await switch.new_switch(config[key], parent)
     cg.add(setter(swch))
     return swch
 
@@ -215,9 +199,7 @@ async def setup_text_sensor(config, key, setter):
     """Setup text sensor"""
     if key not in config:
         return None
-    conf = config[key]
-    sens = cg.new_Pvariable(conf[CONF_ID])
-    await text_sensor.register_text_sensor(sens, conf)
+    sens = await text_sensor.new_text_sensor(config[key])
     cg.add(setter(sens))
     return sens
 
@@ -269,6 +251,15 @@ async def setup_presets(config, key, setter) -> bool:
     return has_presets
 
 
+async def setup_button(config, key, setter, parent):
+    """Setup button"""
+    if key not in config:
+        return None
+    butn = await button.new_button(config[key], parent)
+    cg.add(setter(butn))
+    return butn
+
+
 async def setup_tion_core(config):
     """Setup core component properties"""
 
@@ -299,6 +290,7 @@ async def setup_tion_core(config):
     if has_presets and "boost" in config[CONF_PRESETS]:
         await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
         await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
+    await setup_button(config, CONF_RESET_FILER, var.set_reset_filter, var)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

@@ -54,6 +54,8 @@ class Tion4s : public TionClimateComponent<TionApi4s, tion4s_state_t> {
   void dump_state() const override;
   void flush_state() override;
 
+  void reset_filter() { this->api_->reset_filter(this->state_); }
+
  protected:
   switch_::Switch *recirculation_{};
 #ifdef TION_ENABLE_PRESETS
