@@ -1,6 +1,6 @@
 switch:
   - platform: template
-    name: $name Persistent
+    name: Persistent
     lambda: return id(tion_climate).is_persistent_connection();
     turn_on_action:
       - lambda: |-

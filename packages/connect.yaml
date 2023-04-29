@@ -1,5 +1,5 @@
 switch:
   - platform: ble_client
     ble_client_id: tion_ble_client
-    name: $name Connect
+    name: Connect
     entity_category: diagnostic

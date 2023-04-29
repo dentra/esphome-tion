@@ -1,7 +1,15 @@
 sensor:
-  - platform: ble_rssi
-    mac_address: $tion_mac_address
-    name: "$name RSSI"
+  # - platform: ble_rssi
+  #   mac_address: $tion_mac_address
+  #   name: "RSSI"
+  #   filters:
+  #     throttle_average: 60s
+  #   entity_category: diagnostic
+
+  - platform: ble_client
+    type: rssi
+    ble_client_id: tion_ble_client
+    name: RSSI
     filters:
       throttle_average: 60s
     entity_category: diagnostic

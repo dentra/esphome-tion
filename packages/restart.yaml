@@ -1,4 +1,4 @@
 button:
   - platform: restart
-    name: $name Restart
+    name: Restart
     entity_category: diagnostic
