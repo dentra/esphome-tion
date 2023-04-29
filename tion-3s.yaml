@@ -1,88 +1,85 @@
 substitutions:
-  # tion mac address. setup yours.
-  tion_mac_address: 00:00:00:00:00:00
-  # name of the node.
   node_name: tion-3s
-  # name for main climate entity and prefix for all others.
-  name: $node_name
-  # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "false"
-  # setup your board or leave it as is.
-  board: esp32dev
+  friendly_name: $node_name
+  # board
+  board: esp01_1m
+  # uart configuration
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: "115200"
+  # component version
+  project_version: master
   # wifi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
+  wifi_ap_password: !secret wifi_password
 
 packages:
-  ## Enable additional RSSI signal sensor. Comment next line to disable.
-  rssi_signal: github://dentra/esphome-tion/packages/rssi_signal.yaml
-  ## Enable additional WiFi signal sensor. Comment next line to disable.
-  wifi_signal: github://dentra/esphome-tion/packages/wifi_signal.yaml
-  ## Enable additional Uptime sensor. Comment next line to disable.
-  uptime: github://dentra/esphome-tion/packages/uptime.yaml
-  ## Uncomment next line to enable additional restart button.
-  # restart: github://dentra/esphome-tion/packages/restart.yaml
-  ## Uncomment next line to enable persistent connection runtime control switch.
-  # persistent: github://dentra/esphome-tion/packages/persistent.yaml
-  ## Uncomment next line to enable additional connect switch useful for debugging.
-  # connect: github://dentra/esphome-tion/packages/connect.yaml
-  ## Uncomment next line to enable additional debug information.
-  # debug: github://dentra/esphome-tion/packages/debug.yaml
-  ## Uncomment next line to if you wish to compile via ESP IDF.
-  # idf: github://dentra/esphome-tion/packages/idf.yaml
-  # Common configuration parameters. Do not comment or remove!
-  common: github://dentra/esphome-tion/packages/common.yaml
+  tion:
+    url: https://github.com/dentra/esphome-tion
+    ref: master # cant use substitutions here
+    files:
+      # - packages/debug.yaml
+      - packages/wifi_signal.yaml
+      - packages/uptime.yaml
+      - packages/restart.yaml
+      - packages/esp8266.yaml
 
-# WiFi hotspot configuration.
-# Comment next 3 lines to enable manual WiFi conviguration via access point.
+# uart:
+#   debug:
+#     after:
+#       bytes: 20
+#     sequence:
+#       - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+
+esphome:
+  name: $node_name
+  friendly_name: $friendly_name
+
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
+  ap:
+    ssid: "$friendly_name Hotspot"
+    password: $wifi_ap_password
 
-ble_client:
-  mac_address: $tion_mac_address
-  id: tion_ble_client
+ota:
+api:
 
-# Virtual port configuration
+external_components:
+  - source: github://dentra/esphome-components@2023.2.0
+    components: [crash_info, etl, otax, vport, esp32_usb_dis]
+  - source: github://dentra/esphome-tion@$project_version
+    refresh: 1h
+
+otax:
+  enabled:
+    name: OTA Enabled
+
 vport:
-  - platform: tion_ble_3s
-    id: tion3s_ble_vport
-    ble_client_id: tion_ble_client
-    # Optional, How often query device state. Default: 60s.
-    update_interval: 60s
-    # Optional, Do not disconnect after receiving state. Default: false.
-    persistent_connection: false
-    # Optional, Timeout to reconnect if no state answer received. Default: 15s.
-    state_timeout: 15s
-    # Optional, Sena a pair command after every connect (experimental feature)
-    #experimental_always_pair: false
-    # Optional, Allow to disable other BLE device scanning when breezer is already connected.
-    disable_scan: false
+  - platform: tion_3s_uart
 
-# Main component configuration.
 climate:
   - platform: tion_3s
-    id: tion_climate
-    vport_id: tion3s_ble_vport
-    name: "$name"
+    name: none
     # Optional, Buzzer control switch.
     buzzer:
-      name: "$name Buzzer"
+      name: "Buzzer"
     # Optional, Temperatire of air before heater, °C (celsius).
     outdoor_temperature:
-      name: "$name Outdoor Temperature"
+      name: "Outdoor Temperature"
     # Optional, Current productivity, m³/h (cubic meters per hour).
     productivity:
-      name: "$name Productivity"
+      name: "Productivity"
     # Optional, Filter time left counter, days.
     filter_time_left:
-      name: "$name Filter Time Left"
+      name: "Filter Time Left"
     # Optional, Air Intake control.
     air_intake:
-      name: "$name Air Intake"
+      name: "Air Intake"
     # Optional, Tion firmware version.
     version:
-      name: "$name Version"
+      name: "Version"
     # Optional, Enable presets. Default: <empty>
     # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
     # Defaults:
@@ -105,20 +102,9 @@ climate:
       sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
     # Optional, configure boost time
     boost_time:
-      name: $name Boost Time
+      name: "Boost Time"
     # Optional, display remaining boost time
     boost_time_left:
-      name: $name Boost Time Left
-
-button:
-  - platform: template
-    name: "$name Pair"
-    on_press:
-      lambda: id(tion3s_ble_vport).pair();
-    entity_category: config
-  ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
-  # - platform: template
-  #   name: "$name Reset Pair"
-  #   on_press:
-  #     lambda: id(tion3s_ble_vport).reset_pair();
-  #   entity_category: config
+      name: "Boost Time Left"
+    # Optional, How often query device state. Default: 60s.
+    update_interval: 60s
