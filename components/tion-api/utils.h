@@ -22,7 +22,7 @@ namespace dentra {
 namespace tion {
 
 #ifndef TION_ESPHOME
-std::string tion_hexencode(const void *data, uint32_t size);
+std::string tion_hexencode(const uint8_t *data, uint32_t size);
 #endif
 
 inline std::string hexencode(const void *data, uint32_t size) {
