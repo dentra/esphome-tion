@@ -13,36 +13,44 @@ substitutions:
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
 
+  tion_version: master
+
 packages:
-  ## Enable additional RSSI signal sensor. Comment next line to disable.
-  rssi_signal: github://dentra/esphome-tion/packages/rssi_signal.yaml
-  ## Enable additional WiFi signal sensor. Comment next line to disable.
-  wifi_signal: github://dentra/esphome-tion/packages/wifi_signal.yaml
-  ## Enable additional Uptime sensor. Comment next line to disable.
-  uptime: github://dentra/esphome-tion/packages/uptime.yaml
-  ## Uncomment next line to enable additional restart button.
-  # restart: github://dentra/esphome-tion/packages/restart.yaml
-  ## Uncomment next line to enable persistent connection runtime control switch.
-  # persistent: github://dentra/esphome-tion/packages/persistent.yaml
-  ## Uncomment next line to enable additional connect switch useful for debugging.
-  # connect: github://dentra/esphome-tion/packages/connect.yaml
-  ## Uncomment next line to enable additional debug information.
-  # debug: github://dentra/esphome-tion/packages/debug.yaml
-  ## Uncomment next line to if you wish to compile via ESP IDF.
-  # idf: github://dentra/esphome-tion/packages/idf.yaml
-  platform: github://dentra/esphome-tion/packages/esp32_
-  # Common configuration parameters. Do not comment or remove!
-  common: github://dentra/esphome-tion/packages/common.yaml
+  tion:
+    url: https://github.com/dentra/esphome-tion
+    ref: master # cant use substitutions here
+    files:
+      ## Enable additional RSSI signal sensor. Comment next line to disable.
+      - packages/rssi_signal.yaml
+        ## Enable additional WiFi signal sensor. Comment next line to disable.
+      - packages/wifi_signal.yaml
+      ## Enable additional Uptime sensor. Comment next line to disable.
+      - packages/uptime.yaml
+      ## Uncomment next line to enable additional restart button.
+      # - packages/restart.yaml
+      ## Uncomment next line to enable persistent connection runtime control switch.
+      # - packages/persistent.yaml
+      ## Uncomment next line to enable additional connect switch useful for debugging.
+      # - packages/connect.yaml
+      ## Uncomment next line to enable additional debug information.
+      # - packages/debug.yaml
+      ## Uncomment next line to if you wish to compile via ESP IDF.
+      # - packages/idf.yaml
+      - packages/esp32_ble.yaml
+      - packages/common.yaml
+
+external_components:
+  - source: github://dentra/esphome-components@2023.2.0
+    components: [crash_info, etl, otax, vport, esp32_usb_dis]
+  - source: $tion_source
+    refresh: 0s
 
 # WiFi hotspot configuration.
 # Comment next 3 lines to enable manual WiFi conviguration via access point.
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
-
-ble_client:
-  mac_address: $tion_mac_address
-  id: tion_ble_client
+  power_save_mode: light
 
 # Virtual port configuration
 vport:
