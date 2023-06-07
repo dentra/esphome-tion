@@ -7,7 +7,7 @@ esp32:
     type: $framework_type
 
 wifi:
-  power_save_mode: none
+  power_save_mode: light
 
 esp32_ble_tracker:
 
