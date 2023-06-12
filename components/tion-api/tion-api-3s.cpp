@@ -22,8 +22,9 @@ enum : uint8_t {
   FRAME_TYPE_STATE_GET = 0x1,
   // write state
   FRAME_TYPE_STATE_SET = 0x2,
+  //
   FRAME_TYPE_FILTER_TIME_SET = 0x3,
-  // reset filter
+  // reset filter??
   FRAME_TYPE_FILTER_TIME_RESET = 0x4,
   // send sevice mode flags
   FRAME_TYPE_SRV_MODE_SET = 0x5,
@@ -31,11 +32,12 @@ enum : uint8_t {
   FRAME_TYPE_MA_PAIRING = 0x7,
   // set time
   FRAME_TYPE_TIME_SET = 0x8,
+  // get alarm
   FRAME_TYPE_ALARM = 0x9,
   // set alrm to on
   FRAME_TYPE_ALRAM_ON = 0xA,
   // set alrm to off
-  FRAME_TYPE_ALARM_OFF_SET = 0xB,
+  FRAME_TYPE_ALARM_OFF = 0xB,
 };
 
 #pragma pack(push, 1)
@@ -98,10 +100,12 @@ void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
     }
   } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_FILTER_TIME_RESET)) {
-    TION_LOGD(TAG, "Response[] Filter Time Reset (%04X): %s", frame_type,
-              hexencode(frame_data, frame_data_size).c_str());
+    TION_LOGD(TAG, "Response[] Command 4 (%04X): %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
     // ответ такого вида, к сожалению, значения пока не понятны:
+    // на прошивке 003C
     // B3 40 11 00 08 00 08 00 08 00 00 00 00 00 00 00 00 00 00 5A
+    // на прошивке 0033, после команды 0x1
+    // 3D 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 5A
   } else {
     TION_LOGW(TAG, "Response[] Unknown (%04X): %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
   }
@@ -132,6 +136,29 @@ bool TionApi3s::write_state(const tion3s_state_t &state) const {
 
 bool TionApi3s::reset_filter() const {
   TION_LOGD(TAG, "Request[] Filter Time Reset");
+  // return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
+
+  // предположительно сброс ресурса фильтра выполняется командой 2
+  // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:02:01:17:02:0A:01:02:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+
+  // еще пример
+  // 3D:02:01:17:02:0A:01:02:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+  // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
+
+  // FIXME реализовать сброс ресурса фильтра
+
+  return false;
+}
+
+bool TionApi3s::request_after_state() const {
+  TION_LOGD(TAG, "Request[] Command 4");
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
 }
 
