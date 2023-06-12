@@ -3,7 +3,7 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2023.4.2",
+      "esphome_version": "2023.5.5",
       // additional APT dependicies
       "apt_deps": "bash-completion less libmbedtls-dev gdb ccache cmake",
       // additional PIP dependicies

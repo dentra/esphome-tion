@@ -14,8 +14,8 @@ RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get clean -y \
  && rm -rf /var/lib/apt/lists/*
 
-# pyparsing needed to correctly compile with esp-idf: https://github.com/esphome/issues/issues/2540
-RUN pip3 --disable-pip-version-check --no-cache-dir install esphome==${esphome_version} pyparsing==2.2.0 ${pip_deps} \
+# pyparsing==2.2.0 needed to correctly compile with esp-idf: https://github.com/esphome/issues/issues/2540
+RUN pip3 --disable-pip-version-check --no-cache-dir install esphome==${esphome_version} ${pip_deps} \
  && pio settings set enable_telemetry No \
  && pio settings set check_platformio_interval 1000000 \
  && rm -rf /tmp/pip-tmp
