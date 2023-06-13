@@ -32,7 +32,6 @@ wifi:
     ssid: "$friendly_name Hotspot"
 captive_portal:
 
-api:
 logger:
 
 external_components:
