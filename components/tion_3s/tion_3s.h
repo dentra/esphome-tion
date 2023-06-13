@@ -31,7 +31,13 @@ class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
   void dump_state() const override;
   void flush_state() override;
 
-  void reset_filter() { this->api_->reset_filter(); }
+  void reset_filter() {
+    this->api_->reset_filter(this->state_);
+    if (this->vport_type_ == TionVPortType::VPORT_UART) {
+      // allow execute command 4 for fw >= 0x003C
+      this->state_.firmware_version = 0;
+    }
+  }
 
  protected:
   select::Select *air_intake_{};

@@ -58,7 +58,7 @@ class TionApi3s : public TionApiBase<tion3s_state_t> {
   bool request_state() const;
   bool request_after_state() const;
   bool write_state(const tion3s_state_t &state) const;
-  bool reset_filter() const;
+  bool reset_filter(const tion3s_state_t &state) const;
 
 #ifdef TION_ENABLE_HEARTBEAT
   bool send_heartbeat() const { return false; }

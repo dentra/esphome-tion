@@ -134,7 +134,7 @@ bool TionApi3s::write_state(const tion3s_state_t &state) const {
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), mode);
 }
 
-bool TionApi3s::reset_filter() const {
+bool TionApi3s::reset_filter(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Request[] Filter Time Reset");
   // return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
 
@@ -152,9 +152,16 @@ bool TionApi3s::reset_filter() const {
   // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
   // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
 
-  // FIXME реализовать сброс ресурса фильтра
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
 
-  return false;
+  auto set = tion3s_state_set_t::create(state);
+  set.flags.preset_state = true;
+  set.filter_time.reset = true;
+  set.filter_time.value = 0;
+  return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), set);
 }
 
 bool TionApi3s::request_after_state() const {

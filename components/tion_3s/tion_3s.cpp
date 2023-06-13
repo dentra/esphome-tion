@@ -23,7 +23,7 @@ void Tion3s::update_state() {
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
 
-  if (this->version_) {
+  if (this->version_ && state.firmware_version > 0) {
     this->version_->publish_state(str_snprintf("%04X", 4, state.firmware_version));
   }
   if (this->buzzer_) {
