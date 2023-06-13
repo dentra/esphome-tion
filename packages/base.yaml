@@ -32,6 +32,7 @@ wifi:
     ssid: "$friendly_name Hotspot"
 captive_portal:
 
+ota:
 logger:
 
 external_components:
