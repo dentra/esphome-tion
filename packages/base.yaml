@@ -14,8 +14,6 @@ substitutions:
   framework_type: arduino
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "true"
-  # esphome min version
-  esphome_min_version: "2023.5.5"
 
 esphome:
   name: $node_name
@@ -24,7 +22,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version ($framework_type)"
-  min_version: $esphome_min_version
+  min_version: "2023.5.5" # can't use substitutions here
 
 preferences:
   flash_write_interval: 10min
