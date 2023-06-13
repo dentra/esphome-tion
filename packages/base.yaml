@@ -1,0 +1,44 @@
+substitutions:
+  # project version
+  project_version: 2023.06-master
+  # project git source
+  project_source: github://dentra/esphome-tion@$project_version
+  # project idenitfier
+  project_id: tion
+  # node name
+  node_name: $project_id
+  # name for main entity and prefix for all others.
+  friendly_name: $node_name
+  # framework type settings: esp-idf or arduino
+  framework_type: arduino
+  # add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "true"
+  # esphome min version
+  esphome_min_version: 2023.5.5
+
+esphome:
+  name: $node_name
+  friendly_name: $friendly_name
+  name_add_mac_suffix: $node_add_mac_suffix
+  project:
+    name: "dentra.$project_id"
+    version: "$project_version ($framework_type)"
+  min_version: $esphome_min_version
+
+preferences:
+  flash_write_interval: 10min
+
+wifi:
+  ap:
+    ssid: "$friendly_name Hotspot"
+captive_portal:
+
+api:
+logger:
+
+external_components:
+  - source: github://dentra/esphome-components@2023.2.0
+    components: [crash_info, etl, otax, vport, esp32_usb_dis]
+    refresh: 1d
+  - source: $project_source
+    refresh: 12h
