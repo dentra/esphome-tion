@@ -5,9 +5,9 @@
       // ESPHome version
       "esphome_version": "2023.5.5",
       // additional APT dependicies
-      "apt_deps": "bash-completion less libmbedtls-dev gdb ccache cmake",
+      "apt_deps": "bash-completion less libmbedtls-dev gdb ccache cmake jq",
       // additional PIP dependicies
-      "pip_deps": "pyserial_asyncio",
+      "pip_deps": "pyserial_asyncio yq",
       // workspace dir
       "workspace_dir": "${containerWorkspaceFolder}"
     }
