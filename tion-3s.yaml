@@ -13,8 +13,6 @@ substitutions:
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
 
-  tion_version: master
-
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
@@ -27,7 +25,7 @@ packages:
       ## Enable additional Uptime sensor. Comment next line to disable.
       - packages/uptime.yaml
       ## Uncomment next line to enable additional restart button.
-      # - packages/restart.yaml
+      - packages/restart.yaml
       ## Uncomment next line to enable persistent connection runtime control switch.
       # - packages/persistent.yaml
       ## Uncomment next line to enable additional connect switch useful for debugging.
@@ -37,20 +35,22 @@ packages:
       ## Uncomment next line to if you wish to compile via ESP IDF.
       # - packages/idf.yaml
       - packages/esp32_ble.yaml
-      - packages/common.yaml
+      - packages/base.yaml
 
-external_components:
-  - source: github://dentra/esphome-components@2023.2.0
-    components: [crash_info, etl, otax, vport, esp32_usb_dis]
-  - source: $tion_source
-    refresh: 0s
+# Enable Home Assistant API connection.
+api:
+
+# Uncomment to enable MQTT connecion.
+# mqtt:
+#   broker: !secret mqtt_borker
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
 
 # WiFi hotspot configuration.
 # Comment next 3 lines to enable manual WiFi conviguration via access point.
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
-  power_save_mode: light
 
 # Virtual port configuration
 vport:
