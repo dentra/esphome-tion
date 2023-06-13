@@ -1,8 +1,9 @@
 substitutions:
+  project_branch: master
   # project version
   project_version: 2023.06-master
   # project git source
-  project_source: github://dentra/esphome-tion@$project_version
+  project_source: github://dentra/esphome-tion@$project_branch
   # project idenitfier
   project_id: tion
   # node name
@@ -14,7 +15,7 @@ substitutions:
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "true"
   # esphome min version
-  esphome_min_version: 2023.5.5
+  esphome_min_version: "2023.5.5"
 
 esphome:
   name: $node_name
