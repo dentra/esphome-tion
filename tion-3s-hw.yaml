@@ -19,39 +19,27 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: master # cant use substitutions here
     files:
-      # - packages/debug.yaml
       - packages/wifi_signal.yaml
       - packages/uptime.yaml
       - packages/restart.yaml
       - packages/esp8266.yaml
+      # - packages/debug.yaml
+      - packages/base.yaml
 
-# uart:
-#   debug:
-#     after:
-#       bytes: 20
-#     sequence:
-#       - lambda: UARTDebug::log_hex(direction, bytes, ' ');
+# Enable Home Assistant API connection.
+api:
 
-esphome:
-  name: $node_name
-  friendly_name: $friendly_name
+# Uncomment to enable MQTT connecion.
+# mqtt:
+#   broker: !secret mqtt_borker
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
 
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
-  ap:
-    ssid: "$friendly_name Hotspot"
-    password: $wifi_ap_password
 
-ota:
-api:
-
-external_components:
-  - source: github://dentra/esphome-components@2023.2.0
-    components: [crash_info, etl, otax, vport, esp32_usb_dis]
-  - source: github://dentra/esphome-tion@$project_version
-    refresh: 1h
-
+# Optional switch to temporary disable OTA to reduce CPU usage
 otax:
   enabled:
     name: OTA Enabled
@@ -61,7 +49,7 @@ vport:
 
 climate:
   - platform: tion_3s
-    name: none
+    name: None # use friendly_name
     # Optional, Buzzer control switch.
     buzzer:
       name: "Buzzer"

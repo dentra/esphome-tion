@@ -4,7 +4,7 @@ substitutions:
   # name of the node.
   node_name: tion-4s
   # name for main climate entity and prefix for all others.
-  name: $node_name
+  friendly_name: $node_name
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "false"
   # setup your board or leave it asis.
@@ -14,24 +14,25 @@ substitutions:
   wifi_password: !secret wifi_password
 
 packages:
-  ## Enable additional RSSI signal sensor. Comment next line to disable.
-  rssi_signal: github://dentra/esphome-tion/packages/rssi_signal.yaml
-  ## Enable additional WiFi signal sensor. Comment next line to disable.
-  wifi_signal: github://dentra/esphome-tion/packages/wifi_signal.yaml
-  ## Enable additional Uptime sensor. Comment next line to disable.
-  uptime: github://dentra/esphome-tion/packages/uptime.yaml
-  ## Uncomment next line to enable additional restart button.
-  # restart: github://dentra/esphome-tion/packages/restart.yaml
-  ## Uncomment next line to enable persistent connection runtime control switch.
-  # persistent: github://dentra/esphome-tion/packages/persistent.yaml
-  ## Uncomment next line to enable additional connect switch useful for debugging.
-  # connect: github://dentra/esphome-tion/packages/connect.yaml
-  ## Uncomment next line to enable additional debug information.
-  # debug: github://dentra/esphome-tion/packages/debug.yaml
-  ## Uncomment next line to if you wish to compile via ESP IDF.
-  # idf: github://dentra/esphome-tion/packages/idf.yaml
-  # Common configuration parameters. Do not comment or remove!
-  common: github://dentra/esphome-tion/packages/common.yaml
+  tion:
+    url: https://github.com/dentra/esphome-tion
+    ref: master # cant use substitutions here
+    files:
+      - packages/wifi_signal.yaml
+      - packages/uptime.yaml
+      - packages/restart.yaml
+      - packages/esp32_ble.yaml
+      # - packages/debug.yaml
+      - packages/base.yaml
+
+# Enable Home Assistant API connection.
+api:
+
+# Uncomment to enable MQTT connecion.
+# mqtt:
+#   broker: !secret mqtt_borker
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
 
 # WiFi hotspot configuration.
 # Comment next 3 lines to enable manual WiFi conviguration via access point.
@@ -39,17 +40,11 @@ wifi:
   ssid: $wifi_ssid
   password: $wifi_password
 
-ble_client:
-  mac_address: $tion_mac_address
-  id: tion_ble_client
-
 # Virtual port configuration
 vport:
-  - platform: tion_ble
+  - platform: tion_4s
     id: tion4s_ble_vport
     ble_client_id: tion_ble_client
-    # Optional, How often query device state. Default: 60s.
-    update_interval: 60s
     # Optional, Do not disconnect after receiving state. Default: false.
     persistent_connection: false
     # Optional, Timeout to reconnect if no state answer received. Default: 15s.
@@ -60,36 +55,36 @@ vport:
 # Main component configuration.
 climate:
   - platform: tion_4s
-    name: "$name"
+    name: None # use friendly_name
     # Optional, virtual port id. Default: autodetect
     vport_id: tion4s_ble_vport
     # Optional, Buzzer control switch.
     buzzer:
-      name: "$name Buzzer"
+      name: "Buzzer"
     # Optional, Led control switch.
     led:
-      name: "$name Led"
+      name: "Led"
     # Optional, Recirculation control switch.
     recirculation:
-      name: "$name Recirculation"
+      name: "Recirculation"
     # Optional, Temperatire of air before heater, °C (celsius).
     outdoor_temperature:
-      name: "$name Outdoor Temperature"
+      name: "Outdoor Temperature"
     # Optional, Heater power, W (watt).
     heater_power:
-      name: "$name Heater power"
+      name: "Heater power"
     # Optional, Total airflow counter, m³ (cubic meters).
     airflow_counter:
-      name: "$name Airflow counter"
+      name: "Airflow counter"
     # Optional, Filter time left counter, days.
     filter_time_left:
-      name: "$name Filter Time Left"
+      name: "Filter Time Left"
     # Optional, Filter warning state.
     filter_warnout:
-      name: "$name Filter Warnout"
+      name: "Filter Warnout"
     # Optional, Tion firmware version.
     version:
-      name: "$name Version"
+      name: "Version"
     # Optional, Enable presets. Default: <empty>
     # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
     # Defaults:
@@ -112,7 +107,9 @@ climate:
       sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
     # Optional, configure boost time
     boost_time:
-      name: $name Boost Time
+      name: "Boost Time"
     # Optional, display remaining boost time
     boost_time_left:
-      name: $name Boost Time Left
+      name: "Boost Time Left"
+    # Optional, How often query device state. Default: 60s.
+    update_interval: 60s

@@ -13,42 +13,35 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: master # cant use substitutions here
     files:
-      # - packages/debug.yaml
       - packages/wifi_signal.yaml
       - packages/uptime.yaml
       - packages/restart.yaml
       # change to esp32_s2.yaml to use with ESP32-S2 chip
       - packages/esp32_s3.yaml
+      # - packages/debug.yaml
+      - packages/base.yaml
 
-esphome:
-  name: $node_name
-  friendly_name: $friendly_name
+# Enable Home Assistant API connection.
+api:
 
+# Uncomment to enable MQTT connecion.
+# mqtt:
+#   broker: !secret mqtt_borker
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+
+# WiFi hotspot configuration.
+# Comment next 3 lines to enable manual WiFi conviguration via access point.
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
-  ap:
-    ssid: "$friendly_name Hotspot"
-    password: $wifi_ap_password
-
-ota:
-api:
-
-external_components:
-  - source: github://dentra/esphome-components@2023.2.0
-    components: [etl, vport, esp32_usb_dis]
-    # refresh: 0s
-  - source: github://dentra/esphome-tion@$project_version
-    refresh: 1h
-  - source: github://pr#3500
-    components: [web_server, web_server_idf, web_server_base, captive_portal]
 
 vport:
   - platform: tion_4s_uart
 
 climate:
   - platform: tion_4s
-    name: none
+    name: None # use friendly_name
     # Optional, Buzzer control switch.
     buzzer:
       name: "Buzzer"

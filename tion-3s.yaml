@@ -71,7 +71,7 @@ climate:
   - platform: tion_3s
     id: tion_climate
     vport_id: tion3s_ble_vport
-    name: "$friendly_name"
+    name: None # use friendly_name
     # Optional, Buzzer control switch.
     buzzer:
       name: "Buzzer"
