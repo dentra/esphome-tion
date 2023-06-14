@@ -46,6 +46,7 @@ otax:
 
 vport:
   - platform: tion_3s_uart
+    uart_id: uart_tion
 
 climate:
   - platform: tion_3s
