@@ -7,6 +7,10 @@ substitutions:
   tx_pin: TX
   rx_pin: RX
   baud_rate: "115200"
+  # uart proxy configuration (optional)
+  proxy_tx_pin: GPIO10
+  proxy_rx_pin: GPIO09
+  proxy_baud_rate: 115200
   # component version
   project_version: master
   # wifi settings.
@@ -19,11 +23,21 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: master # cant use substitutions here
     files:
+      ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
+      ## Enable additional Uptime sensor. Comment next line to disable.
       - packages/uptime.yaml
+      ## Uncomment next line to enable additional restart button.
       - packages/restart.yaml
+      ## Optional switch to temporary disable OTA to reduce CPU usage.
+      - packages/otax.yaml
+      ## Change to packages/esp32.yaml if you want to use ESP32.
       - packages/esp8266.yaml
+      ## Uncomment to enable uart proxy support
+      # - packages/tion_s3_proxy.yaml
+      ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
+      ## Do not remove or comment or move next line from the end
       - packages/base.yaml
 
 # Enable Home Assistant API connection.
@@ -38,11 +52,6 @@ api:
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
-
-# Optional switch to temporary disable OTA to reduce CPU usage
-otax:
-  enabled:
-    name: OTA Enabled
 
 vport:
   - platform: tion_3s_uart

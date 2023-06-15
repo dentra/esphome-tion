@@ -5,6 +5,7 @@
 #include "../components/tion-api/tion-api-3s.h"
 #include "../components/tion-api/tion-api-ble-3s.h"
 #include "../components/tion_3s/tion_3s.h"
+#include "../components/tion_3s_proxy/tion_3s_proxy.h"
 
 #include "test_api.h"
 #include "test_vport.h"
@@ -166,6 +167,39 @@ bool test_uart_3s() {
   return res;
 }
 
+bool test_uart_3s_proxy() {
+  bool res = true;
+
+  auto inp = "B3.10.00.00.00.00.00.00.00.00.00.0E.00.00.00.00.00.AA.AA.5A";
+  auto out = "B3.10.00.00.00.00.00.00.00.00.00.0E.00.00.00.00.00.FF.FF.5A";
+
+  esphome::uart::UARTComponent uart_inp(inp);
+  Tion3sUartIOTest io(&uart_inp);
+  Tion3sUartVPortTest vport(&io);
+
+  // as additional input source
+  Tion3sUartVPortApiTest api(&vport);
+  Tion3sTest comp(&api);
+
+  esphome::uart::UARTComponent uart_out(out);
+
+  esphome::tion::TionVPortApi<esphome::tion::Tion3sUartVPort::frame_spec_type, esphome::tion_3s_proxy::TionApi3sProxy>
+      api_proxy(&vport);
+  esphome::tion_3s_proxy::Tion3sProxy proxy(&api_proxy, &uart_out);
+
+  cloak::setup_and_loop({&vport, &comp, &proxy});
+  for (int i = 0; i < 5; i++) {
+    vport.loop();
+    proxy.loop();
+  }
+
+  res &= cloak::check_data("inp data", uart_inp, out);
+  res &= cloak::check_data("out data", uart_out, inp);
+
+  return res;
+}
+
 REGISTER_TEST(test_api_3s);
 REGISTER_TEST(test_3s);
 REGISTER_TEST(test_uart_3s);
+REGISTER_TEST(test_uart_3s_proxy);

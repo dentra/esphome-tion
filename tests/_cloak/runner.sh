@@ -7,6 +7,10 @@ if [ "$1" == "clean" ]; then
   TGT=clean
 fi
 
+if [ "$1" == "debug" ]; then
+  TYP=debug
+fi
+
 ARGS="--parallel"
 if [ "$1" == "clean-first" ]; then
   ARGS+=" --clean-first"

@@ -1,0 +1,4 @@
+# Optional switch to temporary disable OTA to reduce CPU usage
+otax:
+  enabled:
+    name: OTA Enabled
