@@ -55,6 +55,7 @@ vport:
 # Main component configuration.
 climate:
   - platform: tion_4s
+    id: tion_climate
     name: None # use friendly_name
     # Optional, virtual port id. Default: autodetect
     vport_id: tion4s_ble_vport

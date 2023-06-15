@@ -50,6 +50,7 @@ vport:
 
 climate:
   - platform: tion_3s
+    id: tion_climate
     name: None # use friendly_name
     # Optional, Buzzer control switch.
     buzzer:
