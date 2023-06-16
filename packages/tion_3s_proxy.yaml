@@ -1,7 +1,7 @@
 substitutions:
   proxy_tx_pin: GPIO10
   proxy_rx_pin: GPIO09
-  proxy_baud_rate: 115200
+  proxy_baud_rate: "115200"
 
 uart:
   - id: uart_proxy

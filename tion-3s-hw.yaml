@@ -10,7 +10,7 @@ substitutions:
   # uart proxy configuration (optional)
   proxy_tx_pin: GPIO10
   proxy_rx_pin: GPIO09
-  proxy_baud_rate: 115200
+  proxy_baud_rate: "115200"
   # component version
   project_version: master
   # wifi settings.
@@ -34,7 +34,7 @@ packages:
       ## Change to packages/esp32.yaml if you want to use ESP32.
       - packages/esp8266.yaml
       ## Uncomment to enable uart proxy support
-      # - packages/tion_s3_proxy.yaml
+      # - packages/tion_3s_proxy.yaml
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
       ## Do not remove or comment or move next line from the end
