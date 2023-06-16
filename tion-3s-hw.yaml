@@ -1,6 +1,8 @@
 substitutions:
   node_name: tion-3s
   friendly_name: $node_name
+  # add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "false"
   # board
   board: esp01_1m
   # uart configuration

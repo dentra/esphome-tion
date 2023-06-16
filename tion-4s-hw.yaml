@@ -1,6 +1,8 @@
 substitutions:
   node_name: tion-4s
   friendly_name: $node_name
+  # add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "false"
   # component version
   project_version: master
   # wifi settings.
