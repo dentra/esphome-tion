@@ -11,9 +11,14 @@
 namespace esphome {
 namespace tion_3s_proxy {
 
-class Tion3sUartIO : public tion::TionUartIO<dentra::tion::TionUartProtocol3s> {
+class TionUartProtocol3sProxy : public dentra::tion::TionUartProtocol3s {
  public:
-  explicit Tion3sUartIO(uart::UARTComponent *uart) : tion::TionUartIO<dentra::tion::TionUartProtocol3s>(uart) {}
+  TionUartProtocol3sProxy() { this->head_type_ = dentra::tion::FRAME_MAGIC_REQ; }
+};
+
+class Tion3sUartIO : public tion::TionUartIO<TionUartProtocol3sProxy> {
+ public:
+  explicit Tion3sUartIO(uart::UARTComponent *uart) : tion::TionUartIO<TionUartProtocol3sProxy>(uart) {}
   virtual ~Tion3sUartIO() {}
   bool write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
     return this->protocol_.write_frame(frame_type, frame_data, frame_data_size);
@@ -41,7 +46,7 @@ class Tion3sProxy : public Component {
   void loop() { this->tx_->poll(); }
 
  protected:
-  void on_frame_(const dentra::tion::TionUartProtocol3s::frame_spec_type &frame, size_t size);
+  void on_frame_(const TionUartProtocol3sProxy::frame_spec_type &frame, size_t size);
   // tion
   TionApi3sProxy *rx_{};
   // ble module

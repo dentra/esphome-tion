@@ -171,7 +171,7 @@ bool test_uart_3s_proxy() {
   bool res = true;
 
   auto inp = "B3.10.00.00.00.00.00.00.00.00.00.0E.00.00.00.00.00.AA.AA.5A";
-  auto out = "B3.10.00.00.00.00.00.00.00.00.00.0E.00.00.00.00.00.FF.FF.5A";
+  auto out = "3D.01.00.00.00.00.00.00.00.00.00.0E.00.00.00.00.00.FF.FF.5A";
 
   esphome::uart::UARTComponent uart_inp(inp);
   Tion3sUartIOTest io(&uart_inp);

@@ -6,6 +6,13 @@ namespace dentra {
 namespace tion {
 
 #pragma pack(push, 1)
+
+enum : uint8_t {
+  FRAME_MAGIC_REQ = 0x3D,
+  FRAME_MAGIC_RSP = 0xB3,
+  FRAME_MAGIC_END = 0x5A,
+};
+
 struct tion3s_state_t {
   enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
   uint8_t fan_speed : 4;

@@ -14,10 +14,6 @@ static const char *const TAG = "tion-api-3s";
 #define FRAME_TYPE_RSP(cmd) FRAME_TYPE(FRAME_MAGIC_RSP, (cmd << 4))
 
 enum : uint8_t {
-  FRAME_MAGIC_REQ = 0x3D,
-  FRAME_MAGIC_RSP = 0xB3,
-  FRAME_MAGIC_END = 0x5A,
-
   // request state
   FRAME_TYPE_STATE_GET = 0x1,
   // write state

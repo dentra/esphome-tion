@@ -11,9 +11,6 @@ static const char *const TAG = "tion-api-uart-3s";
 #pragma pack(push, 1)
 struct tion3s_frame_t {
   enum : uint8_t {
-    FRAME_MAGIC_REQ = 0x3D,
-    FRAME_MAGIC_RSP = 0xB3,
-    FRAME_MAGIC = 0x5A,
     FRAME_DATA_SIZE = 17,
   };
   union {
@@ -45,7 +42,7 @@ void TionUartProtocol3s::read_uart_data(TionUartReader *io) {
 bool TionUartProtocol3s::read_frame_(TionUartReader *io) {
   auto frame = reinterpret_cast<tion3s_frame_t *>(this->buf_);
 
-  if (frame->rx.head != tion3s_frame_t::FRAME_MAGIC_RSP) {
+  if (frame->rx.head != this->head_type_) {
     if (io->available() < sizeof(frame->rx.head)) {
       // do not flood log while waiting magic
       // TION_LOGV(TAG, "Waiting frame magic");
@@ -55,7 +52,7 @@ bool TionUartProtocol3s::read_frame_(TionUartReader *io) {
       TION_LOGW(TAG, "Failed read frame head");
       return true;
     }
-    if (frame->rx.head != tion3s_frame_t::FRAME_MAGIC_RSP) {
+    if (frame->rx.head != this->head_type_) {
       TION_LOGW(TAG, "Unxepected byte: 0x%02X", frame->rx.head);
       return true;
     }
@@ -87,7 +84,7 @@ bool TionUartProtocol3s::read_frame_(TionUartReader *io) {
 
   TION_LOGV(TAG, "Read data: %s", hexencode(&frame->data, sizeof(frame->data)).c_str());
 
-  if (frame->magic != tion3s_frame_t::FRAME_MAGIC) {
+  if (frame->magic != FRAME_MAGIC_END) {
     TION_LOGW(TAG, "Invlid frame magic %02X", frame->magic);
     this->reset_buf_();
     return true;
@@ -107,7 +104,7 @@ bool TionUartProtocol3s::write_frame(uint16_t frame_type, const void *frame_data
     return false;
   }
 
-  tion3s_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = tion3s_frame_t::FRAME_MAGIC};
+  tion3s_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = FRAME_MAGIC_END};
   if (frame_data_size <= sizeof(frame.data.data)) {
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }

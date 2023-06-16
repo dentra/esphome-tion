@@ -21,6 +21,7 @@ class TionUartProtocol3s : public TionProtocol<tion_any_frame_t> {
   bool read_frame_(TionUartReader *io);
   uint8_t buf_[FRAME_MAX_SIZE]{};
   void reset_buf_();
+  uint8_t head_type_{FRAME_MAGIC_RSP};
 };
 
 }  // namespace tion
