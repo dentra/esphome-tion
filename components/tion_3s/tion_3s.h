@@ -39,6 +39,8 @@ class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
     }
   }
 
+  int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
+
  protected:
   select::Select *air_intake_{};
 };
