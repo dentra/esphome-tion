@@ -14,12 +14,6 @@ class TionLt : public TionClimateComponent<TionApiLt, tionlt_state_t> {
 
   void dump_config() override;
 
-  climate::ClimateTraits traits() override {
-    auto traits = TionClimate::traits();
-    traits.set_supports_action(true);
-    return traits;
-  }
-
   void update_state() override;
   void dump_state() const override;
   void flush_state() override;

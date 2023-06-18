@@ -15,9 +15,16 @@ void Tion3s::dump_config() {
 void Tion3s::update_state() {
   const auto &state = this->state_;
 
-  this->mode = state.flags.power_state
-                   ? state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY
-                   : climate::CLIMATE_MODE_OFF;
+  this->mode = !state.flags.power_state   ? climate::CLIMATE_MODE_OFF
+               : state.flags.heater_state ? climate::CLIMATE_MODE_HEAT
+                                          : climate::CLIMATE_MODE_FAN_ONLY;
+
+  bool is_heating = (state.target_temperature - state.outdoor_temperature) > 3 &&
+                    state.current_temperature > state.outdoor_temperature;
+  this->action = this->mode == climate::CLIMATE_MODE_OFF ? climate::CLIMATE_ACTION_OFF
+                 : is_heating                            ? climate::CLIMATE_ACTION_HEATING
+                                                         : climate::CLIMATE_ACTION_FAN;
+
   this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);

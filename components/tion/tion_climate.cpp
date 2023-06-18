@@ -27,6 +27,7 @@ climate::ClimateTraits TionClimate::traits() {
     traits.add_supported_preset(climate::CLIMATE_PRESET_NONE);
   }
 #endif
+  traits.set_supports_action(true);
   return traits;
 }
 

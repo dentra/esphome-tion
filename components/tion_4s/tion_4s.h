@@ -16,12 +16,6 @@ class Tion4s : public TionClimateComponent<TionApi4s, tion4s_state_t> {
 
   void dump_config() override;
 
-  climate::ClimateTraits traits() override {
-    auto traits = TionClimate::traits();
-    traits.set_supports_action(true);
-    return traits;
-  }
-
   void set_recirculation(switch_::Switch *recirculation) { this->recirculation_ = recirculation; }
 
 #ifdef TION_ENABLE_PRESETS
