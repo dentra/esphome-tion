@@ -19,6 +19,8 @@ void Tion3s::update_state() {
                : state.flags.heater_state ? climate::CLIMATE_MODE_HEAT
                                           : climate::CLIMATE_MODE_FAN_ONLY;
 
+  // heating detection borrowed from:
+  // https://github.com/TionAPI/tion_python/blob/master/tion_btle/tion.py#L177
   bool is_heating = (state.target_temperature - state.outdoor_temperature) > 3 &&
                     state.current_temperature > state.outdoor_temperature;
   this->action = this->mode == climate::CLIMATE_MODE_OFF ? climate::CLIMATE_ACTION_OFF
@@ -50,6 +52,12 @@ void Tion3s::update_state() {
   }
   if (this->airflow_counter_) {
     this->airflow_counter_->publish_state(state.productivity);
+  }
+
+  // additional request after state response
+  if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
+    // call on next loop
+    this->defer([this]() { this->api_->request_after_state(); });
   }
 }
 

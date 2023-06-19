@@ -20,8 +20,8 @@ class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
 
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
 
-  void update() override {
-    TionClimateComponent::update();
+  void on_ready() {
+    TionClimateComponent::on_ready();
     if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
       this->api_->request_after_state();
     }
