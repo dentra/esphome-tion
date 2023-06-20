@@ -20,9 +20,7 @@ void TionClimateComponentBase::setup() {
   TionComponent::setup();
   auto state = this->restore_state_();
   if (state.has_value()) {
-    state->apply(this);
-    // не пишем в бризер, оно восстановиться при получении состояния
-    // this->write_climate_state();
+    this->control(state->to_call(this));
   }
 }
 
@@ -36,10 +34,7 @@ bool TionClimateComponentBase::enable_boost_() {
   // if boost_time_left not configured, just schedule stop boost after boost_time
   if (this->boost_time_left_ == nullptr) {
     ESP_LOGD(TAG, "Schedule boost timeout for %u s", boost_time);
-    this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() {
-      this->cancel_preset_(*this->preset);
-      this->write_climate_state();
-    });
+    this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() { this->cancel_preset_(*this->preset); });
     return true;
   }
 
@@ -53,7 +48,6 @@ bool TionClimateComponentBase::enable_boost_() {
       this->boost_time_left_->publish_state(static_cast<float>(time_left));
     } else {
       this->cancel_preset_(*this->preset);
-      this->write_climate_state();
     }
   });
 

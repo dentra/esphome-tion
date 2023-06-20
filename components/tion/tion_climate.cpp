@@ -33,69 +33,40 @@ climate::ClimateTraits TionClimate::traits() {
 
 void TionClimate::control(const climate::ClimateCall &call) {
 #ifdef TION_ENABLE_PRESETS
-  bool preset_set = false;
   if (call.get_preset().has_value()) {
     const auto new_preset = *call.get_preset();
     const auto old_preset = *this->preset;
     if (new_preset != old_preset) {
       this->cancel_preset_(old_preset);
-      preset_set = this->enable_preset_(new_preset);
-    }
-  }
-#endif
-
-  if (call.get_mode().has_value()) {
-#ifdef TION_ENABLE_PRESETS
-    if (preset_set) {
-      ESP_LOGW(TAG, "%s preset enabled. Ignore change mode.",
-               LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
-    } else
-#endif
-    {
-      auto mode = *call.get_mode();
-      switch (mode) {
-        case climate::CLIMATE_MODE_OFF:
-        case climate::CLIMATE_MODE_HEAT:
-        case climate::CLIMATE_MODE_FAN_ONLY:
-          this->mode = mode;
-          ESP_LOGD(TAG, "Set mode %u", mode);
-          break;
-        default:
-          ESP_LOGW(TAG, "Unsupported mode %d", mode);
-          return;
+      if (this->enable_preset_(new_preset)) {
+        return;
       }
     }
   }
+#endif
 
+  climate::ClimateMode mode = this->mode;
+  if (call.get_mode().has_value()) {
+    mode = *call.get_mode();
+    ESP_LOGD(TAG, "Set mode %u", climate::climate_mode_to_string(mode));
+    this->preset = climate::CLIMATE_PRESET_NONE;
+  }
+
+  uint8_t fan_speed = this->fan_mode_to_speed_(*this->custom_fan_mode);
   if (call.get_custom_fan_mode().has_value()) {
-#ifdef TION_ENABLE_PRESETS
-    if (preset_set) {
-      ESP_LOGW(TAG, "%s preset enabled. Ignore change fan speed.",
-               LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
-    } else
-#endif
-    {
-      this->set_fan_speed_(this->fan_mode_to_speed_(call.get_custom_fan_mode()));
-      this->preset = climate::CLIMATE_PRESET_NONE;
-    }
+    fan_speed = this->fan_mode_to_speed_(call.get_custom_fan_mode());
+    ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
+    this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
+  int8_t target_temperature = this->target_temperature;
   if (call.get_target_temperature().has_value()) {
-#ifdef TION_ENABLE_PRESETS
-    if (preset_set) {
-      ESP_LOGW(TAG, "%s preset enabled. Ignore change target temperature.",
-               LOG_STR_ARG(climate::climate_preset_to_string(*this->preset)));
-    } else
-#endif
-    {
-      ESP_LOGD(TAG, "Set target temperature %f", target_temperature);
-      const auto target_temperature = *call.get_target_temperature();
-      this->target_temperature = target_temperature;
-      this->preset = climate::CLIMATE_PRESET_NONE;
-    }
+    target_temperature = *call.get_target_temperature();
+    ESP_LOGD(TAG, "Set target temperature %f", target_temperature);
+    this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  this->write_climate_state();
+  this->control_climate_state(mode, fan_speed, target_temperature);
 }
 
 void TionClimate::set_fan_speed_(uint8_t fan_speed) {
@@ -119,18 +90,19 @@ bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
     this->saved_preset_ = *this->preset;
   }
 
+  // если был пресет NONE, то сохраним его значения
   if (*this->preset == climate::CLIMATE_PRESET_NONE) {
     this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
     this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed_();
     this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
   }
 
-  // дополнительно проверим, что пресет был предварительно сохранен
-  // в противном случае можем получить зимой отстутсвие подогрева в детской
+  // дополнительно проверим, что пресет был предварительно сохранен (см. блок выше)
+  // в противном случае можем получить зимой отстутсвие подогрева
+  // т.е. неинициализированный NONE пресет не активируем
   if (this->presets_[preset].fan_speed != 0) {
-    this->mode = this->presets_[preset].mode;
-    this->set_fan_speed_(this->presets_[preset].fan_speed);
-    this->target_temperature = this->presets_[preset].target_temperature;
+    this->control_climate_state(this->presets_[preset].mode, this->presets_[preset].fan_speed,
+                                this->presets_[preset].target_temperature);
   }
   this->preset = preset;
 

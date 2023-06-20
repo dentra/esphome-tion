@@ -21,7 +21,7 @@ class TionClimate : public climate::Climate {
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;
 
-  virtual void write_climate_state() = 0;
+  virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) const = 0;
 #ifdef TION_ENABLE_PRESETS
   /**
    * Update default preset.

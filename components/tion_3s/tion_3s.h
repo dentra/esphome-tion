@@ -29,29 +29,52 @@ class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
 
   void update_state() override;
   void dump_state() const override;
-  void flush_state() override;
 
   void reset_filter() {
     this->api_->reset_filter(this->state_);
     if (this->vport_type_ == TionVPortType::VPORT_UART) {
-      // allow execute command 4 for fw >= 0x003C
-      this->state_.firmware_version = 0;
+      this->defer([this]() { this->api_->request_after_state(); });
     }
   }
 
   int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
 
+  void control_buzzer_state(bool state) const {
+    this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, state,
+                        this->get_gate_position_());
+  }
+
+  void control_air_intake(uint8_t air_intake) const {
+    this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(), air_intake);
+  }
+
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) const override {
+    this->control_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_gate_position_());
+  }
+
+  void control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
+                     uint8_t gate_position) const;
+
  protected:
   select::Select *air_intake_{};
+
+  bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
+
+  uint8_t get_gate_position_() const {
+    if (this->air_intake_) {
+      auto active_index = this->air_intake_->active_index();
+      if (active_index.has_value()) {
+        return *active_index;
+      }
+    }
+    return this->state_.gate_position;
+  }
 };
 
 class Tion3sAirIntakeSelect : public select::Select {
  public:
   explicit Tion3sAirIntakeSelect(Tion3s *parent) : parent_(parent) {}
-  void control(const std::string &value) override {
-    this->publish_state(value);
-    this->parent_->write_climate_state();
-  }
+  void control(const std::string &value) override { this->parent_->control_air_intake(*this->index_of(value)); }
 
  protected:
   Tion3s *parent_;

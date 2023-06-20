@@ -12,6 +12,7 @@ AUTO_LOAD = ["tion", "number"]
 
 Tion4s = tion.tion_ns.class_("Tion4s", PollingComponent, climate.Climate)
 TionApi4s = tion.tion_ns.class_("TionApi4s")
+TionRecirculationSwitchT = tion.tion_ns.class_("TionRecirculationSwitch", switch.Switch)
 
 CONF_RECIRCULATION = "recirculation"
 
@@ -19,7 +20,7 @@ CONF_RECIRCULATION = "recirculation"
 CONFIG_SCHEMA = tion_lt.tion_lt_schema(Tion4s, TionApi4s).extend(
     {
         cv.Optional(CONF_RECIRCULATION): switch.switch_schema(
-            tion.TionSwitch,
+            TionRecirculationSwitchT.template(Tion4s),
             icon="mdi:air-conditioner",
             entity_category=ENTITY_CATEGORY_CONFIG,
             block_inverted=True,

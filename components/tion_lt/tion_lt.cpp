@@ -80,52 +80,41 @@ void TionLt::dump_state() const {
   ESP_LOGV(TAG, "test_type         : %u", state.test_type);
 }
 
-void TionLt::flush_state() {
-  auto &state = this->state_;
+void TionLt::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
+                           bool led) const {
+  tionlt_state_t st = this->state_;
 
-  if (this->custom_fan_mode.has_value()) {
-    auto fan_speed = this->get_fan_speed_();
-    if (state.fan_speed != fan_speed) {
-      ESP_LOGD(TAG, "New fan speed %u", fan_speed);
-      state.fan_speed = fan_speed;
-    }
+  st.flags.power_state = mode != climate::CLIMATE_MODE_OFF;
+  if (this->state_.flags.power_state != st.flags.power_state) {
+    ESP_LOGD(TAG, "New power state %s", ONOFF(st.flags.power_state));
   }
 
-  int8_t target_temperature = this->target_temperature;
-  if (state.target_temperature != target_temperature) {
-    ESP_LOGD(TAG, "New target temperature %d", target_temperature);
-    state.target_temperature = target_temperature;
+  st.flags.heater_state = mode == climate::CLIMATE_MODE_HEAT;
+  if (this->state_.flags.heater_state != st.flags.heater_state) {
+    ESP_LOGD(TAG, "New heater state %s", ONOFF(st.flags.heater_state));
   }
 
-  auto power_state = this->mode != climate::CLIMATE_MODE_OFF;
-  if (state.flags.power_state != power_state) {
-    ESP_LOGD(TAG, "New power state %s", ONOFF(power_state));
-    state.flags.power_state = power_state;
+  st.fan_speed = fan_speed;
+  if (this->state_.fan_speed != st.fan_speed) {
+    ESP_LOGD(TAG, "New fan speed %u", fan_speed);
   }
 
-  if (this->led_) {
-    auto led_state = this->led_->state;
-    if (state.flags.led_state != led_state) {
-      ESP_LOGD(TAG, "New led state %s", ONOFF(led_state));
-      state.flags.led_state = led_state;
-    }
+  st.target_temperature = target_temperature;
+  if (this->state_.target_temperature != st.target_temperature) {
+    ESP_LOGD(TAG, "New target temperature %d", st.target_temperature);
   }
 
-  if (this->buzzer_) {
-    auto sound_state = this->buzzer_->state;
-    if (state.flags.sound_state != sound_state) {
-      ESP_LOGD(TAG, "New sound state %s", ONOFF(sound_state));
-      state.flags.sound_state = sound_state;
-    }
+  st.flags.sound_state = buzzer;
+  if (this->state_.flags.sound_state != st.flags.sound_state) {
+    ESP_LOGD(TAG, "New sound state %s", ONOFF(st.flags.sound_state));
   }
 
-  auto heater_state = this->mode == climate::CLIMATE_MODE_HEAT;
-  if (state.flags.heater_state != heater_state) {
-    ESP_LOGD(TAG, "New heater state %s", ONOFF(heater_state));
-    state.flags.heater_state = heater_state;
+  st.flags.led_state = led;
+  if (this->state_.flags.led_state != st.flags.led_state) {
+    ESP_LOGD(TAG, "New led state %s", ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(state, 1);
+  this->api_->write_state(st, 1);
 }
 
 }  // namespace tion

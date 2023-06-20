@@ -65,9 +65,9 @@ UNIT_DAYS = "d"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
-TionSwitch = tion_ns.class_("TionSwitch", switch.Switch)
+TionBuzzerSwitchT = tion_ns.class_("TionBuzzerSwitch", switch.Switch)
 TionVPortApi = tion_ns.class_("TionVPortApi")
-TionResetFilterButton = tion_ns.class_("TionResetFilterButton", button.Button)
+TionResetFilterButtonT = tion_ns.class_("TionResetFilterButton", button.Button)
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -106,7 +106,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                 cv.GenerateID(CONF_TION_API_ID): cv.declare_id(TionVPortApi),
                 cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
                 cv.Optional(CONF_BUZZER): switch.switch_schema(
-                    TionSwitch,
+                    TionBuzzerSwitchT.template(tion_class),
                     icon="mdi:volume-high",
                     entity_category=ENTITY_CATEGORY_CONFIG,
                     block_inverted=True,
@@ -147,7 +147,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                 ),
                 cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
                 cv.Optional(CONF_RESET_FILER): button.button_schema(
-                    TionResetFilterButton.template(tion_class),
+                    TionResetFilterButtonT.template(tion_class),
                     icon="mdi:air-filter",
                     entity_category=ENTITY_CATEGORY_CONFIG,
                 ),

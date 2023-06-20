@@ -103,4 +103,19 @@ int8_t step_to_accuracy_decimals(float step);
 
 using std::to_string;
 
+/// Helper class to easily give an object a parent of type \p T.
+template<typename T> class Parented {
+ public:
+  Parented() {}
+  Parented(T *parent) : parent_(parent) {}
+
+  /// Get the parent of this object.
+  T *get_parent() const { return parent_; }
+  /// Set the parent of this object.
+  void set_parent(T *parent) { parent_ = parent; }
+
+ protected:
+  T *parent_{nullptr};
+};
+
 }  // namespace esphome

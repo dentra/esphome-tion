@@ -18,6 +18,7 @@ from esphome.const import (
 )
 from .. import tion  # pylint: disable=relative-beyond-top-level
 
+TionLedSwitchT = tion.tion_ns.class_("TionLedSwitch", switch.Switch)
 
 CONF_LED = "led"
 CONF_HEATER_POWER = "heater_power"
@@ -31,7 +32,7 @@ def tion_lt_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
         {
             cv.Optional(CONF_LED): switch.SWITCH_SCHEMA.extend(
                 {
-                    cv.GenerateID(): cv.declare_id(tion.TionSwitch),
+                    cv.GenerateID(): cv.declare_id(TionLedSwitchT.template(tion_class)),
                     cv.Optional(CONF_ICON, default="mdi:led-on"): cv.icon,
                     cv.Optional(
                         CONF_ENTITY_CATEGORY, default=ENTITY_CATEGORY_CONFIG

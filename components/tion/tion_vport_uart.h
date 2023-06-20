@@ -62,7 +62,7 @@ class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, frame_spec
       this->defer([this, datav]() {
         auto frame = reinterpret_cast<const frame_spec_t *>(datav.data());
         if (this->await_frame_) {
-          ESP_LOGW("tion_vport_uart", "prev frame is not recv, may lead to crash");
+          ESP_LOGW("tion_vport_uart", "prev frame was not recv, may lead to crash");
         }
         super_t::write(*frame, datav.size());
         arch_feed_wdt();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "esphome/core/helpers.h"
+
 #include "../tion-api/tion-api.h"
 
 #include "tion_component.h"
@@ -57,21 +59,8 @@ template<class tion_api_type, class tion_state_type> class TionClimateComponent 
     }
   }
 
-  void write_climate_state() override {
-    // softuart при нескольких последовательных записях в это же время начинает прием и тут же валится в wdt
-    // запланируем *только одно* изменение состояния
-    this->set_timeout("write_climate_state", 500, [this]() {
-      this->publish_state();
-      // write state only after first stave received (target temp will not nan)
-      if (!std::isnan(this->current_temperature)) {
-        this->flush_state();
-      }
-    });
-  }
-
   virtual void update_state() = 0;
   virtual void dump_state() const = 0;
-  virtual void flush_state() = 0;
 
   void on_state(const tion_state_type &state, const uint32_t request_id) {
     this->state_ = state;
@@ -94,25 +83,22 @@ class TionBoostTimeNumber : public number::Number {
   virtual void control(float value) { this->publish_state(value); }
 };
 
-class TionSwitch : public switch_::Switch {
+template<class parent_t> class TionBuzzerSwitch : public Parented<parent_t>, public switch_::Switch {
  public:
-  explicit TionSwitch(TionClimate *parent) : parent_(parent) {}
-  void write_state(bool state) override {
-    this->publish_state(state);
-    this->parent_->write_climate_state();
-  }
-
- protected:
-  TionClimate *parent_;
+  explicit TionBuzzerSwitch(parent_t *parent) : Parented<parent_t>(parent) {}
+  void write_state(bool state) override { this->parent_->control_buzzer_state(state); }
 };
 
-template<class parent_t> class TionResetFilterButton : public button::Button {
+template<class parent_t> class TionLedSwitch : public Parented<parent_t>, public switch_::Switch {
  public:
-  explicit TionResetFilterButton(parent_t *parent) : parent_(parent) {}
-  void press_action() override { this->parent_->reset_filter(); }
+  explicit TionLedSwitch(parent_t *parent) : Parented<parent_t>(parent) {}
+  void write_state(bool state) override { this->parent_->control_led_state(state); }
+};
 
- protected:
-  parent_t *parent_;
+template<class parent_t> class TionResetFilterButton : public Parented<parent_t>, public button::Button {
+ public:
+  explicit TionResetFilterButton(parent_t *parent) : Parented<parent_t>(parent) {}
+  void press_action() override { this->parent_->reset_filter(); }
 };
 
 }  // namespace tion
