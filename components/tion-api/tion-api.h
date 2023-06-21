@@ -67,16 +67,17 @@ class TionApiBaseWriter {
   writer_type writer_{};
 };
 
-template<class state_type> class TionApiBase : public TionApiBaseWriter {
+template<class state_type_t> class TionApiBase : public TionApiBaseWriter {
   /// Callback listener for response to request_dev_status command request.
   using on_dev_status_type = etl::delegate<void(const tion_dev_status_t &dev_status)>;
   /// Callback listener for response to request_state command request.
-  using on_state_type = etl::delegate<void(const state_type &state, uint32_t request_id)>;
+  using on_state_type = etl::delegate<void(const state_type_t &state, uint32_t request_id)>;
   /// Callback listener for response to send_heartbeat command request.
   using on_heartbeat_type = etl::delegate<void(uint8_t unknown)>;
 
-
  public:
+  using state_type = state_type_t;
+
   using on_ready_type = etl::delegate<void()>;
   /// Set callback listener for monitoring ready state
   void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = std::move(on_ready); }

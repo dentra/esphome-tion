@@ -39,7 +39,9 @@ class TionClimateComponentBase : public TionClimate, public TionComponent {
  * @param tion_api_type TionApi implementation.
  * @param tion_state_type Tion state struct.
  */
-template<class tion_api_type, class tion_state_type> class TionClimateComponent : public TionClimateComponentBase {
+template<class tion_api_type> class TionClimateComponent : public TionClimateComponentBase {
+  using tion_state_type = typename tion_api_type::state_type;
+
   static_assert(std::is_base_of<dentra::tion::TionApiBase<tion_state_type>, tion_api_type>::value,
                 "tion_api_type is not derived from TionApiBase");
 
