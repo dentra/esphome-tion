@@ -61,8 +61,8 @@ void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
 }
 #endif
 
-void Tion4s::update_state() {
-  const auto &state = this->state_;
+void Tion4s::update_state(const tion4s_state_t &state) {
+  this->dump_state(state);
 
   this->max_fan_speed_ = state.max_fan_speed;
 
@@ -105,8 +105,7 @@ void Tion4s::update_state() {
   }
 }
 
-void Tion4s::dump_state() const {
-  const auto &state = this->state_;
+void Tion4s::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);

@@ -27,8 +27,8 @@ class Tion3s : public TionClimateComponent<TionApi3s, tion3s_state_t> {
     }
   }
 
-  void update_state() override;
-  void dump_state() const override;
+  void update_state(const tion3s_state_t &state) override;
+  void dump_state(const tion3s_state_t &state) const;
 
   void reset_filter() {
     this->api_->reset_filter(this->state_);

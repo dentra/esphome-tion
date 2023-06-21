@@ -8,8 +8,9 @@ static const char *const TAG = "tion_lt";
 
 void TionLt::dump_config() { this->dump_settings(TAG, "Tion Lite"); }
 
-void TionLt::update_state() {
-  const auto &state = this->state_;
+void TionLt::update_state(const tionlt_state_t &state) {
+  this->dump_state(state);
+
   this->max_fan_speed_ = state.max_fan_speed;
 
   this->mode = state.flags.power_state
@@ -46,8 +47,7 @@ void TionLt::update_state() {
   }
 }
 
-void TionLt::dump_state() const {
-  const auto &state = this->state_;
+void TionLt::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state         : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp      : %d", state.current_temperature);

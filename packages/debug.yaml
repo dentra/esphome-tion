@@ -13,7 +13,7 @@ logger:
     sensor: INFO
     select: INFO
     number: INFO
-    climate: INFO
+    climate: DEBUG
     text_sensor: INFO
     binary_sensor: INFO
     esp32_ble_tracker: INFO

@@ -44,8 +44,8 @@ class Tion4s : public TionClimateComponent<TionApi4s, tion4s_state_t> {
 #ifdef TION_ENABLE_SCHEDULER
   void on_time(const time_t time, const uint32_t request_id);
 #endif
-  void update_state() override;
-  void dump_state() const override;
+  void update_state(const tion4s_state_t &state) override;
+  void dump_state(const tion4s_state_t &state) const;
 
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 

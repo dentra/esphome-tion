@@ -59,15 +59,11 @@ template<class tion_api_type, class tion_state_type> class TionClimateComponent 
     }
   }
 
-  virtual void update_state() = 0;
-  virtual void dump_state() const = 0;
+  virtual void update_state(const tion_state_type &state) = 0;
 
   void on_state(const tion_state_type &state, const uint32_t request_id) {
+    this->update_state(state);
     this->state_ = state;
-    this->update_state();
-#if TION_LOG_LEVEL >= TION_LOG_LEVEL_VERBOSE
-    this->dump_state();
-#endif
   }
 
   void on_dev_status(const dentra::tion::tion_dev_status_t &status) { this->update_dev_status_(status); }
