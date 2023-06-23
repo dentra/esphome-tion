@@ -18,10 +18,11 @@ packages:
       - packages/wifi_signal.yaml
       - packages/uptime.yaml
       - packages/restart.yaml
+      ## Common configuration settings.
+      - packages/base.yaml
       # change to esp32_s2.yaml to use with ESP32-S2 chip
       - packages/esp32_s3.yaml
       # - packages/debug.yaml
-      - packages/base.yaml
 
 # Enable Home Assistant API connection.
 api:

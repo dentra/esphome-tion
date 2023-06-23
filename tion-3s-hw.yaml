@@ -33,14 +33,14 @@ packages:
       - packages/restart.yaml
       ## Optional switch to temporary disable OTA to reduce CPU usage.
       - packages/otax.yaml
-      ## Change to packages/esp32.yaml if you want to use ESP32.
-      - packages/esp8266.yaml
       ## Uncomment to enable uart proxy support
       # - packages/tion_3s_proxy.yaml
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
-      ## Do not remove or comment or move next line from the end
+      ## Common configuration settings.
       - packages/base.yaml
+      ## Change to packages/esp32.yaml if you want to use ESP32.
+      - packages/esp8266.yaml
 
 # Enable Home Assistant API connection.
 api:

@@ -30,12 +30,13 @@ packages:
       # - packages/persistent.yaml
       ## Uncomment next line to enable additional connect switch useful for debugging.
       # - packages/connect.yaml
-      ## Uncomment next line to enable additional debug information.
-      # - packages/debug.yaml
+      ## Common configuration settings.
+      - packages/base.yaml
+      - packages/esp32_ble.yaml
       ## Uncomment next line to if you wish to compile via ESP IDF.
       # - packages/idf.yaml
-      - packages/esp32_ble.yaml
-      - packages/base.yaml
+      ## Uncomment next line to enable additional debug information.
+      # - packages/debug.yaml
 
 # Enable Home Assistant API connection.
 api:

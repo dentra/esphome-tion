@@ -21,9 +21,9 @@ packages:
       - packages/wifi_signal.yaml
       - packages/uptime.yaml
       - packages/restart.yaml
+      - packages/base.yaml
       - packages/esp32_ble.yaml
       # - packages/debug.yaml
-      - packages/base.yaml
 
 # Enable Home Assistant API connection.
 api:
