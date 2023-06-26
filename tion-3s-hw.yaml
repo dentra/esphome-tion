@@ -35,12 +35,12 @@ packages:
       - packages/otax.yaml
       ## Uncomment to enable uart proxy support
       # - packages/tion_3s_proxy.yaml
-      ## Uncomment next line to enable additional debug information.
-      # - packages/debug.yaml
-      ## Common configuration settings.
+      ## Common configuration settings. Do not comment or move.
       - packages/base.yaml
       ## Change to packages/esp32.yaml if you want to use ESP32.
       - packages/esp8266.yaml
+      ## Uncomment next line to enable additional debug information.
+      # - packages/debug.yaml
 
 # Enable Home Assistant API connection.
 api:

@@ -18,11 +18,17 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: master # cant use substitutions here
     files:
+      ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
+      ## Enable additional Uptime sensor. Comment next line to disable.
       - packages/uptime.yaml
+      ## Uncomment next line to enable additional restart button.
       - packages/restart.yaml
+      ## Common configuration settings. Do not comment or move.
       - packages/base.yaml
+      ## ESP32 configuration settings. Do not comment or move.
       - packages/esp32_ble.yaml
+      ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
 
 # Enable Home Assistant API connection.
