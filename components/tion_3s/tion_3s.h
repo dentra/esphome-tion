@@ -32,9 +32,10 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
 
   void reset_filter() {
     this->api_->reset_filter(this->state_);
-    if (this->vport_type_ == TionVPortType::VPORT_UART) {
-      this->defer([this]() { this->api_->request_command4(); });
-    }
+    // TODO do tests and remove
+    // if (this->vport_type_ == TionVPortType::VPORT_UART) {
+    //   this->defer([this]() { this->api_->request_command4(); });
+    // }
   }
 
   int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }

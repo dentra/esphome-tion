@@ -46,8 +46,4 @@ async def to_code(config):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
-    # FIXME check and replace/remove
-    # api = await cg.get_variable(config[tion.CONF_TION_API_ID])
-    # prt = await vport.vport_get_var(config)
-    # cg.add(prt.set_api(api))
     await tion.setup_sensor(config, CONF_PRODUCTIVITY, var.set_airflow_counter)
