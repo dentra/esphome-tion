@@ -57,7 +57,7 @@ void Tion3s::update_state(const tion3s_state_t &state) {
   // additional request after state response
   if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
     // call on next loop
-    this->defer([this]() { this->api_->request_after_state(); });
+    this->defer([this]() { this->api_->request_command4(); });
   }
 }
 

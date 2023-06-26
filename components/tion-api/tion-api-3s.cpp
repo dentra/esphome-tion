@@ -18,9 +18,9 @@ enum : uint8_t {
   FRAME_TYPE_STATE_GET = 0x1,
   // write state
   FRAME_TYPE_STATE_SET = 0x2,
-  //
+  // ???
   FRAME_TYPE_FILTER_TIME_SET = 0x3,
-  // reset filter??
+  // ??? reset filter
   FRAME_TYPE_FILTER_TIME_RESET = 0x4,
   // send sevice mode flags
   FRAME_TYPE_SRV_MODE_SET = 0x5,
@@ -160,7 +160,7 @@ bool TionApi3s::reset_filter(const tion3s_state_t &state) const {
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), set);
 }
 
-bool TionApi3s::request_after_state() const {
+bool TionApi3s::request_command4() const {
   TION_LOGD(TAG, "Request[] Command 4");
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
 }

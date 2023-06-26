@@ -23,7 +23,7 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
   void on_ready() {
     TionClimateComponent::on_ready();
     if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
-      this->api_->request_after_state();
+      this->api_->request_command4();
     }
   }
 
@@ -33,7 +33,7 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
   void reset_filter() {
     this->api_->reset_filter(this->state_);
     if (this->vport_type_ == TionVPortType::VPORT_UART) {
-      this->defer([this]() { this->api_->request_after_state(); });
+      this->defer([this]() { this->api_->request_command4(); });
     }
   }
 
