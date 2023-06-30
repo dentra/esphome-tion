@@ -10,6 +10,7 @@ static const char *const TAG = "tion_3s";
 void Tion3s::dump_config() {
   this->dump_settings(TAG, "Tion 3S");
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
+  this->dump_presets(TAG);
 }
 
 void Tion3s::update_state(const tion3s_state_t &state) {

@@ -79,7 +79,20 @@ void TionClimate::set_fan_speed_(uint8_t fan_speed) {
   }
 }
 
+void TionClimate::dump_presets(const char *TAG) const {
 #ifdef TION_ENABLE_PRESETS
+  ESP_LOGCONFIG(TAG, "    Presets:");
+  for (size_t i = 1; i < sizeof(this->presets_) / sizeof(this->presets_[0]); i++) {
+    ESP_LOGCONFIG(TAG, "      %s: fan speed=%u, target temperature=%d, mode=%s",
+                  LOG_STR_ARG(climate::climate_preset_to_string(static_cast<climate::ClimatePreset>(i))),
+                  this->presets_[i].fan_speed, this->presets_[i].target_temperature,
+                  LOG_STR_ARG(climate::climate_mode_to_string(this->presets_[i].mode)));
+  }
+#endif
+}
+
+#ifdef TION_ENABLE_PRESETS
+
 bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
   ESP_LOGD(TAG, "Enable preset %s", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
   if (preset == climate::CLIMATE_PRESET_BOOST) {

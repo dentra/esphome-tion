@@ -6,7 +6,10 @@ namespace tion {
 
 static const char *const TAG = "tion_lt";
 
-void TionLt::dump_config() { this->dump_settings(TAG, "Tion Lite"); }
+void TionLt::dump_config() {
+  this->dump_settings(TAG, "Tion Lite");
+  this->dump_presets(TAG);
+}
 
 void TionLt::update_state(const tionlt_state_t &state) {
   this->dump_state(state);

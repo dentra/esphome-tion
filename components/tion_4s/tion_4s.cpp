@@ -14,6 +14,7 @@ static const char *const TAG = "tion_4s";
 void Tion4s::dump_config() {
   this->dump_settings(TAG, "Tion 4S");
   LOG_SWITCH("  ", "Recirculation", this->recirculation_);
+  this->dump_presets(TAG);
 }
 
 #ifdef TION_ENABLE_SCHEDULER
