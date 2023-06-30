@@ -4,6 +4,8 @@ substitutions:
   project_version: 2023.06-master
   # project git source
   project_source: github://dentra/esphome-tion@$project_branch
+  # project source refresh interval
+  project_source_refresh: 12h
   # project idenitfier
   project_id: tion
   # node name
@@ -43,4 +45,4 @@ external_components:
     components: [web_server, web_server_idf, web_server_base, captive_portal]
     refresh: 1d
   - source: $project_source
-    refresh: 12h
+    refresh: $project_source_refresh
