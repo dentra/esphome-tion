@@ -25,6 +25,8 @@ packages:
       - packages/base.yaml
       # change to esp32_s2.yaml to use with ESP32-S2 chip
       - packages/esp32_s3.yaml
+      ## Uncomment next line to enable monitor internal ESP temperature.
+      # - packages/esp32_temperature.yaml
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
 

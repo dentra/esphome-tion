@@ -1,0 +1,4 @@
+sensor:
+  - platform: internal_temperature
+    name: "ESP Temperature"
+    entity_category: diagnostic
