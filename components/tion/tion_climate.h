@@ -14,7 +14,9 @@ struct tion_preset_t {
   int8_t target_temperature;
   climate::ClimateMode mode;
 };
-#endif
+#endif  // TION_ENABLE_PRESETS
+
+#define TION_MAX_TEMPERATURE 25
 
 class TionClimate : public climate::Climate {
  public:
@@ -30,23 +32,30 @@ class TionClimate : public climate::Climate {
    * @param fan_speed fan speed to update. set to 0 for skip update.
    * @param target_temperature target temperature to update. set to 0 for skip update.
    */
-  void update_preset(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed,
+  bool update_preset(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed,
                      int8_t target_temperature) {
     if (preset > climate::CLIMATE_PRESET_NONE && preset <= climate::CLIMATE_PRESET_ACTIVITY) {
-      if (mode != climate::CLIMATE_MODE_AUTO) {
+      if (mode == climate::CLIMATE_MODE_HEAT || mode == climate::CLIMATE_MODE_FAN_ONLY ||
+          mode == climate::CLIMATE_MODE_OFF) {
         this->presets_[preset].mode = mode;
       }
-      if (fan_speed != 0) {
+      if (fan_speed > 0 && fan_speed <= this->max_fan_speed_) {
         this->presets_[preset].fan_speed = fan_speed;
       }
-      if (target_temperature != 0) {
+      if (target_temperature > 0 && target_temperature <= TION_MAX_TEMPERATURE) {
         this->presets_[preset].target_temperature = target_temperature;
       }
-      this->supported_presets_.insert(preset);
+      if (this->presets_[preset].mode == climate::CLIMATE_MODE_OFF) {
+        this->supported_presets_.erase(preset);
+      } else {
+        this->supported_presets_.insert(preset);
+      }
+      return true;
     }
+    return false;
   }
-  void dump_presets(const char*TAG) const;
-#endif
+  void dump_presets(const char *TAG) const;
+#endif  // TION_ENABLE_PRESETS
  protected:
   uint8_t max_fan_speed_ = 6;
   void set_fan_speed_(uint8_t fan_speed);
@@ -82,7 +91,7 @@ class TionClimate : public climate::Climate {
   };
 
   std::set<climate::ClimatePreset> supported_presets_{};
-#endif
+#endif  // TION_ENABLE_PRESETS
 };
 
 }  // namespace tion
