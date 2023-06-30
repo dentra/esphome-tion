@@ -72,6 +72,20 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
   void control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer, bool led,
                      tion4s_state_t::GatePosition gate_position) const;
 
+  optional<int8_t> get_pcb_ctl_temperature() const {
+    if (this->state_.is_initialized()) {
+      return this->state_.pcb_ctl_temperature;
+    }
+    return {};
+  }
+
+  optional<int8_t> get_pcb_pwr_temperature() const {
+    if (this->state_.is_initialized()) {
+      return this->state_.pcb_pwr_temperature;
+    }
+    return {};
+  }
+
  protected:
   switch_::Switch *recirculation_{};
 #ifdef TION_ENABLE_PRESETS
