@@ -5,7 +5,7 @@ ARG esphome_version
 ARG apt_deps
 ARG pip_deps
 ARG workspace_dir
-ARG pio_dir=${workspace_dir}/.esphome/platformio
+ARG pio_dir=${workspace_dir}/.platformio
 
 RUN export DEBIAN_FRONTEND=noninteractive \
  && apt-get update \

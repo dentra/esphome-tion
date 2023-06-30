@@ -108,7 +108,7 @@ sedi "s/include_dir = ./include_dir = .\nlibdeps_dir=.esphome\/libdeps\nbuild_di
 
 cpp_json=.vscode/c_cpp_properties.json
 
-export PLATFORMIO_CORE_DIR=".esphome/platformio"
+# export PLATFORMIO_CORE_DIR=".platformio"
 export PLATFORMIO_LIB_DIR="/none"
 export PLATFORMIO_GLOBALLIB_DIR=""
 

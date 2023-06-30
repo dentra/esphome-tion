@@ -3,7 +3,7 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2023.5.5",
+      "esphome_version": "2023.6.2",
       // additional APT dependicies
       "apt_deps": "bash-completion less libmbedtls-dev gdb ccache cmake jq",
       // additional PIP dependicies
@@ -58,8 +58,7 @@
           "**/.git/objects/**": true,
           "**/.git/subtree-cache/**": true,
           "**/.esphome/**": true,
-          ".pio/**": true,
-          "esphome/**": true
+          ".platformio/**": true
         },
         "files.associations": {
           "**/.vscode/*.json": "jsonc"
@@ -94,5 +93,6 @@
   "mounts": [
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/.esphome,type=volume",
     "source=vscode-${containerWorkspaceFolderBasename},target=${containerWorkspaceFolder}/config/.esphome,type=volume",
+    "source=vscode-platformio,target=${containerWorkspaceFolder}/.platformio,type=volume"
   ]
 }
