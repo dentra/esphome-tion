@@ -25,8 +25,8 @@ void TionClimateComponentBase::setup() {
   if (this->rtc_.load(this->presets_)) {
     ESP_LOGD(TAG, "Presets loaded");
   }
-  // this->register_service(&TionClimateComponentBase::update_preset_service_, "update_preset",
-  //  {"preset", "mode", "fan_speed", "target_temperature"});
+  this->register_service(&TionClimateComponentBase::update_preset_service_, "update_preset",
+                         {"preset", "mode", "fan_speed", "target_temperature"});
 #endif  // TION_ENABLE_PRESETS_WITH_API
 
   auto state = this->restore_state_();
@@ -37,8 +37,28 @@ void TionClimateComponentBase::setup() {
 
 #ifdef TION_ENABLE_PRESETS
 #ifdef USE_API
-void TionClimateComponentBase::update_preset_service_(climate::ClimatePreset preset, climate::ClimateMode mode,
-                                                      uint8_t fan_speed, int8_t target_temperature) {
+void TionClimateComponentBase::update_preset_service_(std::string preset_str, std::string mode_str, int fan_speed,
+                                                      int target_temperature) {
+  preset_str = str_upper_case(preset_str);
+  climate::ClimatePreset preset = climate::ClimatePreset::CLIMATE_PRESET_NONE;
+  for (int i = preset; i < climate::ClimatePreset::CLIMATE_PRESET_ACTIVITY; i++) {
+    auto p = static_cast<climate::ClimatePreset>(i);
+    if (preset_str == LOG_STR_ARG(climate::climate_preset_to_string(p))) {
+      preset = p;
+      break;
+    }
+  }
+
+  mode_str = str_upper_case(mode_str);
+  climate::ClimateMode mode = climate::ClimateMode::CLIMATE_MODE_OFF;
+  for (int i = mode; i < climate::ClimateMode::CLIMATE_MODE_OFF; i++) {
+    auto m = static_cast<climate::ClimateMode>(i);
+    if (mode_str == LOG_STR_ARG(climate::climate_mode_to_string(m))) {
+      mode = m;
+      break;
+    }
+  }
+
   if (this->update_preset(preset, mode, fan_speed, target_temperature)) {
     if (this->rtc_.save(this->presets_)) {
       ESP_LOGD(TAG, "Preset %s was updated", LOG_STR_ARG(climate::climate_preset_to_string(preset)));

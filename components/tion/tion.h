@@ -47,8 +47,7 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
     return this->boost_time_->state * 60;
   }
 
-  void update_preset_service_(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed,
-                              int8_t target_temperature);
+  void update_preset_service_(std::string preset, std::string mode, int fan_speed, int target_temperature);
   ESPPreferenceObject rtc_;
 #endif
 };  // namespace tion
