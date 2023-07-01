@@ -19,17 +19,15 @@ static const char *const ASH_BOOST = "tion-boost";
 void TionClimateComponentBase::setup() {
   TionComponent::setup();
 
-#ifdef TION_ENABLE_PRESETS
-#ifdef USE_API
+#ifdef TION_ENABLE_PRESETS_WITH_API
   constexpr auto presets_count = (sizeof(this->presets_) / sizeof(this->presets_[0]));
   this->rtc_ = global_preferences->make_preference<tion_preset_t[presets_count]>(this->get_object_id_hash());
   if (this->rtc_.load(this->presets_)) {
     ESP_LOGD(TAG, "Presets loaded");
   }
-  this->register_service(&TionClimateComponentBase::update_preset, "update_preset",
-                         {"preset", "mode", "fan_speed", "target_temperature"});
-#endif  // USE_API
-#endif  // TION_ENABLE_PRESETS
+  // this->register_service(&TionClimateComponentBase::update_preset_service_, "update_preset",
+  //  {"preset", "mode", "fan_speed", "target_temperature"});
+#endif  // TION_ENABLE_PRESETS_WITH_API
 
   auto state = this->restore_state_();
   if (state.has_value()) {

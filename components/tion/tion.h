@@ -1,11 +1,14 @@
 #pragma once
 
 #include "esphome/core/helpers.h"
-#ifdef TION_ENABLE_PRESETS
-#ifdef USE_API
+
+#if defined(TION_ENABLE_PRESETS) && defined(USE_API)
+#define TION_ENABLE_PRESETS_WITH_API
+#endif
+
+#ifdef TION_ENABLE_PRESETS_WITH_API
 #include "esphome/components/api/custom_api_device.h"
-#endif  // USE_API
-#endif  // TION_ENABLE_PRESETS
+#endif  // TION_ENABLE_PRESETS_WITH_API
 
 #include "../tion-api/tion-api.h"
 
@@ -16,15 +19,13 @@
 namespace esphome {
 namespace tion {
 
-class TionClimateComponentBase : public TionClimate,
-                                 public TionComponent
-#ifdef TION_ENABLE_PRESETS
-#ifdef USE_API
-    ,
-                                 public api::CustomAPIDevice
-#endif  // USE_API
-#endif  // TION_ENABLE_PRESETS
-{
+#ifdef TION_ENABLE_PRESETS_WITH_API
+using TionApiDevice = api::CustomAPIDevice;
+#else
+class TionApiDevice {};
+#endif  // TION_ENABLE_PRESETS_WITH_API
+
+class TionClimateComponentBase : public TionClimate, public TionComponent, public TionApiDevice {
  public:
   void setup() override;
   void dump_settings(const char *TAG, const char *component) const;
@@ -45,9 +46,10 @@ class TionClimateComponentBase : public TionClimate,
     }
     return this->boost_time_->state * 60;
   }
+
   void update_preset_service_(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed,
                               int8_t target_temperature);
-                              ESPPreferenceObject rtc_;
+  ESPPreferenceObject rtc_;
 #endif
 };  // namespace tion
 
