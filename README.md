@@ -1,36 +1,44 @@
 [![Version][version-shield]][version]
 [![License][license-shield]][license]
 [![ESPHome release][esphome-release-shield]][esphome-release]
-[![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
 [![Telegram][telegram-shield]][telegram]
-[![Support author][donate-me-shield]][donate-me]
+[![Support author][donate-tinkoff-shield]][donate-tinkoff]
+[![Support author][donate-boosty-shield]][donate-boosty]
+[![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
 
-[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2022.10.1&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2023.7.0&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2022.9&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.6&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
 [open-in-vscode]: https://open.vscode.dev/dentra/esphome-tion
 
-[telegram-shield]: https://img.shields.io/static/v1?label=+&message=Телеграм&logo=telegram
+[telegram-shield]: https://img.shields.io/static/v1?label=Поддержка&message=Телеграм&logo=telegram&color=blue
 [telegram]: https://t.me/esphome_tion
 
-[donate-me-shield]: https://img.shields.io/static/v1?label=+&message=Поддержать+автора
-[donate-me]: https://www.tinkoff.ru/cf/3dZPaLYDBAI
+[donate-tinkoff-shield]: https://img.shields.io/static/v1?label=Поддержать+автора&message=Тинькофф&color=yellow
+[donate-tinkoff]: https://www.tinkoff.ru/cf/3dZPaLYDBAI
+
+[donate-boosty-shield]: https://img.shields.io/static/v1?label=Поддержать+автора&message=Boosty&color=red
+[donate-boosty]: https://boosty.to/dentra
 
 # Tion
 
-English version of this page is available [here](README.md).
+English version of this page is available via [google translate](https://github-com.translate.goog/dentra/esphome-tion?_x_tr_sl=ru&_x_tr_tl=en&_x_tr_hl=en&_x_tr_pto=wapp).
 
-Компонет ESPHome для управления бризерами `Tion 4S`, `Tion Lite` и `Tion 3S` с помощью ESP32 через BLE протокол и бризером `Tion 4S` посредсвом прямого подключения через интеграционный разъем с помощью стика ESP32/ESP8266 (как уточняйте в чате [Telegram][telegram]).
+Компонет ESPHome для управления бризерами `Tion` с помощью ESP в вашей системе управления умным домом. Поддерживаются Home Asistant [API](https://esphome.io/components/api.html) и [MQTT](https://esphome.io/components/mqtt.html).
 
-На текущий момент компонент построен на платформе `climate` и позволяет контролировать:
+Поддерживаемые модели и протоколы:
+ - Tion 4S (BLE/UART)
+ - Tion Lite (BLE)
+ - Tion 3S (BLE/UART)
 
+Компонент построен на платформе [climate](https://esphome.io/components/climate/index.html) и позволяет контролировать:
 * Включение/Выключение
 * Включение/Выключение обогрева
 * Выставление целевой температуры нагрева
@@ -40,23 +48,41 @@ English version of this page is available [here](README.md).
 * Переключение режима приток/рециркуляция (только для 4S)
 * Переключение режима приток/рециркуляция/смешанный (только для 3S)
 * Поддержка пресетов
-* Настройка времени пресета `Турбо`
+* Настройка времени пресета "Турбо"
+* Конфигурация пресетов сервисом
+* Сброс ресурса фильтров
 
 Дополнительно осуществляется мониториг следующих показателей:
-
 * Температура снаружи
 * Температура внутри
 * Текущая потребяемая мощность нагревателя (только для 4S и Lite)
 * Оставшееся время жизни фильтров
 * Индикация о требущейся замене/очистке фильтра (только для 4S и Lite)
-* Оставшееся время работы режима `Турбо`
+* Оставшееся время работы режима "Турбо"
 * Счетчик прошедшего воздуха (только для 4S и Lite)
 * Текущая производительностью бризера (только для 3S)
 * Версия програмного обеспечения бризера
 
+
+>
+> ### **ВНИМАНИЕ: Все что вы делаете вы делаете только на свой страх и риск!**
+>
+
+## Подключение
+
+Доступно два вида подключения BLE и UART.
+
+BLE подключение работает так же как ваш пульт или официальное приложение. UART подключние различно для разных моделей бризеров.
+
+Для UART-подключения `Tion 4S` используется штатный интеграционный разъем бризера. Рекомендуется приобрести стик [Lilygo T-Dongle S3](https://github.com/Xinyuan-LilyGO/T-Dongle-S3), проще всего это сделать на Aliexpress. Или собрать самостоятельно на базе ESP32.
+
+Для UART-подключения `Tion 3S` использется штатный, но доступный только при небольшой разборке бризера, разъем. Здесь рекумендуется использовать любую ESP8266 (ESP32 не тянет по питанию) используя [схему подключения](hardware/3s/NodeMCUv3-Tion.pdf). При использовании ESP-01S не будет доступено подключение штатного модуля BLE, в остальных случаях подключение будет полным.
+
+По вопросам подключению велкам в чат [Telegram][telegram].
+
 ## Прошивка
 
-Вы можете загрузить и использовать примеры конфигурации для [Tion 4S](tion-4s.yaml), [Tion Lite](tion-lt.yaml) и [Tion 3S](tion-3s.yaml), все файлы с подробным описанием (на английском)
+Вы можете загрузить и использовать примеры конфигурации для [Tion 4S BLE](tion-4s.yaml), [Tion 4S UART](tion-4s-hw.yaml), [Tion Lite BLE](tion-lt.yaml), [Tion 3S BLE](tion-3s.yaml) и [Tion 3S UART](tion-3s-hw.yaml), все файлы с подробным описанием (на английском)
 
 * Скачайте конфигурацию соотствующую модели вашего бризера
 * Измените секцию `substitutions` согласно вашим предпочтениям
@@ -65,19 +91,19 @@ English version of this page is available [here](README.md).
 * Запустите сборку и прошивку вашей конфигурации
 * Добавьте появившееся устройство в Home Assistant
 
-## Использование
+## Использование в режиме BLE
 После [прошивки](#прошивка) и перед первым использование вам необъходимо ввести свой бризер в режим сопряжения (см. инструкцию) и только потом включать ESP.
 
 Дополнительно, только для `Tion 3S`, необходимо нажать кнопку `Pair` в Home Assistant.
 
->
-> ### **ВНИМАНИЕ: Все что вы делаете вы делаете только на свой страх и риск!**
->
+## Использование в режиме UART
+
+Никаких дополнительный действий не требуется.
 
 ## Планы на будущее
 
-* Поддержка физического подключения через интеграционный разъем для `Tion 4S` (так же исследую возможность для 3S и Lite).
-* Управление сбросом ресура фильтров
+* ~~Поддержка физического подключения через интеграционный разъем для `Tion 4S`~~ (так же исследую возможность для ~~3S и~~ Lite)
+* ~~Управление сбросом ресура фильтров~~
 * Автоматическое управление притоком от внешнего датчика CO2
 
 ## Решение проблем и поддержка новых функций
@@ -88,7 +114,7 @@ English version of this page is available [here](README.md).
 
 ## Ваша благодарность
 
-Если этот проект оказался для вас полезен и/или вы хотите поддержать его дальнейше развитие, то всегда можно оставить вашу благодарность [переводом на карту](https://www.tinkoff.ru/cf/3dZPaLYDBAI).
+Если этот проект оказался для вас полезен и/или вы хотите поддержать его дальнейше развитие, то всегда можно оставить вашу благодарность [переводом на карту](https://www.tinkoff.ru/cf/3dZPaLYDBAI) или [подпиской](https://boosty.to/dentra).
 
 ## Коммерческое использование
 
