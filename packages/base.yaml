@@ -1,7 +1,7 @@
 substitutions:
-  project_branch: master
+  project_branch: 2023.7.0
   # project version
-  project_version: 2023.06-master
+  project_version: $project_branch
   # project git source
   project_source: github://dentra/esphome-tion@$project_branch
   # project source refresh interval
@@ -24,7 +24,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version ($framework_type)"
-  min_version: "2023.5.5" # can't use substitutions here
+  min_version: "2023.6.2" # can't use substitutions here
 
 preferences:
   flash_write_interval: 10min

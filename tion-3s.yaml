@@ -16,12 +16,12 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: master # cant use substitutions here
+    ref: 2023.7.0 # cant use substitutions here
     files:
-      ## Enable additional RSSI signal sensor. Comment next line to disable.
-      - packages/rssi_signal.yaml
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
+      ## Enable additional BLE RSSI sensor. Comment next line to disable.
+      - packages/rssi_signal.yaml
       ## Enable additional Uptime sensor. Comment next line to disable.
       - packages/uptime.yaml
       ## Uncomment next line to enable additional restart button.

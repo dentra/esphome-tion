@@ -13,8 +13,6 @@ substitutions:
   proxy_tx_pin: GPIO10
   proxy_rx_pin: GPIO09
   proxy_baud_rate: "115200"
-  # component version
-  project_version: master
   # wifi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
@@ -23,7 +21,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: master # cant use substitutions here
+    ref: 2023.7.0 # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
