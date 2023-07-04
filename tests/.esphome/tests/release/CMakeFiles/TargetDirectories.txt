@@ -1,6 +1,0 @@
-/workspaces/esphome-tion/tests/.esphome/tests/release/CMakeFiles/rebuild_cache.dir
-/workspaces/esphome-tion/tests/.esphome/tests/release/CMakeFiles/edit_cache.dir
-/workspaces/esphome-tion/tests/.esphome/tests/release/CMakeFiles/tests.dir
-/workspaces/esphome-tion/tests/.esphome/tests/release/_cloak/CMakeFiles/rebuild_cache.dir
-/workspaces/esphome-tion/tests/.esphome/tests/release/_cloak/CMakeFiles/edit_cache.dir
-/workspaces/esphome-tion/tests/.esphome/tests/release/_cloak/CMakeFiles/cloak.dir
