@@ -254,7 +254,7 @@ bool TionApi4s::request_time(const uint32_t request_id) const {
 }
 
 bool TionApi4s::request_timer(const uint8_t timer_id, const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Timer", request_id);
+  TION_LOGD(TAG, "Request[%u] Timer %u", request_id, timer_id);
   struct {
     uint8_t timer_id;
   } PACKED timer{.timer_id = timer_id};
