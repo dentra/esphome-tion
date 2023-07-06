@@ -298,7 +298,7 @@ async def setup_tion_core(config):
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")
 
     if config[CONF_EANBLE_MODE_HEAT_COOL]:
-        cg.add_define("USE_TION_MODE_HEAT_COOL")
+        cg.add_define("USE_TION_CLIMATE_MODE_HEAT_COOL")
 
     return var
 
