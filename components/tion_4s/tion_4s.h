@@ -12,7 +12,12 @@ using TionApi4s = dentra::tion::TionApi4s;
 
 class Tion4s : public TionClimateComponent<TionApi4s> {
  public:
-  explicit Tion4s(TionApi4s *api) : TionClimateComponent(api) {}
+  explicit Tion4s(TionApi4s *api) : TionClimateComponent(api) {
+#ifdef TION_ENABLE_SCHEDULER
+    this->api_->on_timer.set<Tion4s, &Tion4s::on_timer>(*this);
+    this->api_->on_timers_state.set<Tion4s, &Tion4s::on_timers_state>(*this);
+#endif
+  }
 
   void dump_config() override;
 
@@ -43,6 +48,9 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
 #endif
 #ifdef TION_ENABLE_SCHEDULER
   void on_time(const time_t time, const uint32_t request_id);
+  void on_timer(const uint8_t timer_id, const tion4s_timer_t &timers_state, uint32_t request_id);
+  void on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id);
+  void dump_timers() const;
 #endif
   void update_state(const tion4s_state_t &state) override;
   void dump_state(const tion4s_state_t &state) const;

@@ -213,5 +213,30 @@ void Tion4s::cancel_boost_() {
 }
 #endif
 
+#ifdef TION_ENABLE_SCHEDULER
+
+void Tion4s::dump_timers() const {
+  this->api_->request_timers();
+  this->api_->request_timers_state();
+}
+
+void Tion4s::on_timer(const uint8_t timer_id, const tion4s_timer_t &timers_state, uint32_t request_id) {
+  ESP_LOGI(TAG, "Timer[%u] at %02u:%02u is %s", timer_id, timers_state.schedule.hours, timers_state.schedule.minutes,
+           ONOFF(timers_state.timer_state));
+  // ESP_LOGI(TAG, "  MON %s", ONOFF(timers_state.schedule.monday));
+  // ESP_LOGI(TAG, "  TUE %s", ONOFF(timers_state.schedule.tuesday));
+  // ESP_LOGI(TAG, "  WED %s", ONOFF(timers_state.schedule.wednesday));
+  // ESP_LOGI(TAG, "  THU %s", ONOFF(timers_state.schedule.thursday));
+  // ESP_LOGI(TAG, "  FRI %s", ONOFF(timers_state.schedule.friday));
+  // ESP_LOGI(TAG, "  SAT %s", ONOFF(timers_state.schedule.saturday));
+  // ESP_LOGI(TAG, "  SUN %s", ONOFF(timers_state.schedule.sunday));
+}
+
+void Tion4s::on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id) {
+  for (int i = 0; i < tion4s_timers_state_t::TIMERS_COUNT; i++) {
+    ESP_LOGI(TAG, "Timer[%d] state %s", i, ONOFF(timers_state.timers[i].active));
+  }
+}
+#endif
 }  // namespace tion
 }  // namespace esphome
