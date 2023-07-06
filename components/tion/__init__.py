@@ -60,7 +60,7 @@ CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
 CONF_RESET_FILER = "reset_filter"
-CONF_EANBLE_MODE_HEAT_COOL = "eanble_mode_heat_cool"
+CONF_EANBLE_MODE_HEAT_COOL = "enable_mode_heat_cool"
 
 UNIT_DAYS = "d"
 
