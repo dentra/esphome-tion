@@ -182,7 +182,7 @@ void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
     ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(st, 1);
+  this->api_->write_state(st);
 }
 
 #ifdef TION_ENABLE_PRESETS
@@ -209,7 +209,7 @@ void Tion4s::cancel_boost_() {
     TionClimateComponent::cancel_boost_();
     return;
   }
-  this->api_->set_turbo(0, 1);
+  this->api_->set_turbo(0);
 }
 #endif
 

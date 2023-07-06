@@ -134,16 +134,16 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   bool request_dev_status() const;
   bool request_state() const;
 
-  bool write_state(const tion4s_state_t &state, const uint32_t request_id = 0) const;
-  bool reset_filter(const tion4s_state_t &state, const uint32_t request_id = 0) const;
-  bool factory_reset(const tion4s_state_t &state, const uint32_t request_id = 0) const;
+  bool write_state(const tion4s_state_t &state, const uint32_t request_id = 1) const;
+  bool reset_filter(const tion4s_state_t &state, const uint32_t request_id = 1) const;
+  bool factory_reset(const tion4s_state_t &state, const uint32_t request_id = 1) const;
 
 #ifdef TION_ENABLE_PRESETS
   bool request_turbo() const;
 
   /// Callback listener for response to request_turbo command request.
   on_turbo_type on_turbo{};
-  bool set_turbo(const uint16_t time, const uint32_t request_id = 0) const;
+  bool set_turbo(const uint16_t time, const uint32_t request_id = 1) const;
 #endif
 
 #ifdef TION_ENABLE_HEARTBEAT
@@ -151,20 +151,20 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
 #endif
 
 #ifdef TION_ENABLE_SCHEDULER
-  bool request_time(const uint32_t request_id = 0) const;
+  bool request_time(const uint32_t request_id = 1) const;
 
   /// Callback listener for response to request_time command request.
   on_time_type on_time{};
   bool set_time(const time_t time, const uint32_t request_id) const;
 
-  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 0) const;
+  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 1) const;
 
   /// Callback listener for response to request_timer command request.
   on_timer_type on_timer{};
   /// Request all timers.
-  bool request_timers(const uint32_t request_id = 0) const;
+  bool request_timers(const uint32_t request_id = 1) const;
 
-  bool request_timers_state(const uint32_t request_id = 0) const;
+  bool request_timers_state(const uint32_t request_id = 1) const;
   /// Callback listener for response to request_timers_state command request.
   on_timers_state_type on_timers_state{};
 

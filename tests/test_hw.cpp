@@ -249,7 +249,7 @@ bool test_hw_uart() {
   api.request_state();
   cloak::check_data("request_state", uart, "3A.07.00.32.32.7F.87");
 
-  api.request_time();
+  api.request_time(0);
   cloak::check_data("request_state", uart, "3A.0B.00.32.36.00.00.00.00.B0.E0");
 
   return res;
@@ -278,7 +278,7 @@ bool test_hw_ble() {
   res &= cloak::check_data("send_heartbeat", io, "80.0C.00.3A.AD.32.39.01.00.00.00.88.08");
   api.request_state();
   res &= cloak::check_data("request_state", io, "80.0C.00.3A.AD.32.32.01.00.00.00.64.F7");
-  api.request_time();
+  api.request_time(0);
   res &= cloak::check_data("request_time", io, "80.10.00.3A.AD.32.36.01.00.00.00.00.00.00.00.B9.37");
 
   io.connect();

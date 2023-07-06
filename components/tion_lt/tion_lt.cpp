@@ -124,7 +124,7 @@ void TionLt::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
     ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(st, 1);
+  this->api_->write_state(st);
 }
 
 }  // namespace tion
