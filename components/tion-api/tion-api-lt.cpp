@@ -2,11 +2,12 @@
 
 #include "log.h"
 #include "utils.h"
-#include "tion-api-lt.h"
-#include "internal/tion-api-lt.h"
+#include "tion-api-lt-internal.h"
 
 namespace dentra {
 namespace tion {
+
+using namespace tion_lt;
 
 static const char *const TAG = "tion-api-lt";
 

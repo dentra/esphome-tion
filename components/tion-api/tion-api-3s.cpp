@@ -2,15 +2,14 @@
 
 #include "log.h"
 #include "utils.h"
-#include "tion-api-3s.h"
-#include "internal/tion-api-3s.h"
+#include "tion-api-3s-internal.h"
 
 namespace dentra {
 namespace tion {
 
+using namespace tion_3s;
+
 static const char *const TAG = "tion-api-3s";
-
-
 
 uint16_t TionApi3s::get_state_type() const { return FRAME_TYPE_RSP(FRAME_TYPE_STATE_GET); }
 

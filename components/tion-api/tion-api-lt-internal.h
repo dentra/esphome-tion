@@ -2,12 +2,12 @@
 
 #include <cstdint>
 
-#include "../tion-api-lt.h"
+#include "tion-api-lt.h"
 
 namespace dentra {
-namespace tion {
+namespace tion_lt {
 
-  enum {
+enum {
   FRAME_TYPE_STATE_SET = 0x1230,  // set no save req
   FRAME_TYPE_STATE_RSP = 0x1231,
   FRAME_TYPE_STATE_REQ = 0x1232,
@@ -41,11 +41,11 @@ struct tionlt_state_set_t {
   uint8_t gate_position;
   int8_t target_temperature;
   uint8_t fan_speed;
-  tionlt_state_t::button_presets_t button_presets;
+  tion::tionlt_state_t::button_presets_t button_presets;
   uint16_t filter_time;
   uint8_t test_type;
 
-  static tionlt_state_set_t create(const tionlt_state_t &state) {
+  static tionlt_state_set_t create(const tion::tionlt_state_t &state) {
     tionlt_state_set_t st_set{};
 
     st_set.filter_time = state.counters.filter_time;
@@ -68,5 +68,5 @@ struct tionlt_state_set_t {
 
 #pragma pack(pop)
 
-}
+}  // namespace tion_lt
 }  // namespace dentra

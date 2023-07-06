@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-#include "../tion-api-4s.h"
+#include "tion-api-4s.h"
 
 namespace dentra {
-namespace tion {
+namespace tion_4s {
 
 enum {
   FRAME_TYPE_STATE_SET = 0x3230,  // no save req
@@ -65,7 +65,7 @@ struct tion4s_state_set_t {
     bool ma_auto : 1;
     uint8_t reserved : 6;
   };
-  tion4s_state_t::GatePosition gate_position;
+  tion::tion4s_state_t::GatePosition gate_position;
   // температрура нагревателя.
   int8_t target_temperature;
   uint8_t fan_speed;
@@ -73,7 +73,7 @@ struct tion4s_state_set_t {
   // TODO возможно должен/может быть uint16_t
   uint32_t filter_time;
 
-  static tion4s_state_set_t create(const tion4s_state_t &state) {
+  static tion4s_state_set_t create(const tion::tion4s_state_t &state) {
     tion4s_state_set_t st_set{};
 
     st_set.power_state = state.flags.power_state;
@@ -105,5 +105,5 @@ struct tion4s_errors_t {
 
 #pragma pack(pop)
 
-}  // namespace tion
+}  // namespace tion4s
 }  // namespace dentra

@@ -2,10 +2,10 @@
 
 #include <cstdint>
 
-#include "../tion-api-3s.h"
+#include "tion-api-3s.h"
 
 namespace dentra {
-namespace tion {
+namespace tion_3s {
 
 #define FRAME_TYPE(typ, cmd) ((cmd << 8) | (typ & 0xFF))
 #define FRAME_TYPE_REQ(cmd) FRAME_TYPE(FRAME_MAGIC_REQ, cmd)
@@ -46,7 +46,7 @@ struct tion3s_state_set_t {
   uint8_t fan_speed;                                       // 0
   int8_t target_temperature;                               // 1
   uint8_t /*tion3s_state_t::GatePosition*/ gate_position;  // 2
-  tion3s_state_t::Flags flags;                             // 3-4
+  tion::tion3s_state_t::Flags flags;                       // 3-4
   struct {
     bool save : 1;
     bool reset : 1;
@@ -59,7 +59,7 @@ struct tion3s_state_set_t {
 
   //        0  1  2  3  4  5  6  7  8  9
   // 3D:02 01 17 02 0A.01 02.00.00 00 00 00:00:00:00:00:00:00:5A
-  static tion3s_state_set_t create(const tion3s_state_t &state) {
+  static tion3s_state_set_t create(const tion::tion3s_state_t &state) {
     tion3s_state_set_t st_set{};
 
     st_set.fan_speed = state.fan_speed;
@@ -74,5 +74,5 @@ struct tion3s_state_set_t {
 
 #pragma pack(pop)
 
-}  // namespace tion
+}  // namespace tion_3s
 }  // namespace dentra

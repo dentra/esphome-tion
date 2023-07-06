@@ -1,7 +1,5 @@
 #include "esphome/components/climate/climate_mode.h"
-
-#include "../components/tion-api/tion-api-4s.h"
-#include "../components/tion-api/internal/tion-api-4s.h"
+#include "../components/tion-api/tion-api-4s-internal.h"
 #include "../components/tion_4s/tion_4s.h"
 #include "../components/tion_4s_uart/tion_4s_uart.h"
 
@@ -13,6 +11,7 @@ DEFINE_TAG;
 using namespace esphome;
 using namespace esphome::tion;
 using namespace dentra::tion;
+using namespace dentra::tion_4s;
 
 using Tion4sBleVPortApiTest = TionVPortApi<Tion4sBleIOTest::frame_spec_type, TionApi4s>;
 // using Tion4sUartVPortApiTest = TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s>;
