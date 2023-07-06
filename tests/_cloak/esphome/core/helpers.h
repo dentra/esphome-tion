@@ -118,4 +118,7 @@ template<typename T> class Parented {
   T *parent_{nullptr};
 };
 
+std::string str_lower_case(const std::string &str);
+std::string str_upper_case(const std::string &str);
+
 }  // namespace esphome

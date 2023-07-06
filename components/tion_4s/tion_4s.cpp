@@ -139,15 +139,22 @@ void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
                            bool led, tion4s_state_t::GatePosition gate_position) const {
   tion4s_state_t st = this->state_;
 
-  st.flags.power_state = mode != climate::CLIMATE_MODE_OFF;
-  if (this->state_.flags.power_state != st.flags.power_state) {
-    ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    st.flags.power_state = true;
+  } else if (mode == climate::CLIMATE_MODE_OFF) {
+    st.flags.power_state = false;
+  } else {
+    st.flags.power_state = true;
+
+    st.flags.heater_mode = mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
+                                                              : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
+    if (this->state_.flags.heater_mode != st.flags.heater_mode) {
+      ESP_LOGD(TAG, "New heater mode %s -> %s", ONOFF(this->state_.flags.heater_mode), ONOFF(st.flags.heater_mode));
+    }
   }
 
-  st.flags.heater_mode = mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
-                                                            : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
-  if (this->state_.flags.heater_mode != st.flags.heater_mode) {
-    ESP_LOGD(TAG, "New heater mode %s -> %s", ONOFF(this->state_.flags.heater_mode), ONOFF(st.flags.heater_mode));
+  if (this->state_.flags.power_state != st.flags.power_state) {
+    ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
   }
 
   st.fan_speed = fan_speed;

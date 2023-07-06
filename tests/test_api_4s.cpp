@@ -1,4 +1,7 @@
+#include "esphome/components/climate/climate_mode.h"
+
 #include "../components/tion-api/tion-api-4s.h"
+#include "../components/tion-api/internal/tion-api-4s.h"
 #include "../components/tion_4s/tion_4s.h"
 #include "../components/tion_4s_uart/tion_4s_uart.h"
 
@@ -7,22 +10,62 @@
 
 DEFINE_TAG;
 
+using namespace esphome;
+using namespace esphome::tion;
 using namespace dentra::tion;
 
-using Tion4sBleVPortApiTest = esphome::tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, dentra::tion::TionApi4s>;
-using Tion4sUartVPortApiTest = esphome::tion::TionVPortApi<Tion4sUartIOTest::frame_spec_type, dentra::tion::TionApi4s>;
+using Tion4sBleVPortApiTest = TionVPortApi<Tion4sBleIOTest::frame_spec_type, TionApi4s>;
+// using Tion4sUartVPortApiTest = TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s>;
 
-class Tion4sBleVPortTest : public esphome::tion::Tion4sBleVPort {
+class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s> {
  public:
-  Tion4sBleVPortTest(Tion4sBleIOTest *io) : esphome::tion::Tion4sBleVPort(io) {}
+  Tion4sUartVPortApiTest(Tion4sUartVPort *vport) : TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s>(vport) {
+    this->set_writer(
+        TionApi4s::writer_type::create<Tion4sUartVPortApiTest, &Tion4sUartVPortApiTest::test_write_>(*this));
+
+    this->state_.max_fan_speed = 6;
+    this->state_.fan_speed = 1;
+    this->state_.counters.work_time = 0xFFFF;
+  }
+
+ protected:
+  tion4s_state_t state_{};
+  bool test_write_(uint16_t type, const void *data, size_t size) {
+    struct req_t {
+      uint32_t request_id;
+      tion4s_state_set_t data;
+    } __attribute__((__packed__));
+
+    if (type == FRAME_TYPE_STATE_SET && size == sizeof(req_t)) {
+      auto req = static_cast<const req_t *>(data);
+
+      this->state_.flags.power_state = req->data.power_state;
+      this->state_.flags.heater_mode = req->data.heater_mode;
+      if (req->data.fan_speed > 0 && req->data.fan_speed <= this->state_.max_fan_speed) {
+        this->state_.fan_speed = req->data.fan_speed;
+      }
+      this->state_.target_temperature = req->data.target_temperature;
+      this->state_.gate_position = req->data.gate_position;
+      // add others
+
+      this->on_state(this->state_, req->request_id);
+    }
+    return this->write_frame_(type, data, size);
+  }
+};
+
+class Tion4sBleVPortTest : public Tion4sBleVPort {
+ public:
+  Tion4sBleVPortTest(Tion4sBleIOTest *io) : Tion4sBleVPort(io) {}
   uint16_t get_state_type() const { return this->state_type_; }
 };
 
-class Tion4sTest : public esphome::tion::Tion4s {
+class Tion4sTest : public Tion4s {
  public:
-  Tion4sTest(dentra::tion::TionApi4s *api) : esphome::tion::Tion4s(api) {}
+  Tion4sTest(TionApi4s *api) : Tion4s(api) { this->state_.counters.work_time = 0xFFFF; }
   // void enable_preset(climate::ClimatePreset preset) { this->enable_preset_(preset); }
   // void cancel_preset(climate::ClimatePreset preset) { this->cancel_preset_(preset); }
+  tion4s_state_t &state() { return this->state_; };
 };
 
 /*
@@ -90,7 +133,7 @@ bool test_presets() {
 
   esphome::uart::UARTComponent uart;
   Tion4sUartIOTest io(&uart);
-  esphome::tion::Tion4sUartVPort vport(&io);
+  Tion4sUartVPort vport(&io);
   Tion4sUartVPortApiTest api(&vport);
   Tion4sTest comp(&api);
 
@@ -100,16 +143,45 @@ bool test_presets() {
 
   call.set_preset(esphome::climate::ClimatePreset::CLIMATE_PRESET_HOME);
   comp.control(call);
-  comp.publish_state();
 
   call.set_preset(esphome::climate::ClimatePreset::CLIMATE_PRESET_NONE);
   comp.control(call);
-  comp.publish_state();
 
-  cloak::check_data("target_temperature > 0", comp.target_temperature > 0, true);
+  res &= cloak::check_data("target_temperature > 0", comp.target_temperature > 0, true);
+
+  return res;
+}
+
+bool test_heat_cool() {
+  bool res = true;
+
+  esphome::uart::UARTComponent uart;
+  Tion4sUartIOTest io(&uart);
+  Tion4sUartVPort vport(&io);
+  Tion4sUartVPortApiTest api(&vport);
+  Tion4sTest comp(&api);
+
+  cloak::setup_and_loop({&vport, &comp});
+
+  for (auto mode : {climate::ClimateMode::CLIMATE_MODE_FAN_ONLY, climate::ClimateMode::CLIMATE_MODE_HEAT}) {
+    auto call = comp.make_call();
+
+    call.set_mode(mode);
+    comp.control(call);
+
+    call.set_mode(esphome::climate::ClimateMode::CLIMATE_MODE_OFF);
+    comp.control(call);
+
+    call.set_mode(esphome::climate::ClimateMode::CLIMATE_MODE_HEAT_COOL);
+    comp.control(call);
+
+    auto str = std::string("climate mode ") + LOG_STR_ARG(climate::climate_mode_to_string(mode));
+    res &= cloak::check_data(str, comp.mode == mode, true);
+  }
 
   return res;
 }
 
 REGISTER_TEST(test_api_4s);
 REGISTER_TEST(test_presets);
+REGISTER_TEST(test_heat_cool);

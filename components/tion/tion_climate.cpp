@@ -1,4 +1,5 @@
 #include "esphome/core/log.h"
+#include "esphome/core/defines.h"
 
 #include "tion_climate.h"
 
@@ -15,6 +16,9 @@ climate::ClimateTraits TionClimate::traits() {
   traits.set_visual_temperature_step(1.0f);
   traits.set_supported_modes({
       climate::CLIMATE_MODE_OFF,
+#ifdef USE_TION_CLIMATE_MODE_HEAT_COOL
+      climate::CLIMATE_MODE_HEAT_COOL,
+#endif
       climate::CLIMATE_MODE_HEAT,
       climate::CLIMATE_MODE_FAN_ONLY,
   });
@@ -52,7 +56,7 @@ void TionClimate::control(const climate::ClimateCall &call) {
     this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  uint8_t fan_speed = this->fan_mode_to_speed_(*this->custom_fan_mode);
+  uint8_t fan_speed = this->fan_mode_to_speed_(this->custom_fan_mode);
   if (call.get_custom_fan_mode().has_value()) {
     fan_speed = this->fan_mode_to_speed_(call.get_custom_fan_mode());
     ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
@@ -81,9 +85,9 @@ void TionClimate::set_fan_speed_(uint8_t fan_speed) {
 
 void TionClimate::dump_presets(const char *TAG) const {
 #ifdef TION_ENABLE_PRESETS
-  ESP_LOGCONFIG(TAG, "    Presets:");
+  ESP_LOGCONFIG(TAG, "  Presets:");
   for (size_t i = 1; i < sizeof(this->presets_) / sizeof(this->presets_[0]); i++) {
-    ESP_LOGCONFIG(TAG, "      %s: fan speed=%u, target temperature=%d, mode=%s",
+    ESP_LOGCONFIG(TAG, "    %s: fan speed=%u, target temperature=%d, mode=%s",
                   LOG_STR_ARG(climate::climate_preset_to_string(static_cast<climate::ClimatePreset>(i))),
                   this->presets_[i].fan_speed, this->presets_[i].target_temperature,
                   LOG_STR_ARG(climate::climate_mode_to_string(this->presets_[i].mode)));

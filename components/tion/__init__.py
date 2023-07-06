@@ -60,6 +60,7 @@ CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
 CONF_RESET_FILER = "reset_filter"
+CONF_EANBLE_MODE_HEAT_COOL = "eanble_mode_heat_cool"
 
 UNIT_DAYS = "d"
 
@@ -151,6 +152,7 @@ def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
                     icon="mdi:air-filter",
                     entity_category=ENTITY_CATEGORY_CONFIG,
                 ),
+                cv.Optional(CONF_EANBLE_MODE_HEAT_COOL, default=False): cv.boolean,
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -294,6 +296,9 @@ async def setup_tion_core(config):
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")
+
+    if config[CONF_EANBLE_MODE_HEAT_COOL]:
+        cg.add_define("USE_TION_MODE_HEAT_COOL")
 
     return var
 

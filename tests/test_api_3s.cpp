@@ -176,8 +176,8 @@ bool test_uart_3s_proxy() {
 
   cloak::setup_and_loop({&vport, &comp, &proxy});
   for (int i = 0; i < 5; i++) {
-    vport.loop();
     proxy.loop();
+    vport.loop();
   }
 
   res &= cloak::check_data("inp data", uart_inp, out);

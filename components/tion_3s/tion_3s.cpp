@@ -93,7 +93,19 @@ void Tion3s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
                            uint8_t gate_position) const {
   tion3s_state_t st = this->state_;
 
-  st.flags.power_state = mode != climate::CLIMATE_MODE_OFF;
+  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    st.flags.power_state = true;
+  } else if (mode == climate::CLIMATE_MODE_OFF) {
+    st.flags.power_state = false;
+  } else {
+    st.flags.power_state = true;
+
+    st.flags.heater_state = mode == climate::CLIMATE_MODE_HEAT;
+    if (this->state_.flags.heater_state != st.flags.heater_state) {
+      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
+    }
+  }
+
   if (this->state_.flags.power_state != st.flags.power_state) {
     ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
   }
@@ -118,16 +130,11 @@ void Tion3s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
     ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
   }
 
-  st.flags.heater_state = mode == climate::CLIMATE_MODE_HEAT;
-  if (this->state_.flags.heater_state != st.flags.heater_state) {
-    ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
-
-    // режим вентиляция изменить на обогрев можно только через выключение
-    if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
-      st.flags.power_state = false;
-      this->api_->write_state(st);
-      st.flags.power_state = true;
-    }
+  // режим вентиляция изменить на обогрев можно только через выключение
+  if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
+    st.flags.power_state = false;
+    this->api_->write_state(st);
+    st.flags.power_state = true;
   }
 
   this->api_->write_state(st);
