@@ -84,7 +84,7 @@ void TionLt::dump_state(const tionlt_state_t &state) const {
 }
 
 void TionLt::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           bool led) const {
+                           bool led) {
   tionlt_state_t st = this->state_;
 
   if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
@@ -124,7 +124,7 @@ void TionLt::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
     ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(st);
+  this->api_->write_state(st, ++this->request_id_);
 }
 
 }  // namespace tion

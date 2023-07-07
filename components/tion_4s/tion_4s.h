@@ -48,36 +48,36 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
   void on_time(const time_t time, const uint32_t request_id);
   void on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id);
   void on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id);
-  void dump_timers() const;
-  void reset_timers() const;
+  void dump_timers();
+  void reset_timers();
 #endif
   void update_state(const tion4s_state_t &state) override;
   void dump_state(const tion4s_state_t &state) const;
 
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
-  void control_buzzer_state(bool state) const {
+  void control_buzzer_state(bool state) {
     this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, state, this->get_led_(),
                         this->recirculation_->state);
   }
 
-  void control_led_state(bool state) const {
+  void control_led_state(bool state) {
     this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(), state,
                         this->recirculation_->state);
   }
 
-  void control_recirculation_state(bool state) const {
+  void control_recirculation_state(bool state) {
     this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
                         this->get_led_(), state);
   }
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) const override {
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override {
     this->control_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_led_(),
                         this->recirculation_->state);
   }
 
   void control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer, bool led,
-                     bool recirculation) const;
+                     bool recirculation);
 
   optional<int8_t> get_pcb_ctl_temperature() const {
     if (this->state_.is_initialized()) {
@@ -94,6 +94,7 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
   }
 
  protected:
+  uint32_t request_id_{};
   switch_::Switch *recirculation_{};
 #ifdef TION_ENABLE_PRESETS
   bool enable_boost_() override;

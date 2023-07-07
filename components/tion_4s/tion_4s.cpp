@@ -124,7 +124,7 @@ void Tion4s::dump_state(const tion4s_state_t &state) const {
 }
 
 void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           bool led, bool recirculation) const {
+                           bool led, bool recirculation) {
   tion4s_state_t st = this->state_;
 
   if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
@@ -170,7 +170,7 @@ void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
     ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(st);
+  this->api_->write_state(st, ++this->request_id_);
 }
 
 #ifdef TION_ENABLE_PRESETS
@@ -184,7 +184,7 @@ bool Tion4s::enable_boost_() {
     return false;
   }
 
-  this->api_->set_turbo(boost_time, 1);
+  this->api_->set_turbo(boost_time, ++this->request_id_);
   if (this->boost_time_left_) {
     this->boost_time_left_->publish_state(100);
   }
@@ -197,7 +197,7 @@ void Tion4s::cancel_boost_() {
     TionClimateComponent::cancel_boost_();
     return;
   }
-  this->api_->set_turbo(0);
+  this->api_->set_turbo(0, ++this->request_id_);
 }
 #endif
 
@@ -247,16 +247,18 @@ void Tion4s::on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t
   }
 }
 
-void Tion4s::dump_timers() const {
-  this->api_->request_time();
-  this->api_->request_timers();
-  this->api_->request_timers_state();
+void Tion4s::dump_timers() {
+  this->api_->request_time(++this->request_id_);
+  for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
+    this->api_->request_timer(timer_id, ++this->request_id_);
+  }
+  this->api_->request_timers_state(++this->request_id_);
 }
 
-void Tion4s::reset_timers() const {
+void Tion4s::reset_timers() {
   tion4s_timer_t timer{};
   for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
-    this->api_->write_timer(timer_id, timer);
+    this->api_->write_timer(timer_id, timer, ++this->request_id_);
   }
 }
 #endif
