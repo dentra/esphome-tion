@@ -14,6 +14,7 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
  public:
   explicit Tion4s(TionApi4s *api) : TionClimateComponent(api) {
 #ifdef TION_ENABLE_SCHEDULER
+    this->api_->on_time.set<Tion4s, &Tion4s::on_time>(*this);
     this->api_->on_timer.set<Tion4s, &Tion4s::on_timer>(*this);
     this->api_->on_timers_state.set<Tion4s, &Tion4s::on_timers_state>(*this);
 #endif
@@ -32,13 +33,13 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
   }
 #endif
 
-// #ifdef TION_ENABLE_SCHEDULER
-//   void on_ready() {
-//     TionClimateComponent::on_ready();
-//     // scheduler specific init commands
-//     this->api_->request_time();
-//   }
-// #endif
+  // #ifdef TION_ENABLE_SCHEDULER
+  //   void on_ready() {
+  //     TionClimateComponent::on_ready();
+  //     // scheduler specific init commands
+  //     this->api_->request_time();
+  //   }
+  // #endif
 
 #ifdef TION_ENABLE_PRESETS
   void on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id);
