@@ -16,7 +16,7 @@ enum : uint8_t {
 struct tion3s_state_t {
   enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
   uint8_t fan_speed : 4;
-  uint8_t /*GatePosition*/ gate_position : 4;
+  GatePosition gate_position : 4;
   // настроенная температура подогрева
   int8_t target_temperature;
   struct Flags {

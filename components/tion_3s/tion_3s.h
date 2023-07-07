@@ -45,8 +45,9 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
                         this->get_gate_position_());
   }
 
-  void control_air_intake(uint8_t air_intake) const {
-    this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(), air_intake);
+  void control_gate_position(tion3s_state_t::GatePosition gate_position) const {
+    this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+                        gate_position);
   }
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) const override {
@@ -54,18 +55,18 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
   }
 
   void control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                     uint8_t gate_position) const;
+                     tion3s_state_t::GatePosition gate_position) const;
 
  protected:
   select::Select *air_intake_{};
 
   bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
 
-  uint8_t get_gate_position_() const {
+  tion3s_state_t::GatePosition get_gate_position_() const {
     if (this->air_intake_) {
       auto active_index = this->air_intake_->active_index();
       if (active_index.has_value()) {
-        return *active_index;
+        return static_cast<tion3s_state_t::GatePosition>(*active_index);
       }
     }
     return this->state_.gate_position;
@@ -75,7 +76,9 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
 class Tion3sAirIntakeSelect : public select::Select {
  public:
   explicit Tion3sAirIntakeSelect(Tion3s *parent) : parent_(parent) {}
-  void control(const std::string &value) override { this->parent_->control_air_intake(*this->index_of(value)); }
+  void control(const std::string &value) override {
+    this->parent_->control_gate_position(static_cast<tion3s_state_t::GatePosition>(*this->index_of(value)));
+  }
 
  protected:
   Tion3s *parent_;

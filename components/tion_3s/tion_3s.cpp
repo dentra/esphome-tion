@@ -90,7 +90,7 @@ void Tion3s::dump_state(const tion3s_state_t &state) const {
 }
 
 void Tion3s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           uint8_t gate_position) const {
+                           tion3s_state_t::GatePosition gate_position) const {
   tion3s_state_t st = this->state_;
 
   if (mode == climate::CLIMATE_MODE_HEAT_COOL) {

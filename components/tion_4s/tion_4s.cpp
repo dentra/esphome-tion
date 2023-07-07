@@ -102,7 +102,7 @@ void Tion4s::update_state(const tion4s_state_t &state) {
     this->filter_time_left_->publish_state(state.counters.filter_days());
   }
   if (this->recirculation_) {
-    this->recirculation_->publish_state(state.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION);
+    this->recirculation_->publish_state(state.gate_position != tion4s_state_t::GATE_POSITION_INFLOW);
   }
 }
 
@@ -136,7 +136,7 @@ void Tion4s::dump_state(const tion4s_state_t &state) const {
 }
 
 void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           bool led, tion4s_state_t::GatePosition gate_position) const {
+                           bool led, bool recirculation) const {
   tion4s_state_t st = this->state_;
 
   if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
@@ -167,7 +167,7 @@ void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
     ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, st.target_temperature);
   }
 
-  st.gate_position = gate_position;
+  st.gate_position = recirculation ? tion4s_state_t::GATE_POSITION_RECIRCULATION : tion4s_state_t::GATE_POSITION_INFLOW;
   if (this->state_.gate_position != st.gate_position) {
     ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
   }

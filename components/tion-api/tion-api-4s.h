@@ -35,37 +35,44 @@ struct tion4s_state_t {
     // сотояние обогрева
     bool heater_state : 1;
     // режим обогрева
-    uint8_t /*HeaterMode*/ heater_mode : 1;
+    HeaterMode heater_mode : 1;
     //
     uint8_t last_com_source : 1;
     // предупреждение о необходимости замены фильтра
     bool filter_warnout : 1;
     // мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW
-    uint8_t /*HeaterPresent*/ heater_present : 3;
+    HeaterPresent heater_present : 3;
     // MagicAir control
     bool ma : 1;
     // MagicAir auto control
     bool ma_auto : 1;
     //
     bool active_timer : 1;
-    // зарезервированно
+    // зарезервированно.
     uint8_t reserved : 3;
   } flags;
+  // settings: gate position (0 - inflow, 1 - recirculation).
   GatePosition gate_position;
-  // теператрура нагрева
+  // settings: target temperature.
   int8_t target_temperature;
-  // скорость вентилятора 0-5
+  // settings: fan speed 1-6.
   uint8_t fan_speed;
+  // sensor: outdoor temperature.
   int8_t outdoor_temperature;
+  // sensor: current temperature.
   int8_t current_temperature;
+  // sensor: ctrl pcb temperature.
   int8_t pcb_ctl_temperature;
+  // sensor: pwr pcb temperature.
   int8_t pcb_pwr_temperature;
+  // counters.
   tion_state_counters_t counters;
+  // errors.
   uint32_t errors;
-  // fan speed limit
+  // fan speed limit.
   uint8_t max_fan_speed;
-  // Heater power in %
-  // use heater_power() to get actual consumption in W
+  // Heater power in %.
+  // use heater_power() to get actual consumption in W.
   uint8_t heater_var;
 
   float heater_power() const;
@@ -86,7 +93,7 @@ struct tion4s_timers_state_t {
   } timers[TIMERS_COUNT];
 };
 
-/// Timer settings.
+/// Timer settings. Used for get and set operations.
 struct tion4s_timer_t {
   struct {
     bool monday : 1;
@@ -104,7 +111,8 @@ struct tion4s_timer_t {
     bool power_state : 1;
     bool sound_state : 1;
     bool led_state : 1;
-    bool heater_state : 1;
+    tion4s_state_t::HeaterMode heater_mode : 1;
+    // on/off timer.
     bool timer_state : 1;
     uint8_t reserved : 3;
   };
