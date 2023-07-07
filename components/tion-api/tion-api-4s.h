@@ -165,12 +165,14 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   on_time_type on_time{};
   bool set_time(const time_t time, const uint32_t request_id) const;
 
-  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 1) const;
-
   /// Callback listener for response to request_timer command request.
   on_timer_type on_timer{};
+  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 1) const;
+
   /// Request all timers.
   bool request_timers(const uint32_t request_id = 1) const;
+
+  bool write_timer(const uint8_t timer_id, const tion4s_timer_t &timer, const uint32_t request_id = 1) const;
 
   bool request_timers_state(const uint32_t request_id = 1) const;
   /// Callback listener for response to request_timers_state command request.

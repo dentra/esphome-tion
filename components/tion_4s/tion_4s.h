@@ -32,25 +32,23 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
   }
 #endif
 
-#ifdef TION_ENABLE_SCHEDULER
-  void on_ready() {
-    TionClimateComponent::on_ready();
-
-    // scheduler specific init commands
-    this->api_->request_time();
-    // this->api_->request_timers();
-    // this->api_->request_timers_state();
-  }
-#endif
+// #ifdef TION_ENABLE_SCHEDULER
+//   void on_ready() {
+//     TionClimateComponent::on_ready();
+//     // scheduler specific init commands
+//     this->api_->request_time();
+//   }
+// #endif
 
 #ifdef TION_ENABLE_PRESETS
   void on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id);
 #endif
 #ifdef TION_ENABLE_SCHEDULER
   void on_time(const time_t time, const uint32_t request_id);
-  void on_timer(const uint8_t timer_id, const tion4s_timer_t &timers_state, uint32_t request_id);
+  void on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id);
   void on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id);
   void dump_timers() const;
+  void reset_timers() const;
 #endif
   void update_state(const tion4s_state_t &state) override;
   void dump_state(const tion4s_state_t &state) const;

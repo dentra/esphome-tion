@@ -269,6 +269,14 @@ bool TionApi4s::request_timers(const uint32_t request_id) const {
   return res;
 }
 
+bool TionApi4s::write_timer(const uint8_t timer_id, const tion4s_timer_t &timer, const uint32_t request_id) const {
+  struct tion4s_timer_set_t {
+    uint8_t timer_id;
+    tion4s_timer_t timer;
+  } PACKED set{.timer_id = timer_id, .timer = timer};
+  return this->write_frame(FRAME_TYPE_TIMER_SET, set, request_id);
+}
+
 bool TionApi4s::request_timers_state(const uint32_t request_id) const {
   return this->write_frame(FRAME_TYPE_TIMERS_STATE_REQ, request_id);
 }
