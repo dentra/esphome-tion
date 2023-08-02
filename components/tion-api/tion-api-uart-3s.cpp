@@ -32,54 +32,54 @@ void TionUartProtocol3s::read_uart_data(TionUartReader *io) {
   }
 
   while (io->available() > 0) {
-    if (!this->read_frame_(io)) {
+    if (this->read_frame_(io) == READ_NEXT_LOOP) {
       break;
     }
     tion_yield();
   }
 }
 
-bool TionUartProtocol3s::read_frame_(TionUartReader *io) {
+TionUartProtocol3s::read_frame_result_t TionUartProtocol3s::read_frame_(TionUartReader *io) {
   auto frame = reinterpret_cast<tion3s_frame_t *>(this->buf_);
 
   if (frame->rx.head != this->head_type_) {
     if (io->available() < sizeof(frame->rx.head)) {
       // do not flood log while waiting magic
       // TION_LOGV(TAG, "Waiting frame magic");
-      return false;
+      return READ_NEXT_LOOP;
     }
     if (!io->read_array(&frame->rx.head, sizeof(frame->rx.head))) {
       TION_LOGW(TAG, "Failed read frame head");
-      return true;
+      return READ_THIS_LOOP;
     }
     if (frame->rx.head != this->head_type_) {
       TION_LOGW(TAG, "Unxepected byte: 0x%02X", frame->rx.head);
-      return true;
+      return READ_THIS_LOOP;
     }
   }
 
   if (frame->rx.type == 0) {
     if (io->available() < sizeof(frame->rx.type)) {
       TION_LOGV(TAG, "Waiting frame type");
-      return false;
+      return READ_NEXT_LOOP;
     }
     if (!io->read_array(&frame->rx.type, sizeof(frame->rx.type))) {
       TION_LOGW(TAG, "Failed read frame type");
       this->reset_buf_();
-      return true;
+      return READ_THIS_LOOP;
     }
   }
 
   constexpr uint32_t tail_size = sizeof(frame->rx.data) + sizeof(frame->magic);
   if (io->available() < tail_size) {
     TION_LOGV(TAG, "Waiting frame data %u of %u", io->available(), tail_size);
-    return false;
+    return READ_NEXT_LOOP;
   }
 
   if (!io->read_array(&frame->rx.data, tail_size)) {
     TION_LOGW(TAG, "Failed read frame data");
     this->reset_buf_();
-    return true;
+    return READ_THIS_LOOP;
   }
 
   TION_LOGV(TAG, "Read data: %s", hexencode(&frame->data, sizeof(frame->data)).c_str());
@@ -87,16 +87,15 @@ bool TionUartProtocol3s::read_frame_(TionUartReader *io) {
   if (frame->magic != FRAME_MAGIC_END) {
     TION_LOGW(TAG, "Invlid frame magic %02X", frame->magic);
     this->reset_buf_();
-    return true;
+    return READ_THIS_LOOP;
   }
 
   tion_yield();
   this->reader(*reinterpret_cast<const tion_any_frame_t *>(&frame->data), sizeof(frame->data));
   this->reset_buf_();
-  return false;
-}
 
-void TionUartProtocol3s::reset_buf_() { std::memset(this->buf_, 0, sizeof(this->buf_)); }
+  return READ_NEXT_LOOP;
+}
 
 bool TionUartProtocol3s::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   if (!this->writer) {

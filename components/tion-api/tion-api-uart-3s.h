@@ -6,11 +6,8 @@
 namespace dentra {
 namespace tion {
 
-class TionUartProtocol3s : public TionProtocol<tion_any_frame_t> {
-  enum {
-    FRAME_MAX_SIZE = 20  // sizeof(tion3s_frame_t)
-  };
-
+// 20 = sizeof(tion3s_frame_t)
+class TionUartProtocol3s : public TionUartProtocolBase<20> {
  public:
   void read_uart_data(TionUartReader *io);
 
@@ -18,9 +15,7 @@ class TionUartProtocol3s : public TionProtocol<tion_any_frame_t> {
 
  protected:
   /// Reads a frame starting with size for hw uart or continue reading for sw uart
-  bool read_frame_(TionUartReader *io);
-  uint8_t buf_[FRAME_MAX_SIZE]{};
-  void reset_buf_();
+  read_frame_result_t read_frame_(TionUartReader *io);
   uint8_t head_type_{FRAME_MAGIC_RSP};
 };
 
