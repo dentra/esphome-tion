@@ -38,7 +38,7 @@ bool TionBle3sProtocol::read_data(const uint8_t *data, size_t size) {
     return false;
   }
   if (size != sizeof(tion3s_frame_t)) {
-    TION_LOGW(TAG, "Invalid frame size %u", size);
+    TION_LOGW(TAG, "Invalid frame size %zu", size);
     return false;
   }
   auto frame = reinterpret_cast<const tion3s_frame_t *>(data);

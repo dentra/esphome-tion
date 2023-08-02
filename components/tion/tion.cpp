@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cinttypes>
 
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
@@ -77,17 +78,17 @@ bool TionClimateComponentBase::enable_boost_() {
 
   // if boost_time_left not configured, just schedule stop boost after boost_time
   if (this->boost_time_left_ == nullptr) {
-    ESP_LOGD(TAG, "Schedule boost timeout for %u s", boost_time);
+    ESP_LOGD(TAG, "Schedule boost timeout for %" PRIu32 " s", boost_time);
     this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() { this->cancel_preset_(*this->preset); });
     return true;
   }
 
   // if boost_time_left is configured, schedule update it
-  ESP_LOGD(TAG, "Schedule boost interval up to %u s", boost_time);
+  ESP_LOGD(TAG, "Schedule boost interval up to %" PRIu32 " s", boost_time);
   this->boost_time_left_->publish_state(static_cast<float>(boost_time));
   this->set_interval(ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this]() {
     int32_t time_left = static_cast<int32_t>(this->boost_time_left_->state) - BOOST_TIME_UPDATE_INTERVAL_SEC;
-    ESP_LOGV(TAG, "Boost time left %d s", time_left);
+    ESP_LOGV(TAG, "Boost time left %" PRId32 " s", time_left);
     if (time_left > 0) {
       this->boost_time_left_->publish_state(static_cast<float>(time_left));
     } else {

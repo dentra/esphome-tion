@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cinttypes>
 
 #include "log.h"
 #include "utils.h"
@@ -16,7 +17,7 @@ uint16_t TionApi3s::get_state_type() const { return FRAME_TYPE_RSP(FRAME_TYPE_ST
 void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // invalid size is never possible
   // if (frame_data_size != sizeof(tion3s_state_t)) {
-  //   TION_LOGW(TAG, "Incorrect state data size: %u", frame_data_size);
+  //   TION_LOGW(TAG, "Incorrect state data size: %zu", frame_data_size);
   //   return;
   // }
 

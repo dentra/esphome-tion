@@ -1,4 +1,6 @@
 #include <cstring>
+#include <cinttypes>
+
 #include "log.h"
 #include "utils.h"
 #include "tion-api-uart-3s.h"
@@ -72,7 +74,7 @@ TionUartProtocol3s::read_frame_result_t TionUartProtocol3s::read_frame_(TionUart
 
   constexpr uint32_t tail_size = sizeof(frame->rx.data) + sizeof(frame->magic);
   if (io->available() < tail_size) {
-    TION_LOGV(TAG, "Waiting frame data %u of %u", io->available(), tail_size);
+    TION_LOGV(TAG, "Waiting frame data %i of %" PRIu32, io->available(), tail_size);
     return READ_NEXT_LOOP;
   }
 

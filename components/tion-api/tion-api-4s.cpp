@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <cmath>
+#include <cinttypes>
 
 #include "log.h"
 #include "utils.h"
@@ -39,7 +40,7 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       uint8_t unknown;  // always 1
     } PACKED;
     if (frame_data_size != sizeof(heartbeat_frame_t)) {
-      TION_LOGW(TAG, "Incorrect heartbeat response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect heartbeat response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const heartbeat_frame_t *>(frame_data);
       TION_LOGD(TAG, "Response[] Heartbeat (%02X)", frame->unknown);
@@ -56,10 +57,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tion4s_state_t state;
     } PACKED;
     if (frame_data_size != sizeof(state_frame_t)) {
-      TION_LOGW(TAG, "Incorrect state response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const state_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] State", frame->request_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] State", frame->request_id);
       if (this->on_state) {
         this->on_state(frame->state, frame->request_id);
       }
@@ -73,10 +74,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tion4s_turbo_t turbo;
     } PACKED;
     if (frame_data_size != sizeof(turbo_frame_t)) {
-      TION_LOGW(TAG, "Incorrect turbo response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect turbo response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const turbo_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] Turbo", frame->request_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] Turbo", frame->request_id);
       if (this->on_turbo) {
         this->on_turbo(frame->turbo, frame->request_id);
       }
@@ -86,7 +87,7 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
 #endif
   if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
     if (frame_data_size != sizeof(tion_dev_status_t)) {
-      TION_LOGW(TAG, "Incorrect device status response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect device status response data size: %zu", frame_data_size);
     } else {
       TION_LOGD(TAG, "Response[] Device status");
       if (this->on_dev_status) {
@@ -102,10 +103,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tion4s_time_t time;
     } PACKED;
     if (frame_data_size != sizeof(time_frame_t)) {
-      TION_LOGW(TAG, "Incorrect time response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect time response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const time_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] Time", frame->request_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] Time", frame->request_id);
       if (this->on_time) {
         this->on_time(frame->time.unix_time, frame->request_id);
       }
@@ -120,10 +121,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tion4s_timer_t timer;
     } PACKED;
     if (frame_data_size != sizeof(timer_frame_t)) {
-      TION_LOGW(TAG, "Incorrect timer response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect timer response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const timer_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] Timer %u", frame->request_id, frame->timer_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] Timer %u", frame->request_id, frame->timer_id);
       if (this->on_timer) {
         this->on_timer(frame->timer_id, frame->timer, frame->request_id);
       }
@@ -137,10 +138,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tion4s_timers_state_t timers_state;
     } PACKED;
     if (frame_data_size != sizeof(timers_state_frame_t)) {
-      TION_LOGW(TAG, "Incorrect timers state response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect timers state response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const timers_state_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] Timers state", frame->request_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] Timers state", frame->request_id);
       if (this->on_timers_state) {
         this->on_timers_state(frame->timers_state, frame->request_id);
       }
@@ -155,10 +156,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tion4s_errors_t errors;
     } PACKED;
     if (frame_data_size != sizeof(error_frame_t)) {
-      TION_LOGW(TAG, "Incorrect error response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect error response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const error_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] Errors", frame->request_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] Errors", frame->request_id);
       // this->on_errors(frame->errors, frame->request_id);
     }
     return;
@@ -169,7 +170,7 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       uint8_t unknown[440];
     };
     if (frame_data_size != sizeof(test_frame_t)) {
-      TION_LOGW(TAG, "Incorrect test response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect test response data size: %zu", frame_data_size);
     } else {
       TION_LOGD(TAG, "Response[] Test");
     }
@@ -197,7 +198,7 @@ bool TionApi4s::request_turbo() const {
 }
 #endif
 bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Write state", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Write state", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -207,7 +208,7 @@ bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_
 }
 
 bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Reset filter", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Reset filter", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -219,7 +220,7 @@ bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request
 }
 
 bool TionApi4s::factory_reset(const tion4s_state_t &state, const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Factory reset", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Factory reset", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -231,7 +232,7 @@ bool TionApi4s::factory_reset(const tion4s_state_t &state, const uint32_t reques
 
 #ifdef TION_ENABLE_PRESETS
 bool TionApi4s::set_turbo(const uint16_t time, const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Turbo %u", request_id, time);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Turbo %u", request_id, time);
   struct {
     uint16_t time;
     uint8_t err_code;
@@ -249,12 +250,12 @@ bool TionApi4s::send_heartbeat() const {
 
 #ifdef TION_ENABLE_SCHEDULER
 bool TionApi4s::request_time(const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Time", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time", request_id);
   return this->write_frame(FRAME_TYPE_TIME_REQ, request_id);
 }
 
 bool TionApi4s::request_timer(const uint8_t timer_id, const uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Timer %u", request_id, timer_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Timer %u", request_id, timer_id);
   struct {
     uint8_t timer_id;
   } PACKED timer{.timer_id = timer_id};
@@ -283,9 +284,9 @@ bool TionApi4s::request_timers_state(const uint32_t request_id) const {
 
 bool TionApi4s::set_time(const time_t time, const uint32_t request_id) const {
 #if INTPTR_MAX == INT32_MAX
-  TION_LOGD(TAG, "Request[%u] Time %ld", request_id, time);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %ld", request_id, time);
 #else
-  TION_LOGD(TAG, "Request[%u] Time %lld", request_id, time);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, time);
 #endif
   tion4s_time_t tm{.unix_time = time};
   return this->write_frame(FRAME_TYPE_TIME_SET, tm, request_id);

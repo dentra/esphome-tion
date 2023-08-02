@@ -58,11 +58,12 @@ TionUartProtocolLt::read_frame_result_t TionUartProtocolLt::read_frame_(TionUart
   }
 
   if (frame->size == 0) {
-    if (io->available() < sizeof(frame->size)) {
-      TION_LOGV(TAG, "Waiting frame size %u of %u", io->available(), sizeof(frame->size));
+    constexpr size_t frame_size_size = sizeof(frame->size);
+    if (io->available() < frame_size_size) {
+      TION_LOGV(TAG, "Waiting frame size %i of %zu", io->available(), frame_size_size);
       return READ_NEXT_LOOP;
     }
-    if (!io->read_array(&frame->size, sizeof(frame->size))) {
+    if (!io->read_array(&frame->size, frame_size_size)) {
       TION_LOGW(TAG, "Failed read frame size");
       this->reset_buf_();
       return READ_THIS_LOOP;
@@ -77,7 +78,7 @@ TionUartProtocolLt::read_frame_result_t TionUartProtocolLt::read_frame_(TionUart
 
   auto tail_size = frame->size - sizeof(frame->size) - sizeof(frame->magic);
   if (io->available() < tail_size) {
-    TION_LOGV(TAG, "Waiting frame data %u of %u", io->available(), tail_size);
+    TION_LOGV(TAG, "Waiting frame data %i of %u", io->available(), tail_size);
     return READ_NEXT_LOOP;
   }
   if (!io->read_array(&frame->data.type, tail_size)) {

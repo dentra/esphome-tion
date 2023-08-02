@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <ctime>
 #include <cmath>
+#include <cinttypes>
 
 #include "tion_4s.h"
 
@@ -102,7 +103,7 @@ void Tion4s::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
   ESP_LOGV(TAG, "airflow_counter: %f", state.counters.airflow_counter());
   ESP_LOGV(TAG, "filter_warnout : %s", ONOFF(state.flags.filter_warnout));
-  ESP_LOGV(TAG, "filter_time    : %u", state.counters.filter_time);
+  ESP_LOGV(TAG, "filter_time    : %" PRIu32, state.counters.filter_time);
   ESP_LOGV(TAG, "gate_position  : %u", state.gate_position);
 
   ESP_LOGV(TAG, "pcb_pwr_temp   : %d", state.pcb_pwr_temperature);
@@ -118,9 +119,9 @@ void Tion4s::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.flags.ma_auto));
   ESP_LOGV(TAG, "active_timer   : %s", ONOFF(state.flags.active_timer));
   ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);
-  ESP_LOGV(TAG, "work_time      : %u", state.counters.work_time);
-  ESP_LOGV(TAG, "fan_time       : %u", state.counters.fan_time);
-  ESP_LOGV(TAG, "errors         : %u", state.errors);
+  ESP_LOGV(TAG, "work_time      : %" PRIu32, state.counters.work_time);
+  ESP_LOGV(TAG, "fan_time       : %" PRIu32, state.counters.fan_time);
+  ESP_LOGV(TAG, "errors         : %08" PRIX32, state.errors);
 }
 
 void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,

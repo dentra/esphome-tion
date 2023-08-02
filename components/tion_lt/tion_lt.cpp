@@ -1,3 +1,5 @@
+#include <cinttypes>
+
 #include "esphome/core/log.h"
 #include "tion_lt.h"
 
@@ -58,7 +60,7 @@ void TionLt::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "heater_power      : %f", state.heater_power());
   ESP_LOGV(TAG, "airflow_counter   : %f", state.counters.airflow_counter());
   ESP_LOGV(TAG, "filter_warnout    : %s", ONOFF(state.flags.filter_warnout));
-  ESP_LOGV(TAG, "filter_time       : %u", state.counters.filter_time);
+  ESP_LOGV(TAG, "filter_time       : %" PRIu32, state.counters.filter_time);
   ESP_LOGV(TAG, "last_com_source   : %u", state.flags.last_com_source);
   ESP_LOGV(TAG, "auto_co2          : %s", ONOFF(state.flags.auto_co2));
   ESP_LOGV(TAG, "heater_state      : %s", ONOFF(state.flags.heater_state));
@@ -69,9 +71,9 @@ void TionLt::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "reserved          : %02x", state.flags.reserved);
   ESP_LOGV(TAG, "gate_position     : %u", state.gate_position);
   ESP_LOGV(TAG, "pcb_temperature   : %u", state.pcb_temperature);
-  ESP_LOGV(TAG, "fan_time          : %u", state.counters.fan_time);
-  ESP_LOGV(TAG, "work_time         : %u", state.counters.work_time);
-  ESP_LOGV(TAG, "errors.reg        : %u", state.errors.reg);
+  ESP_LOGV(TAG, "fan_time          : %" PRIu32, state.counters.fan_time);
+  ESP_LOGV(TAG, "work_time         : %" PRIu32, state.counters.work_time);
+  ESP_LOGV(TAG, "errors.reg        : %" PRIu32, state.errors.reg);
   ESP_LOGV(TAG, "errors.cnt        : %s",
            format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors.cnt), sizeof(state.errors.cnt)).c_str());
   ESP_LOGV(TAG, "btn_prs.temp0     : %d", state.button_presets.temp[0]);

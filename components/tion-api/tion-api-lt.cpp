@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cinttypes>
 
 #include "log.h"
 #include "utils.h"
@@ -23,7 +24,7 @@ void TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       tionlt_state_t state;
     } PACKED;
     if (frame_data_size != sizeof(state_frame_t)) {
-      TION_LOGW(TAG, "Incorrect state response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
       auto frame = static_cast<const state_frame_t *>(frame_data);
       TION_LOGD(TAG, "Response[%u] State", frame->request_id);
@@ -36,7 +37,7 @@ void TionApiLt::read_frame(uint16_t frame_type, const void *frame_data, size_t f
 
   if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
     if (frame_data_size != sizeof(tion_dev_status_t)) {
-      TION_LOGW(TAG, "Incorrect device status response data size: %u", frame_data_size);
+      TION_LOGW(TAG, "Incorrect device status response data size: %zu", frame_data_size);
     } else {
       TION_LOGD(TAG, "Response[] Device status");
       if (this->on_dev_status) {
@@ -65,7 +66,7 @@ bool TionApiLt::request_state() const {
 }
 
 bool TionApiLt::write_state(const tionlt_state_t &state, uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Write state", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Write state", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -75,7 +76,7 @@ bool TionApiLt::write_state(const tionlt_state_t &state, uint32_t request_id) co
 }
 
 bool TionApiLt::reset_filter(const tionlt_state_t &state, uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Reset filter", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Reset filter", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
@@ -87,7 +88,7 @@ bool TionApiLt::reset_filter(const tionlt_state_t &state, uint32_t request_id) c
 }
 
 bool TionApiLt::factory_reset(const tionlt_state_t &state, uint32_t request_id) const {
-  TION_LOGD(TAG, "Request[%u] Factory reset", request_id);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Factory reset", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
     return false;
