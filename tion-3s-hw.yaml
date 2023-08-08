@@ -29,8 +29,6 @@ packages:
       - packages/uptime.yaml
       ## Uncomment next line to enable additional restart button.
       - packages/restart.yaml
-      ## Optional switch to temporary disable OTA to reduce CPU usage.
-      - packages/otax.yaml
       ## Uncomment to enable uart proxy support
       # - packages/tion_3s_proxy.yaml
       ## Common configuration settings. Do not comment or move.
