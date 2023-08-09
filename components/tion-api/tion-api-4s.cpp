@@ -177,7 +177,7 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     return;
   }
 #endif
-  TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+  TION_LOGW(TAG, "Unsupported frame %04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
 }
 
 bool TionApi4s::request_dev_status() const {

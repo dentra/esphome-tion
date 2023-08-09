@@ -22,17 +22,17 @@ void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   // }
 
   if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_STATE_GET)) {
-    TION_LOGD(TAG, "Response[] State Get (%04X)", frame_type);
+    TION_LOGD(TAG, "Response[] State Get");
     if (this->on_state) {
       this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
     }
   } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_STATE_SET)) {
-    TION_LOGD(TAG, "Response[] State Set (%04X)", frame_type);
+    TION_LOGD(TAG, "Response[] State Set");
     if (this->on_state) {
       this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
     }
   } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_FILTER_TIME_RESET)) {
-    TION_LOGD(TAG, "Response[] Command 4 (%04X): %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+    TION_LOGD(TAG, "Response[] Command 4: %s", hexencode(frame_data, frame_data_size).c_str());
     // ответ такого вида, к сожалению, значения пока не понятны:
     // на прошивке 003C
     // B3 40 11 00 08 00 08 00 08 00 00 00 00 00 00 00 00 00 00 5A
@@ -45,7 +45,7 @@ void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     // посдледующие совпадают с ответом на команду 0x4
     TION_LOGD(TAG, "Response[] Pair: %s", hexencode(frame_data, frame_data_size).c_str());
   } else {
-    TION_LOGW(TAG, "Response[] Unknown (%04X): %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+    TION_LOGW(TAG, "Unsupported frame %04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
   }
 }
 
