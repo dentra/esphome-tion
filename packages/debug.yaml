@@ -22,3 +22,4 @@ logger:
     wifi_signal.sensor: INFO
     wifi_esp32: INFO
     esp32.preferences: INFO
+    mqtt: INFO
