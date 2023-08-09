@@ -3,6 +3,7 @@
 
 #include "log.h"
 #include "utils.h"
+#include "tion-api-3s-internal.h"  //tion_3s::tion3s_frame_t::FRAME_DATA_SIZE
 #include "tion-api-uart-3s.h"
 
 namespace dentra {
@@ -11,17 +12,14 @@ namespace tion {
 static const char *const TAG = "tion-api-uart-3s";
 
 #pragma pack(push, 1)
-struct tion3s_frame_t {
-  enum : uint8_t {
-    FRAME_DATA_SIZE = 17,
-  };
+struct tion3s_uart_frame_t {
   union {
     struct {
       uint8_t head;
       uint8_t type;
-      uint8_t data[FRAME_DATA_SIZE];
+      uint8_t data[tion_3s::tion3s_frame_t::FRAME_DATA_SIZE];
     } rx;
-    tion_frame_t<uint8_t[FRAME_DATA_SIZE]> data;
+    tion_frame_t<uint8_t[tion_3s::tion3s_frame_t::FRAME_DATA_SIZE]> data;
   };
   uint8_t magic;
 };
@@ -42,7 +40,7 @@ void TionUartProtocol3s::read_uart_data(TionUartReader *io) {
 }
 
 TionUartProtocol3s::read_frame_result_t TionUartProtocol3s::read_frame_(TionUartReader *io) {
-  auto frame = reinterpret_cast<tion3s_frame_t *>(this->buf_);
+  auto frame = reinterpret_cast<tion3s_uart_frame_t *>(this->buf_);
 
   if (frame->rx.head != this->head_type_) {
     if (io->available() < sizeof(frame->rx.head)) {
@@ -105,7 +103,7 @@ bool TionUartProtocol3s::write_frame(uint16_t frame_type, const void *frame_data
     return false;
   }
 
-  tion3s_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = FRAME_MAGIC_END};
+  tion3s_uart_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = FRAME_MAGIC_END};
   if (frame_data_size <= sizeof(frame.data.data)) {
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }

@@ -37,8 +37,11 @@ enum : uint8_t {
 #pragma pack(push, 1)
 
 struct tion3s_frame_t {
+  enum {
+    FRAME_DATA_SIZE = 17,
+  };
   uint16_t type;
-  uint8_t data[17];
+  uint8_t data[FRAME_DATA_SIZE];
   uint8_t magic;
 };
 

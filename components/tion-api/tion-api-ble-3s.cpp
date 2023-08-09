@@ -6,6 +6,9 @@
 #include "utils.h"
 #include "log.h"
 
+#include "tion-api-3s.h"           // FRAME_MAGIC_END
+#include "tion-api-3s-internal.h"  // tion3s_frame_t::FRAME_DATA_SIZE
+
 #include "tion-api-ble-3s.h"
 
 namespace dentra {
@@ -14,10 +17,9 @@ namespace tion {
 static const char *const TAG = "tion-api-ble-3s";
 
 #pragma pack(push, 1)
-struct tion3s_frame_t {
-  enum : uint8_t { FRAME_MAGIC = 0x5A };
-
-  tion_frame_t<uint8_t[17]> data;
+struct tion3s_ble_frame_t {
+  enum : uint8_t { FRAME_MAGIC = FRAME_MAGIC_END };
+  tion_frame_t<uint8_t[tion_3s::tion3s_frame_t::FRAME_DATA_SIZE]> data;
   uint8_t magic;
 };
 #pragma pack(pop)
@@ -37,12 +39,12 @@ bool TionBle3sProtocol::read_data(const uint8_t *data, size_t size) {
     TION_LOGW(TAG, "Empy frame data");
     return false;
   }
-  if (size != sizeof(tion3s_frame_t)) {
+  if (size != sizeof(tion3s_ble_frame_t)) {
     TION_LOGW(TAG, "Invalid frame size %zu", size);
     return false;
   }
-  auto frame = reinterpret_cast<const tion3s_frame_t *>(data);
-  if (frame->magic != tion3s_frame_t::FRAME_MAGIC) {
+  auto frame = reinterpret_cast<const tion3s_ble_frame_t *>(data);
+  if (frame->magic != tion3s_ble_frame_t::FRAME_MAGIC) {
     TION_LOGW(TAG, "Invalid frame magic %02X", frame->magic);
     return false;
   }
@@ -55,7 +57,7 @@ bool TionBle3sProtocol::write_frame(uint16_t frame_type, const void *frame_data,
     TION_LOGE(TAG, "Writer is not configured");
     return false;
   }
-  tion3s_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = tion3s_frame_t::FRAME_MAGIC};
+  tion3s_ble_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = tion3s_ble_frame_t::FRAME_MAGIC};
   if (frame_data_size <= sizeof(frame.data.data)) {
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }

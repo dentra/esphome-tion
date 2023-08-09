@@ -13,7 +13,7 @@ namespace tion_3s_proxy {
 
 class TionUartProtocol3sProxy : public dentra::tion::TionUartProtocol3s {
  public:
-  TionUartProtocol3sProxy() { this->head_type_ = dentra::tion::FRAME_MAGIC_REQ; }
+  TionUartProtocol3sProxy() : dentra::tion::TionUartProtocol3s(dentra::tion::FRAME_MAGIC_REQ) {}
 };
 
 class Tion3sUartIO : public tion::TionUartIO<TionUartProtocol3sProxy> {

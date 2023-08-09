@@ -9,14 +9,17 @@ namespace tion {
 // 20 = sizeof(tion3s_frame_t)
 class TionUartProtocol3s : public TionUartProtocolBase<20> {
  public:
+  TionUartProtocol3s(uint8_t head_type = FRAME_MAGIC_RSP) : head_type_(head_type) {}
+
   void read_uart_data(TionUartReader *io);
 
   bool write_frame(uint16_t type, const void *data, size_t size);
 
  protected:
+  const uint8_t head_type_;
+
   /// Reads a frame starting with size for hw uart or continue reading for sw uart
   read_frame_result_t read_frame_(TionUartReader *io);
-  uint8_t head_type_{FRAME_MAGIC_RSP};
 };
 
 }  // namespace tion
