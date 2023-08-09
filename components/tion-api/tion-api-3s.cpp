@@ -38,6 +38,12 @@ void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     // B3 40 11 00 08 00 08 00 08 00 00 00 00 00 00 00 00 00 00 5A
     // на прошивке 0033, после команды 0x1
     // 3D 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 5A
+  } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_SRV_MODE_SET)) {
+    // предположительно ответ на команду сопряжения
+    // B3 50 01 00 08 00 08 00 08 00 00 00 00 00 00 00 00 00 00 5A
+    // первый байт, возможно состояние 01 - ок
+    // посдледующие совпадают с ответом на команду 0x4
+    TION_LOGD(TAG, "Response[] Pair: %s", hexencode(frame_data, frame_data_size).c_str());
   } else {
     TION_LOGW(TAG, "Response[] Unknown (%04X): %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
   }
