@@ -2,8 +2,8 @@
 
 #include "esphome/components/select/select.h"
 
-#include "../tion-api/tion-api-3s.h"
-#include "../tion/tion.h"
+#include "../../tion-api/tion-api-3s.h"
+#include "../../tion/tion.h"
 
 namespace esphome {
 namespace tion {

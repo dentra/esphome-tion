@@ -7,7 +7,7 @@ from esphome.const import (
     STATE_CLASS_MEASUREMENT,
     UNIT_CUBIC_METER,
 )
-from .. import tion  # pylint: disable=relative-beyond-top-level
+from ... import tion  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "select"]

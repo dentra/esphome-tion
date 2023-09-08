@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../tion-api/tion-api-lt.h"
-#include "../tion/tion.h"
+#include "../../tion-api/tion-api-lt.h"
+#include "../../tion/tion.h"
 
 namespace esphome {
 namespace tion {

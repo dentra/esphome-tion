@@ -4,7 +4,7 @@
 #include "esphome/components/vport/vport_ble.h"
 #include "../components/tion-api/tion-api-3s.h"
 #include "../components/tion-api/tion-api-ble-3s.h"
-#include "../components/tion_3s/tion_3s.h"
+#include "../components/tion_3s/climate/tion_3s.h"
 #include "../components/tion_3s_proxy/tion_3s_proxy.h"
 
 #include "test_api.h"

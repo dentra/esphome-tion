@@ -1,4 +1,4 @@
-#include "../components/tion_lt/tion_lt.h"
+#include "../components/tion_lt/climate/tion_lt.h"
 
 #include "test_api.h"
 #include "test_vport.h"
