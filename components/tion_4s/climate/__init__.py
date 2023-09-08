@@ -5,7 +5,7 @@ from esphome.components import climate, switch
 from esphome.const import (
     ENTITY_CATEGORY_CONFIG,
 )
-from .. import tion, tion_lt  # pylint: disable=relative-beyond-top-level
+from ... import tion, tion_lt  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "number"]
