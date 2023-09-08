@@ -58,12 +58,12 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
 
   void control_buzzer_state(bool state) {
     this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, state, this->get_led_(),
-                        this->recirculation_->state);
+                        this->get_recirculation_());
   }
 
   void control_led_state(bool state) {
     this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(), state,
-                        this->recirculation_->state);
+                        this->get_recirculation_());
   }
 
   void control_recirculation_state(bool state) {
@@ -73,7 +73,7 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override {
     this->control_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_led_(),
-                        this->recirculation_->state);
+                        this->get_recirculation_());
   }
 
   void control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer, bool led,
@@ -102,6 +102,10 @@ class Tion4s : public TionClimateComponent<TionApi4s> {
 #endif
   bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
   bool get_led_() const { return this->led_ ? this->led_->state : this->state_.flags.led_state; }
+  bool get_recirculation_() const {
+    return this->recirculation_ ? this->recirculation_->state
+                                : this->state_.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION;
+  }
 };
 
 template<class parent_t> class TionRecirculationSwitch : public Parented<parent_t>, public switch_::Switch {
