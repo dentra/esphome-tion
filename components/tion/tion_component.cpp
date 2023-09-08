@@ -23,7 +23,7 @@ void TionComponent::setup() {
 #endif
 }
 
-void TionComponent::update_dev_status_(const dentra::tion::tion_dev_status_t &status) {
+void TionComponent::update_dev_info_(const dentra::tion::tion_dev_info_t &status) {
   if (this->version_ != nullptr) {
     this->version_->publish_state(str_snprintf("%04X", 4, status.firmware_version));
   }

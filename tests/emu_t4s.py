@@ -128,8 +128,8 @@ class Tion4s(Device):
     CMD_STATE_SET = 0x3230
     CMD_STATE_RSP = 0x3231
     CMD_STATE_REQ = 0x3232
-    CMD_DEV_STATUS_REQ = 0x3332
-    CMD_DEV_STATUS_RSP = 0x3331
+    CMD_DEV_INFO_REQ = 0x3332
+    CMD_DEV_INFO_RSP = 0x3331
     CMD_TIME_SET = 0x3630
     CMD_TIME_REQ = 0x3632
     CMD_TIME_RSP = 0x3631
@@ -141,7 +141,7 @@ class Tion4s(Device):
         self._reqs[self.CMD_HEARBEAT_REQ] = self.heartbeat_req
         self._reqs[self.CMD_STATE_REQ] = self.state_req
         self._reqs[self.CMD_STATE_SET] = self.state_set
-        self._reqs[self.CMD_DEV_STATUS_REQ] = self.dev_status_req
+        self._reqs[self.CMD_DEV_INFO_REQ] = self.dev_info_req
         self._reqs[self.CMD_TIME_SET] = self.time_set
         self._reqs[self.CMD_TIME_REQ] = self.time_req
 
@@ -168,13 +168,13 @@ class Tion4s(Device):
         _LOGGER.debug("state_set: %s", buf.hex(" "))
         self.state_rsp(self.state.unpack(buf))
 
-    def dev_status_rsp(self) -> None:
+    def dev_info_rsp(self) -> None:
         data = struct.pack("<BHHHH", 0x01, 0x8003, 0, 0x02D2, 0x01) + b"\x00" * 16
-        self._write_cmd(self.CMD_DEV_STATUS_RSP, data)
+        self._write_cmd(self.CMD_DEV_INFO_RSP, data)
 
-    def dev_status_req(self, buf: bytes) -> None:
-        _LOGGER.debug("dev_status: %s", buf.hex(" "))
-        self.dev_status_rsp()
+    def dev_info_req(self, buf: bytes) -> None:
+        _LOGGER.debug("dev_info: %s", buf.hex(" "))
+        self.dev_info_rsp()
 
     def time_rsp(self, request_id: int) -> None:
         now = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc).timestamp()

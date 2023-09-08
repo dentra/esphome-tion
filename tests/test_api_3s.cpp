@@ -143,7 +143,7 @@ bool test_uart_3s() {
   res &= cloak::check_data("request_state data", uart, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   res &= cloak::check_data("send_heartbeat call", api.send_heartbeat(), false);
-  res &= cloak::check_data("request_dev_status call", api.request_dev_status(), false);
+  res &= cloak::check_data("request_dev_info call", api.request_dev_info(), false);
 
   comp.state().flags.heater_state = false;
   printf("0x%04X\n", comp.state().filter_time);

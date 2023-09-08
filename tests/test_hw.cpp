@@ -29,8 +29,8 @@ enum {
   FRAME_TYPE_STATE_REQ = 0x3232,
   FRAME_TYPE_STATE_SAV = 0x3234,  // save req
 
-  FRAME_TYPE_DEV_STATUS_REQ = 0x3332,
-  FRAME_TYPE_DEV_STATUS_RSP = 0x3331,
+  FRAME_TYPE_DEV_INFO_REQ = 0x3332,
+  FRAME_TYPE_DEV_INFO_RSP = 0x3331,
 
   FRAME_TYPE_TEST_REQ = 0x3132,
   FRAME_TYPE_TEST_RSP = 0x3131,
@@ -155,9 +155,9 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       return frame->unknown00 == 0;
     }
 
-    case FRAME_TYPE_DEV_STATUS_REQ: {
+    case FRAME_TYPE_DEV_INFO_REQ: {
       if (size != 0) {
-        ESP_LOGE(TAG, "Incorrect device status request data size: %u", size);
+        ESP_LOGE(TAG, "Incorrect device info request data size: %u", size);
         return false;
       }
       break;

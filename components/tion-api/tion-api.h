@@ -25,9 +25,21 @@ struct tion_state_counters_t {
   uint32_t filter_days() const { return filter_time / 86400; }
 };
 
-struct tion_dev_status_t {
-  uint8_t work_mode;  // system_mode
-  enum : uint32_t { IRM = 0x8001, BRLT = 0x8002, BR4S = 0x8003 } device_type;
+struct tion_dev_info_t {
+  enum : uint8_t {
+    // обычный режим работы
+    NORMAL = 1,
+    // бризер находится в режиме обновления
+    UPDATE = 2,
+  } work_mode;
+  enum : uint32_t {
+    // Tion IQ 200
+    IQ200 = 0x8001,
+    // Tion Lite
+    BRLT = 0x8002,
+    // Tion 4S
+    BR4S = 0x8003,
+  } device_type;
   uint16_t firmware_version;
   uint16_t hardware_version;
   uint8_t reserved[16];
@@ -68,8 +80,8 @@ class TionApiBaseWriter {
 };
 
 template<class state_type_t> class TionApiBase : public TionApiBaseWriter {
-  /// Callback listener for response to request_dev_status command request.
-  using on_dev_status_type = etl::delegate<void(const tion_dev_status_t &dev_status)>;
+  /// Callback listener for response to request_dev_info command request.
+  using on_dev_info_type = etl::delegate<void(const tion_dev_info_t &dev_info)>;
   /// Callback listener for response to request_state command request.
   using on_state_type = etl::delegate<void(const state_type_t &state, uint32_t request_id)>;
   /// Callback listener for response to send_heartbeat command request.
@@ -82,7 +94,7 @@ template<class state_type_t> class TionApiBase : public TionApiBaseWriter {
   /// Set callback listener for monitoring ready state
   void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = std::move(on_ready); }
 
-  on_dev_status_type on_dev_status{};
+  on_dev_info_type on_dev_info{};
   on_state_type on_state{};
 #ifdef TION_ENABLE_HEARTBEAT
   on_heartbeat_type on_heartbeat{};

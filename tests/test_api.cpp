@@ -35,7 +35,7 @@ class ApiTest {
 };
 
 struct ApiTestData {
-  enum { STATE = 1, DEV_STATUS, TURBO, TIME };
+  enum { STATE = 1, DEV_INFO, TURBO, TIME };
   std::vector<std::string> frames;
   uint16_t await_frame_type = {};
   uint16_t await_frame_size = {};
@@ -63,7 +63,7 @@ const ApiTestData test_4s_data[]{
             },
         .await_frame_type = 0x3331,
         .await_frame_size = 25,
-        .await_struct = ApiTestData::DEV_STATUS,
+        .await_struct = ApiTestData::DEV_INFO,
     },
 };
 

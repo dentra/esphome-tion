@@ -13,8 +13,8 @@ enum {
   FRAME_TYPE_STATE_REQ = 0x3232,
   FRAME_TYPE_STATE_SAV = 0x3234,  // save req
 
-  FRAME_TYPE_DEV_STATUS_REQ = 0x3332,
-  FRAME_TYPE_DEV_STATUS_RSP = 0x3331,
+  FRAME_TYPE_DEV_INFO_REQ = 0x3332,
+  FRAME_TYPE_DEV_INFO_RSP = 0x3331,
 
   FRAME_TYPE_TEST_REQ = 0x3132,
   FRAME_TYPE_TEST_RSP = 0x3131,  // returns 440 bytes struct
@@ -56,7 +56,7 @@ struct tion4s_state_set_t {
     bool sound_state : 1;
     // состояние световых оповещений
     bool led_state : 1;
-    uint8_t /*HeaterMode*/ heater_mode : 1;
+    tion::tion4s_state_t::HeaterMode heater_mode : 1;
     bool last_com_source : 1;
     bool factory_reset : 1;
     bool error_reset : 1;

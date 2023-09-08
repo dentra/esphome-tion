@@ -57,7 +57,7 @@ struct hw_test_data_t {
 const hw_test_data_t test_data[] = {
     {hw_test_data_t::REQ, "heartbeat request", "3A 0700 3239 CEEC"},
     {hw_test_data_t::RSP, "heartbeat response", "3A 0800 3139 00 E82B"},
-    {hw_test_data_t::REQ, "device status request", "3A 0700 3233 6FA6"},
+    {hw_test_data_t::REQ, "device info request", "3A 0700 3233 6FA6"},
 
     {hw_test_data_t::SET, "выключение", "3a 1200 3032 02000000 0600 00 0c 03 a4c5 76ca",
      [](const void *data) { return static_cast<const tion_hw_set_state_t *>(data)->power_state == false; }},

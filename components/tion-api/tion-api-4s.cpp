@@ -85,13 +85,13 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     return;
   }
 #endif
-  if (frame_type == FRAME_TYPE_DEV_STATUS_RSP) {
-    if (frame_data_size != sizeof(tion_dev_status_t)) {
-      TION_LOGW(TAG, "Incorrect device status response data size: %zu", frame_data_size);
+  if (frame_type == FRAME_TYPE_DEV_INFO_RSP) {
+    if (frame_data_size != sizeof(tion_dev_info_t)) {
+      TION_LOGW(TAG, "Incorrect device info response data size: %zu", frame_data_size);
     } else {
-      TION_LOGD(TAG, "Response[] Device status");
-      if (this->on_dev_status) {
-        this->on_dev_status(*static_cast<const tion_dev_status_t *>(frame_data));
+      TION_LOGD(TAG, "Response[] Device info");
+      if (this->on_dev_info) {
+        this->on_dev_info(*static_cast<const tion_dev_info_t *>(frame_data));
       }
     }
     return;
@@ -180,9 +180,9 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   TION_LOGW(TAG, "Unsupported frame %04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
 }
 
-bool TionApi4s::request_dev_status() const {
-  TION_LOGD(TAG, "Request[] Device status");
-  return this->write_frame(FRAME_TYPE_DEV_STATUS_REQ);
+bool TionApi4s::request_dev_info() const {
+  TION_LOGD(TAG, "Request[] Device info");
+  return this->write_frame(FRAME_TYPE_DEV_INFO_REQ);
 }
 
 bool TionApi4s::request_state() const {

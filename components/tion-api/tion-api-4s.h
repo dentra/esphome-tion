@@ -139,7 +139,7 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
   uint16_t get_state_type() const;
-  bool request_dev_status() const;
+  bool request_dev_info() const;
   bool request_state() const;
 
   bool write_state(const tion4s_state_t &state, const uint32_t request_id = 1) const;

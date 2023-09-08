@@ -62,7 +62,7 @@ class TionApiLt : public TionApiBase<tionlt_state_t> {
 
   uint16_t get_state_type() const;
 
-  bool request_dev_status() const;
+  bool request_dev_info() const;
   bool request_state() const;
 
   bool write_state(const tionlt_state_t &state, uint32_t request_id = 1) const;

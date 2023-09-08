@@ -1,6 +1,6 @@
 #include "esphome/components/climate/climate_mode.h"
 #include "../components/tion-api/tion-api-4s-internal.h"
-#include "../components/tion_4s/tion_4s.h"
+#include "../components/tion_4s/climate/tion_4s.h"
 #include "../components/tion_4s_uart/tion_4s_uart.h"
 
 #include "test_api.h"
@@ -103,8 +103,8 @@ bool test_api_4s() {
   api.request_state();
   res &= cloak::check_data("request_state", io, "80.0C.00.3A.AD 32.32 01.00.00.00 64.F7");
 
-  api.request_dev_status();
-  res &= cloak::check_data("request_dev_status", io, "80.0C.00.3A.AD 32.33 01.00.00.00 CE.A6");
+  api.request_dev_info();
+  res &= cloak::check_data("request_dev_info", io, "80.0C.00.3A.AD 32.33 01.00.00.00 CE.A6");
 
   api.request_timer(0, 1);
   res &= cloak::check_data("request_timer", io, "80.11.00.3A.AD 32.34 01.00.00.00 01.00.00.00.00 DB.D5");

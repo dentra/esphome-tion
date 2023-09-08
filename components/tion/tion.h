@@ -65,7 +65,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
  public:
   explicit TionClimateComponent(tion_api_type *api) : api_(api) {
     using this_t = typename std::remove_pointer<decltype(this)>::type;
-    this->api_->on_dev_status.template set<this_t, &this_t::on_dev_status>(*this);
+    this->api_->on_dev_info.template set<this_t, &this_t::on_dev_info>(*this);
     this->api_->on_state.template set<this_t, &this_t::on_state>(*this);
     this->api_->set_on_ready(tion_api_type::on_ready_type::template create<this_t, &this_t::on_ready>(*this));
   }
@@ -74,7 +74,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
 
   void on_ready() {
     if (!this->state_.is_initialized()) {
-      this->api_->request_dev_status();
+      this->api_->request_dev_info();
     }
   }
 
@@ -85,7 +85,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     this->state_ = state;
   }
 
-  void on_dev_status(const dentra::tion::tion_dev_status_t &status) { this->update_dev_status_(status); }
+  void on_dev_info(const dentra::tion::tion_dev_info_t &status) { this->update_dev_info_(status); }
 
  protected:
   tion_api_type *api_;
