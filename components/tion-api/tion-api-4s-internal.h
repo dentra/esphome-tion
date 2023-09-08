@@ -33,16 +33,16 @@ enum {
   FRAME_TYPE_ERR_CNT_REQ = 0x3732,
   FRAME_TYPE_ERR_CNT_RSP = 0x3731,
 
-  FRAME_TYPE_CURR_TEST_SET = 0x3830,
-  FRAME_TYPE_CURR_TEST_REQ = 0x3832,
-  FRAME_TYPE_CURR_TEST_RSP = 0x3831,
+  FRAME_TYPE_CURR_TEST_SET = 0x3830,  // BLE Only
+  FRAME_TYPE_CURR_TEST_REQ = 0x3832,  // BLE Only
+  FRAME_TYPE_CURR_TEST_RSP = 0x3831,  // BLE Only
 
   FRAME_TYPE_TURBO_SET = 0x4130,  // BLE Only
   FRAME_TYPE_TURBO_REQ = 0x4132,  // BLE Only
   FRAME_TYPE_TURBO_RSP = 0x4131,  // BLE Only
 
-  FRAME_TYPE_HEARTBIT_REQ = 0x3932,  // every 3 sec
-  FRAME_TYPE_HEARTBIT_RSP = 0x3931,
+  FRAME_TYPE_HEARTBIT_REQ = 0x3932,  // UART Only, every 3 sec
+  FRAME_TYPE_HEARTBIT_RSP = 0x3931,  // UART Only
 };
 
 #pragma pack(push, 1)
@@ -105,5 +105,5 @@ struct tion4s_errors_t {
 
 #pragma pack(pop)
 
-}  // namespace tion4s
+}  // namespace tion_4s
 }  // namespace dentra
