@@ -1,19 +1,19 @@
 #include "esphome/core/log.h"
 
-#include "tion_3s.h"
+#include "tion_3s_climate.h"
 
 namespace esphome {
 namespace tion {
 
 static const char *const TAG = "tion_3s";
 
-void Tion3s::dump_config() {
+void Tion3sClimate::dump_config() {
   this->dump_settings(TAG, "Tion 3S");
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
   this->dump_presets(TAG);
 }
 
-void Tion3s::update_state(const tion3s_state_t &state) {
+void Tion3sClimate::update_state(const tion3s_state_t &state) {
   this->dump_state(state);
 
   this->mode = !state.flags.power_state   ? climate::CLIMATE_MODE_OFF
@@ -63,7 +63,7 @@ void Tion3s::update_state(const tion3s_state_t &state) {
   // }
 }
 
-void Tion3s::dump_state(const tion3s_state_t &state) const {
+void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "fan_speed    : %u", state.fan_speed);
   ESP_LOGV(TAG, "gate_position: %u", state.gate_position);
   ESP_LOGV(TAG, "target_temp  : %u", state.target_temperature);
@@ -89,25 +89,33 @@ void Tion3s::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 }
 
-void Tion3s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           tion3s_state_t::GatePosition gate_position) const {
-  tion3s_state_t st = this->state_;
-
-  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-    st.flags.power_state = true;
-  } else if (mode == climate::CLIMATE_MODE_OFF) {
-    st.flags.power_state = false;
-  } else {
-    st.flags.power_state = true;
-
-    st.flags.heater_state = mode == climate::CLIMATE_MODE_HEAT;
-    if (this->state_.flags.heater_state != st.flags.heater_state) {
-      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
-    }
+void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                                          bool buzzer, tion3s_state_t::GatePosition gate_position) const {
+  if (mode == climate::CLIMATE_MODE_OFF) {
+    this->control_state(false, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, gate_position);
+    return;
   }
 
+  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    this->control_state(true, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, gate_position);
+    return;
+  }
+
+  this->control_state(true, mode == climate::CLIMATE_MODE_HEAT, fan_speed, target_temperature, buzzer, gate_position);
+}
+
+void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature,
+                                  bool buzzer, tion3s_state_t::GatePosition gate_position) const {
+  tion3s_state_t st = this->state_;
+
+  st.flags.power_state = power_state;
   if (this->state_.flags.power_state != st.flags.power_state) {
     ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  }
+
+  st.flags.heater_state = heater_state;
+  if (this->state_.flags.heater_state != st.flags.heater_state) {
+    ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
   }
 
   st.fan_speed = fan_speed;

@@ -1,5 +1,5 @@
 #pragma once
-
+#include "esphome/core/defines.h"
 #include "esphome/core/component.h"
 #include "esphome/core/preferences.h"
 
@@ -9,6 +9,7 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/number/number.h"
 #include "esphome/components/button/button.h"
+
 
 #include "../tion-api/tion-api.h"
 
@@ -37,6 +38,7 @@ class TionComponent : public PollingComponent {
   text_sensor::TextSensor *version_{};
   switch_::Switch *buzzer_{};
   switch_::Switch *led_{};
+
   sensor::Sensor *outdoor_temperature_{};
   sensor::Sensor *heater_power_{};
   sensor::Sensor *airflow_counter_{};
@@ -46,6 +48,7 @@ class TionComponent : public PollingComponent {
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
   button::Button *reset_filter_{};
+
 
 #ifdef TION_ENABLE_PRESETS
   ESPPreferenceObject rtc_;

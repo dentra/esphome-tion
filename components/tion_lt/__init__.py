@@ -18,6 +18,10 @@ from esphome.const import (
 )
 from .. import tion  # pylint: disable=relative-beyond-top-level
 
+CODEOWNERS = ["@dentra"]
+AUTO_LOAD = ["tion"]
+
+TionApiLt = tion.tion_ns.class_("TionApiLt")
 TionLedSwitchT = tion.tion_ns.class_("TionLedSwitch", switch.Switch)
 
 CONF_LED = "led"
@@ -26,9 +30,11 @@ CONF_AIRFLOW_COUNTER = "airflow_counter"
 CONF_FILTER_WARNOUT = "filter_warnout"
 
 
-def tion_lt_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
+def tion_lt_base_schema(
+    tion_class: MockObjClass, tion_api_class: MockObjClass, tion_base_schema: cv.Schema
+):
     """Declare base tion lt schema"""
-    return tion.tion_schema(tion_class, tion_api_class).extend(
+    return tion.tion_schema(tion_class, tion_api_class, tion_base_schema).extend(
         {
             cv.Optional(CONF_LED): switch.SWITCH_SCHEMA.extend(
                 {
@@ -64,9 +70,13 @@ def tion_lt_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
     )
 
 
-async def setup_tion_lt(config):
+def tion_lt_schema(tion_class: MockObjClass, tion_base_schema: cv.Schema):
+    return tion_lt_base_schema(tion_class, TionApiLt, tion_base_schema)
+
+
+async def setup_tion_lt(config, component_reg):
     """Setup tion lt component properties"""
-    var = await tion.setup_tion_core(config)
+    var = await tion.setup_tion_core(config, component_reg)
     await tion.setup_switch(config, CONF_LED, var.set_led, var)
     await tion.setup_sensor(config, CONF_HEATER_POWER, var.set_heater_power)
     await tion.setup_sensor(config, CONF_AIRFLOW_COUNTER, var.set_airflow_counter)

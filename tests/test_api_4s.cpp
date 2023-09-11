@@ -1,6 +1,6 @@
 #include "esphome/components/climate/climate_mode.h"
 #include "../components/tion-api/tion-api-4s-internal.h"
-#include "../components/tion_4s/climate/tion_4s.h"
+#include "../components/tion_4s/climate/tion_4s_climate.h"
 #include "../components/tion_4s_uart/tion_4s_uart.h"
 
 #include "test_api.h"
@@ -59,9 +59,9 @@ class Tion4sBleVPortTest : public Tion4sBleVPort {
   uint16_t get_state_type() const { return this->state_type_; }
 };
 
-class Tion4sTest : public Tion4s {
+class Tion4sTest : public Tion4sClimate {
  public:
-  Tion4sTest(TionApi4s *api) : Tion4s(api) { this->state_.counters.work_time = 0xFFFF; }
+  Tion4sTest(TionApi4s *api) : Tion4sClimate(api) { this->state_.counters.work_time = 0xFFFF; }
   // void enable_preset(climate::ClimatePreset preset) { this->enable_preset_(preset); }
   // void cancel_preset(climate::ClimatePreset preset) { this->cancel_preset_(preset); }
   tion4s_state_t &state() { return this->state_; };

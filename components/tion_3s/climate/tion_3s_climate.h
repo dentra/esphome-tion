@@ -1,20 +1,14 @@
 #pragma once
 
-#include "esphome/components/select/select.h"
-
-#include "../../tion-api/tion-api-3s.h"
-#include "../../tion/tion.h"
+#include "../tion_3s.h"
+#include "../../tion/tion_climate_component.h"
 
 namespace esphome {
 namespace tion {
 
-using namespace dentra::tion;
-
-using TionApi3s = dentra::tion::TionApi3s;
-
-class Tion3s : public TionClimateComponent<TionApi3s> {
+class Tion3sClimate : public TionClimateComponent<TionApi3s> {
  public:
-  explicit Tion3s(TionApi3s *api) : TionClimateComponent(api) {}
+  explicit Tion3sClimate(TionApi3s *api) : TionClimateComponent(api) {}
 
   void dump_config() override;
 
@@ -41,20 +35,23 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
   int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
 
   void control_buzzer_state(bool state) const {
-    this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, state,
-                        this->get_gate_position_());
+    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, state,
+                                this->get_gate_position_());
   }
 
   void control_gate_position(tion3s_state_t::GatePosition gate_position) const {
-    this->control_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
-                        gate_position);
+    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+                                gate_position);
   }
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override {
-    this->control_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_gate_position_());
+    this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_gate_position_());
   }
 
-  void control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
+                             tion3s_state_t::GatePosition gate_position) const;
+
+  void control_state(bool power_state, bool heater_staet, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
                      tion3s_state_t::GatePosition gate_position) const;
 
  protected:
@@ -71,17 +68,6 @@ class Tion3s : public TionClimateComponent<TionApi3s> {
     }
     return this->state_.gate_position;
   }
-};
-
-class Tion3sAirIntakeSelect : public select::Select {
- public:
-  explicit Tion3sAirIntakeSelect(Tion3s *parent) : parent_(parent) {}
-  void control(const std::string &value) override {
-    this->parent_->control_gate_position(static_cast<tion3s_state_t::GatePosition>(*this->index_of(value)));
-  }
-
- protected:
-  Tion3s *parent_;
 };
 
 }  // namespace tion

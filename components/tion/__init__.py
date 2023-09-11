@@ -97,10 +97,12 @@ PRESETS_SCHEMA = cv.Schema(
 )
 
 
-def tion_schema(tion_class: MockObjClass, tion_api_class: MockObjClass):
+def tion_schema(
+    tion_class: MockObjClass, tion_api_class: MockObjClass, tion_base_schema: cv.Schema
+):
     """Declare base tion schema"""
     return (
-        climate.CLIMATE_SCHEMA.extend(
+        tion_base_schema.extend(
             {
                 cv.GenerateID(): cv.declare_id(tion_class),
                 cv.GenerateID(CONF_TION_API_BASE_ID): cv.declare_id(tion_api_class),
@@ -262,7 +264,7 @@ async def setup_button(config, key, setter, parent):
     return butn
 
 
-async def setup_tion_core(config):
+async def setup_tion_core(config, component_reg):
     """Setup core component properties"""
 
     prt = await vport.vport_get_var(config)
@@ -277,7 +279,7 @@ async def setup_tion_core(config):
     )
     var = cg.new_Pvariable(config[CONF_ID], api)
     await cg.register_component(var, config)
-    await climate.register_climate(var, config)
+    await component_reg(var, config)
 
     # FIXME check and replace/remove
     cg.add(prt.set_api(api))

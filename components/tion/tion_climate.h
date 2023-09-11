@@ -1,5 +1,8 @@
 #pragma once
 
+#include "esphome/core/defines.h"
+
+#ifdef USE_CLIMATE
 #include "esphome/components/climate/climate.h"
 
 namespace esphome {
@@ -97,3 +100,4 @@ class TionClimate : public climate::Climate {
 
 }  // namespace tion
 }  // namespace esphome
+#endif

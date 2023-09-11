@@ -1,4 +1,4 @@
-#include "../components/tion_lt/climate/tion_lt.h"
+#include "../components/tion_lt/climate/tion_lt_climate.h"
 
 #include "test_api.h"
 #include "test_vport.h"
@@ -15,9 +15,9 @@ class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
   uint16_t get_state_type() const { return this->state_type_; }
 };
 
-class TionLtTest : public esphome::tion::TionLt {
+class TionLtTest : public esphome::tion::TionLtClimate {
  public:
-  TionLtTest(dentra::tion::TionApiLt *api) : esphome::tion::TionLt(api) {}
+  TionLtTest(dentra::tion::TionApiLt *api) : esphome::tion::TionLtClimate(api) {}
 };
 
 bool test_api_lt() {

@@ -4,7 +4,7 @@
 #include "esphome/components/vport/vport_ble.h"
 #include "../components/tion-api/tion-api-3s.h"
 #include "../components/tion-api/tion-api-ble-3s.h"
-#include "../components/tion_3s/climate/tion_3s.h"
+#include "../components/tion_3s/climate/tion_3s_climate.h"
 #include "../components/tion_3s_proxy/tion_3s_proxy.h"
 
 #include "test_api.h"
@@ -23,9 +23,9 @@ class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
   uint16_t get_state_type() const { return this->state_type_; }
 };
 
-class Tion3sTest : public esphome::tion::Tion3s {
+class Tion3sTest : public esphome::tion::Tion3sClimate {
  public:
-  Tion3sTest(dentra::tion::TionApi3s *api) : esphome::tion::Tion3s(api) {
+  Tion3sTest(dentra::tion::TionApi3s *api) : esphome::tion::Tion3sClimate(api) {
     // using this_t = typename std::remove_pointer_t<decltype(this)>;
     // api->on_state.template set<this_t, &this_t::on_state>(*this);
   }

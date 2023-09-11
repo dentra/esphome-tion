@@ -5,21 +5,21 @@
 #include <cmath>
 #include <cinttypes>
 
-#include "tion_4s.h"
+#include "tion_4s_climate.h"
 
 namespace esphome {
 namespace tion {
 
 static const char *const TAG = "tion_4s";
 
-void Tion4s::dump_config() {
+void Tion4sClimate::dump_config() {
   this->dump_settings(TAG, "Tion 4S");
   LOG_SWITCH("  ", "Recirculation", this->recirculation_);
   this->dump_presets(TAG);
 }
 
 #ifdef TION_ENABLE_PRESETS
-void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
+void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
     ESP_LOGW(TAG, "Only BLE supports native turbo mode. Please report.");
     return;
@@ -51,7 +51,7 @@ void Tion4s::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
 }
 #endif
 
-void Tion4s::update_state(const tion4s_state_t &state) {
+void Tion4sClimate::update_state(const tion4s_state_t &state) {
   this->dump_state(state);
 
   this->max_fan_speed_ = state.max_fan_speed;
@@ -95,7 +95,7 @@ void Tion4s::update_state(const tion4s_state_t &state) {
   }
 }
 
-void Tion4s::dump_state(const tion4s_state_t &state) const {
+void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);
@@ -124,26 +124,37 @@ void Tion4s::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "errors         : %08" PRIX32, state.errors);
 }
 
-void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           bool led, bool recirculation) {
-  tion4s_state_t st = this->state_;
-
-  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-    st.flags.power_state = true;
-  } else if (mode == climate::CLIMATE_MODE_OFF) {
-    st.flags.power_state = false;
-  } else {
-    st.flags.power_state = true;
-
-    st.flags.heater_mode = mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
-                                                              : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
-    if (this->state_.flags.heater_mode != st.flags.heater_mode) {
-      ESP_LOGD(TAG, "New heater mode %s -> %s", ONOFF(this->state_.flags.heater_mode), ONOFF(st.flags.heater_mode));
-    }
+void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                                          bool buzzer, bool led, bool recirculation) {
+  if (mode == climate::CLIMATE_MODE_OFF) {
+    this->control_state(false, this->state_.flags.heater_mode, fan_speed, target_temperature, buzzer, led,
+                        recirculation);
+    return;
   }
 
+  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    this->control_state(true, this->state_.flags.heater_mode, fan_speed, target_temperature, buzzer, led,
+                        recirculation);
+    return;
+  }
+
+  auto heater_mode = mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
+                                                        : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
+  this->control_state(true, heater_mode, fan_speed, target_temperature, buzzer, led, recirculation);
+}
+
+void Tion4sClimate::control_state(bool power_state, tion4s_state_t::HeaterMode heater_mode, uint8_t fan_speed,
+                                  int8_t target_temperature, bool buzzer, bool led, bool recirculation) {
+  tion4s_state_t st = this->state_;
+
+  st.flags.power_state = power_state;
   if (this->state_.flags.power_state != st.flags.power_state) {
     ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  }
+
+  st.flags.heater_mode = heater_mode;
+  if (this->state_.flags.heater_mode != st.flags.heater_mode) {
+    ESP_LOGD(TAG, "New heater mode %s -> %s", ONOFF(this->state_.flags.heater_mode), ONOFF(st.flags.heater_mode));
   }
 
   st.fan_speed = fan_speed;
@@ -175,7 +186,7 @@ void Tion4s::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t 
 }
 
 #ifdef TION_ENABLE_PRESETS
-bool Tion4s::enable_boost_() {
+bool Tion4sClimate::enable_boost_() {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
     return TionClimateComponent::enable_boost_();
   }
@@ -193,7 +204,7 @@ bool Tion4s::enable_boost_() {
   return true;
 }
 
-void Tion4s::cancel_boost_() {
+void Tion4sClimate::cancel_boost_() {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
     TionClimateComponent::cancel_boost_();
     return;
@@ -204,7 +215,7 @@ void Tion4s::cancel_boost_() {
 
 #ifdef TION_ENABLE_SCHEDULER
 
-void Tion4s::on_time(const time_t time, const uint32_t request_id) {
+void Tion4sClimate::on_time(const time_t time, const uint32_t request_id) {
   auto c_tm = std::gmtime(&time);
   char buf[20] = {};
   std::strftime(buf, sizeof(buf), "%F %T", c_tm);
@@ -223,7 +234,7 @@ static void add_timer_week_day(std::string &s, bool day, const char *day_name) {
   }
 }
 
-void Tion4s::on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) {
+void Tion4sClimate::on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) {
   std::string schedule;
   if (timer.schedule.monday && timer.schedule.tuesday && timer.schedule.wednesday && timer.schedule.thursday &&
       timer.schedule.friday && timer.schedule.saturday && timer.schedule.sunday) {
@@ -242,13 +253,13 @@ void Tion4s::on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint3
            timer.schedule.minutes, ONOFF(timer.timer_state));
 }
 
-void Tion4s::on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id) {
+void Tion4sClimate::on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id) {
   for (int i = 0; i < tion4s_timers_state_t::TIMERS_COUNT; i++) {
     ESP_LOGI(TAG, "Timer[%d] state %s", i, ONOFF(timers_state.timers[i].active));
   }
 }
 
-void Tion4s::dump_timers() {
+void Tion4sClimate::dump_timers() {
   this->api_->request_time(++this->request_id_);
   for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
     this->api_->request_timer(timer_id, ++this->request_id_);
@@ -256,7 +267,7 @@ void Tion4s::dump_timers() {
   this->api_->request_timers_state(++this->request_id_);
 }
 
-void Tion4s::reset_timers() {
+void Tion4sClimate::reset_timers() {
   tion4s_timer_t timer{};
   for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
     this->api_->write_timer(timer_id, timer, ++this->request_id_);

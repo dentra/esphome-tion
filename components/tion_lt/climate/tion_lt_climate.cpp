@@ -1,19 +1,19 @@
 #include <cinttypes>
 
 #include "esphome/core/log.h"
-#include "tion_lt.h"
+#include "tion_lt_climate.h"
 
 namespace esphome {
 namespace tion {
 
-static const char *const TAG = "tion_lt";
+static const char *const TAG = "tion_lt_climate";
 
-void TionLt::dump_config() {
+void TionLtClimate::dump_config() {
   this->dump_settings(TAG, "Tion Lite");
   this->dump_presets(TAG);
 }
 
-void TionLt::update_state(const tionlt_state_t &state) {
+void TionLtClimate::update_state(const tionlt_state_t &state) {
   this->dump_state(state);
 
   this->max_fan_speed_ = state.max_fan_speed;
@@ -52,7 +52,7 @@ void TionLt::update_state(const tionlt_state_t &state) {
   }
 }
 
-void TionLt::dump_state(const tionlt_state_t &state) const {
+void TionLtClimate::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "led_state         : %s", ONOFF(state.flags.led_state));
   ESP_LOGV(TAG, "current_temp      : %d", state.current_temperature);
@@ -85,25 +85,33 @@ void TionLt::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "test_type         : %u", state.test_type);
 }
 
-void TionLt::control_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                           bool led) {
-  tionlt_state_t st = this->state_;
-
-  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-    st.flags.power_state = true;
-  } else if (mode == climate::CLIMATE_MODE_OFF) {
-    st.flags.power_state = false;
-  } else {
-    st.flags.power_state = true;
-
-    st.flags.heater_state = mode == climate::CLIMATE_MODE_HEAT;
-    if (this->state_.flags.heater_state != st.flags.heater_state) {
-      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
-    }
+void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                                          bool buzzer, bool led) {
+  if (mode == climate::CLIMATE_MODE_OFF) {
+    this->control_state(false, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, led);
+    return;
   }
 
+  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    this->control_state(true, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, led);
+    return;
+  }
+
+  this->control_state(true, mode == climate::CLIMATE_MODE_HEAT, fan_speed, target_temperature, buzzer, led);
+}
+
+void TionLtClimate::control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature,
+                                  bool buzzer, bool led) {
+  tionlt_state_t st = this->state_;
+
+  st.flags.power_state = power_state;
   if (this->state_.flags.power_state != st.flags.power_state) {
     ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  }
+
+  st.flags.heater_state = heater_state;
+  if (this->state_.flags.heater_state != st.flags.heater_state) {
+    ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
   }
 
   st.fan_speed = fan_speed;

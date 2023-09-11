@@ -1,6 +1,6 @@
-#include "esphome/core/log.h"
 #include "esphome/core/defines.h"
-
+#ifdef USE_CLIMATE
+#include "esphome/core/log.h"
 #include "tion_climate.h"
 
 namespace esphome {
@@ -137,3 +137,4 @@ void TionClimate::cancel_preset_(climate::ClimatePreset preset) {
 
 }  // namespace tion
 }  // namespace esphome
+#endif
