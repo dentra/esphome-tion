@@ -12,6 +12,12 @@ class Tion3sClimate : public TionClimateComponent<TionApi3s> {
 
   void dump_config() override;
 
+  climate::ClimateTraits traits() override {
+    auto traits = TionClimateComponent<TionApi3s>::traits();
+    traits.set_visual_max_temperature(30);
+    return traits;
+  }
+
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
 
   void on_ready() {
