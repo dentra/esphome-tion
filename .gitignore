@@ -6,7 +6,7 @@ secrets.yaml
 
 /esphome
 /.esphome/
-/.platformio/
+/.platformio
 /.pio/
 /include/
 /src/

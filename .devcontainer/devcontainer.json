@@ -3,7 +3,7 @@
   "build": {
     "args": {
       // ESPHome version
-      "esphome_version": "2023.7.1",
+      "esphome_version": "2023.9.1",
       // additional APT dependicies
       "apt_deps": "bash-completion less libmbedtls-dev gdb ccache cmake jq",
       // additional PIP dependicies
@@ -84,7 +84,7 @@
         "editorconfig.editorconfig",
         // fixme and todo tree
         "Gruntfuggly.todo-tree"
-      ],
+      ]
     }
   },
   "postCreateCommand": ".devcontainer/post-create.sh",
