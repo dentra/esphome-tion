@@ -124,6 +124,26 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "errors         : %08" PRIX32, state.errors);
 }
 
+void Tion4sClimate::control_recirculation_state(bool state) {
+  climate::ClimateMode mode = this->mode;
+  if (state && this->mode == climate::CLIMATE_MODE_HEAT) {
+    ESP_LOGW(TAG, "Enabled recirculation allow only FAN_ONLY mode");
+    mode = climate::CLIMATE_MODE_FAN_ONLY;
+  }
+  this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+                              this->get_led_(), state);
+}
+
+void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
+  auto recirculation = this->get_recirculation_();
+  if (mode == climate::CLIMATE_MODE_HEAT && recirculation) {
+    ESP_LOGW(TAG, "HEAT mode allow only disabled recirculation");
+    recirculation = false;
+  }
+  this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_led_(),
+                              recirculation);
+}
+
 void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
                                           bool buzzer, bool led, bool recirculation) {
   if (mode == climate::CLIMATE_MODE_OFF) {

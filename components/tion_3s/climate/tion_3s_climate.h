@@ -39,14 +39,9 @@ class Tion3sClimate : public TionClimateComponent<TionApi3s> {
                                 this->get_gate_position_());
   }
 
-  void control_gate_position(tion3s_state_t::GatePosition gate_position) const {
-    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
-                                gate_position);
-  }
+  void control_gate_position(tion3s_state_t::GatePosition gate_position) const;
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override {
-    this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_gate_position_());
-  }
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
                              tion3s_state_t::GatePosition gate_position) const;

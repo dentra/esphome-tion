@@ -62,15 +62,9 @@ class Tion4sClimate : public TionClimateComponent<TionApi4s> {
                                 state, this->get_recirculation_());
   }
 
-  void control_recirculation_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
-                                this->get_led_(), state);
-  }
+  void control_recirculation_state(bool state);
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override {
-    this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_led_(),
-                                this->get_recirculation_());
-  }
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
                              bool led, bool recirculation);

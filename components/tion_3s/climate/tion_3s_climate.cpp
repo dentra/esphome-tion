@@ -89,6 +89,25 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 }
 
+void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) const {
+  climate::ClimateMode mode = this->mode;
+  if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR && this->mode == climate::CLIMATE_MODE_HEAT) {
+    ESP_LOGW(TAG, "INDOOR gate position allow only FAN_ONLY mode");
+    mode = climate::CLIMATE_MODE_FAN_ONLY;
+  }
+  this->control_climate_state(mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+                              gate_position);
+}
+
+void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
+  auto gate_position = this->get_gate_position_();
+  if (mode == climate::CLIMATE_MODE_HEAT && gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
+    ESP_LOGW(TAG, "HEAT mode allow only OUTDOOR gate position");
+    gate_position = tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR;
+  }
+  this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), gate_position);
+}
+
 void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
                                           bool buzzer, tion3s_state_t::GatePosition gate_position) const {
   if (mode == climate::CLIMATE_MODE_OFF) {
