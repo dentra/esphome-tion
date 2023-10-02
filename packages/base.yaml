@@ -24,7 +24,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version ($framework_type)"
-  min_version: "2023.6.2" # can't use substitutions here
+  min_version: "2023.8.0" # can't use substitutions here
 
 preferences:
   flash_write_interval: 10min
