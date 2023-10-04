@@ -36,6 +36,8 @@ captive_portal:
 
 ota:
 logger:
+  logs:
+    component: ERROR
 
 external_components:
   - source: github://dentra/esphome-components@master
