@@ -43,8 +43,5 @@ external_components:
   - source: github://dentra/esphome-components@master
     components: [crash_info, etl, otax, vport, esp32_usb_dis]
     refresh: 1d
-  - source: github://pr#3500
-    components: [web_server, web_server_idf, web_server_base, captive_portal]
-    refresh: 1d
   - source: $project_source
     refresh: $project_source_refresh
