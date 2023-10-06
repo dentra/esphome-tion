@@ -48,7 +48,6 @@ ICON_AIR_FILTER = "mdi:air-filter"
 
 CONF_TION_API_BASE_ID = "tion_api_base_id"
 CONF_TION_API_ID = "tion_api_id"
-CONF_STATE_TIMEOUT = "state_timeout"
 
 CONF_BUZZER = "buzzer"
 CONF_OUTDOOR_TEMPERATURE = "outdoor_temperature"
@@ -163,13 +162,7 @@ def tion_schema(
 
 
 def tion_vport_ble_schema(vport_class: MockObjClass, io_class: MockObjClass):
-    return vport.vport_ble_schema(vport_class, io_class, "60s").extend(
-        {
-            cv.Optional(
-                CONF_STATE_TIMEOUT, default="15s"
-            ): cv.positive_time_period_milliseconds,
-        }
-    )
+    return vport.vport_ble_schema(vport_class, io_class)
 
 
 async def setup_binary_sensor(config, key, setter):
@@ -283,7 +276,6 @@ async def setup_tion_core(config, component_reg):
 
     # FIXME check and replace/remove
     cg.add(prt.set_api(api))
-    cg.add(prt.set_state_type(api.get_state_type()))
     cg.add(var.set_vport_type(prt.get_vport_type()))
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
@@ -307,5 +299,4 @@ async def setup_tion_core(config, component_reg):
 
 async def setup_tion_vport_ble(config):
     var = await vport.setup_vport_ble(config)
-    cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
     return var

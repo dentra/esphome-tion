@@ -7,10 +7,7 @@
 namespace esphome {
 namespace tion {
 
-#define TION_VPORT_BLE_LOG(port_name) \
-  VPORT_BLE_LOG(port_name); \
-  ESP_LOGCONFIG(TAG, "  State timeout: %s", \
-                this->state_timeout_ > 0 ? (to_string(this->state_timeout_ / 1000) + "s").c_str() : ONOFF(false));
+#define TION_VPORT_BLE_LOG(port_name) VPORT_BLE_LOG(port_name);
 
 template<class protocol_type> class TionBleIO : public TionIO<protocol_type>, public vport::VPortBLENode {
  public:
@@ -42,20 +39,10 @@ class TionVPortBLEComponent : public vport::VPortBLEComponent<io_t, frame_spec_t
  public:
   TionVPortBLEComponent(io_t *io) : vport::VPortBLEComponent<io_t, frame_spec_t>(io) {}
 
-  bool can_disconnect(const frame_spec_t &frame, size_t size) {
-    return this->state_type_ == 0 || this->state_type_ == frame.template type;
-  }
-
   TionVPortType get_vport_type() const { return TionVPortType::VPORT_BLE; }
-
-  void set_state_type(uint16_t state_type) { this->state_type_ = state_type; }
-  void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; }
-
- protected:
-  uint32_t state_timeout_{};  // FIXME разобраться с применением
-  uint16_t state_type_{};
 };
 
-}}
+}  // namespace tion
+}  // namespace esphome
 
 #endif  // USE_VPORT_BLE
