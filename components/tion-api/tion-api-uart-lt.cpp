@@ -78,7 +78,7 @@ TionUartProtocolLt::read_frame_result_t TionUartProtocolLt::read_frame_(TionUart
 
   auto tail_size = frame->size - sizeof(frame->size) - sizeof(frame->magic);
   if (io->available() < tail_size) {
-    TION_LOGV(TAG, "Waiting frame data %i of %u", io->available(), tail_size);
+    TION_LOGV(TAG, "Waiting frame data %i of %zu", io->available(), tail_size);
     return READ_NEXT_LOOP;
   }
   if (!io->read_array(&frame->data.type, tail_size)) {
@@ -112,7 +112,7 @@ bool TionUartProtocolLt::write_frame(uint16_t type, const void *data, size_t siz
 
   auto frame_size = sizeof(tion_uart_frame_t) + size;
   if (frame_size > FRAME_MAX_SIZE) {
-    TION_LOGW(TAG, "Frame size is to large: %u", size);
+    TION_LOGW(TAG, "Frame size is to large: %zu", size);
     return false;
   }
 

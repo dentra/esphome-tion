@@ -47,7 +47,7 @@ class Tion3sProxy : public Component {
   }
   virtual ~Tion3sProxy() { delete this->tx_; }
   void dump_config() override;
-  void loop() { this->tx_->poll(); }
+  void loop() override { this->tx_->poll(); }
 
  protected:
   void on_frame_(const TionUartProtocol3sProxy::frame_spec_type &frame, size_t size);

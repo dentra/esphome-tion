@@ -286,7 +286,7 @@ bool TionApi4s::set_time(const time_t time, const uint32_t request_id) const {
 #if INTPTR_MAX == INT32_MAX
   TION_LOGD(TAG, "Request[%" PRIu32 "] Time %ld", request_id, time);
 #else
-  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, time);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %ld", request_id, time);
 #endif
   tion4s_time_t tm{.unix_time = time};
   return this->write_frame(FRAME_TYPE_TIME_SET, tm, request_id);
