@@ -154,9 +154,9 @@ class Component {
  protected:
   friend class Application;
 
-  // virtual void call_loop();
-  virtual void call_setup() {}
-  // virtual void call_dump_config();
+  virtual void call_loop() { this->loop(); }
+  virtual void call_setup() { this->setup(); }
+  virtual void call_dump_config() { this->dump_config(); }
 
   /** Set an interval function with a unique name. Empty name means no cancelling possible.
    *

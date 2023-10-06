@@ -12,7 +12,7 @@ using TionLtBleVPortApiTest = esphome::tion::TionVPortApi<TionLtBleIOTest::frame
 class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
  public:
   TionLtBleVPortTest(TionLtBleIOTest *io) : esphome::tion::TionLtBleVPort(io) {}
-  uint16_t get_state_type() const { return this->state_type_; }
+  // uint16_t get_state_type() const { return this->state_type_; }
 };
 
 class TionLtTest : public esphome::tion::TionLtClimate {

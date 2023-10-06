@@ -10,7 +10,6 @@
 #include <iostream>
 #include <new>
 #include <vector>
-#include "byteswap.h"
 
 #include "utils.h"
 
@@ -19,10 +18,6 @@
 DEFINE_TAG;
 
 #define NUM_REPEATS 3
-
-#ifndef bswap_16
-#define bswap_16 __bswap_16
-#endif
 
 using namespace dentra::tion;
 
@@ -38,7 +33,7 @@ bool check_crc(crc_fn_t &&crc_fn, bool print) {
   if (print)
     printf("src: %s\n", hexencode_cstr(&buf, sizeof(buf)));
 
-  uint16_t crc = bswap_16(crc_fn(buf, sizeof(buf)));
+  uint16_t crc = __builtin_bswap16(crc_fn(buf, sizeof(buf)));
   if (print)
     printf("crc: %04x\n", crc);
 
@@ -79,7 +74,7 @@ bool test_crc_data(const char *data) {
 
   auto tx_frame = cloak::from_hex(data);
 
-  uint16_t crc = bswap_16(crc16_ccitt_false(tx_frame.data(), tx_frame.size() - 2));
+  uint16_t crc = __builtin_bswap16(crc16_ccitt_false(tx_frame.data(), tx_frame.size() - 2));
   uint16_t chk = *((uint16_t *) (tx_frame.data() + tx_frame.size() - 2));
   res &= cloak::check_data_(crc, chk);
 

@@ -56,7 +56,7 @@ class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_
 class Tion4sBleVPortTest : public Tion4sBleVPort {
  public:
   Tion4sBleVPortTest(Tion4sBleIOTest *io) : Tion4sBleVPort(io) {}
-  uint16_t get_state_type() const { return this->state_type_; }
+  // uint16_t get_state_type() const { return this->state_type_; }
 };
 
 class Tion4sTest : public Tion4sClimate {

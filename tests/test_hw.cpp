@@ -62,7 +62,7 @@ enum {
 };
 
 bool check(const dentra::tion::tion4s_state_t &ss, check_fn_t fn) {
-  ESP_LOGD(TAG, "  tion_hw_rsp_state_t (size=%u)", sizeof(ss));
+  ESP_LOGD(TAG, "  tion_hw_rsp_state_t (size=%zu)", sizeof(ss));
   ESP_LOGD(TAG, "    power_state    : %s", ONOFF(ss.flags.power_state));
   ESP_LOGD(TAG, "    sound_state    : %s", ONOFF(ss.flags.sound_state));
   ESP_LOGD(TAG, "    led_state      : %s", ONOFF(ss.flags.led_state));
@@ -120,7 +120,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
   switch (type) {
     case FRAME_TYPE_STATE_SET: {
       if (size != sizeof(tion_hw_req_frame_state_t)) {
-        ESP_LOGE(TAG, "Incorrect state request data size: %u", size);
+        ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
       }
       auto frame = static_cast<const tion_hw_req_frame_state_t *>(data);
@@ -130,7 +130,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
 
     case FRAME_TYPE_STATE_RSP: {
       if (size != sizeof(tion_hw_rsp_frame_state_t)) {
-        ESP_LOGE(TAG, "Incorrect state request data size: %u", size);
+        ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
       }
       auto frame = static_cast<const tion_hw_rsp_frame_state_t *>(data);
@@ -140,7 +140,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
 
     case FRAME_TYPE_HEARTBIT_REQ: {
       if (size != 0) {
-        ESP_LOGE(TAG, "Incorrect heartbeat request data size: %u", size);
+        ESP_LOGE(TAG, "Incorrect heartbeat request data size: %zu", size);
         return false;
       }
       break;
@@ -148,7 +148,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
 
     case FRAME_TYPE_HEARTBIT_RSP: {
       if (size != sizeof(tion_hw_rsp_heartbeat_t)) {
-        ESP_LOGE(TAG, "Incorrect state request data size: %u", size);
+        ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
       }
       auto frame = static_cast<const tion_hw_rsp_heartbeat_t *>(data);
@@ -157,7 +157,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
 
     case FRAME_TYPE_DEV_INFO_REQ: {
       if (size != 0) {
-        ESP_LOGE(TAG, "Incorrect device info request data size: %u", size);
+        ESP_LOGE(TAG, "Incorrect device info request data size: %zu", size);
         return false;
       }
       break;

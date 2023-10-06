@@ -29,7 +29,7 @@ void BLEWriterClientNode::write(const std::vector<uint8_t> &value) {
     ESP_LOGE(TAG, "Characteristic %s does not allow writing", this->char_uuid_.to_string().c_str());
     return;
   }
-  ESP_LOGVV(TAG, "Will write %d bytes: %s", value.size(), format_hex_pretty(value).c_str());
+  ESP_LOGVV(TAG, "Will write %zd bytes: %s", value.size(), format_hex_pretty(value).c_str());
   esp_err_t err =
       esp_ble_gattc_write_char(this->parent()->get_gattc_if(), this->parent()->get_conn_id(), this->ble_char_handle_,
                                value.size(), const_cast<uint8_t *>(value.data()), write_type, ESP_GATT_AUTH_REQ_NONE);

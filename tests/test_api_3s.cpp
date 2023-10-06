@@ -20,7 +20,7 @@ using Tion3sBleVPortApiTest = esphome::tion::TionVPortApi<Tion3sBleIOTest::frame
 class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
  public:
   Tion3sBleVPortTest(Tion3sBleIOTest *io) : esphome::tion::Tion3sBleVPort(io) {}
-  uint16_t get_state_type() const { return this->state_type_; }
+  // uint16_t get_state_type() const { return this->state_type_; }
 };
 
 class Tion3sTest : public esphome::tion::Tion3sClimate {
@@ -106,13 +106,13 @@ bool test_3s() {
   Tion3sTest comp(&api);
 
   vport.set_api(&api);
-  vport.set_state_type(api.get_state_type());
+  // vport.set_state_type(api.get_state_type());
   comp.set_vport_type(vport.get_vport_type());
 
   cloak::setup_and_loop({&vport, &comp});
 
   cloak::check_data("comp vport_type", comp.get_vport_type(), esphome::tion::TionVPortType::VPORT_BLE);
-  cloak::check_data("vport state_type", vport.get_state_type(), 0x10B3);
+  // cloak::check_data("vport state_type", vport.get_state_type(), 0x10B3);
 
   vport.pair();
   io.on_ble_ready();

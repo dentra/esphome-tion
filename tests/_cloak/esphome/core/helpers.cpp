@@ -80,17 +80,13 @@ bool str_equals_case_insensitive(const std::string &a, const std::string &b) {
 
 int8_t step_to_accuracy_decimals(float step) {
   // use printf %g to find number of digits based on temperature step
-  char buf[32];
-  sprintf(buf, "%.5g", step);
-
-  std::string str{buf};
+  std::string str = str_sprintf("%.5g", step);
   size_t dot_pos = str.find('.');
   if (dot_pos == std::string::npos)
     return 0;
 
   return str.length() - dot_pos - 1;
 }
-
 
 // wrapper around std::transform to run safely on functions from the ctype.h header
 // see https://en.cppreference.com/w/cpp/string/byte/toupper#Notes
