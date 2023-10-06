@@ -30,7 +30,7 @@ class TionApiDevice {};
 
 class TionClimateComponentBase : public TionClimate, public TionComponent, public TionApiDevice {
  public:
-  void setup() override;
+  void call_setup() override;
   void dump_settings(const char *TAG, const char *component) const;
   void set_vport_type(TionVPortType vport_type) { this->vport_type_ = vport_type; }
 

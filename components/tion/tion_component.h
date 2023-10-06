@@ -10,14 +10,13 @@
 #include "esphome/components/number/number.h"
 #include "esphome/components/button/button.h"
 
-
 #include "../tion-api/tion-api.h"
 
 namespace esphome {
 namespace tion {
 class TionComponent : public PollingComponent {
  public:
-  void setup() override;
+  void call_setup() override;
 
   void set_version(text_sensor::TextSensor *version) { this->version_ = version; }
   void set_buzzer(switch_::Switch *buzzer) { this->buzzer_ = buzzer; }
@@ -48,7 +47,6 @@ class TionComponent : public PollingComponent {
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
   button::Button *reset_filter_{};
-
 
 #ifdef TION_ENABLE_PRESETS
   ESPPreferenceObject rtc_;

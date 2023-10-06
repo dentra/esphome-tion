@@ -17,8 +17,8 @@ static const char *const TAG = "tion_climate_component";
 // application scheduler name
 static const char *const ASH_BOOST = "tion-boost";
 
-void TionClimateComponentBase::setup() {
-  TionComponent::setup();
+void TionClimateComponentBase::call_setup() {
+  TionComponent::call_setup();
 
 #ifdef TION_ENABLE_PRESETS_WITH_API
   constexpr auto presets_count = (sizeof(this->presets_) / sizeof(this->presets_[0]));
