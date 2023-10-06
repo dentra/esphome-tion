@@ -58,7 +58,7 @@ class TionClimate : public climate::Climate {
     return false;
   }
 #endif  // TION_ENABLE_PRESETS
-  void dump_presets(const char *TAG) const;
+  void dump_presets(const char *tag) const;
 
  protected:
   uint8_t max_fan_speed_ = 6;
