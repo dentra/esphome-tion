@@ -13,7 +13,7 @@ static const char *const TAG = "tion_4s_uart";
 
 void Tion4sUartVPort::dump_config() {
   VPORT_UART_LOG("Tion 4S UART");
-  LOG_UPDATE_INTERVAL(this);
+  ESP_LOGCONFIG(TAG, "  Heartbeat Interval: %.1fs", this->heartbeat_interval_ / 1000.0f);
 }
 
 void Tion4sUartVPort::setup() {
@@ -23,7 +23,7 @@ void Tion4sUartVPort::setup() {
     return;
   }
 
-  this->super_setup_();
+  this->set_interval(this->heartbeat_interval_, [this]() { this->api_->send_heartbeat(); });
 
 #ifdef USE_OTA
   if (this->get_update_interval() != SCHEDULER_DONT_RUN) {
