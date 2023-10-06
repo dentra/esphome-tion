@@ -16,6 +16,10 @@ substitutions:
   framework_type: arduino
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "true"
+  # vport and additional components configuration parameters
+  vport_version: master
+  vport_source: github://dentra/esphome-components@$vport_version
+  vport_source_refresh: 1d
 
 esphome:
   name: $node_name
@@ -40,8 +44,8 @@ logger:
     component: ERROR
 
 external_components:
-  - source: github://dentra/esphome-components@master
+  - source: $vport_source
     components: [crash_info, etl, otax, vport, esp32_usb_dis]
-    refresh: 1d
+    refresh: $vport_source_refresh
   - source: $project_source
     refresh: $project_source_refresh
