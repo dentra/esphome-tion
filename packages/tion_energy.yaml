@@ -11,33 +11,33 @@ sensor:
   - platform: template
     id: heater_power_plus_fan
     lambda: |-
-      float energy = id(heater_power).state;
+      float power = id(heater_power).state;
       // auto fan_speed = id(tion_climate).get_fan_speed(); // future release
       auto fan_mode = id(tion_climate).custom_fan_mode;
       auto fan_speed = fan_mode.has_value() ? *fan_mode.value().c_str() - '0' : 0;
       switch (fan_speed) {
         case 1:
-          energy += $consumption_speed_1;
+          power += $consumption_speed_1;
           break;
         case 2:
-          energy += $consumption_speed_2;
+          power += $consumption_speed_2;
           break;
         case 3:
-          energy += $consumption_speed_3;
+          power += $consumption_speed_3;
           break;
         case 4:
-          energy += $consumption_speed_4;
+          power += $consumption_speed_4;
           break;
         case 5:
-          energy += $consumption_speed_5;
+          power += $consumption_speed_5;
           break;
         case 6:
-          energy += $consumption_speed_6;
+          power += $consumption_speed_6;
           break;
         default:
           break;
       }
-      return energy;
+      return power;
 
   - platform: total_daily_energy
     name: "Daily Energy"
