@@ -27,7 +27,6 @@ TionLedSwitchT = tion.tion_ns.class_("TionLedSwitch", switch.Switch)
 CONF_LED = "led"
 CONF_HEATER_POWER = "heater_power"
 CONF_AIRFLOW_COUNTER = "airflow_counter"
-CONF_FILTER_WARNOUT = "filter_warnout"
 
 
 def tion_lt_base_schema(
@@ -62,10 +61,6 @@ def tion_lt_base_schema(
                 state_class=STATE_CLASS_TOTAL_INCREASING,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.binary_sensor_schema(
-                device_class=DEVICE_CLASS_PROBLEM,
-                entity_category=ENTITY_CATEGORY_NONE,
-            ),
         }
     )
 
@@ -80,5 +75,4 @@ async def setup_tion_lt(config, component_reg):
     await tion.setup_switch(config, CONF_LED, var.set_led, var)
     await tion.setup_sensor(config, CONF_HEATER_POWER, var.set_heater_power)
     await tion.setup_sensor(config, CONF_AIRFLOW_COUNTER, var.set_airflow_counter)
-    await tion.setup_binary_sensor(config, CONF_FILTER_WARNOUT, var.set_filter_warnout)
     return var

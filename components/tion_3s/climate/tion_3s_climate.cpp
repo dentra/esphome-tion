@@ -63,6 +63,10 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
     this->airflow_counter_->publish_state(state.productivity);
   }
 
+  if (this->filter_warnout_) {
+    this->filter_warnout_->publish_state(state.filter_time <= 10);
+  }
+
   // TODO do tests and remove
   // additional request after state response
   // if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {

@@ -63,6 +63,7 @@ CONF_RESET_FILER = "reset_filter"
 CONF_ENABLE_MODE_HEAT_COOL = "enable_mode_heat_cool"
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
+CONF_FILTER_WARNOUT = "filter_warnout"
 
 UNIT_DAYS = "d"
 
@@ -157,6 +158,10 @@ def tion_schema(
                     entity_category=ENTITY_CATEGORY_CONFIG,
                 ),
                 cv.Optional(CONF_ENABLE_MODE_HEAT_COOL, default=False): cv.boolean,
+                cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.binary_sensor_schema(
+                    device_class=DEVICE_CLASS_PROBLEM,
+                    entity_category=ENTITY_CATEGORY_NONE,
+                ),
                 cv.Optional(CONF_STATE_TIMEOUT, default="3s"): cv.update_interval,
                 cv.Optional(CONF_STATE_WARNOUT): binary_sensor.binary_sensor_schema(
                     device_class=DEVICE_CLASS_PROBLEM,
@@ -293,6 +298,7 @@ async def setup_tion_core(config, component_reg):
         await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
         await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
     await setup_button(config, CONF_RESET_FILER, var.set_reset_filter, var)
+    await setup_binary_sensor(config, CONF_FILTER_WARNOUT, var.set_filter_warnout)
     await setup_binary_sensor(config, CONF_STATE_WARNOUT, var.set_state_warnout)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
 
