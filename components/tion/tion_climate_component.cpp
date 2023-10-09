@@ -30,10 +30,10 @@ void TionClimateComponentBase::call_setup() {
                          {"preset", "mode", "fan_speed", "target_temperature"});
 #endif  // TION_ENABLE_PRESETS_WITH_API
 
-  auto state = this->restore_state_();
-  if (state.has_value()) {
-    this->control(state->to_call(this));
-  }
+  // auto state = this->restore_state_();
+  // if (state.has_value()) {
+  //   this->control(state->to_call(this));
+  // }
 }
 
 #ifdef TION_ENABLE_PRESETS

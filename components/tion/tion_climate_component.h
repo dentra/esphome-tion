@@ -36,6 +36,7 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
 
  protected:
   TionVPortType vport_type_{};
+
 #ifdef TION_ENABLE_PRESETS
   bool enable_boost_() override;
   void cancel_boost_() override;
@@ -51,6 +52,8 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
   }
 
   void update_preset_service_(std::string preset, std::string mode, int fan_speed, int target_temperature);
+#endif
+#ifdef TION_ENABLE_PRESETS_WITH_API
   ESPPreferenceObject rtc_;
 #endif
 };  // namespace tion
