@@ -11,9 +11,9 @@ static const char *const TAG = "tion_component";
 void TionComponent::call_setup() {
 #ifdef TION_ENABLE_PRESETS
   if (this->boost_time_) {
-    this->rtc_ = global_preferences->make_preference<uint8_t>(fnv1_hash(TAG));
+    this->boost_rtc_ = global_preferences->make_preference<uint8_t>(fnv1_hash(TAG));
     uint8_t boost_time;
-    if (!this->rtc_.load(&boost_time)) {
+    if (!this->boost_rtc_.load(&boost_time)) {
       boost_time = DEFAULT_BOOST_TIME_SEC / 60;
     }
     auto call = this->boost_time_->make_call();

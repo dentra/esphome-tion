@@ -49,7 +49,7 @@ class TionComponent : public PollingComponent {
   button::Button *reset_filter_{};
 
 #ifdef TION_ENABLE_PRESETS
-  ESPPreferenceObject rtc_;
+  ESPPreferenceObject boost_rtc_;
 #endif
 
   void update_dev_info_(const dentra::tion::tion_dev_info_t &status);
