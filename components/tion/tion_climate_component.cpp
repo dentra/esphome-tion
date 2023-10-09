@@ -122,6 +122,8 @@ void TionClimateComponentBase::dump_settings(const char *TAG, const char *compon
   LOG_SENSOR("  ", "Airflow Counter", this->airflow_counter_);
   LOG_SENSOR("  ", "Filter Time Left", this->filter_time_left_);
   LOG_BINARY_SENSOR("  ", "Filter Warnout", this->filter_warnout_);
+  LOG_BINARY_SENSOR("  ", "State Warnout", this->filter_warnout_);
+  ESP_LOGCONFIG(TAG, "  State timeout: %.1fs", this->state_timeout_ / 1000.0f);
 #ifdef TION_ENABLE_PRESETS
   LOG_NUMBER("  ", "Boost Time", this->boost_time_);
   LOG_SENSOR("  ", "Boost Time Left", this->boost_time_left_);

@@ -90,6 +90,11 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   void on_state(const tion_state_type &state, const uint32_t request_id) {
     this->update_state(state);
     this->state_ = state;
+    if (this->state_warnout_ && this->state_timeout_ > 0) {
+      this->state_warnout_->publish_state(false);
+      this->set_interval("state_timeout", this->state_timeout_,
+                         [this]() { this->state_warnout_->publish_state(true); });
+    }
   }
 
   void on_dev_info(const dentra::tion::tion_dev_info_t &status) { this->update_dev_info_(status); }
