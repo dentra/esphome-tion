@@ -35,7 +35,6 @@ sensor:
           energy += $consumption_speed_6;
           break;
         default:
-          energy = 0.0f;
           break;
       }
       return energy;
