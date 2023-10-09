@@ -54,8 +54,6 @@ void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request
 void Tion4sClimate::update_state(const tion4s_state_t &state) {
   this->dump_state(state);
 
-  this->max_fan_speed_ = state.max_fan_speed;
-
   this->mode = state.flags.power_state ? state.flags.heater_mode == tion4s_state_t::HEATER_MODE_HEATING
                                              ? climate::CLIMATE_MODE_HEAT
                                              : climate::CLIMATE_MODE_FAN_ONLY

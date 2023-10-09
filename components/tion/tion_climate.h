@@ -20,6 +20,7 @@ struct tion_preset_t {
 #endif  // TION_ENABLE_PRESETS
 
 #define TION_MAX_TEMPERATURE 25
+#define TION_MAX_FAN_SPEED 6
 
 class TionClimate : public climate::Climate {
  public:
@@ -42,7 +43,7 @@ class TionClimate : public climate::Climate {
           mode == climate::CLIMATE_MODE_OFF) {
         this->presets_[preset].mode = mode;
       }
-      if (fan_speed > 0 && fan_speed <= this->max_fan_speed_) {
+      if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
         this->presets_[preset].fan_speed = fan_speed;
       }
       // FIXME у 3S переопределена констана максимальной температуры
@@ -64,7 +65,6 @@ class TionClimate : public climate::Climate {
   uint8_t get_fan_speed() const { return this->get_fan_speed(); }
 
  protected:
-  uint8_t max_fan_speed_ = 6;
   void set_fan_speed_(uint8_t fan_speed);
   uint8_t get_fan_speed_() const { return this->fan_mode_to_speed_(this->custom_fan_mode); }
 

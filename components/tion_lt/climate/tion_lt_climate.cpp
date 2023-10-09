@@ -16,8 +16,6 @@ void TionLtClimate::dump_config() {
 void TionLtClimate::update_state(const tionlt_state_t &state) {
   this->dump_state(state);
 
-  this->max_fan_speed_ = state.max_fan_speed;
-
   this->mode = state.flags.power_state
                    ? state.flags.heater_state ? climate::CLIMATE_MODE_HEAT : climate::CLIMATE_MODE_FAN_ONLY
                    : climate::CLIMATE_MODE_OFF;

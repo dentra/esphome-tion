@@ -22,7 +22,7 @@ climate::ClimateTraits TionClimate::traits() {
       climate::CLIMATE_MODE_HEAT,
       climate::CLIMATE_MODE_FAN_ONLY,
   });
-  for (uint8_t i = 1, max = i + this->max_fan_speed_; i < max; i++) {
+  for (uint8_t i = 1, max = i + TION_MAX_FAN_SPEED; i < max; i++) {
     traits.add_supported_custom_fan_mode(this->fan_speed_to_mode_(i));
   }
 #ifdef TION_ENABLE_PRESETS
@@ -74,11 +74,11 @@ void TionClimate::control(const climate::ClimateCall &call) {
 }
 
 void TionClimate::set_fan_speed_(uint8_t fan_speed) {
-  if (fan_speed > 0 && fan_speed <= this->max_fan_speed_) {
+  if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
     this->custom_fan_mode = this->fan_speed_to_mode_(fan_speed);
   } else {
     if (!(this->mode == climate::CLIMATE_MODE_OFF && fan_speed == 0)) {
-      ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, this->max_fan_speed_);
+      ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, TION_MAX_FAN_SPEED);
     }
   }
 }
