@@ -61,7 +61,9 @@ class Tion4sBleVPortTest : public Tion4sBleVPort {
 
 class Tion4sTest : public Tion4sClimate {
  public:
-  Tion4sTest(TionApi4s *api) : Tion4sClimate(api) { this->state_.counters.work_time = 0xFFFF; }
+  Tion4sTest(TionApi4s *api, esphome::tion::TionVPortType vport_type) : Tion4sClimate(api, vport_type) {
+    this->state_.counters.work_time = 0xFFFF;
+  }
   // void enable_preset(climate::ClimatePreset preset) { this->enable_preset_(preset); }
   // void cancel_preset(climate::ClimatePreset preset) { this->cancel_preset_(preset); }
   tion4s_state_t &state() { return this->state_; };
@@ -134,7 +136,7 @@ bool test_presets() {
   Tion4sUartIOTest io(&uart);
   Tion4sUartVPort vport(&io);
   Tion4sUartVPortApiTest api(&vport);
-  Tion4sTest comp(&api);
+  Tion4sTest comp(&api, vport.get_type());
 
   cloak::setup_and_loop({&vport, &comp});
 
@@ -158,7 +160,7 @@ bool test_heat_cool() {
   Tion4sUartIOTest io(&uart);
   Tion4sUartVPort vport(&io);
   Tion4sUartVPortApiTest api(&vport);
-  Tion4sTest comp(&api);
+  Tion4sTest comp(&api, vport.get_type());
 
   cloak::setup_and_loop({&vport, &comp});
 

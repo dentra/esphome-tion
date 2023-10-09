@@ -10,7 +10,7 @@ class Tion3sClimate : public TionClimateComponent<TionApi3s> {
   static constexpr float TION_3S_MAX_TEMPERATURE = 30.0f;
 
  public:
-  explicit Tion3sClimate(TionApi3s *api) : TionClimateComponent(api) {}
+  explicit Tion3sClimate(TionApi3s *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
 
   void dump_config() override;
 

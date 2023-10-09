@@ -10,7 +10,7 @@ using namespace dentra::tion;
 
 class TionLtClimate : public TionClimateComponent<TionApiLt> {
  public:
-  explicit TionLtClimate(TionApiLt *api) : TionClimateComponent(api) {}
+  explicit TionLtClimate(TionApiLt *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
 
   void dump_config() override;
 

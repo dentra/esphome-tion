@@ -17,7 +17,8 @@ class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
 
 class TionLtTest : public esphome::tion::TionLtClimate {
  public:
-  TionLtTest(dentra::tion::TionApiLt *api) : esphome::tion::TionLtClimate(api) {}
+  TionLtTest(dentra::tion::TionApiLt *api, esphome::tion::TionVPortType vport_type)
+      : esphome::tion::TionLtClimate(api, vport_type) {}
 };
 
 bool test_api_lt() {

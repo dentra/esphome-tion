@@ -8,7 +8,7 @@ namespace tion {
 
 class Tion4sClimate : public TionClimateComponent<TionApi4s> {
  public:
-  explicit Tion4sClimate(TionApi4s *api) : TionClimateComponent(api) {
+  explicit Tion4sClimate(TionApi4s *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {
 #ifdef TION_ENABLE_SCHEDULER
     this->api_->on_time.set<Tion4sClimate, &Tion4sClimate::on_time>(*this);
     this->api_->on_timer.set<Tion4sClimate, &Tion4sClimate::on_timer>(*this);

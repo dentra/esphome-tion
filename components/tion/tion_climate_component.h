@@ -30,12 +30,12 @@ class TionApiDevice {};
 
 class TionClimateComponentBase : public TionClimate, public TionComponent, public TionApiDevice {
  public:
+  TionClimateComponentBase(TionVPortType vport_type) : vport_type_(vport_type) {}
   void call_setup() override;
   void dump_settings(const char *tag, const char *component) const;
-  void set_vport_type(TionVPortType vport_type) { this->vport_type_ = vport_type; }
 
  protected:
-  TionVPortType vport_type_{};
+  const TionVPortType vport_type_;
 
 #ifdef TION_ENABLE_PRESETS
   bool enable_boost_() override;
@@ -69,7 +69,8 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
                 "tion_api_type is not derived from TionApiBase");
 
  public:
-  explicit TionClimateComponent(tion_api_type *api) : api_(api) {
+  explicit TionClimateComponent(tion_api_type *api, TionVPortType vport_type)
+      : TionClimateComponentBase(vport_type), api_(api) {
     using this_t = typename std::remove_pointer<decltype(this)>::type;
     this->api_->on_dev_info.template set<this_t, &this_t::on_dev_info>(*this);
     this->api_->on_state.template set<this_t, &this_t::on_state>(*this);

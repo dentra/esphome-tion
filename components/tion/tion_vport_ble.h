@@ -39,7 +39,7 @@ class TionVPortBLEComponent : public vport::VPortBLEComponent<io_t, frame_spec_t
  public:
   TionVPortBLEComponent(io_t *io) : vport::VPortBLEComponent<io_t, frame_spec_t>(io) {}
 
-  TionVPortType get_vport_type() const { return TionVPortType::VPORT_BLE; }
+  TionVPortType get_type() const { return TionVPortType::VPORT_BLE; }
 };
 
 }  // namespace tion

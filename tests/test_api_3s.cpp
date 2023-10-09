@@ -25,12 +25,13 @@ class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
 
 class Tion3sTest : public esphome::tion::Tion3sClimate {
  public:
-  Tion3sTest(dentra::tion::TionApi3s *api) : esphome::tion::Tion3sClimate(api) {
+  Tion3sTest(dentra::tion::TionApi3s *api, esphome::tion::TionVPortType vport_type)
+      : esphome::tion::Tion3sClimate(api, vport_type) {
     // using this_t = typename std::remove_pointer_t<decltype(this)>;
     // api->on_state.template set<this_t, &this_t::on_state>(*this);
   }
 
-  esphome::tion::TionVPortType get_vport_type() { return this->vport_type_; }
+  esphome::tion::TionVPortType get_vport_type() const { return this->vport_type_; }
 
   dentra::tion::tion3s_state_t &state() { return this->state_; };
   void state_reset() { this->state_ = {}; }
@@ -52,7 +53,7 @@ bool test_api_3s() {
   Tion3sBleIOTest io(&client);
   Tion3sBleVPortTest vport(&io);
   Tion3sBleVPortApiTest api(&vport);
-  Tion3sTest comp(&api);
+  Tion3sTest comp(&api, vport.get_type());
 
   io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
   // vport.set_persistent_connection(true);
@@ -103,11 +104,9 @@ bool test_3s() {
   Tion3sBleIOTest io(&client);
   Tion3sBleVPortTest vport(&io);
   Tion3sBleVPortApiTest api(&vport);
-  Tion3sTest comp(&api);
+  Tion3sTest comp(&api, vport.get_type());
 
   vport.set_api(&api);
-  // vport.set_state_type(api.get_state_type());
-  comp.set_vport_type(vport.get_vport_type());
 
   cloak::setup_and_loop({&vport, &comp});
 
@@ -129,7 +128,7 @@ bool test_uart_3s() {
   Tion3sUartIOTest io(&uart);
   Tion3sUartVPortTest vport(&io);
   Tion3sUartVPortApiTest api(&vport);
-  Tion3sTest comp(&api);
+  Tion3sTest comp(&api, esphome::tion::TionVPortType::VPORT_UART);
 
   cloak::setup_and_loop({&vport, &comp});
   for (int i = 0; i < 5; i++) {
@@ -166,7 +165,7 @@ bool test_uart_3s_proxy() {
 
   // as additional input source
   Tion3sUartVPortApiTest api(&vport);
-  Tion3sTest comp(&api);
+  Tion3sTest comp(&api, esphome::tion::TionVPortType::VPORT_UART);
 
   esphome::uart::UARTComponent uart_out(out);
 

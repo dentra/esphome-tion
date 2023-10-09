@@ -52,7 +52,7 @@ class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, frame_spec
 #endif
   }
 
-  TionVPortType get_vport_type() const { return TionVPortType::VPORT_UART; }
+  TionVPortType get_type() const { return TionVPortType::VPORT_UART; }
 
 #ifdef USE_TION_HALF_DUPLEX
   void write(const frame_spec_t &frame, size_t size) override {

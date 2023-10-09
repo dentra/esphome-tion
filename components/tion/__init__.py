@@ -272,11 +272,9 @@ async def setup_tion_core(config, component_reg):
     )
     cg.add(prt.set_api(api))
 
-    var = cg.new_Pvariable(config[CONF_ID], api)
+    var = cg.new_Pvariable(config[CONF_ID], api, prt.get_type())
     await cg.register_component(var, config)
     await component_reg(var, config)
-
-    cg.add(var.set_vport_type(prt.get_vport_type()))
 
     await setup_switch(config, CONF_BUZZER, var.set_buzzer, var)
     await setup_sensor(config, CONF_OUTDOOR_TEMPERATURE, var.set_outdoor_temperature)
