@@ -1,4 +1,5 @@
 #include "esphome/core/log.h"
+#include "esphome/core/defines.h"
 
 #include "tion_3s_climate.h"
 
@@ -10,6 +11,13 @@ static const char *const TAG = "tion_3s";
 void Tion3sClimate::dump_config() {
   this->dump_settings(TAG, "Tion 3S");
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
+  ESP_LOGCONFIG("  ", "OFF befor HEAT: "
+#ifdef USE_TION_ENABLE_OFF_BEFORE_HEAT
+                      "enabled"
+#else
+                      "disabled"
+#endif
+  );
   this->dump_presets(TAG);
 }
 
@@ -157,12 +165,14 @@ void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t f
     ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
   }
 
+#ifdef USE_TION_ENABLE_OFF_BEFORE_HEAT
   // режим вентиляция изменить на обогрев можно только через выключение
   if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
     st.flags.power_state = false;
     this->api_->write_state(st);
     st.flags.power_state = true;
   }
+#endif
 
   this->api_->write_state(st);
 }
