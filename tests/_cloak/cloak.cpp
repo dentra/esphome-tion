@@ -125,23 +125,23 @@ int char2int(char ch) {
   return -1;
 }
 
-bool test(const char *TAG, const std::string &name, bool data1, bool data2) {
+bool test(const char *tag, const std::string &name, bool data1, bool data2) {
   print_data1(data1 == data2, name, "%s", TRUEFALSE(data1), TRUEFALSE(data2));
 }
 
-bool test(const char *TAG, const std::string &name, uint8_t data1, uint8_t data2) {
+bool test(const char *tag, const std::string &name, uint8_t data1, uint8_t data2) {
   print_data2(data1 == data2, name, "%u", "0x%02X", data1, data2);
 }
 
-bool test(const char *TAG, const std::string &name, uint16_t data1, uint16_t data2) {
+bool test(const char *tag, const std::string &name, uint16_t data1, uint16_t data2) {
   print_data2(data1 == data2, name, "%u", "0x%04X", data1, data2);
 }
 
-bool test(const char *TAG, const std::string &name, uint32_t data1, uint32_t data2) {
+bool test(const char *tag, const std::string &name, uint32_t data1, uint32_t data2) {
   print_data2(data1 == data2, name, "%u", "0x%08X", data1, data2);
 }
 
-bool test(const char *TAG, const std::string &name, const std::vector<uint8_t> &data1,
+bool test(const char *tag, const std::string &name, const std::vector<uint8_t> &data1,
           const std::vector<uint8_t> &data2) {
   print_data1(data1 == data2, name, "%s", format_hex_pretty(data1).c_str(), format_hex_pretty(data2).c_str());
 }

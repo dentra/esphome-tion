@@ -63,31 +63,31 @@ namespace internal {
 
 int char2int(char ch);
 
-bool test(const char *TAG, const std::string &name, bool data1, bool data2);
-bool test(const char *TAG, const std::string &name, uint8_t data1, uint8_t data2);
-bool test(const char *TAG, const std::string &name, uint16_t data1, uint16_t data2);
-bool test(const char *TAG, const std::string &name, uint32_t data1, uint32_t data2);
+bool test(const char *tag, const std::string &name, bool data1, bool data2);
+bool test(const char *tag, const std::string &name, uint8_t data1, uint8_t data2);
+bool test(const char *tag, const std::string &name, uint16_t data1, uint16_t data2);
+bool test(const char *tag, const std::string &name, uint32_t data1, uint32_t data2);
 
-bool test(const char *TAG, const std::string &name, const std::vector<uint8_t> &data1,
+bool test(const char *tag, const std::string &name, const std::vector<uint8_t> &data1,
           const std::vector<uint8_t> &data2);
 
-inline bool test(const char *TAG, const std::string &name, const std::vector<uint8_t> &data1,
+inline bool test(const char *tag, const std::string &name, const std::vector<uint8_t> &data1,
                  const std::string &data2) {
-  return test(TAG, name, data1, from_hex(data2));
+  return test(tag, name, data1, from_hex(data2));
 }
-inline bool test(const char *TAG, const std::string &name, cloak::Cloak *data1, const std::vector<uint8_t> &data2) {
-  bool res = test(TAG, name, data1->test_data(), data2);
+inline bool test(const char *tag, const std::string &name, cloak::Cloak *data1, const std::vector<uint8_t> &data2) {
+  bool res = test(tag, name, data1->test_data(), data2);
   data1->test_data_clear();
   return res;
 }
-inline bool test(const char *TAG, const std::string &name, cloak::Cloak *data1, const std::string &data2) {
-  return test(TAG, name, data1, from_hex(data2));
+inline bool test(const char *tag, const std::string &name, cloak::Cloak *data1, const std::string &data2) {
+  return test(tag, name, data1, from_hex(data2));
 }
-inline bool test(const char *TAG, const std::string &name, cloak::Cloak &data1, const std::vector<uint8_t> &data2) {
-  return test(TAG, name, &data1, data2);
+inline bool test(const char *tag, const std::string &name, cloak::Cloak &data1, const std::vector<uint8_t> &data2) {
+  return test(tag, name, &data1, data2);
 }
-inline bool test(const char *TAG, const std::string &name, cloak::Cloak &data1, const std::string &data2) {
-  return test(TAG, name, &data1, from_hex(data2));
+inline bool test(const char *tag, const std::string &name, cloak::Cloak &data1, const std::string &data2) {
+  return test(tag, name, &data1, from_hex(data2));
 }
 }  // namespace internal
 
