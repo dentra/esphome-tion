@@ -7,6 +7,8 @@ namespace esphome {
 namespace tion {
 
 class Tion3sClimate : public TionClimateComponent<TionApi3s> {
+  static constexpr float TION_3S_MAX_TEMPERATURE = 30.0f;
+
  public:
   explicit Tion3sClimate(TionApi3s *api) : TionClimateComponent(api) {}
 
@@ -14,7 +16,7 @@ class Tion3sClimate : public TionClimateComponent<TionApi3s> {
 
   climate::ClimateTraits traits() override {
     auto traits = TionClimateComponent<TionApi3s>::traits();
-    traits.set_visual_max_temperature(30);
+    traits.set_visual_max_temperature(TION_3S_MAX_TEMPERATURE);
     return traits;
   }
 
@@ -30,13 +32,7 @@ class Tion3sClimate : public TionClimateComponent<TionApi3s> {
   void update_state(const tion3s_state_t &state) override;
   void dump_state(const tion3s_state_t &state) const;
 
-  void reset_filter() {
-    this->api_->reset_filter(this->state_);
-    // TODO do tests and remove
-    // if (this->vport_type_ == TionVPortType::VPORT_UART) {
-    //   this->defer([this]() { this->api_->request_command4(); });
-    // }
-  }
+  void reset_filter() { this->api_->reset_filter(this->state_); }
 
   int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
 

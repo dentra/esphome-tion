@@ -45,6 +45,7 @@ class TionClimate : public climate::Climate {
       if (fan_speed > 0 && fan_speed <= this->max_fan_speed_) {
         this->presets_[preset].fan_speed = fan_speed;
       }
+      // FIXME у 3S переопределена констана максимальной температуры
       if (target_temperature > 0 && target_temperature <= TION_MAX_TEMPERATURE) {
         this->presets_[preset].target_temperature = target_temperature;
       }
