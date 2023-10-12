@@ -7,26 +7,16 @@ secrets.yaml
 /esphome
 /.esphome/
 /.platformio
-/.pio/
-/include/
-/src/
 /lib/
 /config/
 /platformio.ini
 /partitions.csv
-CMakeListsPrivate.txt
-CMakeLists.txt
 Doxygen
 
 /compile_commands.json
 /.clang_complete
 /.gcc-flags.json
 /.temp-clang-tidy.cpp
-/.clang-format
-/.clang-tidy
-/.editorconfig
-/.pylintrc
-/pylintrc
 /*-dev.yaml
 
 /components/vport
