@@ -7,7 +7,7 @@ DEFINE_TAG;
 
 using namespace dentra::tion;
 
-using TionLtBleVPortApiTest = esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionApiLt>;
+using TionLtBleVPortApiTest = esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi>;
 
 class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
  public:
@@ -17,7 +17,7 @@ class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
 
 class TionLtTest : public esphome::tion::TionLtClimate {
  public:
-  TionLtTest(dentra::tion::TionApiLt *api, esphome::tion::TionVPortType vport_type)
+  TionLtTest(dentra::tion::TionLtApi *api, esphome::tion::TionVPortType vport_type)
       : esphome::tion::TionLtClimate(api, vport_type) {}
 };
 

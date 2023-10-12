@@ -12,9 +12,9 @@ using namespace tion_3s;
 
 static const char *const TAG = "tion-api-3s";
 
-uint16_t TionApi3s::get_state_type() const { return FRAME_TYPE_RSP(FRAME_TYPE_STATE_GET); }
+uint16_t Tion3sApi::get_state_type() const { return FRAME_TYPE_RSP(FRAME_TYPE_STATE_GET); }
 
-void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
+void Tion3sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // invalid size is never possible
   // if (frame_data_size != sizeof(tion3s_state_t)) {
   //   TION_LOGW(TAG, "Incorrect state data size: %zu", frame_data_size);
@@ -60,7 +60,7 @@ void TionApi3s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 }
 
-bool TionApi3s::pair() const {
+bool Tion3sApi::pair() const {
   TION_LOGD(TAG, "Request[] Pair");
   struct {
     uint8_t pair;
@@ -68,12 +68,12 @@ bool TionApi3s::pair() const {
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_SRV_MODE_SET), pair);
 }
 
-bool TionApi3s::request_state() const {
+bool Tion3sApi::request_state() const {
   TION_LOGD(TAG, "Request[] State Get");
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_GET));
 }
 
-bool TionApi3s::write_state(const tion3s_state_t &state) const {
+bool Tion3sApi::write_state(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Request[] State Set");
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
@@ -83,7 +83,7 @@ bool TionApi3s::write_state(const tion3s_state_t &state) const {
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), mode);
 }
 
-bool TionApi3s::reset_filter(const tion3s_state_t &state) const {
+bool Tion3sApi::reset_filter(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Request[] Filter Time Reset");
   // return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
 
@@ -113,7 +113,7 @@ bool TionApi3s::reset_filter(const tion3s_state_t &state) const {
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), set);
 }
 
-bool TionApi3s::request_command4() const {
+bool Tion3sApi::request_command4() const {
   TION_LOGD(TAG, "Request[] Command 4");
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
 }

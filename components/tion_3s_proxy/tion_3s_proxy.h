@@ -11,14 +11,14 @@
 namespace esphome {
 namespace tion_3s_proxy {
 
-class TionUartProtocol3sProxy : public dentra::tion::TionUartProtocol3s {
+class Tion3sUartProtocolProxy : public dentra::tion::Tion3sUartProtocol {
  public:
-  TionUartProtocol3sProxy() : dentra::tion::TionUartProtocol3s(dentra::tion::FRAME_MAGIC_REQ) {}
+  Tion3sUartProtocolProxy() : dentra::tion::Tion3sUartProtocol(dentra::tion::FRAME_MAGIC_REQ) {}
 };
 
-class Tion3sUartIO : public tion::TionUartIO<TionUartProtocol3sProxy> {
+class Tion3sUartIO : public tion::TionUartIO<Tion3sUartProtocolProxy> {
  public:
-  explicit Tion3sUartIO(uart::UARTComponent *uart) : tion::TionUartIO<TionUartProtocol3sProxy>(uart) {}
+  explicit Tion3sUartIO(uart::UARTComponent *uart) : tion::TionUartIO<Tion3sUartProtocolProxy>(uart) {}
   virtual ~Tion3sUartIO() {}
   bool write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
     return this->protocol_.write_frame(frame_type, frame_data, frame_data_size);
@@ -27,7 +27,7 @@ class Tion3sUartIO : public tion::TionUartIO<TionUartProtocol3sProxy> {
 
 class Tion3sProxy;
 
-class TionApi3sProxy : public dentra::tion::TionApiBase<dentra::tion::tion3s_state_t> {
+class Tion3sApiProxy : public dentra::tion::TionApiBase<dentra::tion::tion3s_state_t> {
  public:
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
   void set_tx(Tion3sProxy *parent) { this->parent_ = parent; }
@@ -37,10 +37,10 @@ class TionApi3sProxy : public dentra::tion::TionApiBase<dentra::tion::tion3s_sta
 };
 
 class Tion3sProxy : public Component {
-  friend class TionApi3sProxy;
+  friend class Tion3sApiProxy;
 
  public:
-  explicit Tion3sProxy(TionApi3sProxy *rx, uart::UARTComponent *uart) : rx_(rx) {
+  explicit Tion3sProxy(Tion3sApiProxy *rx, uart::UARTComponent *uart) : rx_(rx) {
     this->tx_ = new Tion3sUartIO(uart);
     this->tx_->set_on_frame(Tion3sUartIO::on_frame_type::create<Tion3sProxy, &Tion3sProxy::on_frame_>(*this));
     this->rx_->set_tx(this);
@@ -50,9 +50,9 @@ class Tion3sProxy : public Component {
   void loop() override { this->tx_->poll(); }
 
  protected:
-  void on_frame_(const TionUartProtocol3sProxy::frame_spec_type &frame, size_t size);
+  void on_frame_(const Tion3sUartProtocolProxy::frame_spec_type &frame, size_t size);
   // tion
-  TionApi3sProxy *rx_{};
+  Tion3sApiProxy *rx_{};
   // ble module
   Tion3sUartIO *tx_;
 

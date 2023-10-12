@@ -6,17 +6,17 @@
 #include "../components/tion-api/tion-api-ble-lt.h"
 #include "../components/tion-api/tion-api-ble-3s.h"
 
-class TestTionBleLtProtocol : public dentra::tion::TionBleLtProtocol {
+class TestTionLtBleProtocol : public dentra::tion::TionLtBleProtocol {
  public:
   bool read_data(const std::vector<uint8_t> &data) {
-    return dentra::tion::TionBleLtProtocol::read_data(data.data(), data.size());
+    return dentra::tion::TionLtBleProtocol::read_data(data.data(), data.size());
   }
 };
 
-class TestTionBle3sProtocol : public dentra::tion::TionBle3sProtocol {
+class TestTion3sBleProtocol : public dentra::tion::Tion3sBleProtocol {
  public:
   bool read_data(const std::vector<uint8_t> &data) {
-    return dentra::tion::TionBle3sProtocol::read_data(data.data(), data.size());
+    return dentra::tion::Tion3sBleProtocol::read_data(data.data(), data.size());
   }
 };
 

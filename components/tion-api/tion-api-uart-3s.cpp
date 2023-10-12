@@ -12,7 +12,7 @@ namespace tion {
 static const char *const TAG = "tion-api-uart-3s";
 
 #pragma pack(push, 1)
-struct tion3s_uart_frame_t {
+struct Tion3sRawUartFrame {
   union {
     struct {
       uint8_t head;
@@ -25,7 +25,7 @@ struct tion3s_uart_frame_t {
 };
 #pragma pack(pop)
 
-void TionUartProtocol3s::read_uart_data(TionUartReader *io) {
+void Tion3sUartProtocol::read_uart_data(TionUartReader *io) {
   if (!this->reader) {
     TION_LOGE(TAG, "Reader is not configured");
     return;
@@ -39,8 +39,8 @@ void TionUartProtocol3s::read_uart_data(TionUartReader *io) {
   }
 }
 
-TionUartProtocol3s::read_frame_result_t TionUartProtocol3s::read_frame_(TionUartReader *io) {
-  auto frame = reinterpret_cast<tion3s_uart_frame_t *>(this->buf_);
+Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUartReader *io) {
+  auto frame = reinterpret_cast<Tion3sRawUartFrame *>(this->buf_);
 
   if (frame->rx.head != this->head_type_) {
     if (io->available() < sizeof(frame->rx.head)) {
@@ -97,13 +97,13 @@ TionUartProtocol3s::read_frame_result_t TionUartProtocol3s::read_frame_(TionUart
   return READ_NEXT_LOOP;
 }
 
-bool TionUartProtocol3s::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
+bool Tion3sUartProtocol::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   if (!this->writer) {
     TION_LOGE(TAG, "Writer is not configured");
     return false;
   }
 
-  tion3s_uart_frame_t frame{.data = {.type = frame_type, .data = {}}, .magic = FRAME_MAGIC_END};
+  Tion3sRawUartFrame frame{.data = {.type = frame_type, .data = {}}, .magic = FRAME_MAGIC_END};
   if (frame_data_size <= sizeof(frame.data.data)) {
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }

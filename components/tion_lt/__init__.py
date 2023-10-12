@@ -21,7 +21,7 @@ from .. import tion  # pylint: disable=relative-beyond-top-level
 CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion"]
 
-TionApiLt = tion.tion_ns.class_("TionApiLt")
+TionLtApi = tion.tion_ns.class_("TionLtApi")
 TionLedSwitchT = tion.tion_ns.class_("TionLedSwitch", switch.Switch)
 
 CONF_LED = "led"
@@ -66,7 +66,7 @@ def tion_lt_base_schema(
 
 
 def tion_lt_schema(tion_class: MockObjClass, tion_base_schema: cv.Schema):
-    return tion_lt_base_schema(tion_class, TionApiLt, tion_base_schema)
+    return tion_lt_base_schema(tion_class, TionLtApi, tion_base_schema)
 
 
 async def setup_tion_lt(config, component_reg):

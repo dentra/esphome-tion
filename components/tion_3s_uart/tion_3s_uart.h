@@ -10,7 +10,7 @@
 namespace esphome {
 namespace tion {
 
-using Tion3sUartIO = TionUartIO<dentra::tion::TionUartProtocol3s>;
+using Tion3sUartIO = TionUartIO<dentra::tion::Tion3sUartProtocol>;
 
 class Tion3sUartVPort : public TionVPortUARTComponent<Tion3sUartIO, Tion3sUartIO::frame_spec_type, PollingComponent> {
  public:
@@ -19,10 +19,10 @@ class Tion3sUartVPort : public TionVPortUARTComponent<Tion3sUartIO, Tion3sUartIO
   void dump_config() override;
   void update() override { this->api_->request_command4(); }
 
-  void set_api(dentra::tion::TionApi3s *api) { this->api_ = api; }
+  void set_api(dentra::tion::Tion3sApi *api) { this->api_ = api; }
 
  protected:
-  dentra::tion::TionApi3s *api_;
+  dentra::tion::Tion3sApi *api_;
 };
 
 }  // namespace tion

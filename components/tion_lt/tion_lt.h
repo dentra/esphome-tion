@@ -10,7 +10,7 @@ using namespace dentra::tion;
 
 class TionLtBaseComponent {
  public:
-  TionLtBaseComponent(TionApiLt *api) {}
+  TionLtBaseComponent(TionLtApi *api) {}
 
   void control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
                      bool led);

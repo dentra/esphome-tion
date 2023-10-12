@@ -7,9 +7,9 @@ namespace dentra {
 namespace tion {
 
 // 20 = sizeof(tion3s_frame_t)
-class TionUartProtocol3s : public TionUartProtocolBase<20> {
+class Tion3sUartProtocol : public TionUartProtocolBase<20> {
  public:
-  TionUartProtocol3s(uint8_t head_type = FRAME_MAGIC_RSP) : head_type_(head_type) {}
+  Tion3sUartProtocol(uint8_t head_type = FRAME_MAGIC_RSP) : head_type_(head_type) {}
 
   void read_uart_data(TionUartReader *io);
 

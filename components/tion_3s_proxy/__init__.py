@@ -6,13 +6,13 @@ from .. import vport, tion  # pylint: disable=relative-beyond-top-level
 
 tion_3s_proxy_ns = cg.esphome_ns.namespace("tion_3s_proxy")
 Tion3sProxy = tion_3s_proxy_ns.class_("Tion3sProxy", cg.Component)
-TionApi3sProxy = tion_3s_proxy_ns.class_("TionApi3sProxy")
+Tion3sApiProxy = tion_3s_proxy_ns.class_("Tion3sApiProxy")
 
 CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(Tion3sProxy),
-            cv.GenerateID(tion.CONF_TION_API_BASE_ID): cv.declare_id(TionApi3sProxy),
+            cv.GenerateID(tion.CONF_TION_API_BASE_ID): cv.declare_id(Tion3sApiProxy),
             cv.GenerateID(tion.CONF_TION_API_ID): cv.declare_id(tion.TionVPortApi),
         }
     )

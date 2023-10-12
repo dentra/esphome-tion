@@ -7,7 +7,7 @@
 namespace esphome {
 namespace tion {
 
-using Tion4sBleIO = esphome::tion::TionBleIO<dentra::tion::TionBleLtProtocol>;
+using Tion4sBleIO = esphome::tion::TionBleIO<dentra::tion::TionLtBleProtocol>;
 
 class Tion4sBleVPort : public TionVPortBLEComponent<Tion4sBleIO, Tion4sBleIO::frame_spec_type> {
  public:

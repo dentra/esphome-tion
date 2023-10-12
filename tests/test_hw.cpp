@@ -183,10 +183,10 @@ bool check_packet(const std::string &hex, check_fn_t fn) {
     return false;
   }
 
-  if (crc16_ccitt_false(packet, packet->size) != 0) {
+  if (crc16_ccitt_false_ffff(packet, packet->size) != 0) {
     uint16_t crc = __builtin_bswap16(*(uint16_t *) (raw.data() + raw.size() - sizeof(uint16_t)));
     ESP_LOGD(TAG, "invalid crc %04X (expected: %04X)", crc,
-             crc16_ccitt_false(raw.data(), raw.size() - sizeof(uint16_t)));
+             crc16_ccitt_false_ffff(raw.data(), raw.size() - sizeof(uint16_t)));
     return false;
   }
 

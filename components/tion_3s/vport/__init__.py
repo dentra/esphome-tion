@@ -11,8 +11,8 @@ AUTO_LOAD = ["vport", "tion"]
 CONF_EXPERIMENTAL_ALWAYS_PAIR = "experimental_always_pair"
 
 # Tion3sBLEVPort = tion.tion_ns.class_("Tion3sBLEVPort", cg.PollingComponent, vport.VPort)
-# VPortTionBle3sProtocol = tion.tion_ns.class_("VPortTionBle3sProtocol")
-# CONFIG_SCHEMA = tion_ble.tion_ble_schema(Tion3sBLEVPort, VPortTionBle3sProtocol).extend(
+# VPortTion3sBleProtocol= tion.tion_ns.class_("VPortTion3sBleProtocol")
+# CONFIG_SCHEMA = tion_ble.tion_ble_schema(Tion3sBLEVPort, VPortTion3sBleProtocol).extend(
 #     {
 #         cv.Optional(CONF_EXPERIMENTAL_ALWAYS_PAIR, default=False): cv.boolean,
 #     }

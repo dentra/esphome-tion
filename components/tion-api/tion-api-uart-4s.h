@@ -6,7 +6,7 @@
 namespace dentra {
 namespace tion {
 
-class TionUartProtocol4s : public TionUartProtocolBase<0x2A> {
+class Tion4sUartProtocol : public TionUartProtocolBase<0x2A> {
  public:
   void read_uart_data(TionUartReader *io);
 

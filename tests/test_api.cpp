@@ -12,7 +12,7 @@ class ApiTest {
  public:
   dentra::tion::TionApiBase<tion4s_state_t> api_;
 
-  ApiTest(dentra::tion::TionBleLtProtocol *w) {
+  ApiTest(dentra::tion::TionLtBleProtocol *w) {
     w->reader.set<ApiTest, &ApiTest::read_frame>(*this);
     // w->writer.set<ApiTest, &ApiTest::write_data>(*this);
   }
@@ -70,7 +70,7 @@ const ApiTestData test_4s_data[]{
 bool test_api() {
   bool res = true;
 
-  dentra::tion::TionBleLtProtocol p;
+  dentra::tion::TionLtBleProtocol p;
   for (auto data : test_4s_data) {
     ApiTest t(&p);
     for (auto d : data.frames) {

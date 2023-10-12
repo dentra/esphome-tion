@@ -16,14 +16,14 @@ CONF_AIR_INTAKE = "air_intake"
 CONF_PRODUCTIVITY = "productivity"
 UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/h"
 
-TionApi3s = tion.tion_ns.class_("TionApi3s")
+Tion3sApi = tion.tion_ns.class_("Tion3sApi")
 Tion3sAirIntakeSelectT = tion.tion_ns.class_("Tion3sAirIntakeSelect", select.Select)
 
 OPTIONS_AIR_INTAKE = ["Indoor", "Mixed", "Outdoor"]
 
 
 def tion_3s_schema(tion_class: MockObjClass, tion_base_schema: cv.Schema):
-    return tion.tion_schema(tion_class, TionApi3s, tion_base_schema).extend(
+    return tion.tion_schema(tion_class, Tion3sApi, tion_base_schema).extend(
         {
             cv.Optional(CONF_AIR_INTAKE): select.select_schema(
                 Tion3sAirIntakeSelectT.template(tion_class),

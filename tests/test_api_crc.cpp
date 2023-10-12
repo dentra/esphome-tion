@@ -74,11 +74,11 @@ bool test_crc_data(const char *data) {
 
   auto tx_frame = cloak::from_hex(data);
 
-  uint16_t crc = __builtin_bswap16(crc16_ccitt_false(tx_frame.data(), tx_frame.size() - 2));
+  uint16_t crc = __builtin_bswap16(crc16_ccitt_false_ffff(tx_frame.data(), tx_frame.size() - 2));
   uint16_t chk = *((uint16_t *) (tx_frame.data() + tx_frame.size() - 2));
   res &= cloak::check_data_(crc, chk);
 
-  uint16_t zer = crc16_ccitt_false(tx_frame.data(), tx_frame.size());
+  uint16_t zer = crc16_ccitt_false_ffff(tx_frame.data(), tx_frame.size());
   res &= cloak::check_data_(zer, 0);
 
   return res;
@@ -86,7 +86,7 @@ bool test_crc_data(const char *data) {
 
 bool test_api_crc() {
   bool res = true;
-  // res = mk_test([&](bool) { return check_crc(crc16_ccitt_false, print); });
+  // res = mk_test([&](bool) { return check_crc(crc16_ccitt_false_ffff, print); });
 
   res &= test_crc_data("0C.00.3A.AD.32.33.01.00.00.00.CE.A6");
   res &= test_crc_data("0C.00.3A.AD.32.32.01.00.00.00.64.F7");

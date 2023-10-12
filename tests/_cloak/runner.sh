@@ -37,8 +37,11 @@ cmake -B $BLD -S $(dirname $0) -DCMAKE_BUILD_TYPE=$TYP \
   -DEX_TEST_SOURCES_ESPHOME="$EX_TEST_SOURCES_ESPHOME" && \
 cmake --build $BLD --target $TGT $ARGS || exit $?
 
-OUT=$BLD/tests
+if [ $TGT == "clean" ]; then
+  exit 0
+fi
 
+OUT=$BLD/tests
 if [ "$1" == "info" ]; then
   size $OUT
 elif [ "$1" != "debug" ]; then

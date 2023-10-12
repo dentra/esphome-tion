@@ -5,7 +5,7 @@
 namespace dentra {
 namespace tion {
 
-class TionBleLtProtocol : public TionProtocol<tion_any_ble_frame_t> {
+class TionLtBleProtocol : public TionProtocol<tion_any_ble_frame_t> {
  public:
   bool read_data(const uint8_t *data, size_t size);
 
@@ -18,7 +18,6 @@ class TionBleLtProtocol : public TionProtocol<tion_any_ble_frame_t> {
  protected:
   std::vector<uint8_t> rx_buf_;
 
-  bool read_packet_(uint8_t packet_type, const uint8_t *data, size_t size);
   bool write_packet_(const void *data, uint16_t size) const;
   bool read_frame_(const void *data, uint32_t size);
 };

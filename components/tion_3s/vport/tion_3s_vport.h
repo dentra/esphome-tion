@@ -11,7 +11,7 @@ namespace tion {
 
 class Tion3sBleVPort;
 
-class Tion3sBleIO : public TionBleIO<dentra::tion::TionBle3sProtocol> {
+class Tion3sBleIO : public TionBleIO<dentra::tion::Tion3sBleProtocol> {
  public:
   explicit Tion3sBleIO() { this->set_ble_encryption(esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT); }
 
@@ -41,7 +41,7 @@ class Tion3sBleVPort : public TionVPortBLEComponent<Tion3sBleIO, Tion3sBleIO::fr
   void reset_pair();
   bool is_paired() const { return this->pair_state_ > 0; }
 
-  void set_api(dentra::tion::TionApi3s *api) { this->api_ = api; }
+  void set_api(dentra::tion::Tion3sApi *api) { this->api_ = api; }
 
 #ifdef TION_ENABLE_MAC_CHAHGE
   void save_mac_address(const std::string &mac_address);
@@ -51,13 +51,13 @@ class Tion3sBleVPort : public TionVPortBLEComponent<Tion3sBleIO, Tion3sBleIO::fr
   ESPPreferenceObject rtc_;
   int8_t pair_state_{};  // 0: not paired, >0: paired, <0: pairing
   bool experimental_always_pair_{};
-  dentra::tion::TionApi3s *api_{};
+  dentra::tion::Tion3sApi *api_{};
 
   void on_ready_3s_();
   void pair_();
 };
 
-// using Tion3sBleApi = TionVPortApi<Tion3sBleIO::frame_spec_type, dentra::tion::TionApi3s>;
+// using Tion3sBleApi = TionVPortApi<Tion3sBleIO::frame_spec_type, dentra::tion::Tion3sApi>;
 
 }  // namespace tion
 }  // namespace esphome

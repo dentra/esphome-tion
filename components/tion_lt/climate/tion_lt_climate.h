@@ -8,9 +8,9 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLtClimate : public TionClimateComponent<TionApiLt> {
+class TionLtClimate : public TionClimateComponent<TionLtApi> {
  public:
-  explicit TionLtClimate(TionApiLt *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
+  explicit TionLtClimate(TionLtApi *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
 
   void dump_config() override;
 

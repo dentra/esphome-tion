@@ -12,10 +12,10 @@
 
 DEFINE_TAG;
 
-using Tion3sUartVPortApiTest = esphome::tion::TionVPortApi<Tion3sUartIOTest::frame_spec_type, dentra::tion::TionApi3s>;
+using Tion3sUartVPortApiTest = esphome::tion::TionVPortApi<Tion3sUartIOTest::frame_spec_type, dentra::tion::Tion3sApi>;
 using Tion3sUartVPortTest = esphome::vport::VPortUARTComponent<Tion3sUartIOTest, Tion3sUartIOTest::frame_spec_type>;
 
-using Tion3sBleVPortApiTest = esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::TionApi3s>;
+using Tion3sBleVPortApiTest = esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi>;
 
 class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
  public:
@@ -25,7 +25,7 @@ class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
 
 class Tion3sTest : public esphome::tion::Tion3sClimate {
  public:
-  Tion3sTest(dentra::tion::TionApi3s *api, esphome::tion::TionVPortType vport_type)
+  Tion3sTest(dentra::tion::Tion3sApi *api, esphome::tion::TionVPortType vport_type)
       : esphome::tion::Tion3sClimate(api, vport_type) {
     // using this_t = typename std::remove_pointer_t<decltype(this)>;
     // api->on_state.template set<this_t, &this_t::on_state>(*this);
@@ -169,7 +169,7 @@ bool test_uart_3s_proxy() {
 
   esphome::uart::UARTComponent uart_out(out);
 
-  esphome::tion::TionVPortApi<esphome::tion::Tion3sUartVPort::frame_spec_type, esphome::tion_3s_proxy::TionApi3sProxy>
+  esphome::tion::TionVPortApi<esphome::tion::Tion3sUartVPort::frame_spec_type, esphome::tion_3s_proxy::Tion3sApiProxy>
       api_proxy(&vport);
   esphome::tion_3s_proxy::Tion3sProxy proxy(&api_proxy, &uart_out);
 

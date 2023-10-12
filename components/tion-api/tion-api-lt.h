@@ -56,7 +56,7 @@ struct tionlt_state_t {
 
 #pragma pack(pop)
 
-class TionApiLt : public TionApiBase<tionlt_state_t> {
+class TionLtApi : public TionApiBase<tionlt_state_t> {
  public:
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 

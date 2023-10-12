@@ -11,7 +11,7 @@
 namespace esphome {
 namespace tion {
 
-using Tion4sUartIO = TionUartIO<dentra::tion::TionUartProtocol4s>;
+using Tion4sUartIO = TionUartIO<dentra::tion::Tion4sUartProtocol>;
 
 class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO, Tion4sUartIO::frame_spec_type, PollingComponent> {
  public:

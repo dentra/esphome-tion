@@ -31,13 +31,13 @@ static const PROGMEM uint16_t CRC_CCITT_TABLE[256] = {
     0x1CE0, 0x0CC1, 0xEF1F, 0xFF3E, 0xCF5D, 0xDF7C, 0xAF9B, 0xBFBA, 0x8FD9, 0x9FF8, 0x6E17, 0x7E36, 0x4E55, 0x5E74,
     0x2E93, 0x3EB2, 0x0ED1, 0x1EF0};
 
-uint16_t crc16_ccitt_false(uint16_t crc, const void *data, uint16_t size) {
+uint16_t crc16_ccitt_false(uint16_t init, const void *data, size_t size) {
   const uint8_t *data_ptr = static_cast<const uint8_t *>(data);
   const uint8_t *data_end = data_ptr + size;
   while (data_ptr < data_end) {
-    crc = (crc << 8) ^ pgm_read_word(CRC_CCITT_TABLE + ((crc >> 8) ^ *data_ptr++));
+    init = (init << 8) ^ pgm_read_word(CRC_CCITT_TABLE + ((init >> 8) ^ *data_ptr++));
   }
-  return crc;
+  return init;
 }
 
 }  // namespace tion

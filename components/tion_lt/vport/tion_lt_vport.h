@@ -7,7 +7,7 @@
 namespace esphome {
 namespace tion {
 
-using TionLtBleIO = esphome::tion::TionBleIO<dentra::tion::TionBleLtProtocol>;
+using TionLtBleIO = esphome::tion::TionBleIO<dentra::tion::TionLtBleProtocol>;
 
 class TionLtBleVPort : public TionVPortBLEComponent<TionLtBleIO, TionLtBleIO::frame_spec_type> {
  public:
@@ -15,7 +15,7 @@ class TionLtBleVPort : public TionVPortBLEComponent<TionLtBleIO, TionLtBleIO::fr
 
   void dump_config() override;
 
-  void set_api(dentra::tion::TionApiLt *api) {}
+  void set_api(dentra::tion::TionLtApi *api) {}
 };
 
 }  // namespace tion

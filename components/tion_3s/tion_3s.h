@@ -10,7 +10,7 @@ namespace tion {
 
 using namespace dentra::tion;
 
-using TionApi3s = dentra::tion::TionApi3s;
+using Tion3sApi = dentra::tion::Tion3sApi;
 
 template<class parent_t> class Tion3sAirIntakeSelect : public select::Select, public Parented<parent_t> {
  public:

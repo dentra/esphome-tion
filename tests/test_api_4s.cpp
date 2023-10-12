@@ -72,7 +72,7 @@ class Tion4sTest : public Tion4sClimate {
 /*
 bool test_api_4s_x() {
   bool res = true;
-  TestTionBleLtProtocol p;
+  TestTionLtBleProtocol p;
   for (auto data : test_4s_data) {
     Api4sTest t4s(&p);
     // p.set_api(&t4s);
