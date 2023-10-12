@@ -6,12 +6,12 @@
 #include "utils.h"
 #include "log.h"
 
-#include "tion-api-uart-lt.h"
+#include "tion-api-uart-4s.h"
 
 namespace dentra {
 namespace tion {
 
-static const char *const TAG = "tion-api-uart-lt";
+static const char *const TAG = "tion-api-uart-4s";
 
 enum {
   FRAME_HEADER = 0x3A,
@@ -25,7 +25,7 @@ struct tion_uart_frame_t {
 };
 #pragma pack(pop)
 
-void TionUartProtocolLt::read_uart_data(TionUartReader *io) {
+void TionUartProtocol4s::read_uart_data(TionUartReader *io) {
   if (!this->reader) {
     TION_LOGE(TAG, "Reader is not configured");
     return;
@@ -39,7 +39,7 @@ void TionUartProtocolLt::read_uart_data(TionUartReader *io) {
   }
 }
 
-TionUartProtocolLt::read_frame_result_t TionUartProtocolLt::read_frame_(TionUartReader *io) {
+TionUartProtocol4s::read_frame_result_t TionUartProtocol4s::read_frame_(TionUartReader *io) {
   auto frame = reinterpret_cast<tion_uart_frame_t *>(this->buf_);
   if (frame->magic != FRAME_HEADER) {
     if (io->available() < sizeof(frame->magic)) {
@@ -104,7 +104,7 @@ TionUartProtocolLt::read_frame_result_t TionUartProtocolLt::read_frame_(TionUart
   return READ_NEXT_LOOP;
 }
 
-bool TionUartProtocolLt::write_frame(uint16_t type, const void *data, size_t size) {
+bool TionUartProtocol4s::write_frame(uint16_t type, const void *data, size_t size) {
   if (!this->writer) {
     TION_LOGE(TAG, "Writer is not configured");
     return false;

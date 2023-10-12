@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "../components/tion-api/log.h"
 #include "../components/tion-api/crc.h"
-#include "../components/tion-api/tion-api-uart-lt.h"
+#include "../components/tion-api/tion-api-uart-4s.h"
 #include "../components/tion-api/tion-api-ble-lt.h"
 #include "../components/tion-api/tion-api-4s.h"
 

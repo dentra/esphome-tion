@@ -6,12 +6,12 @@
 #include "../tion/tion.h"
 #include "../tion/tion_vport_uart.h"
 #include "../tion-api/tion-api-4s.h"
-#include "../tion-api/tion-api-uart-lt.h"
+#include "../tion-api/tion-api-uart-4s.h"
 
 namespace esphome {
 namespace tion {
 
-using Tion4sUartIO = TionUartIO<dentra::tion::TionUartProtocolLt>;
+using Tion4sUartIO = TionUartIO<dentra::tion::TionUartProtocol4s>;
 
 class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO, Tion4sUartIO::frame_spec_type, PollingComponent> {
  public:
