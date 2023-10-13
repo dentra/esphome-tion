@@ -37,7 +37,8 @@ sensor:
         default:
           break;
       }
-      return power;
+      return power * 0.001;
+    unit_of_measurement: kW
 
   - platform: total_daily_energy
     name: "Daily Energy"
