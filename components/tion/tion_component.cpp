@@ -9,6 +9,7 @@ namespace tion {
 static const char *const TAG = "tion_component";
 
 void TionComponent::call_setup() {
+  PollingComponent::call_setup();
 #ifdef TION_ENABLE_PRESETS
   if (this->boost_time_) {
     this->boost_rtc_ = global_preferences->make_preference<uint8_t>(fnv1_hash(TAG));
