@@ -43,6 +43,7 @@ sensor:
     name: "Daily Energy"
     power_id: heater_power_plus_fan
     accuracy_decimals: 2
+    entity_category: diagnostic
 
 time:
   - platform: $time_platform
