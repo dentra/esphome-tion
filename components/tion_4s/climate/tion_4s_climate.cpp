@@ -179,7 +179,7 @@ void Tion4sClimate::control_state(bool power_state, tion4s_state_t::HeaterMode h
     ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(st, ++this->request_id_);
+  this->write_api_state_(st);
 }
 
 #ifdef TION_ENABLE_PRESETS

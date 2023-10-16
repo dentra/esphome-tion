@@ -110,7 +110,7 @@ void TionLtClimate::control_state(bool power_state, bool heater_state, uint8_t f
     ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
   }
 
-  this->api_->write_state(st, ++this->request_id_);
+  this->write_api_state_(st);
 }
 
 }  // namespace tion

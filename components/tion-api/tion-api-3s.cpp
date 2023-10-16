@@ -73,7 +73,7 @@ bool Tion3sApi::request_state() const {
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_GET));
 }
 
-bool Tion3sApi::write_state(const tion3s_state_t &state) const {
+bool Tion3sApi::write_state(const tion3s_state_t &state, uint32_t unused_request_id __attribute__((unused))) const {
   TION_LOGD(TAG, "Request[] State Set");
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");

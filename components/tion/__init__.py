@@ -169,7 +169,7 @@ def tion_schema(
                 cv.Optional(CONF_STATE_TIMEOUT, default="3s"): cv.update_interval,
                 cv.Optional(CONF_STATE_WARNOUT): binary_sensor.binary_sensor_schema(
                     device_class=DEVICE_CLASS_PROBLEM,
-                    entity_category=ENTITY_CATEGORY_NONE,
+                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
                 cv.Optional(CONF_PRODUCTIVITY): sensor.sensor_schema(
                     unit_of_measurement=UNIT_CUBIC_METER_PER_HOUR,

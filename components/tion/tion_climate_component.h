@@ -92,7 +92,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
 
     if (this->state_warnout_ && this->state_timeout_ > 0) {
       this->state_warnout_->publish_state(false);
-      this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
+      this->cancel_timeout("state_timeout");
     }
     if (this->outdoor_temperature_) {
       this->outdoor_temperature_->publish_state(state.outdoor_temperature);
@@ -115,6 +115,13 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
  protected:
   tion_api_type *api_;
   tion_state_type state_{};
+  uint32_t request_id_{};
+  void write_api_state_(const tion_state_type &state) {
+    this->api_->write_state(state, ++this->request_id_);
+    if (this->state_warnout_ && this->state_timeout_ > 0) {
+      this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
+    }
+  }
 };
 
 template<class tion_api_type> class TionLtClimateComponent : public TionClimateComponent<tion_api_type> {
@@ -158,7 +165,6 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
   }
 
  protected:
-  uint32_t request_id_{};
   uint32_t prev_airflow_time_{};
   uint32_t prev_airflow_counter_{};
 };

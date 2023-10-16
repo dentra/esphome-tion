@@ -81,7 +81,7 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 }
 
-void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) const {
+void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) {
   climate::ClimateMode mode = this->mode;
   if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR && this->mode == climate::CLIMATE_MODE_HEAT) {
     ESP_LOGW(TAG, "INDOOR gate position allow only FAN_ONLY mode");
@@ -101,7 +101,7 @@ void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan
 }
 
 void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
-                                          bool buzzer, tion3s_state_t::GatePosition gate_position) const {
+                                          bool buzzer, tion3s_state_t::GatePosition gate_position) {
   if (mode == climate::CLIMATE_MODE_OFF) {
     this->control_state(false, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, gate_position);
     return;
@@ -116,7 +116,7 @@ void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan
 }
 
 void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature,
-                                  bool buzzer, tion3s_state_t::GatePosition gate_position) const {
+                                  bool buzzer, tion3s_state_t::GatePosition gate_position) {
   tion3s_state_t st = this->state_;
 
   st.flags.power_state = power_state;
@@ -153,12 +153,12 @@ void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t f
   // режим вентиляция изменить на обогрев можно только через выключение
   if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
     st.flags.power_state = false;
-    this->api_->write_state(st);
+    this->write_api_state_(st);
     st.flags.power_state = true;
   }
 #endif
 
-  this->api_->write_state(st);
+  this->write_api_state_(st);
 }
 
 }  // namespace tion
