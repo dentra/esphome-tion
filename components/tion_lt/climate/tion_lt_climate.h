@@ -38,6 +38,20 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
   void control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
                      bool led);
 
+  optional<int8_t> get_pcb_temperature() const {
+    if (this->state_.is_initialized()) {
+      return this->state_.pcb_temperature;
+    }
+    return {};
+  }
+
+  optional<int8_t> get_fan_time() const {
+    if (this->state_.is_initialized()) {
+      return this->state_.counters.fan_time;
+    }
+    return {};
+  }
+
  protected:
   bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
   bool get_led_() const { return this->led_ ? this->led_->state : this->state_.flags.led_state; }
