@@ -25,6 +25,8 @@ from esphome.const import (
     UNIT_CELSIUS,
     UNIT_MINUTE,
     UNIT_SECOND,
+    UNIT_CUBIC_METER,
+    UNIT_HOUR,
 )
 from .. import vport  # pylint: disable=relative-beyond-top-level
 
@@ -64,8 +66,10 @@ CONF_ENABLE_MODE_HEAT_COOL = "enable_mode_heat_cool"
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
 CONF_FILTER_WARNOUT = "filter_warnout"
+CONF_PRODUCTIVITY = "productivity"
 
 UNIT_DAYS = "d"
+UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/{UNIT_HOUR}"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
@@ -166,6 +170,13 @@ def tion_schema(
                 cv.Optional(CONF_STATE_WARNOUT): binary_sensor.binary_sensor_schema(
                     device_class=DEVICE_CLASS_PROBLEM,
                     entity_category=ENTITY_CATEGORY_NONE,
+                ),
+                cv.Optional(CONF_PRODUCTIVITY): sensor.sensor_schema(
+                    unit_of_measurement=UNIT_CUBIC_METER_PER_HOUR,
+                    accuracy_decimals=1,
+                    icon="mdi:weather-windy",
+                    state_class=STATE_CLASS_MEASUREMENT,
+                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
             }
         )
@@ -301,6 +312,7 @@ async def setup_tion_core(config, component_reg):
     await setup_binary_sensor(config, CONF_FILTER_WARNOUT, var.set_filter_warnout)
     await setup_binary_sensor(config, CONF_STATE_WARNOUT, var.set_state_warnout)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
+    await setup_sensor(config, CONF_PRODUCTIVITY, var.set_productivity)
 
     if config[CONF_ENABLE_MODE_HEAT_COOL]:
         cg.add_define("USE_TION_CLIMATE_MODE_HEAT_COOL")

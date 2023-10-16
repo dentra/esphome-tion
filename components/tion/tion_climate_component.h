@@ -89,11 +89,25 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
 
   void on_state(const tion_state_type &state, const uint32_t request_id) {
     this->update_state(state);
-    this->state_ = state;
+
     if (this->state_warnout_ && this->state_timeout_ > 0) {
       this->state_warnout_->publish_state(false);
       this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
     }
+    if (this->outdoor_temperature_) {
+      this->outdoor_temperature_->publish_state(state.outdoor_temperature);
+    }
+    if (this->buzzer_) {
+      this->buzzer_->publish_state(state.flags.sound_state);
+    }
+    if (this->filter_time_left_) {
+      this->filter_time_left_->publish_state(state.counters.filter_time_left());
+    }
+    if (this->filter_warnout_) {
+      this->filter_warnout_->publish_state(state.filter_warnout());
+    }
+
+    this->state_ = state;
   }
 
   void on_dev_info(const dentra::tion::tion_dev_info_t &status) { this->update_dev_info_(status); }
@@ -101,6 +115,52 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
  protected:
   tion_api_type *api_;
   tion_state_type state_{};
+};
+
+template<class tion_api_type> class TionLtClimateComponent : public TionClimateComponent<tion_api_type> {
+  using tion_state_type = typename tion_api_type::state_type;
+
+ public:
+  explicit TionLtClimateComponent(tion_api_type *api, TionVPortType vport_type)
+      : TionClimateComponent<tion_api_type>(api, vport_type) {
+    using this_t = typename std::remove_pointer<decltype(this)>::type;
+    this->api_->on_state.template set<this_t, &this_t::on_state>(*this);
+  }
+
+  void on_state(const tion_state_type &state, const uint32_t request_id) {
+    TionClimateComponent<tion_api_type>::on_state(state, request_id);
+
+    if (this->led_) {
+      this->led_->publish_state(state.flags.led_state);
+    }
+    if (this->heater_power_) {
+      this->heater_power_->publish_state(state.heater_power());
+    }
+    if (this->airflow_counter_) {
+      this->airflow_counter_->publish_state(state.counters.airflow());
+    }
+    if (this->productivity_) {
+      uint32_t now = millis();
+      if (this->prev_airflow_time_ == 0) {
+        this->prev_airflow_time_ = now;
+        this->prev_airflow_counter_ = state.counters.airflow_counter;
+      } else {
+        auto diff_airflow = state.counters.airflow_counter - this->prev_airflow_counter_;
+        if (diff_airflow > 0) {
+          auto diff_time = now - this->prev_airflow_time_;
+          this->productivity_->publish_state(float(diff_airflow) / (float(diff_time) / 1000.0f) *
+                                             float(state.counters.airflow_k()));
+          this->prev_airflow_time_ = now;
+          this->prev_airflow_counter_ = state.counters.airflow_counter;
+        }
+      }
+    }
+  }
+
+ protected:
+  uint32_t request_id_{};
+  uint32_t prev_airflow_time_{};
+  uint32_t prev_airflow_counter_{};
 };
 
 class TionBoostTimeNumber : public number::Number {

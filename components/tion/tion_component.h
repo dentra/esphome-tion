@@ -26,6 +26,7 @@ class TionComponent : public PollingComponent {
   }
   void set_heater_power(sensor::Sensor *heater_power) { this->heater_power_ = heater_power; }
   void set_airflow_counter(sensor::Sensor *airflow_counter) { this->airflow_counter_ = airflow_counter; }
+  void set_productivity(sensor::Sensor *productivity) { this->productivity_ = productivity; }
   void set_filter_time_left(sensor::Sensor *filter_time_left) { this->filter_time_left_ = filter_time_left; }
   void set_filter_warnout(binary_sensor::BinarySensor *filter_warnout) { this->filter_warnout_ = filter_warnout; }
 
@@ -44,6 +45,7 @@ class TionComponent : public PollingComponent {
   sensor::Sensor *outdoor_temperature_{};
   sensor::Sensor *heater_power_{};
   sensor::Sensor *airflow_counter_{};
+  sensor::Sensor *productivity_{};
   sensor::Sensor *filter_time_left_{};
   binary_sensor::BinarySensor *filter_warnout_{};
 

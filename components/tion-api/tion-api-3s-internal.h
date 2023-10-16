@@ -69,7 +69,7 @@ struct tion3s_state_set_t {
     st_set.target_temperature = state.target_temperature;
     st_set.gate_position = state.gate_position;
     st_set.flags = state.flags;
-    st_set.filter_time.value = state.filter_time;
+    st_set.filter_time.value = state.counters.filter_time;
 
     return st_set;
   }

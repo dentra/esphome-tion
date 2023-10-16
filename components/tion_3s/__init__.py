@@ -13,8 +13,6 @@ CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "select"]
 
 CONF_AIR_INTAKE = "air_intake"
-CONF_PRODUCTIVITY = "productivity"
-UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/h"
 
 Tion3sApi = tion.tion_ns.class_("Tion3sApi")
 Tion3sAirIntakeSelectT = tion.tion_ns.class_("Tion3sAirIntakeSelect", select.Select)
@@ -30,13 +28,6 @@ def tion_3s_schema(tion_class: MockObjClass, tion_base_schema: cv.Schema):
                 icon="mdi:air-conditioner",
                 entity_category=ENTITY_CATEGORY_CONFIG,
             ),
-            cv.Optional(CONF_PRODUCTIVITY): sensor.sensor_schema(
-                unit_of_measurement=UNIT_CUBIC_METER_PER_HOUR,
-                accuracy_decimals=2,
-                icon="mdi:weather-windy",
-                state_class=STATE_CLASS_MEASUREMENT,
-                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-            ),
         }
     )
 
@@ -47,4 +38,3 @@ async def setup_tion_3s(config, compoent_reg):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
-    await tion.setup_sensor(config, CONF_PRODUCTIVITY, var.set_airflow_counter)

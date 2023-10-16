@@ -67,27 +67,6 @@ void Tion4sClimate::update_state(const tion4s_state_t &state) {
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
 
-  if (this->buzzer_) {
-    this->buzzer_->publish_state(state.flags.sound_state);
-  }
-  if (this->led_) {
-    this->led_->publish_state(state.flags.led_state);
-  }
-  if (this->outdoor_temperature_) {
-    this->outdoor_temperature_->publish_state(state.outdoor_temperature);
-  }
-  if (this->heater_power_) {
-    this->heater_power_->publish_state(state.heater_power());
-  }
-  if (this->airflow_counter_) {
-    this->airflow_counter_->publish_state(state.counters.airflow_counter());
-  }
-  if (this->filter_warnout_) {
-    this->filter_warnout_->publish_state(state.flags.filter_warnout);
-  }
-  if (this->filter_time_left_) {
-    this->filter_time_left_->publish_state(state.counters.filter_days());
-  }
   if (this->recirculation_) {
     this->recirculation_->publish_state(state.gate_position != tion4s_state_t::GATE_POSITION_INFLOW);
   }
@@ -99,7 +78,7 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);
   ESP_LOGV(TAG, "outdoor_temp   : %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
-  ESP_LOGV(TAG, "airflow_counter: %f", state.counters.airflow_counter());
+  ESP_LOGV(TAG, "airflow_counter: %" PRIu32, state.counters.airflow_counter);
   ESP_LOGV(TAG, "filter_warnout : %s", ONOFF(state.flags.filter_warnout));
   ESP_LOGV(TAG, "filter_time    : %" PRIu32, state.counters.filter_time);
   ESP_LOGV(TAG, "gate_position  : %u", state.gate_position);

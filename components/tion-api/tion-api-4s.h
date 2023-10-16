@@ -66,7 +66,7 @@ struct tion4s_state_t {
   // sensor: pwr pcb temperature.
   int8_t pcb_pwr_temperature;
   // counters.
-  tion_state_counters_t counters;
+  tion_state_counters_t<tion_dev_info_t::BR4S> counters;
   // errors.
   uint32_t errors;
   // fan speed limit.
@@ -77,6 +77,7 @@ struct tion4s_state_t {
 
   float heater_power() const;
   bool is_initialized() const { return this->counters.work_time != 0; }
+  bool filter_warnout() const { return this->flags.filter_warnout; }
 };
 
 struct tion4s_turbo_t {

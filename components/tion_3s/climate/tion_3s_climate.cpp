@@ -44,35 +44,15 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
   if (this->version_ && state.firmware_version > 0) {
     this->version_->publish_state(str_snprintf("%04X", 4, state.firmware_version));
   }
-  if (this->buzzer_) {
-    this->buzzer_->publish_state(state.flags.sound_state);
-  }
-  if (this->outdoor_temperature_) {
-    this->outdoor_temperature_->publish_state(state.outdoor_temperature);
-  }
-  if (this->filter_time_left_) {
-    this->filter_time_left_->publish_state(state.filter_time);
-  }
   if (this->air_intake_) {
     auto air_intake = this->air_intake_->at(state.gate_position);
     if (air_intake.has_value()) {
       this->air_intake_->publish_state(*air_intake);
     }
   }
-  if (this->airflow_counter_) {
-    this->airflow_counter_->publish_state(state.productivity);
+  if (this->productivity_) {
+    this->productivity_->publish_state(state.productivity);
   }
-
-  if (this->filter_warnout_) {
-    this->filter_warnout_->publish_state(state.filter_time <= 10);
-  }
-
-  // TODO do tests and remove
-  // additional request after state response
-  // if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
-  //   // call on next loop
-  //   this->defer([this]() { this->api_->request_command4(); });
-  // }
 }
 
 void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
@@ -92,7 +72,7 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "unknown_temp : %d", state.unknown_temperature);
   ESP_LOGV(TAG, "outdoor_temp : %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "current_temp : %d", state.current_temperature);
-  ESP_LOGV(TAG, "filter_time  : %u", state.filter_time);
+  ESP_LOGV(TAG, "filter_time  : %u", state.counter.filter_time);
   ESP_LOGV(TAG, "hours        : %u", state.hours);
   ESP_LOGV(TAG, "minutes      : %u", state.minutes);
   ESP_LOGV(TAG, "last_error   : %u", state.last_error);

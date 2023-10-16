@@ -34,7 +34,7 @@ struct tionlt_state_t {
   int8_t outdoor_temperature;
   int8_t current_temperature;
   int8_t pcb_temperature;
-  tion_state_counters_t counters;
+  tion_state_counters_t<tion_dev_info_t::BRLT> counters;
   struct {
     uint32_t reg;
     struct {
@@ -52,6 +52,7 @@ struct tionlt_state_t {
   uint8_t test_type;
   float heater_power() const;
   bool is_initialized() const { return this->counters.work_time != 0; }
+  bool filter_warnout() const { return this->flags.filter_warnout; }
 };
 
 #pragma pack(pop)

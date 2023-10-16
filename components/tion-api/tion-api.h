@@ -10,29 +10,14 @@ namespace dentra {
 namespace tion {
 
 #pragma pack(push, 1)
-struct tion_state_counters_t {
-  // Motor time counter in seconds. power_up_time
-  uint32_t work_time;
-  // Electronics time count in seconds.
-  uint32_t fan_time;
-  // Filter time counter in seconds.
-  uint32_t filter_time;
-  // Airflow counter, m3=airflow_counter * 15.0 / 3600.0.
-  uint32_t airflow_counter_;
-  // Calculated airflow_counter in m3.
-  float airflow_counter() const { return airflow_counter_ * (15.0f / 3600.0f); }
-  // Calculated filter days left
-  uint32_t filter_days() const { return filter_time / 86400; }
-};
-
 struct tion_dev_info_t {
-  enum : uint8_t {
+  enum work_mode_t : uint8_t {
     // обычный режим работы
     NORMAL = 1,
     // бризер находится в режиме обновления
     UPDATE = 2,
   } work_mode;
-  enum : uint32_t {
+  enum device_type_t : uint32_t {
     // Tion IQ 200
     IQ200 = 0x8001,
     // Tion Lite
@@ -43,6 +28,28 @@ struct tion_dev_info_t {
   uint16_t firmware_version;
   uint16_t hardware_version;
   uint8_t reserved[16];
+};
+
+template<tion_dev_info_t::device_type_t DT> struct tion_state_counters_t {
+  // Motor time counter in seconds. power_up_time
+  uint32_t work_time;
+  // Electronics time count in seconds.
+  uint32_t fan_time;
+  // Filter time counter in seconds.
+  uint32_t filter_time;
+  // Airflow counter, m3=airflow_counter * 15.0 / 3600.0.
+  uint32_t airflow_counter;
+  // Calculated airflow in m3.
+  float airflow() const { return airflow_counter * (float(airflow_k()) / 3600.0f); }
+  // Calculated filter days left
+  uint32_t filter_time_left() const { return filter_time / (24 * 3600); }
+
+  constexpr size_t airflow_k() const {
+    if constexpr (DT == tion_dev_info_t::device_type_t::BRLT) {
+      return 10;
+    }
+    return 15;
+  }
 };
 
 #pragma pack(pop)

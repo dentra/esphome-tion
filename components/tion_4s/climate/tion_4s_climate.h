@@ -6,9 +6,9 @@
 namespace esphome {
 namespace tion {
 
-class Tion4sClimate : public TionClimateComponent<TionApi4s> {
+class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
  public:
-  explicit Tion4sClimate(TionApi4s *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {
+  explicit Tion4sClimate(TionApi4s *api, TionVPortType vport_type) : TionLtClimateComponent(api, vport_type) {
 #ifdef TION_ENABLE_SCHEDULER
     this->api_->on_time.set<Tion4sClimate, &Tion4sClimate::on_time>(*this);
     this->api_->on_timer.set<Tion4sClimate, &Tion4sClimate::on_timer>(*this);
@@ -22,7 +22,7 @@ class Tion4sClimate : public TionClimateComponent<TionApi4s> {
 
 #ifdef TION_ENABLE_PRESETS
   void update() override {
-    TionClimateComponent::update();
+    TionLtClimateComponent::update();
     if (this->vport_type_ == TionVPortType::VPORT_BLE) {
       this->api_->request_turbo();
     }
@@ -87,7 +87,6 @@ class Tion4sClimate : public TionClimateComponent<TionApi4s> {
   }
 
  protected:
-  uint32_t request_id_{};
   switch_::Switch *recirculation_{};
 #ifdef TION_ENABLE_PRESETS
   bool enable_boost_() override;

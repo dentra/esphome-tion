@@ -36,8 +36,11 @@ struct tion3s_state_t {
   int8_t current_temperature;
   // температура воздуха на входе в бризер (т.е. текущая температура на улице)
   int8_t outdoor_temperature;
-  // остаточный ресурс фильтров в днях (то, что показывается в приложении как "время жизни фильтров")
-  uint16_t filter_time;
+  struct {
+    // остаточный ресурс фильтров в днях (то, что показывается в приложении как "время жизни фильтров")
+    uint16_t filter_time;
+    uint16_t filter_time_left() const { return filter_time; }
+  } counters;
   uint8_t hours;
   uint8_t minutes;
   uint8_t last_error;
@@ -49,6 +52,7 @@ struct tion3s_state_t {
   uint16_t firmware_version;
 
   bool is_initialized() const { return this->firmware_version != 0; }
+  bool filter_warnout() const { return this->counters.filter_time <= 10; }
 };
 
 #pragma pack(pop)

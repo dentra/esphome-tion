@@ -8,9 +8,9 @@ namespace tion {
 
 using namespace dentra::tion;
 
-class TionLtClimate : public TionClimateComponent<TionLtApi> {
+class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
  public:
-  explicit TionLtClimate(TionLtApi *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
+  explicit TionLtClimate(TionLtApi *api, TionVPortType vport_type) : TionLtClimateComponent(api, vport_type) {}
 
   void dump_config() override;
 
@@ -39,7 +39,6 @@ class TionLtClimate : public TionClimateComponent<TionLtApi> {
                      bool led);
 
  protected:
-  uint32_t request_id_{};
   bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
   bool get_led_() const { return this->led_ ? this->led_->state : this->state_.flags.led_state; }
 };
