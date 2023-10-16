@@ -19,7 +19,7 @@ struct tion_preset_t {
 };
 #endif  // TION_ENABLE_PRESETS
 
-#define TION_MAX_TEMPERATURE 25
+#define TION_MAX_TEMPERATURE 30
 #define TION_MAX_FAN_SPEED 6
 
 class TionClimate : public climate::Climate {
@@ -46,7 +46,7 @@ class TionClimate : public climate::Climate {
       if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
         this->presets_[preset].fan_speed = fan_speed;
       }
-      // FIXME у 3S переопределена констана максимальной температуры
+      // FIXME у Lite тербуется проверка возможности греть до 30 градусов.
       if (target_temperature > 0 && target_temperature <= TION_MAX_TEMPERATURE) {
         this->presets_[preset].target_temperature = target_temperature;
       }

@@ -7,18 +7,10 @@ namespace esphome {
 namespace tion {
 
 class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
-  static constexpr float TION_3S_MAX_TEMPERATURE = 30.0f;
-
  public:
   explicit Tion3sClimate(Tion3sApi *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
 
   void dump_config() override;
-
-  climate::ClimateTraits traits() override {
-    auto traits = TionClimateComponent<Tion3sApi>::traits();
-    traits.set_visual_max_temperature(TION_3S_MAX_TEMPERATURE);
-    return traits;
-  }
 
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
 
