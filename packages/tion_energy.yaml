@@ -12,10 +12,7 @@ sensor:
     id: heater_power_plus_fan
     lambda: |-
       float power = id(heater_power).state;
-      // auto fan_speed = id(tion_climate).get_fan_speed(); // future release
-      auto fan_mode = id(tion_climate).custom_fan_mode;
-      auto fan_speed = fan_mode.has_value() ? *fan_mode.value().c_str() - '0' : 0;
-      switch (fan_speed) {
+      switch (id(tion_climate).get_fan_speed()) {
         case 1:
           power += $consumption_speed_1;
           break;
@@ -39,6 +36,7 @@ sensor:
       }
       return power * 0.001;
     unit_of_measurement: kW
+    update_interval: never
 
   - platform: total_daily_energy
     name: "Daily Energy"
@@ -54,6 +52,6 @@ climate:
   - id: !extend tion_climate
     heater_power:
       id: heater_power
-      on_value:
+      on_raw_value:
         then:
           lambda: id(heater_power_plus_fan).update();
