@@ -92,8 +92,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     this->state_ = state;
     if (this->state_warnout_ && this->state_timeout_ > 0) {
       this->state_warnout_->publish_state(false);
-      this->set_interval("state_timeout", this->state_timeout_,
-                         [this]() { this->state_warnout_->publish_state(true); });
+      this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
     }
   }
 
