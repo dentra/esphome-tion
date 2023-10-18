@@ -62,7 +62,6 @@ CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
 CONF_RESET_FILER = "reset_filter"
-CONF_ENABLE_MODE_HEAT_COOL = "enable_mode_heat_cool"
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
 CONF_FILTER_WARNOUT = "filter_warnout"
@@ -161,7 +160,6 @@ def tion_schema(
                     icon="mdi:air-filter",
                     entity_category=ENTITY_CATEGORY_CONFIG,
                 ),
-                cv.Optional(CONF_ENABLE_MODE_HEAT_COOL, default=False): cv.boolean,
                 cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.binary_sensor_schema(
                     device_class=DEVICE_CLASS_PROBLEM,
                     entity_category=ENTITY_CATEGORY_NONE,
@@ -313,9 +311,6 @@ async def setup_tion_core(config, component_reg):
     await setup_binary_sensor(config, CONF_STATE_WARNOUT, var.set_state_warnout)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
     await setup_sensor(config, CONF_PRODUCTIVITY, var.set_productivity)
-
-    if config[CONF_ENABLE_MODE_HEAT_COOL]:
-        cg.add_define("USE_TION_CLIMATE_MODE_HEAT_COOL")
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

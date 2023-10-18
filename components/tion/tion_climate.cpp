@@ -16,7 +16,7 @@ climate::ClimateTraits TionClimate::traits() {
   traits.set_visual_temperature_step(1.0f);
   traits.set_supported_modes({
       climate::CLIMATE_MODE_OFF,
-#ifdef USE_TION_CLIMATE_MODE_HEAT_COOL
+#ifdef TION_ENABLE_CLIMATE_MODE_HEAT_COOL
       climate::CLIMATE_MODE_HEAT_COOL,
 #endif
       climate::CLIMATE_MODE_HEAT,

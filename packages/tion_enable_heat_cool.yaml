@@ -1,0 +1,4 @@
+esphome:
+  platformio_options:
+    build_flags:
+      - -DTION_ENABLE_CLIMATE_MODE_HEAT_COOL
