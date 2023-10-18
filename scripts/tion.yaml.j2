@@ -63,7 +63,9 @@ packages:
       {%- if type == "3s" and port == "uart" %}
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_3s_antifrize.yaml
-       {%- endif %}
+      ## Turn the breezer off before enable heat mode.
+      - packages/tion_3s_enable_off_before_heat.yaml
+      {%- endif %}
       ## Common configuration settings. Do not comment or move or remove.
       - packages/base.yaml
       {%- if type == "3s" and port == "uart" %}
@@ -223,10 +225,6 @@ climate:
       name: "State Warnout"
     # Optional, Timout when state_warnout will be informed. Default: 3s.
     state_timeout: 3s
-    {%- if type == "3s" %}
-    # Optional, Turn the breezer off before enable heat mode. Default: true.
-    turn_off_before_heat: true
-    {%- endif %}
 
 {%- if type == "3s" and port == "ble" %}
 

@@ -11,7 +11,6 @@ CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["tion", "select"]
 
 CONF_AIR_INTAKE = "air_intake"
-CONF_TURN_OFF_BEFORE_HEAT = "turn_off_before_heat"
 
 Tion3sApi = tion.tion_ns.class_("Tion3sApi")
 Tion3sAirIntakeSelectT = tion.tion_ns.class_("Tion3sAirIntakeSelect", select.Select)
@@ -27,7 +26,6 @@ def tion_3s_schema(tion_class: MockObjClass, tion_base_schema: cv.Schema):
                 icon="mdi:air-conditioner",
                 entity_category=ENTITY_CATEGORY_CONFIG,
             ),
-            cv.Optional(CONF_TURN_OFF_BEFORE_HEAT, default=True): cv.boolean,
         }
     )
 
@@ -38,5 +36,3 @@ async def setup_tion_3s(config, compoent_reg):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
-    if config[CONF_TURN_OFF_BEFORE_HEAT]:
-        cg.add_define("USE_TION_ENABLE_OFF_BEFORE_HEAT")

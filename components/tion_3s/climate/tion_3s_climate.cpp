@@ -12,7 +12,7 @@ void Tion3sClimate::dump_config() {
   this->dump_settings(TAG, "Tion 3S");
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
   ESP_LOGCONFIG("  ", "OFF befor HEAT: "
-#ifdef USE_TION_ENABLE_OFF_BEFORE_HEAT
+#ifdef TION_ENABLE_OFF_BEFORE_HEAT
                       "enabled"
 #else
                       "disabled"
@@ -165,7 +165,7 @@ void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t f
   }
 #endif
 
-#ifdef USE_TION_ENABLE_OFF_BEFORE_HEAT
+#ifdef TION_ENABLE_OFF_BEFORE_HEAT
   // режим вентиляция изменить на обогрев можно только через выключение
   if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
     st.flags.power_state = false;
