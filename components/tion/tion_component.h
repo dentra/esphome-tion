@@ -33,9 +33,16 @@ class TionComponent : public PollingComponent {
   void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
   void set_reset_filter(button::Button *reset_filter) { this->reset_filter_ = reset_filter; };
+  void set_reset_filter_confirm(switch_::Switch *reset_filter_confirm) {
+    this->reset_filter_confirm_ = reset_filter_confirm;
+  };
 
   void set_state_warnout(binary_sensor::BinarySensor *state_warnout) { this->state_warnout_ = state_warnout; };
   void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; };
+
+  bool is_reset_filter_confirmed() const {
+    return this->reset_filter_confirm_ == nullptr || this->reset_filter_confirm_->state;
+  }
 
  protected:
   text_sensor::TextSensor *version_{};
@@ -52,6 +59,7 @@ class TionComponent : public PollingComponent {
   number::Number *boost_time_{};
   sensor::Sensor *boost_time_left_{};
   button::Button *reset_filter_{};
+  switch_::Switch *reset_filter_confirm_{};
   binary_sensor::BinarySensor *state_warnout_{};
   uint32_t state_timeout_{};
 

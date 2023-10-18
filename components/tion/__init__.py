@@ -61,7 +61,8 @@ CONF_PRESETS = "presets"
 CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
-CONF_RESET_FILER = "reset_filter"
+CONF_RESET_FILTER = "reset_filter"
+CONF_RESET_FILTER_CONFIRM = "reset_filter_confirm"
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
 CONF_FILTER_WARNOUT = "filter_warnout"
@@ -75,6 +76,9 @@ TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", number.Number)
 TionBuzzerSwitchT = tion_ns.class_("TionBuzzerSwitch", switch.Switch)
 TionVPortApi = tion_ns.class_("TionVPortApi")
 TionResetFilterButtonT = tion_ns.class_("TionResetFilterButton", button.Button)
+TionResetFilterConfirmSwitchT = tion_ns.class_(
+    "TionResetFilterConfirmSwitch", switch.Switch
+)
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -155,10 +159,16 @@ def tion_schema(
                     entity_category=ENTITY_CATEGORY_NONE,
                 ),
                 cv.Optional(CONF_PRESETS): PRESETS_SCHEMA,
-                cv.Optional(CONF_RESET_FILER): button.button_schema(
+                cv.Optional(CONF_RESET_FILTER): button.button_schema(
                     TionResetFilterButtonT.template(tion_class),
-                    icon="mdi:air-filter",
+                    icon="mdi:wrench-cog",
                     entity_category=ENTITY_CATEGORY_CONFIG,
+                ),
+                cv.Optional(CONF_RESET_FILTER_CONFIRM): switch.switch_schema(
+                    TionResetFilterConfirmSwitchT.template(tion_class),
+                    icon="mdi:wrench-check",
+                    entity_category=ENTITY_CATEGORY_CONFIG,
+                    block_inverted=True,
                 ),
                 cv.Optional(CONF_FILTER_WARNOUT): binary_sensor.binary_sensor_schema(
                     device_class=DEVICE_CLASS_PROBLEM,
@@ -306,7 +316,10 @@ async def setup_tion_core(config, component_reg):
     if has_presets and "boost" in config[CONF_PRESETS]:
         await setup_number(config, CONF_BOOST_TIME, var.set_boost_time, 1, 60, 1)
         await setup_sensor(config, CONF_BOOST_TIME_LEFT, var.set_boost_time_left)
-    await setup_button(config, CONF_RESET_FILER, var.set_reset_filter, var)
+    await setup_button(config, CONF_RESET_FILTER, var.set_reset_filter, var)
+    await setup_switch(
+        config, CONF_RESET_FILTER_CONFIRM, var.set_reset_filter_confirm, var
+    )
     await setup_binary_sensor(config, CONF_FILTER_WARNOUT, var.set_filter_warnout)
     await setup_binary_sensor(config, CONF_STATE_WARNOUT, var.set_state_warnout)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
