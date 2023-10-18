@@ -30,8 +30,10 @@ class TionComponent : public PollingComponent {
   void set_filter_time_left(sensor::Sensor *filter_time_left) { this->filter_time_left_ = filter_time_left; }
   void set_filter_warnout(binary_sensor::BinarySensor *filter_warnout) { this->filter_warnout_ = filter_warnout; }
 
+#ifdef TION_ENABLE_PRESETS
   void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
   void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
+#endif
   void set_reset_filter(button::Button *reset_filter) { this->reset_filter_ = reset_filter; };
   void set_reset_filter_confirm(switch_::Switch *reset_filter_confirm) {
     this->reset_filter_confirm_ = reset_filter_confirm;
@@ -56,14 +58,14 @@ class TionComponent : public PollingComponent {
   sensor::Sensor *filter_time_left_{};
   binary_sensor::BinarySensor *filter_warnout_{};
 
-  number::Number *boost_time_{};
-  sensor::Sensor *boost_time_left_{};
   button::Button *reset_filter_{};
   switch_::Switch *reset_filter_confirm_{};
   binary_sensor::BinarySensor *state_warnout_{};
   uint32_t state_timeout_{};
 
 #ifdef TION_ENABLE_PRESETS
+  number::Number *boost_time_{};
+  sensor::Sensor *boost_time_left_{};
   ESPPreferenceObject boost_rtc_;
 #endif
 
