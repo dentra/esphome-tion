@@ -71,7 +71,7 @@ void TionClimateComponentBase::update_preset_service_(std::string preset_str, st
 #endif  // USE_API
 
 bool TionClimateComponentBase::enable_boost_() {
-  auto boost_time = this->get_boost_time();
+  auto boost_time = this->get_boost_time_();
   if (boost_time == 0) {
     return false;
   }

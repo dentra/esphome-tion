@@ -20,11 +20,11 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, state, this->get_led_());
+    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, state, this->get_led_());
   }
 
   void control_led_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(),
                                 state);
   }
 

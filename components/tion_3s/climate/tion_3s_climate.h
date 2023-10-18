@@ -29,7 +29,7 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
   int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
 
   void control_buzzer_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, state,
+    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, state,
                                 this->get_gate_position_());
   }
 

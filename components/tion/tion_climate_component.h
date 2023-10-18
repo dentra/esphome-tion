@@ -41,7 +41,7 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
   bool enable_boost_() override;
   void cancel_boost_() override;
   /// returns boost time in seconds.
-  uint32_t get_boost_time() const {
+  uint32_t get_boost_time_() const {
     if (this->boost_time_ == nullptr) {
       return DEFAULT_BOOST_TIME_SEC;
     }
@@ -172,7 +172,7 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
 class TionBoostTimeNumber : public number::Number {
  public:
  protected:
-  virtual void control(float value) { this->publish_state(value); }
+  void control(float value) override { this->publish_state(value); }
 };
 
 }  // namespace tion

@@ -128,8 +128,7 @@ using tion_any_ble_frame_t = tion_ble_frame_t<uint8_t[0]>;
 
 template<class frame_spec_t> class TionProtocol {
  public:
-  // using frame_spec_type = frame_spec_t;
-  typedef frame_spec_t frame_spec_type;
+  using frame_spec_type = frame_spec_t;
 
   using reader_type = etl::delegate<void(const frame_spec_t &data, size_t size)>;
   // TODO move to protected

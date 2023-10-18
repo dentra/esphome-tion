@@ -62,20 +62,19 @@ class TionClimate : public climate::Climate {
 #endif  // TION_ENABLE_PRESETS
   void dump_presets(const char *tag) const;
 
-  uint8_t get_fan_speed() const { return this->get_fan_speed_(); }
+  uint8_t get_fan_speed() const { return this->fan_mode_to_speed_(this->custom_fan_mode); }
 
  protected:
   void set_fan_speed_(uint8_t fan_speed);
-  uint8_t get_fan_speed_() const { return this->fan_mode_to_speed_(this->custom_fan_mode); }
 
-  static uint8_t fan_mode_to_speed_(const optional<std::string> &fan_mode) {
+  uint8_t fan_mode_to_speed_(const optional<std::string> &fan_mode) const {
     if (fan_mode.has_value()) {
       return *fan_mode.value().c_str() - '0';
     }
     return 0;
   }
 
-  static std::string fan_speed_to_mode_(uint8_t fan_speed) {
+  std::string fan_speed_to_mode_(uint8_t fan_speed) const {
     char fan_mode[2] = {static_cast<char>(fan_speed + '0'), 0};
     return std::string(fan_mode);
   }

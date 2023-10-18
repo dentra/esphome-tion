@@ -41,7 +41,7 @@ void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request
     if (turbo.turbo_time == 0) {
       this->boost_time_left_->publish_state(NAN);
     } else {
-      auto boost_time = this->get_boost_time();
+      auto boost_time = this->get_boost_time_();
       this->boost_time_left_->publish_state(static_cast<float>(turbo.turbo_time) /
                                             static_cast<float>(boost_time / 100));
     }
@@ -107,7 +107,7 @@ void Tion4sClimate::control_recirculation_state(bool state) {
     ESP_LOGW(TAG, "Enabled recirculation allow only FAN_ONLY mode");
     mode = climate::CLIMATE_MODE_FAN_ONLY;
   }
-  this->control_climate_state(this->mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+  this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(),
                               this->get_led_(), state);
 }
 
@@ -188,7 +188,7 @@ bool Tion4sClimate::enable_boost_() {
     return TionClimateComponent::enable_boost_();
   }
 
-  auto boost_time = this->get_boost_time();
+  auto boost_time = this->get_boost_time_();
   if (boost_time == 0) {
     return false;
   }

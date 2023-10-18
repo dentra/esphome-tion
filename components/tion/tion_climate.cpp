@@ -110,7 +110,7 @@ bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
   // если был пресет NONE, то сохраним его значения
   if (*this->preset == climate::CLIMATE_PRESET_NONE) {
     this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
-    this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed_();
+    this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed();
     this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
   }
 

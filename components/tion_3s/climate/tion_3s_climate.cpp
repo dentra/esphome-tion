@@ -72,7 +72,7 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "unknown_temp : %d", state.unknown_temperature);
   ESP_LOGV(TAG, "outdoor_temp : %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "current_temp : %d", state.current_temperature);
-  ESP_LOGV(TAG, "filter_time  : %u", state.counter.filter_time);
+  ESP_LOGV(TAG, "filter_time  : %u", state.counters.filter_time);
   ESP_LOGV(TAG, "hours        : %u", state.hours);
   ESP_LOGV(TAG, "minutes      : %u", state.minutes);
   ESP_LOGV(TAG, "last_error   : %u", state.last_error);
@@ -87,7 +87,7 @@ void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_posi
     ESP_LOGW(TAG, "INDOOR gate position allow only FAN_ONLY mode");
     mode = climate::CLIMATE_MODE_FAN_ONLY;
   }
-  this->control_climate_state(mode, this->get_fan_speed_(), this->target_temperature, this->get_buzzer_(),
+  this->control_climate_state(mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(),
                               gate_position);
 }
 
