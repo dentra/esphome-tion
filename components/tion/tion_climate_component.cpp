@@ -119,9 +119,12 @@ void TionClimateComponentBase::dump_settings(const char *TAG, const char *compon
   LOG_SWITCH("  ", "Led", this->led_);
   LOG_SENSOR("  ", "Outdoor Temperature", this->outdoor_temperature_);
   LOG_SENSOR("  ", "Heater Power", this->heater_power_);
+  LOG_SENSOR("  ", "Productivity", this->productivity_);
   LOG_SENSOR("  ", "Airflow Counter", this->airflow_counter_);
   LOG_SENSOR("  ", "Filter Time Left", this->filter_time_left_);
   LOG_BINARY_SENSOR("  ", "Filter Warnout", this->filter_warnout_);
+  LOG_BUTTON("  ", "Reset Filter", this->reset_filter_);
+  LOG_SWITCH("  ", "Reset Filter Confirm", this->reset_filter_confirm_);
   LOG_BINARY_SENSOR("  ", "State Warnout", this->filter_warnout_);
   ESP_LOGCONFIG(TAG, "  State timeout: %.1fs", this->state_timeout_ / 1000.0f);
 #ifdef TION_ENABLE_PRESETS
