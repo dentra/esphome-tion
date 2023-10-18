@@ -17,6 +17,8 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
   void update_state(const tionlt_state_t &state) override;
   void dump_state(const tionlt_state_t &state) const;
 
+  void set_gate_state(binary_sensor::BinarySensor *gate_state) { this->gate_state_ = gate_state; }
+
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
@@ -53,6 +55,7 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
   }
 
  protected:
+  binary_sensor::BinarySensor *gate_state_{};
   bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
   bool get_led_() const { return this->led_ ? this->led_->state : this->state_.flags.led_state; }
 };

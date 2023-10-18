@@ -6,12 +6,11 @@ from esphome.const import (
     CONF_ENTITY_CATEGORY,
     DEVICE_CLASS_POWER,
     ENTITY_CATEGORY_DIAGNOSTIC,
-    ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     CONF_ICON,
     CONF_INVERTED,
-    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_OPENING,
     ENTITY_CATEGORY_CONFIG,
     UNIT_CUBIC_METER,
     UNIT_WATT,
@@ -27,6 +26,7 @@ TionLedSwitchT = tion.tion_ns.class_("TionLedSwitch", switch.Switch)
 CONF_LED = "led"
 CONF_HEATER_POWER = "heater_power"
 CONF_AIRFLOW_COUNTER = "airflow_counter"
+CONF_GATE_STATE = "gate_state"
 
 
 def tion_lt_base_schema(
@@ -66,7 +66,14 @@ def tion_lt_base_schema(
 
 
 def tion_lt_schema(tion_class: MockObjClass, tion_base_schema: cv.Schema):
-    return tion_lt_base_schema(tion_class, TionLtApi, tion_base_schema)
+    return tion_lt_base_schema(tion_class, TionLtApi, tion_base_schema).extend(
+        {
+            cv.Optional(CONF_GATE_STATE): binary_sensor.binary_sensor_schema(
+                device_class=DEVICE_CLASS_OPENING,
+                entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            ),
+        }
+    )
 
 
 async def setup_tion_lt(config, component_reg):
@@ -75,4 +82,5 @@ async def setup_tion_lt(config, component_reg):
     await tion.setup_switch(config, CONF_LED, var.set_led, var)
     await tion.setup_sensor(config, CONF_HEATER_POWER, var.set_heater_power)
     await tion.setup_sensor(config, CONF_AIRFLOW_COUNTER, var.set_airflow_counter)
+    await tion.setup_binary_sensor(config, CONF_GATE_STATE, var.set_gate_state)
     return var

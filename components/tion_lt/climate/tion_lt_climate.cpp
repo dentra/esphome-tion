@@ -10,6 +10,7 @@ static const char *const TAG = "tion_lt_climate";
 
 void TionLtClimate::dump_config() {
   this->dump_settings(TAG, "Tion Lite");
+  LOG_BINARY_SENSOR("  ", "Gate State", this->gate_state_);
   this->dump_presets(TAG);
 }
 
@@ -26,39 +27,43 @@ void TionLtClimate::update_state(const tionlt_state_t &state) {
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
+
+  if (this->gate_state_) {
+    this->gate_state_->publish_state(state.gate_state == tionlt_state_t::GateState::OPENED);
+  }
 }
 
 void TionLtClimate::dump_state(const tionlt_state_t &state) const {
-  ESP_LOGV(TAG, "sound_state       : %s", ONOFF(state.flags.sound_state));
-  ESP_LOGV(TAG, "led_state         : %s", ONOFF(state.flags.led_state));
-  ESP_LOGV(TAG, "current_temp      : %d", state.current_temperature);
-  ESP_LOGV(TAG, "outdoor_temp      : %d", state.outdoor_temperature);
-  ESP_LOGV(TAG, "heater_power      : %f", state.heater_power());
-  ESP_LOGV(TAG, "airflow_counter   : %" PRIu32, state.counters.airflow_counter);
-  ESP_LOGV(TAG, "filter_warnout    : %s", ONOFF(state.flags.filter_warnout));
-  ESP_LOGV(TAG, "filter_time       : %" PRIu32, state.counters.filter_time);
-  ESP_LOGV(TAG, "last_com_source   : %u", state.flags.last_com_source);
-  ESP_LOGV(TAG, "auto_co2          : %s", ONOFF(state.flags.auto_co2));
-  ESP_LOGV(TAG, "heater_state      : %s", ONOFF(state.flags.heater_state));
-  ESP_LOGV(TAG, "heater_present    : %s", ONOFF(state.flags.heater_present));
-  ESP_LOGV(TAG, "heater_var        : %u", state.heater_var);
-  ESP_LOGV(TAG, "kiv_present       : %s", ONOFF(state.flags.kiv_present));
-  ESP_LOGV(TAG, "kiv_active        : %s", ONOFF(state.flags.kiv_active));
-  ESP_LOGV(TAG, "reserved          : %02x", state.flags.reserved);
-  ESP_LOGV(TAG, "gate_position     : %u", state.gate_position);
-  ESP_LOGV(TAG, "pcb_temperature   : %u", state.pcb_temperature);
-  ESP_LOGV(TAG, "fan_time          : %" PRIu32, state.counters.fan_time);
-  ESP_LOGV(TAG, "work_time         : %" PRIu32, state.counters.work_time);
-  ESP_LOGV(TAG, "errors.reg        : %" PRIu32, state.errors.reg);
-  ESP_LOGV(TAG, "errors.cnt        : %s",
+  ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
+  ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
+  ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);
+  ESP_LOGV(TAG, "outdoor_temp   : %d", state.outdoor_temperature);
+  ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
+  ESP_LOGV(TAG, "airflow_counter: %" PRIu32, state.counters.airflow_counter);
+  ESP_LOGV(TAG, "filter_warnout : %s", ONOFF(state.flags.filter_warnout));
+  ESP_LOGV(TAG, "filter_time    : %" PRIu32, state.counters.filter_time);
+  ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
+  ESP_LOGV(TAG, "auto_co2       : %s", ONOFF(state.flags.auto_co2));
+  ESP_LOGV(TAG, "heater_state   : %s", ONOFF(state.flags.heater_state));
+  ESP_LOGV(TAG, "heater_present : %s", ONOFF(state.flags.heater_present));
+  ESP_LOGV(TAG, "heater_var     : %u", state.heater_var);
+  ESP_LOGV(TAG, "kiv_present    : %s", ONOFF(state.flags.kiv_present));
+  ESP_LOGV(TAG, "kiv_active     : %s", ONOFF(state.flags.kiv_active));
+  ESP_LOGV(TAG, "reserved       : %02x", state.flags.reserved);
+  ESP_LOGV(TAG, "gate_state     : %u", state.gate_state);
+  ESP_LOGV(TAG, "pcb_temperature: %u", state.pcb_temperature);
+  ESP_LOGV(TAG, "fan_time       : %" PRIu32, state.counters.fan_time);
+  ESP_LOGV(TAG, "work_time      : %" PRIu32, state.counters.work_time);
+  ESP_LOGV(TAG, "errors.reg     : %" PRIu32, state.errors.reg);
+  ESP_LOGV(TAG, "errors.cnt     : %s",
            format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors.cnt), sizeof(state.errors.cnt)).c_str());
-  ESP_LOGV(TAG, "btn_prs.temp0     : %d", state.button_presets.temp[0]);
-  ESP_LOGV(TAG, "btn_prs.fan_speed0: %d", state.button_presets.fan_speed[0]);
-  ESP_LOGV(TAG, "btn_prs.temp1     : %d", state.button_presets.temp[1]);
-  ESP_LOGV(TAG, "btn_prs.fan_speed1: %d", state.button_presets.fan_speed[1]);
-  ESP_LOGV(TAG, "btn_prs.temp2     : %d", state.button_presets.temp[2]);
-  ESP_LOGV(TAG, "btn_prs.fan_speed2: %d", state.button_presets.fan_speed[2]);
-  ESP_LOGV(TAG, "test_type         : %u", state.test_type);
+  ESP_LOGV(TAG, "btn_prs0.temp  : %d", state.button_presets.temp[0]);
+  ESP_LOGV(TAG, "btn_prs0.fan_sp: %d", state.button_presets.fan_speed[0]);
+  ESP_LOGV(TAG, "btn_prs1.temp  : %d", state.button_presets.temp[1]);
+  ESP_LOGV(TAG, "btn_prs1.fan_sp: %d", state.button_presets.fan_speed[1]);
+  ESP_LOGV(TAG, "btn_prs2.temp  : %d", state.button_presets.temp[2]);
+  ESP_LOGV(TAG, "btn_prs2.fan_sp: %d", state.button_presets.fan_speed[2]);
+  ESP_LOGV(TAG, "test_type      : %u", state.test_type);
 }
 
 void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,

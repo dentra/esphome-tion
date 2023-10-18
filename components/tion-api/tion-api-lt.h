@@ -8,6 +8,13 @@ namespace tion {
 #pragma pack(push, 1)
 
 struct tionlt_state_t {
+  enum GateState : uint8_t {
+    // закрыто
+    CLOSED = 1,
+    // открыто
+    OPENED = 2,
+  };
+
   struct {
     // состояние (power state)
     bool power_state : 1;
@@ -28,7 +35,7 @@ struct tionlt_state_t {
     // reserved
     uint8_t reserved : 6;
   } flags;
-  uint8_t gate_position;  // gate_state
+  GateState gate_state;
   int8_t target_temperature;
   uint8_t fan_speed;
   int8_t outdoor_temperature;

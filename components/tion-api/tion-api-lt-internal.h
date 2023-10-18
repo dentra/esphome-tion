@@ -41,7 +41,7 @@ struct tionlt_state_set_t {
     // uint8_t save;
     uint8_t reserved : 7;
   };
-  uint8_t gate_position;
+  tion::tionlt_state_t::GateState gate_state;
   int8_t target_temperature;
   uint8_t fan_speed;
   tion::tionlt_state_t::button_presets_t button_presets;
@@ -54,7 +54,7 @@ struct tionlt_state_set_t {
     st_set.filter_time = state.counters.filter_time;
 
     st_set.fan_speed = state.fan_speed;
-    st_set.gate_position = state.gate_position;
+    st_set.gate_state = state.gate_state;
     st_set.target_temperature = state.target_temperature;
 
     st_set.power_state = state.flags.power_state;

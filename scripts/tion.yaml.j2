@@ -163,6 +163,11 @@ climate:
     recirculation:
       name: "Recirculation"
     {%- endif %}
+    {%- if type == "lt" %}
+    # Optional, Gate state control binary sensor.
+    gate_state:
+      name: "Gate State"
+    {%- endif %}
     # Optional, Current productivity, m³/h (cubic meters per hour).
     productivity:
       name: "Productivity"
