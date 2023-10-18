@@ -1,0 +1,9 @@
+esphome:
+  platformio_options:
+    build_flags:
+      - -DTION_ENABLE_ANTIFRIZE
+climate:
+  - id: !extend tion_climate
+    # make sure outdoor_temperature enabled
+    outdoor_temperature:
+      id: outdoor_temperature

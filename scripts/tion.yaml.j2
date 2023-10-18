@@ -60,6 +60,10 @@ packages:
       ## Uncomment to enable uart proxy support
       # - packages/tion_3s_proxy.yaml
       {%- endif %}
+      {%- if type == "3s" and port == "uart" %}
+      ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
+      - packages/tion_3s_antifrize.yaml
+       {%- endif %}
       ## Common configuration settings. Do not comment or move or remove.
       - packages/base.yaml
       {%- if type == "3s" and port == "uart" %}
