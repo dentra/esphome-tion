@@ -18,5 +18,6 @@ Doxygen
 /.gcc-flags.json
 /.temp-clang-tidy.cpp
 /*-dev.yaml
+/*-gen.yaml
 
 /components/vport

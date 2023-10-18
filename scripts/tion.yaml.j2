@@ -1,0 +1,236 @@
+substitutions:
+  {%- if port == "ble" %}
+  # tion mac address. setup yours.
+  tion_mac_address: 00:00:00:00:00:00
+  {%- endif %}
+  # name of the node.
+  node_name: tion-{{ "lite" if type == "lt" else type }}
+  # name for main climate entity and prefix for all others.
+  friendly_name: $node_name
+  # add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "false"
+  {%- if type == "3s" and port == "uart" %}
+  # board
+  board: esp01_1m
+  # uart configuration
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: "115200"
+  # uart proxy configuration (optional)
+  proxy_tx_pin: GPIO10
+  proxy_rx_pin: GPIO09
+  proxy_baud_rate: "115200"
+  {%- endif %}
+
+  # wifi settings.
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+
+packages:
+  tion:
+    url: https://github.com/dentra/esphome-tion
+    ref: {{ version }} # cant use substitutions here
+    files:
+      ## Enable additional WiFi signal sensor. Comment next line to disable.
+      - packages/wifi_signal.yaml
+      {%- if port == "ble" %}
+      ## Enable additional BLE RSSI sensor. Comment next line to disable.
+      - packages/rssi_signal.yaml
+      {%- endif %}
+      ## Enable additional Uptime sensor. Comment next line to disable.
+      - packages/uptime.yaml
+      ## Enable additional Restart button. Comment next line to disable.
+      - packages/restart.yaml
+      {%- if type == "lt" %}
+      ## Enable maximum target temperature to 30°C. Uncomment next line to enable.
+      #- packages/tion_temperature30c.yaml
+      {%- else %}
+      ## Enable maximum target temperature to 30°C. Comment next line to disable.
+      - packages/tion_temperature30c.yaml
+      {%- endif %}
+      ## Enable heat_cool mode to workaraund when using Home Assistant turn_on service.
+      # - packages/tion_enable_heat_cool.yaml
+      {%- if type != "3s" %}
+      ## Uncomment next line to enable additional energy sensor.
+      # - packages/tion_energy.yaml
+      {%- endif %}
+      ## Base climate definition. Do not comment or move or remove.
+      - packages/tion_{{ type }}_climate.yaml
+      {%- if type == "3s" and port == "uart" %}
+      ## Uncomment to enable uart proxy support
+      # - packages/tion_3s_proxy.yaml
+      {%- endif %}
+      ## Common configuration settings. Do not comment or move or remove.
+      - packages/base.yaml
+      {%- if type == "3s" and port == "uart" %}
+      ## Change to packages/esp32.yaml if you want to use ESP32.
+      - packages/esp8266.yaml
+      {%- endif %}
+      {%- if type == "4s" and port == "uart" %}
+      # change to esp32_s2.yaml to use with ESP32-S2 chip, or esp32.yaml to use with ESP32 chip.
+      - packages/esp32_s3.yaml
+      {%- endif %}
+      {%- if port == "ble" %}
+      ## BLE configuration settings. Do not comment or move or remove.
+      - packages/esp32_ble.yaml
+      ## Uncomment next line to enable persistent connection runtime control switch.
+      # - packages/persistent.yaml
+      ## Uncomment next line to enable additional connect switch useful for debugging.
+      # - packages/connect.yaml
+      {%- endif %}
+      {%- if type == "4s" %}
+      ## Uncomment next line to enable additional internal timers support.
+      # - packages/tion_4s_timers.yaml
+      {%- endif %}
+      {%- if type != "3s" or port != "uart" %}
+      ## Uncomment next line to enable monitor internal ESP temperature.
+      # - packages/esp32_temperature.yaml
+      {%- endif %}
+      ## Uncomment next line to enable additional debug information.
+      # - packages/debug.yaml
+
+# Uncomment to enable MQTT connecion.
+# mqtt:
+#   broker: !secret mqtt_borker
+#   port: !secret mqtt_port
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+
+# Enable Home Assistant API connection. Please do not remove to keep logs functioning.
+api:
+
+# WiFi hotspot configuration.
+# Comment next 3 lines to enable manual WiFi conviguration via access point.
+wifi:
+  ssid: $wifi_ssid
+  password: $wifi_password
+
+# Virtual port configuration
+vport:
+  - platform: tion_{{ type }}{{ "_uart" if port == "uart" else "" }}
+    id: tion_{{ port }}_vport
+    {%- if port == "ble" %}
+    ble_client_id: tion_{{ port }}_client
+    ## Optional, Do not disconnect after receiving state. Default: false.
+    persistent_connection: false
+    ## Optional, Allow to disable other BLE device scanning when breezer is already connected. Default: false.
+    disable_scan: false
+    {%- else %}
+    uart_id: uart_tion
+    {%- endif %}
+    {%- if type == "3s" and port == "ble" %}
+    ## Optional, Send a pair command after every connect (experimental feature)
+    # experimental_always_pair: false
+    {%- endif %}
+    ## Optional, Interval between sending commmands. Set to 0ms to disable.
+    # command_interval: {{ "100ms" if port == "ble" else "20ms" }}
+    ## Optional, Command queue size. Default: 10.
+    # command_queue_size: 10
+    {%- if type == "4s" and port == "uart" %}
+    ## Optional, Interval between sending heartbeat commands. Default: 5s.
+    # heartbeat_interval: 5s
+    {%- endif %}
+
+# Main climate component configuration.
+climate:
+  - id: !extend tion_climate
+    name: None # use friendly_name
+    # Optional, virtual port id. Default: autodetect
+    vport_id: tion_{{ port }}_vport
+    # Optional, Temperatire of air before heater, °C (celsius).
+    outdoor_temperature:
+      name: "Outdoor Temperature"
+    # Optional, Buzzer control switch.
+    buzzer:
+      name: "Buzzer"
+    {%- if type != "3s" %}
+    # Optional, Led control switch.
+    led:
+      name: "Led"
+    # Optional, Heater power, W (watt).
+    heater_power:
+      name: "Heater power"
+    # Optional, Total airflow counter, m³ (cubic meters).
+    airflow_counter:
+      name: "Airflow counter"
+    {%- else %}
+    # Optional, Air Intake control.
+    air_intake:
+      name: "Air Intake"
+    {%- endif %}
+    {%- if type == "4s" %}
+    # Optional, Recirculation control switch.
+    recirculation:
+      name: "Recirculation"
+    {%- endif %}
+    # Optional, Current productivity, m³/h (cubic meters per hour).
+    productivity:
+      name: "Productivity"
+    # Optional, Filter time left counter, days.
+    filter_time_left:
+      name: "Filter Time Left"
+    # Optional, Filter warning state.
+    filter_warnout:
+      name: "Filter Warnout"
+    # Optional, Tion firmware version.
+    version:
+      name: "Version"
+    # Optional, Enable presets. Default: <empty>
+    # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
+    # Defaults:
+    #   home    : { fan_speed: 2, target_temperature: 20, mode: heat }
+    #   away    : { fan_speed: 1, target_temperature: 10, mode: fan_only }
+    #   boost   : { fan_speed: 6, target_temperature: 10, mode: fan_only }
+    #   comfort : { fan_speed: 2, target_temperature: 23, mode: heat }
+    #   eco     : { fan_speed: 1, target_temperature: 16, mode: heat }
+    #   sleep   : { fan_speed: 1, target_temperature: 18, mode: heat }
+    #   activity: { fan_speed: 3, target_temperature: 18, mode: heat }
+    # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
+    presets:
+      # enable and override "home" preset
+      home: { fan_speed: 2, target_temperature: 16, mode: heat }
+      # enable "away" preset
+      away:
+      # enable "boost" preset
+      boost:
+      # enable and override "sleep" preset
+      sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
+    # Optional, configure boost time
+    boost_time:
+      name: "Boost Time"
+    # Optional, display remaining boost time
+    boost_time_left:
+      name: "Boost Time Left"
+    # Optional, How often query device state. Default: 60s.
+    update_interval: {{ "30s" if port == "uart" else "60s" }}
+    # Optional, reset filter button
+    reset_filter:
+      name: "Reset Filter"
+    # Optional, reset filter confirmation. When off then reset_filter will not work.
+    reset_filter_confirm:
+      name: "Reset Filter Confirm"
+    # Optional, Informs about get state problem from breezer.
+    state_warnout:
+      name: "State Warnout"
+    # Optional, Timout when state_warnout will be informed. Default: 3s.
+    state_timeout: 3s
+    {%- if type == "3s" %}
+    # Optional, Turn the breezer off before enable heat mode. Default: true.
+    turn_off_before_heat: true
+    {%- endif %}
+
+{%- if type == "3s" and port == "ble" %}
+
+button:
+  - platform: template
+    name: "Pair"
+    on_press:
+      lambda: id(tion_{{ port }}_vport).pair();
+    entity_category: config
+  ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
+  # - platform: template
+  #   name: "Reset Pair"
+  #   on_press:
+  #     lambda: id(tion_{{ port }}_vport).reset_pair();
+  #   entity_category: config
+{%- endif %}
