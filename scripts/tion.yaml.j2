@@ -62,7 +62,7 @@ packages:
       {%- endif %}
       {%- if type == "3s" and port == "uart" %}
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
-      - packages/tion_3s_antifrize.yaml
+      - packages/tion_3s_enable_antifrize.yaml
       ## Turn the breezer off before enable heat mode.
       - packages/tion_3s_enable_off_before_heat.yaml
       {%- endif %}
