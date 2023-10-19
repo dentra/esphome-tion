@@ -1,0 +1,23 @@
+#!/bin/bash
+
+version_tion=master
+if [ "$1" != "" ]; then
+  version_tion=$1
+fi
+
+version_vport=master
+
+version_esphome=($(esphome version))
+version_esphome=${version_esphome[1]}
+
+vars=(
+  ${vars[@]}
+  version_tion=$version_tion
+  version_esphome=$version_esphome
+  version_vport=$version_vport
+)
+
+j2_vars=""
+for v in "${vars[@]}" ; do
+  j2_vars="$j2_vars -D $v"
+done

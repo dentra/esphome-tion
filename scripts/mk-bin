@@ -2,10 +2,13 @@
 
 prj_path=$(dirname $0)/..
 
-version=master
-if [ "$1" != "" ]; then
-  version=$1
-fi
+vars=(
+  node_add_mac_suffix=true
+  tion_enable_heat_cool=true
+  tion_energy=true
+)
+
+. $prj_path/scripts/j2_vars
 
 br=4s-uart
 
@@ -17,15 +20,9 @@ parts=(${br//-/ })
 port=${parts[1]}
 type=${parts[0]}
 
-jinja2 \
-  -D version=$version \
-  -D port=$port \
-  -D type=$type \
-  -D node_add_mac_suffix=true \
-  -D tion_enable_heat_cool=true \
-  -D tion_energy=true \
-  -D project_source=./components \
-  -o $dfn $tfn
+
+jinja2 $j2_vars -D port=$port -D type=$type -o $dfn $tfn $prj_path/scripts/j2_vars.yaml
+  # -D project_source=./components \
 
 pushd $prj_path >/dev/null
 esphome compile $dfn
