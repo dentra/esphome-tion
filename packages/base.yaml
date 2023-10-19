@@ -1,7 +1,8 @@
 substitutions:
-  project_branch: 2023.7.0
   # project version
-  project_version: $project_branch
+  project_version: 2023.7.0
+  # project branch
+  project_branch: $project_version
   # project git source
   project_source: github://dentra/esphome-tion@$project_branch
   # project source refresh interval
@@ -17,7 +18,7 @@ substitutions:
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "true"
   # vport and additional components configuration parameters
-  vport_version: master
+  vport_version: 2023.2.0
   vport_source: github://dentra/esphome-components@$vport_version
   vport_source_refresh: 1d
 
@@ -41,6 +42,7 @@ captive_portal:
 ota:
 logger:
   logs:
+    esp-idf: INFO
     component: ERROR
 
 external_components:

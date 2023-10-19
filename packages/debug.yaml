@@ -2,10 +2,13 @@ logger:
   level: VERBOSE
   logs:
     ota: DEBUG
+    esp-idf: DEBUG
+    climate: DEBUG
+    esp32_ble: DEBUG
+    component: DEBUG
     mdns: INFO
     wifi: INFO
     sntp: INFO
-    esp-idf: INFO
     api.connection: INFO
     api: INFO
     button: INFO
@@ -13,7 +16,6 @@ logger:
     sensor: INFO
     select: INFO
     number: INFO
-    climate: DEBUG
     text_sensor: INFO
     binary_sensor: INFO
     esp32_ble_tracker: INFO
@@ -23,4 +25,3 @@ logger:
     wifi_esp32: INFO
     esp32.preferences: INFO
     mqtt: INFO
-    esp32_ble: DEBUG
