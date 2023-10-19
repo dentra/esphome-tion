@@ -6,6 +6,8 @@ vars=(
   node_add_mac_suffix=true
   tion_enable_heat_cool=true
   tion_energy=true
+  project_version=master
+  project_branch=master
 )
 
 . $prj_path/scripts/j2_vars
@@ -20,9 +22,7 @@ parts=(${br//-/ })
 port=${parts[1]}
 type=${parts[0]}
 
-
 jinja2 $j2_vars -D port=$port -D type=$type -o $dfn $tfn $prj_path/scripts/j2_vars.yaml
-  # -D project_source=./components \
 
 pushd $prj_path >/dev/null
 esphome compile $dfn
