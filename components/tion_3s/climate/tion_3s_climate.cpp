@@ -17,7 +17,8 @@ void Tion3sClimate::dump_config() {
 #else
                       "disabled"
 #endif
-ESP_LOGCONFIG("  ", "antifrize: "
+  );
+  ESP_LOGCONFIG("  ", "antifrize: "
 #ifdef TION_ENABLE_ANTIFRIZE
                       "enabled"
 #else
