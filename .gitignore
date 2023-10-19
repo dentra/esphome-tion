@@ -19,5 +19,6 @@ Doxygen
 /.temp-clang-tidy.cpp
 /*-dev.yaml
 /*-gen.yaml
+/*-bin.yaml
 
 /components/vport

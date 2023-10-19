@@ -8,7 +8,7 @@ substitutions:
   # name for main climate entity and prefix for all others.
   friendly_name: $node_name
   # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "false"
+  node_add_mac_suffix: "{{ 'true' if node_add_mac_suffix == 'true' else 'false' }}"
   {%- if type == "3s" and port == "uart" %}
   # board
   board: esp01_1m
@@ -25,6 +25,11 @@ substitutions:
   # wifi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
+
+  {%- if (project_source|length) > 0 %}
+
+  project_source: {{ project_source }}
+  {%- endif %}
 
 packages:
   tion:
@@ -49,18 +54,20 @@ packages:
       - packages/tion_temperature30c.yaml
       {%- endif %}
       ## Enable heat_cool mode to workaraund when using Home Assistant turn_on service.
-      # - packages/tion_enable_heat_cool.yaml
+      {{ "" if tion_enable_heat_cool == "true" else "# " -}}
+      - packages/tion_enable_heat_cool.yaml
       {%- if type != "3s" %}
       ## Uncomment next line to enable additional energy sensor.
-      # - packages/tion_energy.yaml
+      {{ "" if tion_energy == "true" else "# " -}}
+      - packages/tion_energy.yaml
       {%- endif %}
       ## Base climate definition. Do not comment or move or remove.
       - packages/tion_{{ type }}_climate.yaml
       {%- if type == "3s" and port == "uart" %}
-      ## Uncomment to enable uart proxy support
-      # - packages/tion_3s_proxy.yaml
+      ## Comment to disable uart proxy support.
+      - packages/tion_3s_proxy.yaml
       {%- endif %}
-      {%- if type == "3s" and port == "uart" %}
+      {%- if type == "3s" %}
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_3s_enable_antifrize.yaml
       ## Turn the breezer off before enable heat mode.
@@ -94,6 +101,9 @@ packages:
       {%- endif %}
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
+    {%- if (packages_refresh|length) > 0 %}
+    refresh: {{ packages_refresh }}
+    {%- endif %}
 
 # Uncomment to enable MQTT connecion.
 # mqtt:

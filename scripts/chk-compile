@@ -1,0 +1,32 @@
+#!/bin/bash
+
+prj_path=$(dirname $0)/..
+
+types=(lt-ble 4s-ble 4s-uart 3s-ble 3s-uart)
+
+if [ "$1" != "" ]; then
+  types=($*)
+fi
+
+for br in "${types[@]}" ; do
+  pushd $prj_path >/dev/null
+  esphome config tion-$br-dev.yaml >/dev/null
+  res=$?
+  popd >/dev/null
+  if [ "$res" != "0" ]; then
+    pushd $prj_path >/dev/null
+    esphome config tion-$br-dev.yaml
+    popd >/dev/null
+    exit $res
+  fi
+done
+
+for br in "${types[@]}" ; do
+  pushd $prj_path >/dev/null
+  esphome compile tion-$br-dev.yaml
+  res=$?
+  popd >/dev/null
+  if [ "$res" != "0" ]; then
+    exit $res
+  fi
+done

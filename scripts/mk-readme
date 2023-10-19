@@ -1,0 +1,28 @@
+#!/bin/bash
+
+prj_path=$(dirname $0)/..
+
+if [ "$1" == "" ]; then
+    echo "no version defined"
+    exit 1
+fi
+
+version=$1
+esphome=($(esphome version))
+esphome=${esphome[1]}
+
+ofn=README.md
+dfn=$ofn
+if [ "$2" == "diff" ]; then
+  dfn=/tmp/${ofn%.*}-gen.${ofn##*.}
+fi
+
+ofn=$prj_path/$ofn
+tfn=$ofn.j2
+
+jinja2 -D version=$version -D esphome=$esphome -o $dfn $tfn
+
+if [ "$2" == "diff" ]; then
+  diff $dfn $ofn
+  rm $dfn
+fi

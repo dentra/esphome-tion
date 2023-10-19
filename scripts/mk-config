@@ -1,0 +1,37 @@
+#!/bin/bash
+
+prj_path=$(dirname $0)/..
+
+version=master
+if [ "$1" != "" ]; then
+  version=$1
+fi
+
+tfn=$prj_path/tion.yaml.j2
+
+types=(lt-ble 4s-ble 4s-uart 3s-ble 3s-uart)
+for br in "${types[@]}" ; do
+  parts=(${br//-/ })
+  port=${parts[1]}
+  type=${parts[0]}
+  ofn=tion-$br.yaml
+  dfn=$ofn
+  if [ "$2" == "diff" ]; then
+    dfn=/tmp/$ofn
+  fi
+  ofn=$prj_path/$ofn
+  echo "Generating tion-$type config for $port connection..."
+  jinja2 \
+    -D version=$version \
+    -D port=$port \
+    -D type=$type \
+    -D node_add_mac_suffix=false \
+    -D tion_enable_heat_cool=false \
+    -D tion_energy=false \
+    -o $dfn $tfn
+  if [ "$2" == "diff" ]; then
+    diff $dfn $ofn
+    rm $dfn
+  fi
+done
+

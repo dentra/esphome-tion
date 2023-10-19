@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ "$1" == "" ]; then
+    echo "no version defined"
+    exit 1
+fi
+
+base_path=$(dirname $0)
+
+$base_path/mk_config $1
+$base_path/mk_readme $1
+
+

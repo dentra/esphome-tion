@@ -1,0 +1,36 @@
+#!/bin/bash
+
+prj_path=$(dirname $0)/..
+
+version=master
+if [ "$1" != "" ]; then
+  version=$1
+fi
+
+br=4s-uart
+
+tfn=$prj_path/tion.yaml.j2
+ofn=tion-$br.yaml
+dfn=${ofn%.*}-bin.${ofn##*.}
+
+parts=(${br//-/ })
+port=${parts[1]}
+type=${parts[0]}
+
+jinja2 \
+  -D version=$version \
+  -D port=$port \
+  -D type=$type \
+  -D node_add_mac_suffix=true \
+  -D tion_enable_heat_cool=true \
+  -D tion_energy=true \
+  -D project_source=./components \
+  -o $dfn $tfn
+
+pushd $prj_path >/dev/null
+esphome compile $dfn
+res=$?
+popd >/dev/null
+if [ "$res" != "0" ]; then
+  exit $res
+fi
