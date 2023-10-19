@@ -2,6 +2,8 @@
 
 prj_path=$(dirname $0)/..
 
+$base_path/mk_config $1
+
 types=(lt-ble 4s-ble 4s-uart 3s-ble 3s-uart)
 
 if [ "$1" != "" ]; then
