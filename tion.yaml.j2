@@ -1,3 +1,6 @@
+{%- if (port|length) == 0 or (type|length) == 0 %}
+{{ ("port or type not defined")|raise }}
+{%- endif %}
 substitutions:
   {%- if port == "ble" %}
   # tion mac address. setup yours.
@@ -34,7 +37,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: {{ version }} # cant use substitutions here
+    ref: {{ version_tion }} # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml

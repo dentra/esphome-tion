@@ -2,10 +2,29 @@
 
 prj_path=$(dirname $0)/..
 
-version=master
+version_tion=master
 if [ "$1" != "" ]; then
   version=$1
 fi
+
+version_vport=master
+
+version_esphome=($(esphome version))
+version_esphome=${version_esphome[1]}
+
+vars=(
+  version_tion=$version_tion
+  version_esphome=$version_esphome
+  version_vport=$version_vport
+  node_add_mac_suffix=false
+  tion_enable_heat_cool=false
+  tion_energy=false
+)
+
+j2_vars=""
+for v in "${vars[@]}" ; do
+  j2_vars="$j2_vars -D $v"
+done
 
 tfn=$prj_path/tion.yaml.j2
 
@@ -21,17 +40,24 @@ for br in "${types[@]}" ; do
   fi
   ofn=$prj_path/$ofn
   echo "Generating tion-$type config for $port connection..."
-  jinja2 \
-    -D version=$version \
-    -D port=$port \
-    -D type=$type \
-    -D node_add_mac_suffix=false \
-    -D tion_enable_heat_cool=false \
-    -D tion_energy=false \
-    -o $dfn $tfn
+  jinja2 $j2_vars -D port=$port -D type=$type -o $dfn $tfn
   if [ "$2" == "diff" ]; then
     diff $dfn $ofn
     rm $dfn
   fi
 done
 
+for f in $prj_path/packages/*.j2 ; do
+  tfn=$f
+  ofn=${tfn%.*}
+  dfn=$ofn
+  if [ "$2" == "diff" ]; then
+    dfn=/tmp/$(basename $ofn)
+  fi
+  echo "Generating $dfn..."
+  jinja2 $j2_vars -D port=$port -D type=$type -o $dfn $tfn
+  if [ "$2" == "diff" ]; then
+    diff $dfn $ofn
+    rm $dfn
+  fi
+done

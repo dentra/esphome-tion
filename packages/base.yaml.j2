@@ -1,0 +1,53 @@
+substitutions:
+  # project version
+  project_version: "{{ version_tion }}"
+  # project branch
+  project_branch: $project_version
+  # project git source
+  project_source: github://dentra/esphome-tion@$project_branch
+  # project source refresh interval
+  project_source_refresh: 12h
+  # project idenitfier
+  project_id: tion
+  # node name
+  node_name: $project_id
+  # name for main entity and prefix for all others.
+  friendly_name: $node_name
+  # framework type settings: esp-idf or arduino
+  framework_type: arduino
+  # add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "true"
+  # vport and additional components configuration parameters
+  vport_version: "{{ version_vport }}"
+  vport_source: github://dentra/esphome-components@$vport_version
+  vport_source_refresh: 1d
+
+esphome:
+  name: $node_name
+  friendly_name: $friendly_name
+  name_add_mac_suffix: $node_add_mac_suffix
+  project:
+    name: "dentra.$project_id"
+    version: "$project_version ($framework_type)"
+  min_version: "{{ version_esphome }}" # can't use substitutions here
+
+preferences:
+  flash_write_interval: 10min
+
+wifi:
+  ap:
+    ssid: "$friendly_name Hotspot"
+captive_portal:
+
+ota:
+logger:
+  logs:
+    esp-idf: INFO
+    component: ERROR
+
+external_components:
+  - source: $vport_source
+    components: [crash_info, etl, otax, vport, esp32_usb_dis]
+    refresh: $vport_source_refresh
+  - source: $project_source
+    refresh: $project_source_refresh
