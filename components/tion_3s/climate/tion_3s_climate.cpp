@@ -158,8 +158,8 @@ void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t f
 
 #ifdef TION_ENABLE_ANTIFRIZE
   if (st.flags.power_state && !st.flags.heater_state && this->outdoor_temperature_) {
-    auto outdoor_temperature = this->outdoor_temperature_;
-    if (!isnan(outdoor_temperature) && outdoor_temperature < 0.001) {
+    auto outdoor_temperature = this->outdoor_temperature_->state;
+    if (!std::isnan(outdoor_temperature) && outdoor_temperature < 0.001) {
       ESP_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
       st.flags.heater_state = true;
     }
