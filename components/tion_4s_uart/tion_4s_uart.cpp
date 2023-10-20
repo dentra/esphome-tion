@@ -26,7 +26,7 @@ void Tion4sUartVPort::setup() {
   this->set_interval(this->heartbeat_interval_, [this]() { this->api_->send_heartbeat(); });
 
 #ifdef USE_OTA
-  if (this->get_update_interval() != SCHEDULER_DONT_RUN) {
+  if (this->heartbeat_interval_ > 0) {
     // additionally send heartbeat when OTA starts and before ESP restart.
     ota::global_ota_component->add_on_state_callback([this](ota::OTAState state, float, uint8_t) {
       if (state != ota::OTAState::OTA_IN_PROGRESS) {

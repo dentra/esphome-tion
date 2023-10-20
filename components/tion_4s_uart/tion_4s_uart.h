@@ -13,13 +13,12 @@ namespace tion {
 
 using Tion4sUartIO = TionUartIO<dentra::tion::Tion4sUartProtocol>;
 
-class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO, Tion4sUartIO::frame_spec_type, PollingComponent> {
+class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO, Tion4sUartIO::frame_spec_type> {
  public:
   explicit Tion4sUartVPort(Tion4sUartIO *io) : TionVPortUARTComponent(io){};
 
   void dump_config() override;
   void setup() override;
-  void update() override { this->api_->send_heartbeat(); }
 
   void set_api(dentra::tion::TionApi4s *api) { this->api_ = api; }
   void set_heartbeat_interval(uint32_t heartbeat_interval) { this->heartbeat_interval_ = heartbeat_interval; }
