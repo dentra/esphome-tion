@@ -181,7 +181,7 @@ def tion_schema(
                 ),
                 cv.Optional(CONF_PRODUCTIVITY): sensor.sensor_schema(
                     unit_of_measurement=UNIT_CUBIC_METER_PER_HOUR,
-                    accuracy_decimals=1,
+                    accuracy_decimals=0,
                     icon="mdi:weather-windy",
                     state_class=STATE_CLASS_MEASUREMENT,
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
