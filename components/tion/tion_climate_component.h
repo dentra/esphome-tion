@@ -135,6 +135,11 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
   }
 
   void on_state(const tion_state_type &state, const uint32_t request_id) {
+    // this->state_ will set to new state in TionClimateComponent::on_state,
+    // so save some vars here
+    auto prev_airflow_counter = this->state_.counters.airflow_counter;
+    auto prev_fan_time = this->state_.counters.fan_time;
+
     TionClimateComponent<tion_api_type>::on_state(state, request_id);
 
     if (this->led_) {
@@ -146,27 +151,16 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
     if (this->airflow_counter_) {
       this->airflow_counter_->publish_state(state.counters.airflow());
     }
-    if (this->productivity_) {
-      uint32_t now = millis();
-      if (this->prev_airflow_time_ == 0) {
-        this->prev_airflow_time_ = now;
-        this->prev_airflow_counter_ = state.counters.airflow_counter;
+    if (this->productivity_ && prev_fan_time != 0) {
+      auto diff_time = state.counters.fan_time - prev_fan_time;
+      if (diff_time == 0) {
+        this->productivity_->publish_state(0);
       } else {
-        auto diff_airflow = state.counters.airflow_counter - this->prev_airflow_counter_;
-        if (diff_airflow > 0) {
-          auto diff_time = now - this->prev_airflow_time_;
-          this->productivity_->publish_state(float(diff_airflow) / (float(diff_time) / 1000.0f) *
-                                             float(state.counters.airflow_k()));
-          this->prev_airflow_time_ = now;
-          this->prev_airflow_counter_ = state.counters.airflow_counter;
-        }
+        auto diff_airflow = state.counters.airflow_counter - prev_airflow_counter;
+        this->productivity_->publish_state(float(diff_airflow) / float(diff_time) * float(state.counters.airflow_k()));
       }
     }
   }
-
- protected:
-  uint32_t prev_airflow_time_{};
-  uint32_t prev_airflow_counter_{};
 };
 
 class TionBoostTimeNumber : public number::Number {
