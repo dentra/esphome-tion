@@ -114,6 +114,9 @@ packages:
     {%- endif %}
 
 # Uncomment to enable MQTT connecion.
+# WARNINIG: If you leave next api section for logging purpose
+#           and do not use Home Assistant, you need to uncomment
+#           reboot_timeout parameter.
 # mqtt:
 #   broker: !secret mqtt_borker
 #   port: !secret mqtt_port
@@ -122,6 +125,8 @@ packages:
 
 # Enable Home Assistant API connection. Please do not remove to keep logs functioning.
 api:
+  # Uncomment next line if you do not use Home Assistant.
+  #reboot_timeout: 0s
 
 # WiFi hotspot configuration.
 # Comment next 3 lines to enable manual WiFi conviguration via access point.
