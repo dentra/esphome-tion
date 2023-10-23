@@ -73,13 +73,14 @@ void TionClimateComponentBase::update_preset_service_(std::string preset_str, st
 bool TionClimateComponentBase::enable_boost_() {
   auto boost_time = this->get_boost_time_();
   if (boost_time == 0) {
+    ESP_LOGW(TAG, "Boost time is not configured");
     return false;
   }
 
   // if boost_time_left not configured, just schedule stop boost after boost_time
   if (this->boost_time_left_ == nullptr) {
     ESP_LOGD(TAG, "Schedule boost timeout for %" PRIu32 " s", boost_time);
-    this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() { this->cancel_preset_(*this->preset); });
+    this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() { this->cancel_preset_(climate::CLIMATE_PRESET_BOOST); });
     return true;
   }
 
@@ -92,7 +93,7 @@ bool TionClimateComponentBase::enable_boost_() {
     if (time_left > 0) {
       this->boost_time_left_->publish_state(static_cast<float>(time_left));
     } else {
-      this->cancel_preset_(*this->preset);
+      this->cancel_preset_(climate::CLIMATE_PRESET_BOOST);
     }
   });
 
@@ -103,11 +104,11 @@ void TionClimateComponentBase::cancel_boost_() {
   if (this->boost_time_left_) {
     ESP_LOGV(TAG, "Cancel boost interval");
     this->cancel_interval(ASH_BOOST);
+    this->boost_time_left_->publish_state(NAN);
   } else {
     ESP_LOGV(TAG, "Cancel boost timeout");
     this->cancel_timeout(ASH_BOOST);
   }
-  this->boost_time_left_->publish_state(NAN);
 }
 #endif  // TION_ENABLE_PRESETS
 

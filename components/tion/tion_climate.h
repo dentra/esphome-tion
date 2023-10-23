@@ -16,6 +16,7 @@ struct tion_preset_t {
   uint8_t fan_speed;
   int8_t target_temperature;
   climate::ClimateMode mode;
+  bool is_initialized() const { return this->fan_speed != 0; }
 };
 #endif  // TION_ENABLE_PRESETS
 
@@ -86,8 +87,13 @@ class TionClimate : public climate::Climate {
     return std::string(fan_mode);
   }
 #ifdef TION_ENABLE_PRESETS
-  bool enable_preset_(climate::ClimatePreset preset);
-  void cancel_preset_(climate::ClimatePreset preset);
+  bool enable_preset_(climate::ClimatePreset new_preset);
+  void cancel_preset_(climate::ClimatePreset old_preset);
+  void update_default_preset_() {
+    this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
+    this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed();
+    this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
+  }
   virtual bool enable_boost_() = 0;
   virtual void cancel_boost_() = 0;
   climate::ClimatePreset saved_preset_{climate::CLIMATE_PRESET_NONE};

@@ -38,13 +38,8 @@ climate::ClimateTraits TionClimate::traits() {
 void TionClimate::control(const climate::ClimateCall &call) {
 #ifdef TION_ENABLE_PRESETS
   if (call.get_preset().has_value()) {
-    const auto new_preset = *call.get_preset();
-    const auto old_preset = *this->preset;
-    if (new_preset != old_preset) {
-      this->cancel_preset_(old_preset);
-      if (this->enable_preset_(new_preset)) {
-        return;
-      }
+    if (this->enable_preset_(*call.get_preset())) {
+      return;
     }
   }
 #endif
@@ -97,39 +92,54 @@ void TionClimate::dump_presets(const char *tag) const {
 
 #ifdef TION_ENABLE_PRESETS
 
-bool TionClimate::enable_preset_(climate::ClimatePreset preset) {
-  ESP_LOGD(TAG, "Enable preset %s", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
-  if (preset == climate::CLIMATE_PRESET_BOOST) {
-    if (!this->enable_boost_()) {
-      ESP_LOGW(TAG, "Boost time is not configured");
-      return false;
-    }
-    this->saved_preset_ = *this->preset;
+bool TionClimate::enable_preset_(climate::ClimatePreset new_preset) {
+  const auto old_preset = *this->preset;
+  if (new_preset == old_preset) {
+    ESP_LOGD(TAG, "Preset was not changed");
+    return false;
   }
 
-  // если был пресет NONE, то сохраним его значения
-  if (*this->preset == climate::CLIMATE_PRESET_NONE) {
-    this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
-    this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed();
-    this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
+  if (old_preset == climate::CLIMATE_PRESET_BOOST) {
+    ESP_LOGD(TAG, "Cancel preset boost");
+    this->cancel_boost_();
+  }
+
+  ESP_LOGD(TAG, "Enable preset %s", LOG_STR_ARG(climate::climate_preset_to_string(new_preset)));
+  if (new_preset == climate::CLIMATE_PRESET_BOOST) {
+    if (!this->enable_boost_()) {
+      return false;
+    }
+    this->saved_preset_ = old_preset;
+    // инициализируем дефолный пресет NONE чтобы можно было в него восстановиться в любом случае
+    if (!this->presets_[climate::CLIMATE_PRESET_NONE].is_initialized() && old_preset != climate::CLIMATE_PRESET_NONE) {
+      this->update_default_preset_();
+    }
+  }
+
+  // если был пресет NONE, то сохраним его текущее состояние
+  if (old_preset == climate::CLIMATE_PRESET_NONE) {
+    this->update_default_preset_();
   }
 
   // дополнительно проверим, что пресет был предварительно сохранен (см. блок выше)
-  // в противном случае можем получить зимой отстутсвие подогрева
-  // т.е. неинициализированный NONE пресет не активируем
-  if (this->presets_[preset].fan_speed != 0) {
-    this->control_climate_state(this->presets_[preset].mode, this->presets_[preset].fan_speed,
-                                this->presets_[preset].target_temperature);
+  // в противном случае можем получить зимой, например, отстутсвие подогрева
+  // т.е. неинициализированный пресет не активируем
+  if (!this->presets_[new_preset].is_initialized()) {
+    ESP_LOGW(TAG, "No data for preset %s", LOG_STR_ARG(climate::climate_preset_to_string(new_preset)));
+    return false;
   }
-  this->preset = preset;
+
+  this->control_climate_state(this->presets_[new_preset].mode, this->presets_[new_preset].fan_speed,
+                              this->presets_[new_preset].target_temperature);
+
+  this->preset = new_preset;
 
   return true;
 }
 
-void TionClimate::cancel_preset_(climate::ClimatePreset preset) {
-  ESP_LOGD(TAG, "Cancel preset %s", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
-  if (preset == climate::CLIMATE_PRESET_BOOST) {
-    this->cancel_boost_();
+// TODO remove this method and use this->enable_preset_(this->saved_preset_);
+void TionClimate::cancel_preset_(climate::ClimatePreset old_preset) {
+  if (old_preset == climate::CLIMATE_PRESET_BOOST) {
     this->enable_preset_(this->saved_preset_);
   }
 }
