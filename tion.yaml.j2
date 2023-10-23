@@ -109,6 +109,9 @@ packages:
       {%- endif %}
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
+      ## Uncomment to enable set climate preset to "none" (requred by MQTT only)
+      ## To enable this feature by default please vote for this PR: https://github.com/esphome/esphome/pull/5588
+      # - packages/mqtt_add_climate_preset_none.yaml
     {%- if (packages_refresh|length) > 0 %}
     refresh: {{ packages_refresh }}
     {%- endif %}

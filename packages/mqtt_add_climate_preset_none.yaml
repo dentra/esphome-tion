@@ -1,0 +1,4 @@
+external_components:
+  - source: github://pr#5588
+    components: [climate]
+    refresh: 1d
