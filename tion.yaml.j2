@@ -151,7 +151,7 @@ vport:
     ## Optional, Send a pair command after every connect (experimental feature)
     # experimental_always_pair: false
     {%- endif %}
-    ## Optional, Interval between sending commmands. Set to 0ms to disable.
+    ## Optional, Interval between sending commmands. Set to 0ms to send one command per loop.
     # command_interval: {{ "100ms" if port == "ble" else "20ms" }}
     ## Optional, Command queue size. Default: 10.
     # command_queue_size: 10
