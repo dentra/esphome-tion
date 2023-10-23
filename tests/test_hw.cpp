@@ -86,7 +86,7 @@ bool check(const dentra::tion::tion4s_state_t &ss, check_fn_t fn) {
   ESP_LOGD(TAG, "    cnt.work_time  : %08X", ss.counters.work_time);
   ESP_LOGD(TAG, "    cnt.fan_time   : %08X", ss.counters.fan_time);
   ESP_LOGD(TAG, "    cnt.filter_time: %08X", ss.counters.filter_time);
-  ESP_LOGD(TAG, "    cnt.airflow_cnt: %08X", ss.counters.airflow_counter_);
+  ESP_LOGD(TAG, "    cnt.airflow_cnt: %08X", ss.counters.airflow_counter);
   ESP_LOGD(TAG, "    errors         : %08X", ss.errors);
   ESP_LOGD(TAG, "    max_fan_speed  : %u", ss.max_fan_speed);
   ESP_LOGD(TAG, "    heater_var     : %u", ss.heater_var);

@@ -64,8 +64,6 @@ class Tion4sTest : public Tion4sClimate {
   Tion4sTest(TionApi4s *api, esphome::tion::TionVPortType vport_type) : Tion4sClimate(api, vport_type) {
     this->state_.counters.work_time = 0xFFFF;
   }
-  // void enable_preset(climate::ClimatePreset preset) { this->enable_preset_(preset); }
-  // void cancel_preset(climate::ClimatePreset preset) { this->cancel_preset_(preset); }
   tion4s_state_t &state() { return this->state_; };
 };
 
@@ -148,7 +146,20 @@ bool test_presets() {
   call.set_preset(esphome::climate::ClimatePreset::CLIMATE_PRESET_NONE);
   comp.control(call);
 
+  // проверяем, что не упали в неинициализированное состояние
   res &= cloak::check_data("target_temperature > 0", comp.target_temperature > 0, true);
+
+  comp.control(comp.make_call().set_fan_mode(std::string("3")));
+
+  call.set_preset(esphome::climate::ClimatePreset::CLIMATE_PRESET_BOOST);
+  comp.control(call);
+
+  res &= cloak::check_data("fan_speed == 6", comp.get_fan_speed(), 6);
+
+  call.set_preset(esphome::climate::ClimatePreset::CLIMATE_PRESET_NONE);
+  comp.control(call);
+
+  res &= cloak::check_data("fan_speed == 3", comp.get_fan_speed(), 3);
 
   return res;
 }

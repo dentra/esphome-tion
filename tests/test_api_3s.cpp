@@ -64,7 +64,7 @@ bool test_api_3s() {
   res &= cloak::check_data("request_state", io, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   comp.state().firmware_version = 0xFFFF;
-  api.write_state(comp.state());
+  api.write_state(comp.state(), 0);
   res &= cloak::check_data("write_state firmware_version", io,
                            "3D.02.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
@@ -77,11 +77,11 @@ bool test_api_3s() {
   comp.state().flags.power_state = true;
   comp.state().flags.sound_state = true;
   comp.state().target_temperature = 23;
-  comp.state().filter_time = 79;
+  comp.state().counters.filter_time = 79;
   comp.state().hours = 14;
   comp.state().minutes = 45;
   comp.state().gate_position = dentra::tion::tion3s_state_t::GATE_POSITION_OUTDOOR;
-  api.write_state(comp.state());
+  api.write_state(comp.state(), 0);
   res &= cloak::check_data("write_state params", io, "3D.02.01.17.02.0B.00.00.4F.00.00.00.00.00.00.00.00.00.00.5A");
 
   auto copy = comp.state();
@@ -145,7 +145,7 @@ bool test_uart_3s() {
   res &= cloak::check_data("request_dev_info call", api.request_dev_info(), false);
 
   comp.state().flags.heater_state = false;
-  printf("0x%04X\n", comp.state().filter_time);
+  printf("0x%04X\n", comp.state().counters.filter_time);
 
   res &= cloak::check_data("reset_filter call", api.reset_filter(comp.state()), true);
   res &= cloak::check_data("reset_filter data", uart, "3D:02:01:17:02:0A:01:02:00:00:00:00:00:00:00:00:00:00:00:5A");
