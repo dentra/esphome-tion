@@ -41,6 +41,7 @@ class TionComponent : public PollingComponent {
 
   void set_state_warnout(binary_sensor::BinarySensor *state_warnout) { this->state_warnout_ = state_warnout; };
   void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; };
+  void set_batch_timeout(uint32_t batch_timeout) { this->batch_timeout_ = batch_timeout; };
 
   bool is_reset_filter_confirmed() const {
     return this->reset_filter_confirm_ == nullptr || this->reset_filter_confirm_->state;
@@ -62,6 +63,7 @@ class TionComponent : public PollingComponent {
   switch_::Switch *reset_filter_confirm_{};
   binary_sensor::BinarySensor *state_warnout_{};
   uint32_t state_timeout_{};
+  uint32_t batch_timeout_{};
 
 #ifdef TION_ENABLE_PRESETS
   number::Number *boost_time_{};

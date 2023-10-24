@@ -67,6 +67,7 @@ CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
 CONF_FILTER_WARNOUT = "filter_warnout"
 CONF_PRODUCTIVITY = "productivity"
+CONF_BATCH_TIMEOUT = "batch_timeout"
 
 UNIT_DAYS = "d"
 UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/{UNIT_HOUR}"
@@ -186,6 +187,9 @@ def tion_schema(
                     state_class=STATE_CLASS_MEASUREMENT,
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
+                cv.Optional(
+                    CONF_BATCH_TIMEOUT, default="200ms"
+                ): cv.positive_time_period_milliseconds,
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -324,6 +328,8 @@ async def setup_tion_core(config, component_reg):
     await setup_binary_sensor(config, CONF_STATE_WARNOUT, var.set_state_warnout)
     cg.add(var.set_state_timeout(config[CONF_STATE_TIMEOUT]))
     await setup_sensor(config, CONF_PRODUCTIVITY, var.set_productivity)
+
+    cg.add(var.set_batch_timeout(config[CONF_BATCH_TIMEOUT]))
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")
