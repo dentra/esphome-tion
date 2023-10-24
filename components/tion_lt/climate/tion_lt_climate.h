@@ -22,23 +22,18 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, state, this->get_led_());
+    ControlState control;
+    control.buzzer = state;
+    this->control_state_(control);
   }
 
   void control_led_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(),
-                                state);
+    ControlState control;
+    control.led = state;
+    this->control_state_(control);
   }
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override {
-    this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_led_());
-  }
-
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                             bool led);
-
-  void control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                     bool led);
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
 
   optional<int8_t> get_pcb_temperature() const {
     if (this->state_.is_initialized()) {
@@ -56,8 +51,17 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
 
  protected:
   binary_sensor::BinarySensor *gate_state_{};
-  bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
-  bool get_led_() const { return this->led_ ? this->led_->state : this->state_.flags.led_state; }
+
+  struct ControlState {
+    optional<bool> power_state;
+    optional<bool> heater_state;
+    optional<uint8_t> fan_speed;
+    optional<int8_t> target_temperature;
+    optional<bool> buzzer;
+    optional<bool> led;
+  };
+
+  void control_state_(const ControlState &state);
 };
 
 }  // namespace tion

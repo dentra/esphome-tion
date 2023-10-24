@@ -29,27 +29,20 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
   int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
 
   void control_buzzer_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, state,
-                                this->get_gate_position_());
+    ControlState control;
+    control.buzzer = state;
+    this->control_state_(control);
   }
 
   void control_gate_position(tion3s_state_t::GatePosition gate_position);
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                             tion3s_state_t::GatePosition gate_position);
-
-  void control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                     tion3s_state_t::GatePosition gate_position);
-
  protected:
   select::Select *air_intake_{};
 
-  bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
-
   tion3s_state_t::GatePosition get_gate_position_() const {
-    if (this->air_intake_) {
+    if (!this->batch_active_ && this->air_intake_) {
       auto active_index = this->air_intake_->active_index();
       if (active_index.has_value()) {
         return static_cast<tion3s_state_t::GatePosition>(*active_index);
@@ -57,6 +50,17 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
     }
     return this->state_.gate_position;
   }
+
+  struct ControlState {
+    optional<bool> power_state;
+    optional<bool> heater_state;
+    optional<uint8_t> fan_speed;
+    optional<int8_t> target_temperature;
+    optional<bool> buzzer;
+    optional<tion3s_state_t::GatePosition> gate_position;
+  };
+
+  void control_state_(const ControlState &state);
 };
 
 }  // namespace tion

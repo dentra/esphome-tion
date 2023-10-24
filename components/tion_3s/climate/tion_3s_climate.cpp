@@ -89,71 +89,89 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
 }
 
 void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) {
+  ControlState control;
+  control.gate_position = gate_position;
+
   climate::ClimateMode mode = this->mode;
-  if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR && this->mode == climate::CLIMATE_MODE_HEAT) {
-    ESP_LOGW(TAG, "INDOOR gate position allow only FAN_ONLY mode");
-    mode = climate::CLIMATE_MODE_FAN_ONLY;
+  if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
+    // TODO необходимо проверять batch_active
+    if (this->mode == climate::CLIMATE_MODE_HEAT) {
+      ESP_LOGW(TAG, "INDOOR gate position allow only FAN_ONLY mode");
+      control.heater_state = false;
+    }
   }
-  this->control_climate_state(mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(),
-                              gate_position);
+
+  this->control_state_(control);
 }
 
 void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
-  auto gate_position = this->get_gate_position_();
-  if (mode == climate::CLIMATE_MODE_HEAT && gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
-    ESP_LOGW(TAG, "HEAT mode allow only OUTDOOR gate position");
-    gate_position = tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR;
-  }
-  this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), gate_position);
-}
+  ControlState control;
+  control.fan_speed = fan_speed;
+  control.target_temperature = target_temperature;
 
-void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
-                                          bool buzzer, tion3s_state_t::GatePosition gate_position) {
   if (mode == climate::CLIMATE_MODE_OFF) {
-    this->control_state(false, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, gate_position);
-    return;
+    control.power_state = false;
+  } else if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    control.power_state = true;
+  } else {
+    control.power_state = true;
+    control.heater_state = mode == climate::CLIMATE_MODE_HEAT;
   }
 
-  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-    this->control_state(true, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, gate_position);
-    return;
+  if (mode == climate::CLIMATE_MODE_HEAT) {
+    auto gate_position = this->get_gate_position_();
+    if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
+      ESP_LOGW(TAG, "HEAT mode allow only OUTDOOR gate position");
+      control.gate_position = tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR;
+    }
   }
 
-  this->control_state(true, mode == climate::CLIMATE_MODE_HEAT, fan_speed, target_temperature, buzzer, gate_position);
+  this->control_state_(control);
 }
 
-void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature,
-                                  bool buzzer, tion3s_state_t::GatePosition gate_position) {
+void Tion3sClimate::control_state_(const ControlState &state) {
   tion3s_state_t st = this->state_;
 
-  st.flags.power_state = power_state;
-  if (this->state_.flags.power_state != st.flags.power_state) {
-    ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  if (state.power_state.has_value()) {
+    st.flags.power_state = *state.power_state;
+    if (this->state_.flags.power_state != st.flags.power_state) {
+      ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+    }
   }
 
-  st.flags.heater_state = heater_state;
-  if (this->state_.flags.heater_state != st.flags.heater_state) {
-    ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
+  if (state.heater_state.has_value()) {
+    st.flags.heater_state = *state.heater_state;
+    if (this->state_.flags.heater_state != st.flags.heater_state) {
+      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
+    }
   }
 
-  st.fan_speed = fan_speed;
-  if (this->state_.fan_speed != fan_speed) {
-    ESP_LOGD(TAG, "New fan speed %u -> %u", this->state_.fan_speed, st.fan_speed);
+  if (state.fan_speed.has_value()) {
+    st.fan_speed = *state.fan_speed;
+    if (this->state_.fan_speed != st.fan_speed) {
+      ESP_LOGD(TAG, "New fan speed %u -> %u", this->state_.fan_speed, st.fan_speed);
+    }
   }
 
-  st.target_temperature = target_temperature;
-  if (this->state_.target_temperature != st.target_temperature) {
-    ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, target_temperature);
+  if (state.target_temperature.has_value()) {
+    st.target_temperature = *state.target_temperature;
+    if (this->state_.target_temperature != st.target_temperature) {
+      ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, st.target_temperature);
+    }
   }
 
-  st.flags.sound_state = buzzer;
-  if (this->state_.flags.sound_state != st.flags.sound_state) {
-    ESP_LOGD(TAG, "New sound state %s -> %s", ONOFF(this->state_.flags.sound_state), ONOFF(st.flags.sound_state));
+  if (state.buzzer.has_value()) {
+    st.flags.sound_state = *state.buzzer;
+    if (this->state_.flags.sound_state != st.flags.sound_state) {
+      ESP_LOGD(TAG, "New sound state %s -> %s", ONOFF(this->state_.flags.sound_state), ONOFF(st.flags.sound_state));
+    }
   }
 
-  st.gate_position = gate_position;
-  if (this->state_.gate_position != st.gate_position) {
-    ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
+  if (state.gate_position.has_value()) {
+    st.gate_position = *state.gate_position;
+    if (this->state_.gate_position != st.gate_position) {
+      ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
+    }
   }
 
 #ifdef TION_ENABLE_ANTIFRIZE
@@ -166,14 +184,15 @@ void Tion3sClimate::control_state(bool power_state, bool heater_state, uint8_t f
   }
 #endif
 
-#ifdef TION_ENABLE_OFF_BEFORE_HEAT
-  // режим вентиляция изменить на обогрев можно только через выключение
-  if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
-    st.flags.power_state = false;
-    this->write_api_state_(st);
-    st.flags.power_state = true;
-  }
-#endif
+  // FIXME с батч режимом невозможно
+  // #ifdef TION_ENABLE_OFF_BEFORE_HEAT
+  //   // режим вентиляция изменить на обогрев можно только через выключение
+  //   if (this->state_.flags.power_state && !this->state_.flags.heater_state && st.flags.heater_state) {
+  //     st.flags.power_state = false;
+  //     this->write_api_state_(st);
+  //     st.flags.power_state = true;
+  //   }
+  // #endif
 
   this->write_api_state_(st);
 }

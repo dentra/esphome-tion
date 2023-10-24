@@ -53,24 +53,19 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, state, this->get_led_(),
-                                this->get_recirculation_());
+    ControlState control;
+    control.buzzer = state;
+    this->control_state_(control);
   }
 
   void control_led_state(bool state) {
-    this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(), state,
-                                this->get_recirculation_());
+    ControlState control;
+    control.led = state;
+    this->control_state_(control);
   }
 
   void control_recirculation_state(bool state);
-
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
-
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature, bool buzzer,
-                             bool led, bool recirculation);
-
-  void control_state(bool power_state, tion4s_state_t::HeaterMode heater_mode, uint8_t fan_speed,
-                     int8_t target_temperature, bool buzzer, bool led, bool recirculation);
 
   optional<int8_t> get_pcb_ctl_temperature() const {
     if (this->state_.is_initialized()) {
@@ -92,12 +87,25 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   bool enable_boost_() override;
   void cancel_boost_() override;
 #endif
-  bool get_buzzer_() const { return this->buzzer_ ? this->buzzer_->state : this->state_.flags.sound_state; }
-  bool get_led_() const { return this->led_ ? this->led_->state : this->state_.flags.led_state; }
+
   bool get_recirculation_() const {
-    return this->recirculation_ ? this->recirculation_->state
-                                : this->state_.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION;
+    if (!this->batch_active_ && this->recirculation_) {
+      return this->recirculation_->state;
+    }
+    return this->state_.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION;
   }
+
+  struct ControlState {
+    optional<bool> power_state;
+    optional<tion4s_state_t::HeaterMode> heater_mode;
+    optional<uint8_t> fan_speed;
+    optional<int8_t> target_temperature;
+    optional<bool> buzzer;
+    optional<bool> led;
+    optional<bool> recirculation;
+  };
+
+  void control_state_(const ControlState &state);
 };
 
 }  // namespace tion

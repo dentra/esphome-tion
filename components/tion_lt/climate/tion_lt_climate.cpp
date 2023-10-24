@@ -66,53 +66,66 @@ void TionLtClimate::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "test_type      : %u", state.test_type);
 }
 
-void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
-                                          bool buzzer, bool led) {
+void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
+  ControlState control;
+  control.fan_speed = fan_speed;
+  control.target_temperature = target_temperature;
+
   if (mode == climate::CLIMATE_MODE_OFF) {
-    this->control_state(false, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, led);
-    return;
+    control.power_state = false;
+  } else if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    control.power_state = true;
+  } else {
+    control.power_state = true;
+    control.heater_state = mode == climate::CLIMATE_MODE_HEAT;
   }
 
-  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-    this->control_state(true, this->state_.flags.heater_state, fan_speed, target_temperature, buzzer, led);
-    return;
-  }
-
-  this->control_state(true, mode == climate::CLIMATE_MODE_HEAT, fan_speed, target_temperature, buzzer, led);
+  this->control_state_(control);
 }
 
-void TionLtClimate::control_state(bool power_state, bool heater_state, uint8_t fan_speed, int8_t target_temperature,
-                                  bool buzzer, bool led) {
+void TionLtClimate::control_state_(const ControlState &state) {
   tionlt_state_t st = this->state_;
 
-  st.flags.power_state = power_state;
-  if (this->state_.flags.power_state != st.flags.power_state) {
-    ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  if (state.power_state.has_value()) {
+    st.flags.power_state = *state.power_state;
+    if (this->state_.flags.power_state != st.flags.power_state) {
+      ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+    }
   }
 
-  st.flags.heater_state = heater_state;
-  if (this->state_.flags.heater_state != st.flags.heater_state) {
-    ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
+  if (state.heater_state.has_value()) {
+    st.flags.heater_state = *state.heater_state;
+    if (this->state_.flags.heater_state != st.flags.heater_state) {
+      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(this->state_.flags.heater_state), ONOFF(st.flags.heater_state));
+    }
   }
 
-  st.fan_speed = fan_speed;
-  if (this->state_.fan_speed != st.fan_speed) {
-    ESP_LOGD(TAG, "New fan speed %u -> %u", this->state_.fan_speed, st.fan_speed);
+  if (state.fan_speed.has_value()) {
+    st.fan_speed = *state.fan_speed;
+    if (this->state_.fan_speed != st.fan_speed) {
+      ESP_LOGD(TAG, "New fan speed %u -> %u", this->state_.fan_speed, st.fan_speed);
+    }
   }
 
-  st.target_temperature = target_temperature;
-  if (this->state_.target_temperature != st.target_temperature) {
-    ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, st.target_temperature);
+  if (state.target_temperature.has_value()) {
+    st.target_temperature = *state.target_temperature;
+    if (this->state_.target_temperature != st.target_temperature) {
+      ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, st.target_temperature);
+    }
   }
 
-  st.flags.sound_state = buzzer;
-  if (this->state_.flags.sound_state != st.flags.sound_state) {
-    ESP_LOGD(TAG, "New sound state %s -> %s", ONOFF(this->state_.flags.sound_state), ONOFF(st.flags.sound_state));
+  if (state.buzzer.has_value()) {
+    st.flags.sound_state = *state.buzzer;
+    if (this->state_.flags.sound_state != st.flags.sound_state) {
+      ESP_LOGD(TAG, "New sound state %s -> %s", ONOFF(this->state_.flags.sound_state), ONOFF(st.flags.sound_state));
+    }
   }
 
-  st.flags.led_state = led;
-  if (this->state_.flags.led_state != st.flags.led_state) {
-    ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
+  if (state.led.has_value()) {
+    st.flags.led_state = *state.led;
+    if (this->state_.flags.led_state != st.flags.led_state) {
+      ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
+    }
   }
 
   this->write_api_state_(st);

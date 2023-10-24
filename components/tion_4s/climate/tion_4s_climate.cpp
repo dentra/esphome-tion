@@ -104,81 +104,98 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
 }
 
 void Tion4sClimate::control_recirculation_state(bool state) {
-  climate::ClimateMode mode = this->mode;
-  if (state && this->mode == climate::CLIMATE_MODE_HEAT) {
-    ESP_LOGW(TAG, "Enabled recirculation allow only FAN_ONLY mode");
-    mode = climate::CLIMATE_MODE_FAN_ONLY;
+  ControlState control;
+  control.recirculation = state;
+
+  if (state) {
+    // TODO необходимо проверять batch_active
+    if (this->mode == climate::CLIMATE_MODE_HEAT) {
+      ESP_LOGW(TAG, "Enabled recirculation allow only FAN_ONLY mode");
+      control.heater_mode = tion4s_state_t::HeaterMode::HEATER_MODE_TEMPERATURE_MAINTENANCE;
+    }
   }
-  this->control_climate_state(this->mode, this->get_fan_speed(), this->target_temperature, this->get_buzzer_(),
-                              this->get_led_(), state);
+
+  this->control_state_(control);
 }
 
 void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
-  auto recirculation = this->get_recirculation_();
-  if (mode == climate::CLIMATE_MODE_HEAT && recirculation) {
-    ESP_LOGW(TAG, "HEAT mode allow only disabled recirculation");
-    recirculation = false;
-  }
-  this->control_climate_state(mode, fan_speed, target_temperature, this->get_buzzer_(), this->get_led_(),
-                              recirculation);
-}
+  ControlState control;
 
-void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
-                                          bool buzzer, bool led, bool recirculation) {
+  control.fan_speed = fan_speed;
+  control.target_temperature = target_temperature;
+
   if (mode == climate::CLIMATE_MODE_OFF) {
-    this->control_state(false, this->state_.flags.heater_mode, fan_speed, target_temperature, buzzer, led,
-                        recirculation);
-    return;
+    control.power_state = false;
+  } else if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
+    control.power_state = true;
+  } else {
+    control.power_state = true;
+    control.heater_mode = mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
+                                                             : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
   }
 
-  if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-    this->control_state(true, this->state_.flags.heater_mode, fan_speed, target_temperature, buzzer, led,
-                        recirculation);
-    return;
+  if (mode == climate::CLIMATE_MODE_HEAT) {
+    auto recirculation = this->get_recirculation_();
+    if (recirculation) {
+      ESP_LOGW(TAG, "HEAT mode allow only disabled recirculation");
+      control.recirculation = false;
+    }
   }
 
-  auto heater_mode = mode == climate::CLIMATE_MODE_HEAT ? tion4s_state_t::HEATER_MODE_HEATING
-                                                        : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
-  this->control_state(true, heater_mode, fan_speed, target_temperature, buzzer, led, recirculation);
+  this->control_state_(control);
 }
 
-void Tion4sClimate::control_state(bool power_state, tion4s_state_t::HeaterMode heater_mode, uint8_t fan_speed,
-                                  int8_t target_temperature, bool buzzer, bool led, bool recirculation) {
+void Tion4sClimate::control_state_(const ControlState &state) {
   tion4s_state_t st = this->state_;
 
-  st.flags.power_state = power_state;
-  if (this->state_.flags.power_state != st.flags.power_state) {
-    ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+  if (state.power_state.has_value()) {
+    st.flags.power_state = *state.power_state;
+    if (this->state_.flags.power_state != st.flags.power_state) {
+      ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(this->state_.flags.power_state), ONOFF(st.flags.power_state));
+    }
   }
 
-  st.flags.heater_mode = heater_mode;
-  if (this->state_.flags.heater_mode != st.flags.heater_mode) {
-    ESP_LOGD(TAG, "New heater mode %s -> %s", ONOFF(this->state_.flags.heater_mode), ONOFF(st.flags.heater_mode));
+  if (state.heater_mode.has_value()) {
+    st.flags.heater_mode = *state.heater_mode;
+    if (this->state_.flags.heater_mode != st.flags.heater_mode) {
+      ESP_LOGD(TAG, "New heater mode %s -> %s", ONOFF(this->state_.flags.heater_mode), ONOFF(st.flags.heater_mode));
+    }
   }
 
-  st.fan_speed = fan_speed;
-  if (this->state_.fan_speed != st.fan_speed) {
-    ESP_LOGD(TAG, "New fan speed %u -> %u", this->state_.fan_speed, st.fan_speed);
+  if (state.fan_speed.has_value()) {
+    st.fan_speed = *state.fan_speed;
+    if (this->state_.fan_speed != st.fan_speed) {
+      ESP_LOGD(TAG, "New fan speed %u -> %u", this->state_.fan_speed, st.fan_speed);
+    }
   }
 
-  st.target_temperature = target_temperature;
-  if (this->state_.target_temperature != st.target_temperature) {
-    ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, st.target_temperature);
+  if (state.target_temperature.has_value()) {
+    st.target_temperature = *state.target_temperature;
+    if (this->state_.target_temperature != st.target_temperature) {
+      ESP_LOGD(TAG, "New target temperature %d -> %d", this->state_.target_temperature, st.target_temperature);
+    }
   }
 
-  st.gate_position = recirculation ? tion4s_state_t::GATE_POSITION_RECIRCULATION : tion4s_state_t::GATE_POSITION_INFLOW;
-  if (this->state_.gate_position != st.gate_position) {
-    ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
+  if (state.recirculation.has_value()) {
+    st.gate_position =
+        *state.recirculation ? tion4s_state_t::GATE_POSITION_RECIRCULATION : tion4s_state_t::GATE_POSITION_INFLOW;
+    if (this->state_.gate_position != st.gate_position) {
+      ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
+    }
   }
 
-  st.flags.sound_state = buzzer;
-  if (this->state_.flags.sound_state != st.flags.sound_state) {
-    ESP_LOGD(TAG, "New sound state %s -> %s", ONOFF(this->state_.flags.sound_state), ONOFF(st.flags.sound_state));
+  if (state.buzzer.has_value()) {
+    st.flags.sound_state = *state.buzzer;
+    if (this->state_.flags.sound_state != st.flags.sound_state) {
+      ESP_LOGD(TAG, "New sound state %s -> %s", ONOFF(this->state_.flags.sound_state), ONOFF(st.flags.sound_state));
+    }
   }
 
-  st.flags.led_state = led;
-  if (this->state_.flags.led_state != st.flags.led_state) {
-    ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
+  if (state.led.has_value()) {
+    st.flags.led_state = *state.led;
+    if (this->state_.flags.led_state != st.flags.led_state) {
+      ESP_LOGD(TAG, "New led state %s -> %s", ONOFF(this->state_.flags.led_state), ONOFF(st.flags.led_state));
+    }
   }
 
   this->write_api_state_(st);
