@@ -187,7 +187,7 @@ bool TionApi4s::request_dev_info() const {
 
 bool TionApi4s::request_state() const {
   TION_LOGD(TAG, "Request[] State");
-  return this->write_frame(FRAME_TYPE_STATE_REQ);
+  return this->write_frame(FRAME_TYPE_STATE_REQ, 0);
 }
 
 #ifdef TION_ENABLE_PRESETS
