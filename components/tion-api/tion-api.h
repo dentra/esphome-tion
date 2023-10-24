@@ -92,7 +92,7 @@ template<class state_type_t> class TionApiBase : public TionApiBaseWriter {
   /// Callback listener for response to request_state command request.
   using on_state_type = etl::delegate<void(const state_type_t &state, uint32_t request_id)>;
   /// Callback listener for response to send_heartbeat command request.
-  using on_heartbeat_type = etl::delegate<void(uint8_t unknown)>;
+  using on_heartbeat_type = etl::delegate<void(tion_dev_info_t::work_mode_t work_mode)>;
 
  public:
   using state_type = state_type_t;

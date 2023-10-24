@@ -36,31 +36,31 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
 #ifdef TION_ENABLE_HEARTBEAT
   if (frame_type == FRAME_TYPE_HEARTBIT_RSP) {
-    struct heartbeat_frame_t {
-      uint8_t unknown;  // always 1
+    struct RawHeartbeatFrame {
+      tion_dev_info_t::work_mode_t work_mode;  // always 1
     } PACKED;
-    if (frame_data_size != sizeof(heartbeat_frame_t)) {
+    if (frame_data_size != sizeof(RawHeartbeatFrame)) {
       TION_LOGW(TAG, "Incorrect heartbeat response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const heartbeat_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[] Heartbeat (%02X)", frame->unknown);
+      auto *frame = static_cast<const RawHeartbeatFrame *>(frame_data);
+      TION_LOGD(TAG, "Response[] Heartbeat (%02X)", frame->work_mode);
       if (this->on_heartbeat) {
-        this->on_heartbeat(frame->unknown);
+        this->on_heartbeat(frame->work_mode);
       }
     }
     return;
   }
 #endif
   if (frame_type == FRAME_TYPE_STATE_RSP) {
-    struct state_frame_t {
+    struct RawStateFrame {
       uint32_t request_id;
       tion4s_state_t state;
     } PACKED;
-    if (frame_data_size != sizeof(state_frame_t)) {
+    if (frame_data_size != sizeof(RawStateFrame)) {
       TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const state_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%" PRIu32 "] State", frame->request_id);
+      auto *frame = static_cast<const RawStateFrame *>(frame_data);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] %s", frame->request_id, frame->request_id == 0 ? "State" : "Write State");
       if (this->on_state) {
         this->on_state(frame->state, frame->request_id);
       }
@@ -69,14 +69,14 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 #ifdef TION_ENABLE_PRESETS
   if (frame_type == FRAME_TYPE_TURBO_RSP) {
-    struct turbo_frame_t {
+    struct RawTurboFrame {
       uint32_t request_id;
       tion4s_turbo_t turbo;
     } PACKED;
-    if (frame_data_size != sizeof(turbo_frame_t)) {
+    if (frame_data_size != sizeof(RawTurboFrame)) {
       TION_LOGW(TAG, "Incorrect turbo response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const turbo_frame_t *>(frame_data);
+      auto *frame = static_cast<const RawTurboFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Turbo", frame->request_id);
       if (this->on_turbo) {
         this->on_turbo(frame->turbo, frame->request_id);
@@ -98,14 +98,14 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 #ifdef TION_ENABLE_SCHEDULER
   if (frame_type == FRAME_TYPE_TIME_RSP) {
-    struct time_frame_t {
+    struct RawTimeFrame {
       uint32_t request_id;
       tion4s_time_t time;
     } PACKED;
-    if (frame_data_size != sizeof(time_frame_t)) {
+    if (frame_data_size != sizeof(RawTimeFrame)) {
       TION_LOGW(TAG, "Incorrect time response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const time_frame_t *>(frame_data);
+      auto *frame = static_cast<const RawTimeFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Time", frame->request_id);
       if (this->on_time) {
         this->on_time(frame->time.unix_time, frame->request_id);
@@ -115,15 +115,15 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 
   if (frame_type == FRAME_TYPE_TIMER_RSP) {
-    struct timer_frame_t {
+    struct RawTimerFrame {
       uint32_t request_id;
       uint8_t timer_id;
       tion4s_timer_t timer;
     } PACKED;
-    if (frame_data_size != sizeof(timer_frame_t)) {
+    if (frame_data_size != sizeof(RawTimerFrame)) {
       TION_LOGW(TAG, "Incorrect timer response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const timer_frame_t *>(frame_data);
+      auto *frame = static_cast<const RawTimerFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Timer %u", frame->request_id, frame->timer_id);
       if (this->on_timer) {
         this->on_timer(frame->timer_id, frame->timer, frame->request_id);
@@ -133,14 +133,14 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 
   if (frame_type == FRAME_TYPE_TIMERS_STATE_RSP) {
-    struct timers_state_frame_t {
+    struct RawTimersStateFrame {
       uint32_t request_id;
       tion4s_timers_state_t timers_state;
     } PACKED;
-    if (frame_data_size != sizeof(timers_state_frame_t)) {
+    if (frame_data_size != sizeof(RawTimersStateFrame)) {
       TION_LOGW(TAG, "Incorrect timers state response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const timers_state_frame_t *>(frame_data);
+      auto *frame = static_cast<const RawTimersStateFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Timers state", frame->request_id);
       if (this->on_timers_state) {
         this->on_timers_state(frame->timers_state, frame->request_id);
@@ -151,14 +151,14 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
 #endif
 #ifdef TION_ENABLE_DIAGNOSTIC
   if (frame_type == FRAME_TYPE_ERR_CNT_RSP) {
-    struct error_frame_t {
+    struct RawErrorFrame {
       uint32_t request_id;
       tion4s_errors_t errors;
     } PACKED;
-    if (frame_data_size != sizeof(error_frame_t)) {
+    if (frame_data_size != sizeof(RawErrorFrame)) {
       TION_LOGW(TAG, "Incorrect error response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const error_frame_t *>(frame_data);
+      auto *frame = static_cast<const RawErrorFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Errors", frame->request_id);
       // this->on_errors(frame->errors, frame->request_id);
     }
@@ -166,10 +166,10 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 
   if (frame_type == FRAME_TYPE_TEST_RSP) {
-    struct test_frame_t {
+    struct RawTestFrame {
       uint8_t unknown[440];
-    };
-    if (frame_data_size != sizeof(test_frame_t)) {
+    } PACKED;
+    if (frame_data_size != sizeof(RawTestFrame)) {
       TION_LOGW(TAG, "Incorrect test response data size: %zu", frame_data_size);
     } else {
       TION_LOGD(TAG, "Response[] Test");
