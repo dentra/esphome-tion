@@ -124,7 +124,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     this->batch_active_ = true;
     this->state_ = state;
     this->set_timeout("batch_update", this->batch_timeout_, [this]() {
-      this->api_->write_state(state, ++this->request_id_);
+      this->api_->write_state(this->state_, ++this->request_id_);
       if (this->state_warnout_ && this->state_timeout_ > 0) {
         this->set_timeout("state_timeout", this->state_timeout_,
                           [this]() { this->state_warnout_->publish_state(true); });
