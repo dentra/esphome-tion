@@ -60,7 +60,7 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawStateFrame *>(frame_data);
-      TION_LOGD(TAG, "Response[%" PRIu32 "] %s", frame->request_id, frame->request_id == 0 ? "State" : "Write State");
+      TION_LOGD(TAG, "Response[%" PRIu32 "] %s", frame->request_id, frame->request_id == 1 ? "State" : "Write State");
       if (this->on_state) {
         this->on_state(frame->state, frame->request_id);
       }
@@ -187,7 +187,7 @@ bool TionApi4s::request_dev_info() const {
 
 bool TionApi4s::request_state() const {
   TION_LOGD(TAG, "Request[] State");
-  return this->write_frame(FRAME_TYPE_STATE_REQ, 0);
+  return this->write_frame(FRAME_TYPE_STATE_REQ, 1);
 }
 
 #ifdef TION_ENABLE_PRESETS
@@ -271,7 +271,7 @@ bool TionApi4s::request_timers(const uint32_t request_id) const {
 }
 
 bool TionApi4s::write_timer(const uint8_t timer_id, const tion4s_timer_t &timer, const uint32_t request_id) const {
-  struct tion4s_timer_set_t {
+  struct RawTimerSet {
     uint8_t timer_id;
     tion4s_timer_t timer;
   } PACKED set{.timer_id = timer_id, .timer = timer};
@@ -283,12 +283,8 @@ bool TionApi4s::request_timers_state(const uint32_t request_id) const {
 }
 
 bool TionApi4s::set_time(const time_t time, const uint32_t request_id) const {
-#if INTPTR_MAX == INT32_MAX
-  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %ld", request_id, time);
-#else
-  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %ld", request_id, time);
-#endif
   tion4s_time_t tm{.unix_time = time};
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, tm.unix_time);
   return this->write_frame(FRAME_TYPE_TIME_SET, tm, request_id);
 }
 #endif
