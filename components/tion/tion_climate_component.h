@@ -119,11 +119,15 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   tion_state_type state_{};
   uint32_t request_id_{};
   bool batch_active_{};
-  uint32_t batch_timeout_{50};
+  uint32_t batch_timeout_{200};
   void write_api_state_(const tion_state_type &state) {
-    this->batch_active_ = true;
+    if (!this->batch_active_) {
+      ESP_LOGV("tion_climate_component", "Starting batch update");
+      this->batch_active_ = true;
+    }
     this->state_ = state;
     this->set_timeout("batch_update", this->batch_timeout_, [this]() {
+      ESP_LOGV("tion_climate_component", "Write out batch changes");
       this->api_->write_state(this->state_, ++this->request_id_);
       if (this->state_warnout_ && this->state_timeout_ > 0) {
         this->set_timeout("state_timeout", this->state_timeout_,
