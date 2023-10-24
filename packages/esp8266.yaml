@@ -7,8 +7,6 @@ substitutions:
 esp8266:
   board: $board
   restore_from_flash: true
-  framework:
-    type: arduino
 
 logger:
   # Make sure logging is not using the serial port
