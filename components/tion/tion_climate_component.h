@@ -121,10 +121,8 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   bool batch_active_{};
   uint32_t batch_timeout_{200};
   void write_api_state_(const tion_state_type &state) {
-    if (!this->batch_active_) {
-      ESP_LOGV("tion_climate_component", "Starting batch update");
-      this->batch_active_ = true;
-    }
+    ESP_LOGV("tion_climate_component", "%s batch update", this->batch_active_ ? "Continue" : "Starting");
+    this->batch_active_ = true;
     this->state_ = state;
     this->set_timeout("batch_update", this->batch_timeout_, [this]() {
       ESP_LOGV("tion_climate_component", "Write out batch changes");

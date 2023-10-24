@@ -43,7 +43,7 @@ void TionApi4s::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       TION_LOGW(TAG, "Incorrect heartbeat response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawHeartbeatFrame *>(frame_data);
-      TION_LOGD(TAG, "Response[] Heartbeat (%02X)", frame->work_mode);
+      TION_LOGD(TAG, "Response[] Heartbeat (%u)", frame->work_mode);
       if (this->on_heartbeat) {
         this->on_heartbeat(frame->work_mode);
       }
