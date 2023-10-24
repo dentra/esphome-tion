@@ -73,31 +73,33 @@ void Tion4sClimate::update_state(const tion4s_state_t &state) {
 }
 
 void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
-  ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
-  ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
+  ESP_LOGV(TAG, "power_state    : %s", ONOFF(state.flags.power_state));
+  ESP_LOGV(TAG, "gate_position  : %u", state.gate_position);
+  ESP_LOGV(TAG, "fan_speed      : %u", state.fan_speed);
   ESP_LOGV(TAG, "current_temp   : %d", state.current_temperature);
   ESP_LOGV(TAG, "outdoor_temp   : %d", state.outdoor_temperature);
-  ESP_LOGV(TAG, "heater_power   : %f", state.heater_power());
-  ESP_LOGV(TAG, "airflow_counter: %" PRIu32, state.counters.airflow_counter);
-  ESP_LOGV(TAG, "filter_warnout : %s", ONOFF(state.flags.filter_warnout));
-  ESP_LOGV(TAG, "filter_time    : %" PRIu32, state.counters.filter_time);
-  ESP_LOGV(TAG, "gate_position  : %u", state.gate_position);
-
-  ESP_LOGV(TAG, "pcb_pwr_temp   : %d", state.pcb_pwr_temperature);
-  ESP_LOGV(TAG, "pcb_ctl_temp   : %d", state.pcb_ctl_temperature);
-  ESP_LOGV(TAG, "fan_speed      : %u", state.fan_speed);
   ESP_LOGV(TAG, "heater_mode    : %u", state.flags.heater_mode);
   ESP_LOGV(TAG, "heater_state   : %s", ONOFF(state.flags.heater_state));
   ESP_LOGV(TAG, "heater_present : %u", state.flags.heater_present);
   ESP_LOGV(TAG, "heater_var     : %u", state.heater_var);
-  ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
+
+  ESP_LOGV(TAG, "sound_state    : %s", ONOFF(state.flags.sound_state));
+  ESP_LOGV(TAG, "led_state      : %s", ONOFF(state.flags.led_state));
+  ESP_LOGV(TAG, "filter_warnout : %s", ONOFF(state.flags.filter_warnout));
+  ESP_LOGV(TAG, "filter_time    : %" PRIu32, state.counters.filter_time);
+
+  ESP_LOGV(TAG, "airflow_counter: %" PRIu32, state.counters.airflow_counter);
+  ESP_LOGV(TAG, "fan_time       : %" PRIu32, state.counters.fan_time);
+  ESP_LOGV(TAG, "work_time      : %" PRIu32, state.counters.work_time);
+
+  ESP_LOGV(TAG, "active_timer   : %s", ONOFF(state.flags.active_timer));
+  ESP_LOGV(TAG, "pcb_pwr_temp   : %d", state.pcb_pwr_temperature);
+  ESP_LOGV(TAG, "pcb_ctl_temp   : %d", state.pcb_ctl_temperature);
 
   ESP_LOGV(TAG, "ma             : %s", ONOFF(state.flags.ma));
   ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.flags.ma_auto));
-  ESP_LOGV(TAG, "active_timer   : %s", ONOFF(state.flags.active_timer));
+  ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
   ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);
-  ESP_LOGV(TAG, "work_time      : %" PRIu32, state.counters.work_time);
-  ESP_LOGV(TAG, "fan_time       : %" PRIu32, state.counters.fan_time);
   ESP_LOGV(TAG, "errors         : %08" PRIX32, state.errors);
 }
 
