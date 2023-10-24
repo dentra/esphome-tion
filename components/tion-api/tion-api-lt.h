@@ -73,7 +73,7 @@ class TionLtApi : public TionApiBase<tionlt_state_t> {
   bool request_dev_info() const;
   bool request_state() const;
 
-  bool write_state(const tionlt_state_t &state, uint32_t request_id = 1) const;
+  bool write_state(const tionlt_state_t &state, uint32_t request_id) const;
   bool reset_filter(const tionlt_state_t &state, uint32_t request_id = 1) const;
   bool factory_reset(const tionlt_state_t &state, uint32_t request_id = 1) const;
 

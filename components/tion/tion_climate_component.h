@@ -107,7 +107,9 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
       this->filter_warnout_->publish_state(state.filter_warnout());
     }
 
-    this->state_ = state;
+    if (!this->batch_active_) {
+      this->state_ = state;
+    }
   }
 
   void on_dev_info(const dentra::tion::tion_dev_info_t &status) { this->update_dev_info_(status); }
@@ -116,11 +118,19 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   tion_api_type *api_;
   tion_state_type state_{};
   uint32_t request_id_{};
+  bool batch_active_{};
+  uint32_t batch_timeout_{50};
   void write_api_state_(const tion_state_type &state) {
-    this->api_->write_state(state, ++this->request_id_);
-    if (this->state_warnout_ && this->state_timeout_ > 0) {
-      this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
-    }
+    this->batch_active_ = true;
+    this->state_ = state;
+    this->set_timeout("batch_update", this->batch_timeout_, [this]() {
+      this->api_->write_state(state, ++this->request_id_);
+      if (this->state_warnout_ && this->state_timeout_ > 0) {
+        this->set_timeout("state_timeout", this->state_timeout_,
+                          [this]() { this->state_warnout_->publish_state(true); });
+      }
+      this->batch_active_ = false;
+    });
   }
 };
 

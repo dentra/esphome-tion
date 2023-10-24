@@ -143,7 +143,7 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   bool request_dev_info() const;
   bool request_state() const;
 
-  bool write_state(const tion4s_state_t &state, const uint32_t request_id = 1) const;
+  bool write_state(const tion4s_state_t &state, const uint32_t request_id) const;
   bool reset_filter(const tion4s_state_t &state, const uint32_t request_id = 1) const;
   bool factory_reset(const tion4s_state_t &state, const uint32_t request_id = 1) const;
 
