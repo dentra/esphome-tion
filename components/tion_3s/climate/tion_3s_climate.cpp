@@ -31,17 +31,20 @@ void Tion3sClimate::dump_config() {
 void Tion3sClimate::update_state(const tion3s_state_t &state) {
   this->dump_state(state);
 
-  this->mode = !state.flags.power_state   ? climate::CLIMATE_MODE_OFF
-               : state.flags.heater_state ? climate::CLIMATE_MODE_HEAT
-                                          : climate::CLIMATE_MODE_FAN_ONLY;
-
-  // heating detection borrowed from:
-  // https://github.com/TionAPI/tion_python/blob/master/tion_btle/tion.py#L177
-  bool is_heating = (state.target_temperature - state.outdoor_temperature) > 3 &&
-                    state.current_temperature > state.outdoor_temperature;
-  this->action = this->mode == climate::CLIMATE_MODE_OFF ? climate::CLIMATE_ACTION_OFF
-                 : is_heating                            ? climate::CLIMATE_ACTION_HEATING
-                                                         : climate::CLIMATE_ACTION_FAN;
+  if (!state.flags.power_state) {
+    this->mode = climate::CLIMATE_MODE_OFF;
+    this->action = climate::CLIMATE_ACTION_OFF;
+  } else if (state.flags.heater_state) {
+    this->mode = climate::CLIMATE_MODE_HEAT;
+    // heating detection borrowed from:
+    // https://github.com/TionAPI/tion_python/blob/master/tion_btle/tion.py#L177
+    bool is_heating = (state.target_temperature - state.outdoor_temperature) > 3 &&
+                      state.current_temperature > state.outdoor_temperature;
+    this->action = this->mode == is_heating ? climate::CLIMATE_ACTION_HEATING : climate::CLIMATE_ACTION_FAN;
+  } else {
+    this->mode = climate::CLIMATE_MODE_FAN_ONLY;
+    this->action = climate::CLIMATE_ACTION_FAN;
+  }
 
   this->current_temperature = state.current_temperature;
   this->target_temperature = state.target_temperature;
