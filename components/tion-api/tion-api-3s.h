@@ -15,44 +15,82 @@ enum : uint8_t {
 
 struct tion3s_state_t {
   enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
+  // Байт 0, бит 0-3. Скорость вентиляции.
   uint8_t fan_speed : 4;
+  // Байт 0, бит 4-7. Позиция заслонки.
   GatePosition gate_position : 4;
-  // настроенная температура подогрева
+  // Байт 1. Настроенная температура подогрева.
   int8_t target_temperature;
+  // Байт 2-3. Флаги.
   struct Flags {
+    // Байт 2, бит 0. Включен режим подогрева.
     bool heater_state : 1;
+    // Байт 2, бит 1. Включен бризер.
     bool power_state : 1;
+    // Байт 2, бит 2. Включен таймер.
     bool timer_state : 1;
+    // Байт 2, бит 3. Включены звуковые оповещения.
     bool sound_state : 1;
+    // Байт 2, бит 4.
     bool auto_state : 1;
+    // Байт 2, бит 5. Состояния подключения MagicAir.
     bool ma_connect : 1;
+    // Байт 2, бит 6.
     bool save : 1;
+    // Байт 2, бит 7.
     bool ma_pairing : 1;
+    // Байт 3, бит 0.
     bool preset_state : 1;
+    // Байт 3, бит 1.
+    // bool presets_state: 1;
     uint8_t reserved : 7;
   } flags;
-  int8_t unknown_temperature;
-  // текущая температура воздуха после нагревателя (т.е. текущая температура внутри помещения);
-  int8_t current_temperature;
-  // температура воздуха на входе в бризер (т.е. текущая температура на улице)
+  // Байт 4.
+  int8_t current_temperature1;
+  // Байт 5. Текущая температура воздуха после нагревателя (внутри помещения).
+  int8_t current_temperature2;
+  // Байт 6. Температура воздуха на входе в бризер (температура на улице).
   int8_t outdoor_temperature;
+  // Байт 7-8.
   struct {
-    // остаточный ресурс фильтров в днях (то, что показывается в приложении как "время жизни фильтров")
+    // Остаточный ресурс фильтров в днях. То, что показывается в приложении как "время жизни фильтров".
     uint16_t filter_time;
-    uint16_t filter_time_left() const { return filter_time; }
+    uint16_t filter_time_left() const { return this->filter_time > 360 ? 1 : this->filter_time; }
   } counters;
+  // Байт 9. Часы.
   uint8_t hours;
+  // Байт 10. Минуты.
   uint8_t minutes;
+  // Байт 11. Код последней ошибки. Выводиться в формате "EC%u".
   uint8_t last_error;
-  // текущая производительность бризера в кубометрах в час
+  // Байт 12. Текущая производительность бризера в кубометрах в час.
   uint8_t productivity;
-  // сколько дней прошло с момента установки новых фильтров
+  // Байт 13. Сколько дней прошло с момента установки новых фильтров.
   uint16_t filter_days;
-  // текущая версия прошивки
+  // Байт 15-16. Текущая версия прошивки.
   uint16_t firmware_version;
+
+  int current_temperature() const {
+    // Исходная формула:
+    // ((bArr[4] <= 0 ? bArr[5] : bArr[4]) + (bArr[5] <= 0 ? bArr[4] : bArr[5])) / 2;
+    auto bArr_4 = this->current_temperature1;
+    auto bArr_5 = this->current_temperature2;
+    return ((bArr_4 <= 0 ? bArr_5 : bArr_4) + (bArr_5 <= 0 ? bArr_4 : bArr_5)) / 2;
+  }
 
   bool is_initialized() const { return this->firmware_version != 0; }
   bool filter_warnout() const { return this->counters.filter_time <= 10; }
+
+  bool is_heating() const {
+    if (!this->flags.heater_state) {
+      return false;
+    }
+    // heating detection borrowed from:
+    // https://github.com/TionAPI/tion_python/blob/master/tion_btle/tion.py#L177
+    // self.heater_temp - self.in_temp > 3 and self.out_temp > self.in_temp
+    return (this->target_temperature - this->outdoor_temperature) > 3 &&
+           (this->current_temperature() > this->outdoor_temperature);
+  }
 };
 
 #pragma pack(pop)

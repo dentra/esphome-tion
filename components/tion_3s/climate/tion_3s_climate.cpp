@@ -36,17 +36,13 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
     this->action = climate::CLIMATE_ACTION_OFF;
   } else if (state.flags.heater_state) {
     this->mode = climate::CLIMATE_MODE_HEAT;
-    // heating detection borrowed from:
-    // https://github.com/TionAPI/tion_python/blob/master/tion_btle/tion.py#L177
-    bool is_heating = (state.target_temperature - state.outdoor_temperature) > 3 &&
-                      state.current_temperature > state.outdoor_temperature;
-    this->action = this->mode == is_heating ? climate::CLIMATE_ACTION_HEATING : climate::CLIMATE_ACTION_FAN;
+    this->action = this->mode == state.is_heating() ? climate::CLIMATE_ACTION_HEATING : climate::CLIMATE_ACTION_FAN;
   } else {
     this->mode = climate::CLIMATE_MODE_FAN_ONLY;
     this->action = climate::CLIMATE_ACTION_FAN;
   }
 
-  this->current_temperature = state.current_temperature;
+  this->current_temperature = state.current_temperature();
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
@@ -79,9 +75,9 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "save         : %s", ONOFF(state.flags.save));
   ESP_LOGV(TAG, "ma_pairing   : %s", ONOFF(state.flags.ma_pairing));
   ESP_LOGV(TAG, "reserved     : 0x%02X", state.flags.reserved);
-  ESP_LOGV(TAG, "unknown_temp : %d", state.unknown_temperature);
+  ESP_LOGV(TAG, "current_temp1: %d", state.current_temperature1);
+  ESP_LOGV(TAG, "current_temp2: %d", state.current_temperature2);
   ESP_LOGV(TAG, "outdoor_temp : %d", state.outdoor_temperature);
-  ESP_LOGV(TAG, "current_temp : %d", state.current_temperature);
   ESP_LOGV(TAG, "filter_time  : %u", state.counters.filter_time);
   ESP_LOGV(TAG, "hours        : %u", state.hours);
   ESP_LOGV(TAG, "minutes      : %u", state.minutes);
