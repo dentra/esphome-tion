@@ -96,7 +96,7 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "pcb_pwr_temp   : %d", state.pcb_pwr_temperature);
   ESP_LOGV(TAG, "pcb_ctl_temp   : %d", state.pcb_ctl_temperature);
 
-  ESP_LOGV(TAG, "ma             : %s", ONOFF(state.flags.ma));
+  ESP_LOGV(TAG, "ma_connect     : %s", ONOFF(state.flags.ma_connect));
   ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.flags.ma_auto));
   ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
   ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);

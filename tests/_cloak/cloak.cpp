@@ -87,7 +87,7 @@ std::vector<uint8_t> from_hex(const std::string &hex) {
   return res;
 }
 
-#define print_data1(expr, name, fmt, act, exp) \
+#define print_data1(TAG, expr, name, fmt, act, exp) \
   bool res = expr; \
   if (res) { \
     ESP_LOGI(TAG, "test %s: SUCCESS", name.c_str()); \
@@ -99,7 +99,7 @@ std::vector<uint8_t> from_hex(const std::string &hex) {
   } \
   return res
 
-#define print_data2(expr, name, fmt1, fmt2, act, exp) \
+#define print_data2(TAG, expr, name, fmt1, fmt2, act, exp) \
   bool res = expr; \
   if (res) { \
     ESP_LOGI(TAG, "test %s: SUCCESS", name.c_str()); \
@@ -126,24 +126,24 @@ int char2int(char ch) {
 }
 
 bool test(const char *tag, const std::string &name, bool data1, bool data2) {
-  print_data1(data1 == data2, name, "%s", TRUEFALSE(data1), TRUEFALSE(data2));
+  print_data1(tag, data1 == data2, name, "%s", TRUEFALSE(data1), TRUEFALSE(data2));
 }
 
 bool test(const char *tag, const std::string &name, uint8_t data1, uint8_t data2) {
-  print_data2(data1 == data2, name, "%u", "0x%02X", data1, data2);
+  print_data2(tag, data1 == data2, name, "%u", "0x%02X", data1, data2);
 }
 
 bool test(const char *tag, const std::string &name, uint16_t data1, uint16_t data2) {
-  print_data2(data1 == data2, name, "%u", "0x%04X", data1, data2);
+  print_data2(tag, data1 == data2, name, "%u", "0x%04X", data1, data2);
 }
 
 bool test(const char *tag, const std::string &name, uint32_t data1, uint32_t data2) {
-  print_data2(data1 == data2, name, "%u", "0x%08X", data1, data2);
+  print_data2(tag, data1 == data2, name, "%u", "0x%08X", data1, data2);
 }
 
 bool test(const char *tag, const std::string &name, const std::vector<uint8_t> &data1,
           const std::vector<uint8_t> &data2) {
-  print_data1(data1 == data2, name, "%s", format_hex_pretty(data1).c_str(), format_hex_pretty(data2).c_str());
+  print_data1(tag, data1 == data2, name, "%s", format_hex_pretty(data1).c_str(), format_hex_pretty(data2).c_str());
 }
 }  // namespace internal
 }  // namespace cloak

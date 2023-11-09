@@ -26,8 +26,6 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
 
   void reset_filter() { this->api_->reset_filter(this->state_); }
 
-  int8_t get_unknown_temperature() const { return this->state_.unknown_temperature; }
-
   void control_buzzer_state(bool state) {
     ControlState control;
     control.buzzer = state;

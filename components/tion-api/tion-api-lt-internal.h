@@ -29,20 +29,32 @@ enum {
 // used to change state of device
 struct tionlt_state_set_t {
   struct {
+    // Байт 0, бит 0
     bool power_state : 1;
+    // Байт 0, бит 1
     bool sound_state : 1;
+    // Байт 0, бит 2
     bool led_state : 1;
+    // Байт 0, бит 3
     uint8_t auto_co2 : 1;
+    // Байт 0, бит 4
     uint8_t heater_state : 1;
+    // Байт 0, бит 5
     uint8_t last_com_source : 1;  // last_com_source или save
+    // Байт 0, бит 6
     bool factory_reset : 1;
+    // Байт 0, бит 7
     bool error_reset : 1;
+    // Байт 1, бит 0
     bool filter_reset : 1;
     // uint8_t save;
     uint8_t reserved : 7;
   };
+  // Байт 2
   tion::tionlt_state_t::GateState gate_state;
+  // Байт 3
   int8_t target_temperature;
+  // Байт 4. Скорость вентиляции.
   uint8_t fan_speed;
   tion::tionlt_state_t::button_presets_t button_presets;
   uint16_t filter_time;
@@ -51,18 +63,19 @@ struct tionlt_state_set_t {
   static tionlt_state_set_t create(const tion::tionlt_state_t &state) {
     tionlt_state_set_t st_set{};
 
-    st_set.filter_time = state.counters.filter_time;
-
-    st_set.fan_speed = state.fan_speed;
-    st_set.gate_state = state.gate_state;
+    st_set.fan_speed = state.fan_speed == 0 ? 1 : state.fan_speed;
     st_set.target_temperature = state.target_temperature;
+
+    // // FIXME в tion remote выставляется так:
+    // //   (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED
+    // // т.е. с учетом того что fan_speed всегда > 0, то всегда OPENED
+    st_set.gate_state = state.gate_state;
 
     st_set.power_state = state.flags.power_state;
     st_set.sound_state = state.flags.sound_state;
     st_set.led_state = state.flags.led_state;
     st_set.heater_state = state.flags.heater_state;
 
-    st_set.test_type = state.test_type;
     st_set.button_presets = state.button_presets;
 
     return st_set;

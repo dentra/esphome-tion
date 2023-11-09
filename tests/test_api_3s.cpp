@@ -63,14 +63,12 @@ bool test_api_3s() {
   api.request_state();
   res &= cloak::check_data("request_state", io, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  comp.state().firmware_version = 0xFFFF;
+  comp.state().firmware_version = 0xFFFF;  // to pass initialized
   api.write_state(comp.state(), 0);
-  res &= cloak::check_data("write_state firmware_version", io,
-                           "3D.02.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
+  res &= cloak::check_data("write_state empty", io, "3D.02.00.00.00.00.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   api.reset_filter(comp.state());
-  res &= cloak::check_data("write_state firmware_version", io,
-                           "3D.02.00.00.00.00.01.02.00.00.00.00.00.00.00.00.00.00.00.5A");
+  res &= cloak::check_data("reset_filter", io, "3D.02.00.00.00.00.01.02.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   comp.state().fan_speed = 1;
   comp.state().flags.heater_state = true;
@@ -82,7 +80,7 @@ bool test_api_3s() {
   comp.state().minutes = 45;
   comp.state().gate_position = dentra::tion::tion3s_state_t::GATE_POSITION_OUTDOOR;
   api.write_state(comp.state(), 0);
-  res &= cloak::check_data("write_state params", io, "3D.02.01.17.02.0B.00.00.4F.00.00.00.00.00.00.00.00.00.00.5A");
+  res &= cloak::check_data("write_state params", io, "3D.02.01.17.02.0B.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   auto copy = comp.state();
   comp.state_reset();

@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <string>
 #include <functional>
 #include <cmath>
@@ -234,10 +232,14 @@ class Component {
    * @see cancel_timeout()
    */
   void set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f)  // NOLINT
-  {}
+  {
+    f();
+  }
 
   void set_timeout(uint32_t timeout, std::function<void()> &&f)  // NOLINT
-  {}
+  {
+    f();
+  }
 
   /** Cancel a timeout function.
    *

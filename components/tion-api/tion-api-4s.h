@@ -25,41 +25,42 @@ struct tion4s_state_t {
     HEATER_PRESENT_1400W = 2,
   };
 
+  // Байт 0-1.
   struct {
-    // состояние (power state)
+    // Байт 0, бит 0. Состояние (power state).
     bool power_state : 1;
-    // состояние звуковых оповещений
+    // Байт 0, бит 1. Состояние звуковых оповещений.
     bool sound_state : 1;
-    // состояние световых оповещений
+    // Байт 0, бит 2. Состояние световых оповещений.
     bool led_state : 1;
-    // сотояние обогрева
+    // Байт 0, бит 3. Сотояние обогревателя.
     bool heater_state : 1;
-    // режим обогрева
+    // Байт 0, бит 4. Режим обогрева.
     HeaterMode heater_mode : 1;
-    //
+    // Байт 0, бит 5.
     uint8_t last_com_source : 1;
-    // предупреждение о необходимости замены фильтра
+    // Байт 0, бит 6. Предупреждение о необходимости замены фильтра.
     bool filter_warnout : 1;
-    // мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW
+    // Байт 0, бит 7. Мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW.
     HeaterPresent heater_present : 3;
-    // MagicAir control
-    bool ma : 1;
-    // MagicAir auto control
+    // Байт 1, бит 2. Состояния подключения MagicAir.
+    bool ma_connect : 1;
+    // Байт 1, бит 3. MagicAir auto control.
     bool ma_auto : 1;
-    //
+    // Байт 1, бит 4.
     bool active_timer : 1;
     // зарезервированно.
     uint8_t reserved : 3;
   } flags;
-  // settings: gate position (0 - inflow, 1 - recirculation).
+  // Байт 2. settings: gate position (0 - inflow, 1 - recirculation).
   GatePosition gate_position;
-  // settings: target temperature.
+  // Байт 3. settings: target temperature.
   int8_t target_temperature;
-  // settings: fan speed 1-6.
+  // Байт 4. settings: fan speed 1-6.
   uint8_t fan_speed;
-  // sensor: outdoor temperature.
+  // Байт 5. sensor: outdoor temperature.
   int8_t outdoor_temperature;
-  // sensor: current temperature.
+  // Байт 6.  sensor: current temperature.
   int8_t current_temperature;
   // sensor: ctrl pcb temperature.
   int8_t pcb_ctl_temperature;

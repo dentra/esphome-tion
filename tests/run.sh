@@ -37,7 +37,7 @@ else
   )
 fi
 
-SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi)/.+\\.cpp$"
+SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump)/.+\\.cpp$"
 
 INCS=(
   "$ESPHOME_LIB_DIR/esphome-components"

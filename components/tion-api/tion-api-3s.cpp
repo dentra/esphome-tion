@@ -12,6 +12,13 @@ using namespace tion_3s;
 
 static const char *const TAG = "tion-api-3s";
 
+struct Tion3sTimersResponse {
+  struct {
+    uint8_t hours;
+    uint8_t minutes;
+  } timers[4];
+};
+
 uint16_t Tion3sApi::get_state_type() const { return FRAME_TYPE_RSP(FRAME_TYPE_STATE_GET); }
 
 void Tion3sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
@@ -31,14 +38,13 @@ void Tion3sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     if (this->on_state) {
       this->on_state(*static_cast<const tion3s_state_t *>(frame_data), 0);
     }
-  } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_FILTER_TIME_RESET)) {
-    TION_LOGD(TAG, "Response[] Command 4: %s", hexencode(frame_data, frame_data_size).c_str());
-    // ответ такого вида, к сожалению, значения пока не понятны:
-    // на прошивке 003C
-    // B3.40.11.00.08.00.08.00.08.00.00.00.00.00.00.00.00.00.00.5A
-    // на прошивке 0033, после команды 0x1
-    // 3D.04.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A
+  } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_TIMERS_GET)) {
+    TION_LOGD(TAG, "Response[] Timers: %s", hexencode(frame_data, frame_data_size).c_str());
+    // структура Tion3sTimersResponse
   } else if (frame_type == FRAME_TYPE_RSP(FRAME_TYPE_SRV_MODE_SET)) {
+    // есть подозрение, что актуальными являеются первые два байта,
+    // остальное условый мусор из предыдущей команды
+    //
     // один из ответов на команду сопряжения через удеражние кнопки на бризере
     // B3.50.01.00.08.00.08.00.08.00.00.00.00.00.00.00.00.00.00.5A
     // еще:
@@ -85,7 +91,10 @@ bool Tion3sApi::write_state(const tion3s_state_t &state, uint32_t unused_request
 
 bool Tion3sApi::reset_filter(const tion3s_state_t &state) const {
   TION_LOGD(TAG, "Request[] Filter Time Reset");
-  // return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
 
   // предположительно сброс ресурса фильтра выполняется командой 2
   // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
@@ -101,21 +110,25 @@ bool Tion3sApi::reset_filter(const tion3s_state_t &state) const {
   // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
   // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
 
-  if (!state.is_initialized()) {
-    TION_LOGW(TAG, "State is not initialized");
-    return false;
-  }
-
   auto set = tion3s_state_set_t::create(state);
-  set.flags.preset_state = true;
   set.filter_time.reset = true;
-  set.filter_time.value = 0;
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), set);
 }
 
 bool Tion3sApi::request_command4() const {
-  TION_LOGD(TAG, "Request[] Command 4");
-  return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_FILTER_TIME_RESET));
+  TION_LOGD(TAG, "Request[] Timers");
+  return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_TIMERS_GET));
+}
+
+bool Tion3sApi::factory_reset(const tion3s_state_t &state) const {
+  TION_LOGD(TAG, "Request[] Factory Reset");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
+  auto set = tion3s_state_set_t::create(state);
+  set.factory_reset = true;
+  return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), set);
 }
 
 }  // namespace tion

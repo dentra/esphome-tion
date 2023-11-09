@@ -16,16 +16,16 @@ enum : uint8_t {
   FRAME_TYPE_STATE_GET = 0x1,
   // write state
   FRAME_TYPE_STATE_SET = 0x2,
-  // ???
-  FRAME_TYPE_FILTER_TIME_SET = 0x3,
-  // ??? reset filter
-  FRAME_TYPE_FILTER_TIME_RESET = 0x4,
+  // set time
+  FRAME_TYPE_TIME_SET = 0x3,
+  // timers get and set
+  FRAME_TYPE_TIMERS_GET = 0x4,
   // send sevice mode flags
   FRAME_TYPE_SRV_MODE_SET = 0x5,
   FRAME_TYPE_HARD_RESET = 0x6,
   FRAME_TYPE_MA_PAIRING = 0x7,
-  // set time
-  FRAME_TYPE_TIME_SET = 0x8,
+  // unknown
+  FRAME_TYPE_UNKNOWN_8 = 0x8,
   // get alarm
   FRAME_TYPE_ALARM = 0x9,
   // set alrm to on
@@ -46,18 +46,25 @@ struct tion3s_frame_t {
 };
 
 struct tion3s_state_set_t {
-  uint8_t fan_speed;                                       // 0
-  int8_t target_temperature;                               // 1
-  uint8_t /*tion3s_state_t::GatePosition*/ gate_position;  // 2
-  tion::tion3s_state_t::Flags flags;                       // 3-4
+  // Байт 0. Скорость вентиляции.
+  uint8_t fan_speed;
+  // Байт 1. Целевая температура нагрева.
+  int8_t target_temperature;
+  // Байт 2. Состояние затворки.
+  uint8_t /*tion3s_state_t::GatePosition*/ gate_position;
+  // Байт 3-4. Флаги.
+  tion::tion3s_state_t::Flags flags;
+  // Байт 5-7. Управление фильтрами.
   struct {
     bool save : 1;
     bool reset : 1;
     uint8_t reserved : 6;
     uint16_t value;
-  } filter_time;         // 5-7
-  uint8_t hard_reset;    // 8
-  uint8_t service_mode;  // 9
+  } filter_time;
+  // Байт 8. Сброс до заводских настроек.
+  uint8_t factory_reset;
+  // Байт 9. Перевод в сервисный режим.
+  uint8_t service_mode;
   // uint8_t reserved[7];
 
   //        0  1  2  3  4  5  6  7  8  9
@@ -69,7 +76,8 @@ struct tion3s_state_set_t {
     st_set.target_temperature = state.target_temperature;
     st_set.gate_position = state.gate_position;
     st_set.flags = state.flags;
-    st_set.filter_time.value = state.counters.filter_time;
+    // в tion remote всегда выставляется этот бит
+    st_set.flags.preset_state = true;
 
     return st_set;
   }

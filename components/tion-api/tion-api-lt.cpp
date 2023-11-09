@@ -83,7 +83,7 @@ bool TionLtApi::reset_filter(const tionlt_state_t &state, uint32_t request_id) c
   }
   auto st_set = tionlt_state_set_t::create(state);
   st_set.filter_reset = true;
-  st_set.filter_time = 0;
+  st_set.filter_time = 181;
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 

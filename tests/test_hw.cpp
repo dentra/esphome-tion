@@ -71,7 +71,7 @@ bool check(const dentra::tion::tion4s_state_t &ss, check_fn_t fn) {
   ESP_LOGD(TAG, "    last_com_source: %s", ONOFF(ss.flags.last_com_source));
   ESP_LOGD(TAG, "    filter_warnout : %s", ONOFF(ss.flags.filter_warnout));
   ESP_LOGD(TAG, "    heater_present : %u", ss.flags.heater_present);
-  ESP_LOGD(TAG, "    ma             : %s", ONOFF(ss.flags.ma));
+  ESP_LOGD(TAG, "    ma             : %s", ONOFF(ss.flags.ma_connect));
   ESP_LOGD(TAG, "    ma_auto        : %s", ONOFF(ss.flags.ma_auto));
   ESP_LOGD(TAG, "    active_timer   : %s", ONOFF(ss.flags.active_timer));
   ESP_LOGD(TAG, "    reserved       : %02X", ss.flags.reserved);
@@ -227,7 +227,7 @@ class Tion4sCompTest : public TionComponentTest<TionApi4s> {
     api->on_heartbeat.set<this_t, &this_t::on_heartbeat>(*this);
   }
   void on_state(const tion4s_state_t &state, uint32_t request_id) {}
-  void on_heartbeat(uint8_t unknown) { this->api_->send_heartbeat(); }
+  void on_heartbeat(tion_dev_info_t::work_mode_t work_mode) { this->api_->send_heartbeat(); }
 };
 
 bool test_hw_uart() {
@@ -250,7 +250,7 @@ bool test_hw_uart() {
   cloak::check_data("request_state", uart, "3A.07.00.32.32.7F.87");
 
   api.request_time(0);
-  cloak::check_data("request_state", uart, "3A.0B.00.32.36.00.00.00.00.B0.E0");
+  cloak::check_data("request_time", uart, "3A.0B.00.32.36.00.00.00.00.B0.E0");
 
   return res;
 }

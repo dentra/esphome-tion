@@ -45,13 +45,20 @@ bool test_api_lt() {
   res &= cloak::check_data("request_dev_info", io, "80.0C.00.3A.AD.09.40.01.00.00.00.D1.DC");
 
   tionlt_state_t st{};
-  st.flags.power_state = 0;
-  st.counters.work_time = 1;
+  st.flags.power_state = true;
+  st.flags.heater_state = true;
+  st.fan_speed = 2;
+  st.counters.work_time = 0xFFFFFFFF;
+  st.counters.filter_time = 0xEEEEEEEE;
 
   api.write_state(st, 1);
-  res &= cloak::check_data(
-      "request_dev_info", io,
-      "00.1E.00.3A.AD.30.12.01.00.00.00.01.00.00.00.00.00.00.00.00.C0.00.00.00.00.00.00.00.00.00.F8.B7");
+  res &= cloak::check_data("write_state", io,
+                           "00.1E.00.3A.AD."
+                           "30.12."
+                           "01.00.00.00."
+                           "01.00.00.00."
+                           "11.00.00.00.02.C0.00.00.00.00.00.00.00.00.00."
+                           "9B.AB");
 
   return res;
 }

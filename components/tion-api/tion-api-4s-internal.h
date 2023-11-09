@@ -49,43 +49,57 @@ enum {
 
 // структура для изменения состояния
 struct tion4s_state_set_t {
+  // Байт 0-1.
   struct {
-    // состояние (power state)
+    // Байт 0, бит 0. состояние (power state)
     bool power_state : 1;
-    // состояние звуковых оповещений
+    // Байт 0, бит 1. состояние звуковых оповещений
     bool sound_state : 1;
-    // состояние световых оповещений
+    // Байт 0, бит 2. состояние световых оповещений
     bool led_state : 1;
+    // Байт 0, бит 3.
     tion::tion4s_state_t::HeaterMode heater_mode : 1;
+    // Байт 0, бит 4.
     bool last_com_source : 1;
+    // Байт 0, бит 5.
     bool factory_reset : 1;
+    // Байт 0, бит 6.
     bool error_reset : 1;
+    // Байт 0, бит 7.
     bool filter_reset : 1;
-    bool ma : 1;
+    // Байт 1, бит 0.
+    bool ma_connect : 1;
+    // Байт 1, бит 1.
     bool ma_auto : 1;
     uint8_t reserved : 6;
   };
+  // Байт 2.
   tion::tion4s_state_t::GatePosition gate_position;
-  // температрура нагревателя.
+  // Байт 3. температрура нагревателя.
   int8_t target_temperature;
+  // Байт 4. Скорость вентиляции.
   uint8_t fan_speed;
-  // filter time in days
-  // TODO возможно должен/может быть uint16_t
-  uint32_t filter_time;
+  // Байт 5-6. filter time in days
+  // TODO синхронизировал с tion remote. работало с uint32_t, посмотреть в прошивке.
+  uint16_t filter_time;
 
   static tion4s_state_set_t create(const tion::tion4s_state_t &state) {
     tion4s_state_set_t st_set{};
 
+    st_set.fan_speed = state.fan_speed == 0 ? 1 : state.fan_speed;
+
     st_set.power_state = state.flags.power_state;
+    st_set.sound_state = state.flags.sound_state;
+    st_set.led_state = state.flags.led_state;
     st_set.heater_mode = state.flags.heater_mode;
+    st_set.last_com_source = 1;
+
     st_set.gate_position = state.gate_position;
     st_set.target_temperature = state.target_temperature;
-    st_set.led_state = state.flags.led_state;
-    st_set.sound_state = state.flags.sound_state;
-    st_set.fan_speed = state.fan_speed;
-    st_set.filter_time = state.counters.filter_time;
-    st_set.ma_auto = state.flags.ma_auto;
-    st_set.ma = state.flags.ma;
+
+    // st_set.filter_time = state.counters.filter_time;
+    // st_set.ma_auto = state.flags.ma_auto;
+    // st_set.ma_connect = state.flags.ma_connect;
 
     return st_set;
   }

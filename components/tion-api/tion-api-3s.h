@@ -42,8 +42,9 @@ struct tion3s_state_t {
     // Байт 3, бит 0.
     bool preset_state : 1;
     // Байт 3, бит 1.
-    // bool presets_state: 1;
-    uint8_t reserved : 7;
+    bool presets_state : 1;
+    // зарезервированно
+    uint8_t reserved : 6;
   } flags;
   // Байт 4.
   int8_t current_temperature1;
@@ -108,6 +109,7 @@ class Tion3sApi : public TionApiBase<tion3s_state_t> {
   bool request_command4() const;
   bool write_state(const tion3s_state_t &state, uint32_t unused_request_id) const;
   bool reset_filter(const tion3s_state_t &state) const;
+  bool factory_reset(const tion3s_state_t &state) const;
 
 #ifdef TION_ENABLE_HEARTBEAT
   bool send_heartbeat() const { return false; }
