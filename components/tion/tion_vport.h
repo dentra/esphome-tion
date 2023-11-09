@@ -30,7 +30,6 @@ template<class protocol_type> class TionIO {
   protocol_type protocol_;
 };
 
-
 template<class frame_spec_t, class api_t> class TionVPortApi : public api_t, public vport::VPortListener<frame_spec_t> {
   static_assert(std::is_base_of<dentra::tion::TionApiBaseWriter, api_t>::value, "api_t is not TionApi");
 
@@ -54,6 +53,7 @@ template<class frame_spec_t, class api_t> class TionVPortApi : public api_t, pub
 
   bool write_frame_(uint16_t type, const void *data, size_t size) {
     uint8_t buf[sizeof(frame_spec_t) + size];
+    std::memset(buf, 0, sizeof(buf));
     auto frame = reinterpret_cast<frame_spec_t *>(buf);
     frame->type = type;
     std::memcpy(frame->data, data, size);
