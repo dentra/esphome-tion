@@ -1,6 +1,4 @@
-{%- if (port|length) == 0 or (type|length) == 0 %}
-{{ ("port or type not defined")|raise }}
-{%- endif %}
+{%- if (port|length) == 0 or (type|length) == 0 %}{{ ("port or type not defined")|raise}}{% endif -%}
 substitutions:
   {%- if port == "ble" %}
   # tion mac address. setup yours.
@@ -88,7 +86,7 @@ packages:
       - packages/esp8266.yaml
       {%- endif %}
       {%- if type == "4s" and port == "uart" %}
-      # change to esp32_s2.yaml to use with ESP32-S2 chip, or esp32.yaml to use with ESP32 chip.
+      # change to esp32_s2.yaml to use with ESP32-S2 chip or change to esp32.yaml to use with ESP32 chip.
       - packages/esp32_s3.yaml
       {%- endif %}
       {%- if port == "ble" %}
@@ -143,7 +141,7 @@ vport:
     ## Optional, Do not disconnect after receiving state. Default: false.
     persistent_connection: false
     ## Optional, Allow to disable other BLE device scanning when breezer is already connected. Default: false.
-    disable_scan: false
+    # disable_scan: false
     {%- else %}
     uart_id: uart_tion
     {%- endif %}
@@ -163,6 +161,7 @@ vport:
 # Main climate component configuration.
 climate:
   - id: !extend tion_climate
+    # Required, the name of climate entity
     name: None # use friendly_name
     # Optional, virtual port id. Default: autodetect
     vport_id: tion_{{ port }}_vport
@@ -182,7 +181,8 @@ climate:
     # Optional, Total airflow counter, m³ (cubic meters).
     #airflow_counter:
     #  name: "Airflow counter"
-    {%- else %}
+    {%- endif %}
+    {%- if type == "3s" %}
     # Optional, Air Intake control.
     air_intake:
       name: "Air Intake"
