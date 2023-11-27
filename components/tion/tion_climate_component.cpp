@@ -1,9 +1,15 @@
-#include <cstddef>
 #include <cinttypes>
+#include <cstdint>
+#include <cmath>
+#include <string>
 
 #include "esphome/core/log.h"
-#include "esphome/core/application.h"
+#include "esphome/core/preferences.h"
+#include "esphome/core/helpers.h"
+#include "esphome/components/climate/climate_mode.h"
 
+#include "tion_component.h"
+#include "tion_climate.h"
 #include "tion_climate_component.h"
 
 namespace esphome {
@@ -22,7 +28,7 @@ void TionClimateComponentBase::call_setup() {
 
 #ifdef TION_ENABLE_PRESETS_WITH_API
   constexpr auto presets_count = (sizeof(this->presets_) / sizeof(this->presets_[0]));
-  this->rtc_ = global_preferences->make_preference<tion_preset_t[presets_count]>(this->get_object_id_hash());
+  this->rtc_ = global_preferences->make_preference<TionPreset[presets_count]>(this->get_object_id_hash());
   if (this->rtc_.load(this->presets_)) {
     ESP_LOGD(TAG, "Presets loaded");
   }
@@ -70,7 +76,7 @@ void TionClimateComponentBase::update_preset_service_(std::string preset_str, st
 }
 #endif  // USE_API
 
-bool TionClimateComponentBase::enable_boost_() {
+bool TionClimateComponentBase::enable_boost() {
   auto boost_time = this->get_boost_time_();
   if (boost_time == 0) {
     ESP_LOGW(TAG, "Boost time is not configured");
@@ -88,7 +94,7 @@ bool TionClimateComponentBase::enable_boost_() {
   ESP_LOGD(TAG, "Schedule boost interval up to %" PRIu32 " s", boost_time);
   this->boost_time_left_->publish_state(static_cast<float>(boost_time));
   this->set_interval(ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this]() {
-    int32_t time_left = static_cast<int32_t>(this->boost_time_left_->state) - BOOST_TIME_UPDATE_INTERVAL_SEC;
+    const int32_t time_left = static_cast<int32_t>(this->boost_time_left_->state) - BOOST_TIME_UPDATE_INTERVAL_SEC;
     ESP_LOGV(TAG, "Boost time left %" PRId32 " s", time_left);
     if (time_left > 0) {
       this->boost_time_left_->publish_state(static_cast<float>(time_left));
@@ -100,7 +106,7 @@ bool TionClimateComponentBase::enable_boost_() {
   return true;
 }
 
-void TionClimateComponentBase::cancel_boost_() {
+void TionClimateComponentBase::cancel_boost() {
   if (this->boost_time_left_) {
     ESP_LOGV(TAG, "Cancel boost interval");
     this->cancel_interval(ASH_BOOST);

@@ -52,7 +52,7 @@ void Tion3sBleVPort::save_mac_address(const std::string &mac_address) {
   ESP_LOGD(TAG, "Saving MAC to flash: %s", mac_address.c_str());
   std::string copy = mac_address;
   copy.erase(std::remove(copy.begin(), copy.end(), ':'), copy.end());
-  uint16_t address = std::strtoul(copy.c_str(), nullptr, 16);
+  const uint64_t address = std::strtoul(copy.c_str(), nullptr, 16);
   if (address > 0) {
     this->io_->set_address(address);
     global_preferences->make_preference<uint64_t>(RTC_MAC_ADDRESS, true).save(&address);
@@ -110,7 +110,7 @@ void Tion3sBleVPort::on_ready_3s_() {
 void Tion3sBleVPort::pair_() {
   // pairing in progress
   if (this->pair_state_ < 0) {
-    bool res = this->api_->pair();
+    const bool res = this->api_->pair();
     if (res) {
       this->pair_state_ = 1;
       this->rtc_.save(&this->pair_state_);

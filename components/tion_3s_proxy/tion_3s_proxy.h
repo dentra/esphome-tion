@@ -30,7 +30,7 @@ class Tion3sProxy;
 class Tion3sApiProxy : public dentra::tion::TionApiBase<dentra::tion::tion3s_state_t> {
  public:
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
-  void set_tx(Tion3sProxy *parent) { this->parent_ = parent; }
+  void set_parent(Tion3sProxy *parent) { this->parent_ = parent; }
 
  protected:
   Tion3sProxy *parent_{};
@@ -41,9 +41,9 @@ class Tion3sProxy : public Component {
 
  public:
   explicit Tion3sProxy(Tion3sApiProxy *rx, uart::UARTComponent *uart) : rx_(rx) {
-    this->tx_ = new Tion3sUartIO(uart);
+    this->tx_ = new Tion3sUartIO(uart);  // NOLINT cppcoreguidelines-owning-memory
     this->tx_->set_on_frame(Tion3sUartIO::on_frame_type::create<Tion3sProxy, &Tion3sProxy::on_frame_>(*this));
-    this->rx_->set_tx(this);
+    this->rx_->set_parent(this);
   }
   virtual ~Tion3sProxy() { delete this->tx_; }
   void dump_config() override;

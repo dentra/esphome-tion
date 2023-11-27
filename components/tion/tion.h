@@ -27,7 +27,7 @@ template<class parent_t> class TionLedSwitch : public Parented<parent_t>, public
 };
 
 template<class parent_t> class TionResetFilterConfirmSwitch : public Parented<parent_t>, public switch_::Switch {
-  static_assert(std::is_base_of<Component, parent_t>::value, "parent_t is not Component");
+  static_assert(std::is_base_of_v<Component, parent_t>, "parent_t is not Component");
 
  public:
   explicit TionResetFilterConfirmSwitch(parent_t *parent) : Parented<parent_t>(parent) {}

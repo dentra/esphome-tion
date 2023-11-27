@@ -26,8 +26,8 @@ void TionLtApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     if (frame_data_size != sizeof(state_frame_t)) {
       TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
-      auto frame = static_cast<const state_frame_t *>(frame_data);
-      TION_LOGD(TAG, "Response[%u] State", frame->request_id);
+      const auto *frame = static_cast<const state_frame_t *>(frame_data);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] State", frame->request_id);
       if (this->on_state) {
         this->on_state(frame->state, frame->request_id);
       }

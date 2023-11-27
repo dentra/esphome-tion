@@ -123,7 +123,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
       }
-      auto frame = static_cast<const tion_hw_req_frame_state_t *>(data);
+      const auto *frame = static_cast<const tion_hw_req_frame_state_t *>(data);
       ESP_LOGD(TAG, "  request_id %u", frame->request_id);
       return check(frame->state, fn);
     }
@@ -133,7 +133,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
       }
-      auto frame = static_cast<const tion_hw_rsp_frame_state_t *>(data);
+      const auto *frame = static_cast<const tion_hw_rsp_frame_state_t *>(data);
       ESP_LOGD(TAG, "  request_id %u", frame->request_id);
       return check(frame->state, fn);
     }
@@ -151,7 +151,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
       }
-      auto frame = static_cast<const tion_hw_rsp_heartbeat_t *>(data);
+      const auto *frame = static_cast<const tion_hw_rsp_heartbeat_t *>(data);
       return frame->unknown00 == 0;
     }
 

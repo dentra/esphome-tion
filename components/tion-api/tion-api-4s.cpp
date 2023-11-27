@@ -197,7 +197,7 @@ bool TionApi4s::request_turbo() const {
   return this->write_frame(FRAME_TYPE_TURBO_REQ);
 }
 #endif
-bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_id) const {
+bool TionApi4s::write_state(const tion4s_state_t &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Write state", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
@@ -207,7 +207,7 @@ bool TionApi4s::write_state(const tion4s_state_t &state, const uint32_t request_
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request_id) const {
+bool TionApi4s::reset_filter(const tion4s_state_t &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Reset filter", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
@@ -219,7 +219,7 @@ bool TionApi4s::reset_filter(const tion4s_state_t &state, const uint32_t request
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-bool TionApi4s::factory_reset(const tion4s_state_t &state, const uint32_t request_id) const {
+bool TionApi4s::factory_reset(const tion4s_state_t &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Factory reset", request_id);
   if (!state.is_initialized()) {
     TION_LOGW(TAG, "State is not initialized");
@@ -231,9 +231,9 @@ bool TionApi4s::factory_reset(const tion4s_state_t &state, const uint32_t reques
 }
 
 #ifdef TION_ENABLE_PRESETS
-bool TionApi4s::set_turbo(const uint16_t time, const uint32_t request_id) const {
+bool TionApi4s::set_turbo(uint16_t time, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Turbo %u", request_id, time);
-  struct {
+  const struct {
     uint16_t time;
     uint8_t err_code;
   } PACKED turbo{.time = time, .err_code = 0};
@@ -249,20 +249,20 @@ bool TionApi4s::send_heartbeat() const {
 #endif
 
 #ifdef TION_ENABLE_SCHEDULER
-bool TionApi4s::request_time(const uint32_t request_id) const {
+bool TionApi4s::request_time(uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Time", request_id);
   return this->write_frame(FRAME_TYPE_TIME_REQ, request_id);
 }
 
-bool TionApi4s::request_timer(const uint8_t timer_id, const uint32_t request_id) const {
+bool TionApi4s::request_timer(uint8_t timer_id, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Timer %u", request_id, timer_id);
-  struct {
+  const struct {
     uint8_t timer_id;
   } PACKED timer{.timer_id = timer_id};
   return this->write_frame(FRAME_TYPE_TIMER_REQ, timer, request_id);
 }
 
-bool TionApi4s::request_timers(const uint32_t request_id) const {
+bool TionApi4s::request_timers(uint32_t request_id) const {
   bool res = true;
   for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
     res &= this->request_timer(timer_id, request_id);
@@ -270,8 +270,8 @@ bool TionApi4s::request_timers(const uint32_t request_id) const {
   return res;
 }
 
-bool TionApi4s::write_timer(const uint8_t timer_id, const tion4s_timer_t &timer, const uint32_t request_id) const {
-  struct RawTimerSet {
+bool TionApi4s::write_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) const {
+  const struct RawTimerSet {
     uint8_t timer_id;
     tion4s_timer_t timer;
   } PACKED set{.timer_id = timer_id, .timer = timer};
@@ -282,8 +282,8 @@ bool TionApi4s::request_timers_state(const uint32_t request_id) const {
   return this->write_frame(FRAME_TYPE_TIMERS_STATE_REQ, request_id);
 }
 
-bool TionApi4s::set_time(const time_t time, const uint32_t request_id) const {
-  tion4s_time_t tm{.unix_time = time};
+bool TionApi4s::set_time(time_t time, uint32_t request_id) const {
+  const tion4s_time_t tm{.unix_time = time};
   TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, tm.unix_time);
   return this->write_frame(FRAME_TYPE_TIME_SET, tm, request_id);
 }

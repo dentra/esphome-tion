@@ -68,12 +68,12 @@ class TionApiBaseWriter {
     return this->write_frame(type, &request_id, sizeof(request_id));
   }
   /// Write a frame data struct.
-  template<class T, typename std::enable_if<std::is_class<T>::value, bool>::type = true>
+  template<class T, std::enable_if_t<std::is_class_v<T>, bool> = true>
   bool write_frame(uint16_t type, const T &data) const {
     return this->write_frame(type, &data, sizeof(data));
   }
   /// Write a frame data struct with request id (4S and Lite only).
-  template<class T, typename std::enable_if<std::is_class<T>::value, bool>::type = true>
+  template<class T, std::enable_if_t<std::is_class_v<T>, bool> = true>
   bool write_frame(uint16_t type, const T &data, uint32_t request_id) const {
     struct {
       uint32_t request_id;

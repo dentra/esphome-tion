@@ -30,6 +30,10 @@ class TionApiDevice {};
 
 class TionClimateComponentBase : public TionClimate, public TionComponent, public TionApiDevice {
  public:
+  TionClimateComponentBase() = delete;
+  TionClimateComponentBase(const TionClimateComponentBase &) = delete;             // non construction-copyable
+  TionClimateComponentBase &operator=(const TionClimateComponentBase &) = delete;  // non copyable
+
   TionClimateComponentBase(TionVPortType vport_type) : vport_type_(vport_type) {}
   void call_setup() override;
   void dump_settings(const char *tag, const char *component) const;
@@ -38,8 +42,8 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
   const TionVPortType vport_type_;
 
 #ifdef TION_ENABLE_PRESETS
-  bool enable_boost_() override;
-  void cancel_boost_() override;
+  bool enable_boost() override;
+  void cancel_boost() override;
   /// returns boost time in seconds.
   uint32_t get_boost_time_() const {
     if (this->boost_time_ == nullptr) {
@@ -65,13 +69,13 @@ class TionClimateComponentBase : public TionClimate, public TionComponent, publi
 template<class tion_api_type> class TionClimateComponent : public TionClimateComponentBase {
   using tion_state_type = typename tion_api_type::state_type;
 
-  static_assert(std::is_base_of<dentra::tion::TionApiBase<tion_state_type>, tion_api_type>::value,
+  static_assert(std::is_base_of_v<dentra::tion::TionApiBase<tion_state_type>, tion_api_type>,
                 "tion_api_type is not derived from TionApiBase");
 
  public:
   explicit TionClimateComponent(tion_api_type *api, TionVPortType vport_type)
       : TionClimateComponentBase(vport_type), api_(api) {
-    using this_t = typename std::remove_pointer<decltype(this)>::type;
+    using this_t = std::remove_pointer_t<decltype(this)>;
     this->api_->on_dev_info.template set<this_t, &this_t::on_dev_info>(*this);
     this->api_->on_state.template set<this_t, &this_t::on_state>(*this);
     this->api_->set_on_ready(tion_api_type::on_ready_type::template create<this_t, &this_t::on_ready>(*this));
@@ -112,7 +116,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     }
   }
 
-  void on_dev_info(const dentra::tion::tion_dev_info_t &status) { this->update_dev_info_(status); }
+  void on_dev_info(const dentra::tion::tion_dev_info_t &info) { this->update_dev_info_(info); }
 
  protected:
   tion_api_type *api_;
@@ -141,7 +145,7 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
  public:
   explicit TionLtClimateComponent(tion_api_type *api, TionVPortType vport_type)
       : TionClimateComponent<tion_api_type>(api, vport_type) {
-    using this_t = typename std::remove_pointer<decltype(this)>::type;
+    using this_t = std::remove_pointer_t<decltype(this)>;
     this->api_->on_state.template set<this_t, &this_t::on_state>(*this);
   }
 

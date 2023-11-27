@@ -1,22 +1,47 @@
 #pragma once
 
-#define TION_LOG_LEVEL_NONE 0
-#define TION_LOG_LEVEL_ERROR 1
-#define TION_LOG_LEVEL_WARN 2
-#define TION_LOG_LEVEL_INFO 3
-#define TION_LOG_LEVEL_CONFIG 4
-#define TION_LOG_LEVEL_DEBUG 5
-#define TION_LOG_LEVEL_VERBOSE 6
+enum {
+  TION_LOG_LEVEL_NONE = 0,
+  TION_LOG_LEVEL_ERROR = 1,
+  TION_LOG_LEVEL_WARN = 2,
+  TION_LOG_LEVEL_INFO = 3,
+  TION_LOG_LEVEL_CONFIG = 4,
+  TION_LOG_LEVEL_DEBUG = 5,
+  TION_LOG_LEVEL_VERBOSE = 6,
+};
 
 #ifdef TION_ESPHOME
 #include "esphome/core/log.h"
-using namespace esphome;
-#define TION_LOGV ESP_LOGV
-#define TION_LOGD ESP_LOGD
-#define TION_LOGC ESP_LOGC
-#define TION_LOGI ESP_LOGI
-#define TION_LOGW ESP_LOGW
-#define TION_LOGE ESP_LOGE
+#define TION_LOGV(tag, format, ...) \
+  { \
+    using namespace esphome; \
+    ESP_LOGV(tag, format, ##__VA_ARGS__); \
+  }
+#define TION_LOGD(tag, format, ...) \
+  { \
+    using namespace esphome; \
+    ESP_LOGD(tag, format, ##__VA_ARGS__); \
+  }
+#define TION_LOGC(tag, format, ...) \
+  { \
+    using namespace esphome; \
+    ESP_LOGCONFIG(tag, format, ##__VA_ARGS__); \
+  }
+#define TION_LOGI(tag, format, ...) \
+  { \
+    using namespace esphome; \
+    ESP_LOGI(tag, format, ##__VA_ARGS__); \
+  }
+#define TION_LOGW(tag, format, ...) \
+  { \
+    using namespace esphome; \
+    ESP_LOGW(tag, format, ##__VA_ARGS__); \
+  }
+#define TION_LOGE(tag, format, ...) \
+  { \
+    using namespace esphome; \
+    ESP_LOGE(tag, format, ##__VA_ARGS__); \
+  }
 
 #ifndef TION_LOG_LEVEL
 #define TION_LOG_LEVEL ESPHOME_LOG_LEVEL
@@ -25,7 +50,7 @@ using namespace esphome;
 #else  // TION_ESPHOME
 
 #include <functional>  // std::function
-#include <stdarg.h>    // va_list
+#include <cstdarg>     // va_list
 
 #ifndef TION_LOG_LEVEL
 #define TION_LOG_LEVEL TION_LOG_LEVEL_DEBUG

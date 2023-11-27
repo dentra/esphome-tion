@@ -127,13 +127,12 @@ struct tion4s_timer_t {
 
 class TionApi4s : public TionApiBase<tion4s_state_t> {
   /// Callback listener for response to request_turbo command request.
-  using on_turbo_type = etl::delegate<void(const tion4s_turbo_t &turbo, const uint32_t request_id)>;
+  using on_turbo_type = etl::delegate<void(const tion4s_turbo_t &turbo, uint32_t request_id)>;
 #ifdef TION_ENABLE_SCHEDULER
   /// Callback listener for response to request_time command request.
-  using on_time_type = etl::delegate<void(const time_t time, uint32_t request_id)>;
+  using on_time_type = etl::delegate<void(time_t time, uint32_t request_id)>;
   /// Callback listener for response to request_timer command request.
-  using on_timer_type =
-      etl::delegate<void(const uint8_t timer_id, const tion4s_timer_t &timers_state, uint32_t request_id)>;
+  using on_timer_type = etl::delegate<void(uint8_t timer_id, const tion4s_timer_t &timers_state, uint32_t request_id)>;
   /// Callback listener for response to request_timers_state command request.
   using on_timers_state_type = etl::delegate<void(const tion4s_timers_state_t &timers_state, uint32_t request_id)>;
 #endif
@@ -144,16 +143,16 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   bool request_dev_info() const;
   bool request_state() const;
 
-  bool write_state(const tion4s_state_t &state, const uint32_t request_id) const;
-  bool reset_filter(const tion4s_state_t &state, const uint32_t request_id = 1) const;
-  bool factory_reset(const tion4s_state_t &state, const uint32_t request_id = 1) const;
+  bool write_state(const tion4s_state_t &state, uint32_t request_id) const;
+  bool reset_filter(const tion4s_state_t &state, uint32_t request_id = 1) const;
+  bool factory_reset(const tion4s_state_t &state, uint32_t request_id = 1) const;
 
 #ifdef TION_ENABLE_PRESETS
   bool request_turbo() const;
 
   /// Callback listener for response to request_turbo command request.
   on_turbo_type on_turbo{};
-  bool set_turbo(const uint16_t time, const uint32_t request_id = 1) const;
+  bool set_turbo(uint16_t time, uint32_t request_id = 1) const;
 #endif
 
 #ifdef TION_ENABLE_HEARTBEAT
@@ -161,22 +160,22 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
 #endif
 
 #ifdef TION_ENABLE_SCHEDULER
-  bool request_time(const uint32_t request_id = 1) const;
+  bool request_time(uint32_t request_id = 1) const;
 
   /// Callback listener for response to request_time command request.
   on_time_type on_time{};
-  bool set_time(const time_t time, const uint32_t request_id) const;
+  bool set_time(time_t time, uint32_t request_id) const;
 
   /// Callback listener for response to request_timer command request.
   on_timer_type on_timer{};
-  bool request_timer(const uint8_t timer_id, const uint32_t request_id = 1) const;
+  bool request_timer(uint8_t timer_id, uint32_t request_id = 1) const;
 
   /// Request all timers.
-  bool request_timers(const uint32_t request_id = 1) const;
+  bool request_timers(uint32_t request_id = 1) const;
 
-  bool write_timer(const uint8_t timer_id, const tion4s_timer_t &timer, const uint32_t request_id = 1) const;
+  bool write_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id = 1) const;
 
-  bool request_timers_state(const uint32_t request_id = 1) const;
+  bool request_timers_state(uint32_t request_id = 1) const;
   /// Callback listener for response to request_timers_state command request.
   on_timers_state_type on_timers_state{};
 

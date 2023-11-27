@@ -16,7 +16,7 @@ template<class protocol_type> class TionBleIO : public TionIO<protocol_type>, pu
   using on_ready_type = etl::delegate<void()>;
 
   explicit TionBleIO() {
-    using this_t = typename std::remove_pointer<decltype(this)>::type;
+    using this_t = std::remove_pointer_t<decltype(this)>;
     this->protocol_.writer.template set<this_t, &this_t::write_>(*this);
     this->set_ble_service(this->protocol_.get_ble_service());
     this->set_ble_char_tx(this->protocol_.get_ble_char_tx());

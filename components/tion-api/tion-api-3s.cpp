@@ -68,7 +68,7 @@ void Tion3sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
 
 bool Tion3sApi::pair() const {
   TION_LOGD(TAG, "Request[] Pair");
-  struct {
+  const struct {
     uint8_t pair;
   } PACKED pair{.pair = 1};
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_SRV_MODE_SET), pair);

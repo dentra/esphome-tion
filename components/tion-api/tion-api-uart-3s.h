@@ -9,6 +9,9 @@ namespace tion {
 // 20 = sizeof(tion3s_frame_t)
 class Tion3sUartProtocol : public TionUartProtocolBase<20> {
  public:
+  Tion3sUartProtocol(const Tion3sUartProtocol &) = delete;             // non construction-copyable
+  Tion3sUartProtocol &operator=(const Tion3sUartProtocol &) = delete;  // non copyable
+
   Tion3sUartProtocol(uint8_t head_type = FRAME_MAGIC_RSP) : head_type_(head_type) {}
 
   void read_uart_data(TionUartReader *io);

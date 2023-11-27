@@ -19,7 +19,7 @@ void Tion4sClimate::dump_config() {
 }
 
 #ifdef TION_ENABLE_PRESETS
-void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id) {
+void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, uint32_t request_id) {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
     ESP_LOGW(TAG, "Only BLE supports native turbo mode. Please report.");
     return;
@@ -41,9 +41,10 @@ void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, const uint32_t request
     if (turbo.turbo_time == 0) {
       this->boost_time_left_->publish_state(NAN);
     } else {
-      auto boost_time = this->get_boost_time_();
+      const auto boost_time = this->get_boost_time_();
+      const auto boost_time_one_percent = boost_time / 100;
       this->boost_time_left_->publish_state(static_cast<float>(turbo.turbo_time) /
-                                            static_cast<float>(boost_time / 100));
+                                            static_cast<float>(boost_time_one_percent));
     }
   }
 
@@ -202,9 +203,9 @@ void Tion4sClimate::control_state_(const ControlState &state) {
 }
 
 #ifdef TION_ENABLE_PRESETS
-bool Tion4sClimate::enable_boost_() {
+bool Tion4sClimate::enable_boost() {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
-    return TionClimateComponent::enable_boost_();
+    return TionClimateComponent::enable_boost();
   }
 
   auto boost_time = this->get_boost_time_();
@@ -220,9 +221,9 @@ bool Tion4sClimate::enable_boost_() {
   return true;
 }
 
-void Tion4sClimate::cancel_boost_() {
+void Tion4sClimate::cancel_boost() {
   if (this->vport_type_ != TionVPortType::VPORT_BLE) {
-    TionClimateComponent::cancel_boost_();
+    TionClimateComponent::cancel_boost();
     return;
   }
   this->api_->set_turbo(0, ++this->request_id_);
@@ -231,8 +232,8 @@ void Tion4sClimate::cancel_boost_() {
 
 #ifdef TION_ENABLE_SCHEDULER
 
-void Tion4sClimate::on_time(const time_t time, const uint32_t request_id) {
-  auto c_tm = std::gmtime(&time);
+void Tion4sClimate::on_time(time_t time, uint32_t request_id) {
+  auto *c_tm = std::gmtime(&time);
   char buf[20] = {};
   std::strftime(buf, sizeof(buf), "%F %T", c_tm);
   ESP_LOGI(TAG, "Device UTC time: %s", buf);
@@ -241,7 +242,8 @@ void Tion4sClimate::on_time(const time_t time, const uint32_t request_id) {
   ESP_LOGI(TAG, "Device local time: %s", buf);
 }
 
-static void add_timer_week_day(std::string &s, bool day, const char *day_name) {
+namespace {
+void add_timer_week_day(std::string &s, bool day, const char *day_name) {
   if (day) {
     if (!s.empty()) {
       s.append(", ");
@@ -249,8 +251,9 @@ static void add_timer_week_day(std::string &s, bool day, const char *day_name) {
     s.append(day_name);
   }
 }
+}  // namespace
 
-void Tion4sClimate::on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) {
+void Tion4sClimate::on_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) {
   std::string schedule;
   if (timer.schedule.monday && timer.schedule.tuesday && timer.schedule.wednesday && timer.schedule.thursday &&
       timer.schedule.friday && timer.schedule.saturday && timer.schedule.sunday) {
@@ -284,7 +287,7 @@ void Tion4sClimate::dump_timers() {
 }
 
 void Tion4sClimate::reset_timers() {
-  tion4s_timer_t timer{};
+  const tion4s_timer_t timer{};
   for (uint8_t timer_id = 0; timer_id < tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
     this->api_->write_timer(timer_id, timer, ++this->request_id_);
   }

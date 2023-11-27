@@ -37,7 +37,7 @@ void Tion4sUartProtocol::read_uart_data(TionUartReader *io) {
 }
 
 Tion4sUartProtocol::read_frame_result_t Tion4sUartProtocol::read_frame_(TionUartReader *io) {
-  auto frame = reinterpret_cast<Tion4sRawUartFrame *>(this->buf_);
+  auto *frame = reinterpret_cast<Tion4sRawUartFrame *>(this->buf_);
   if (frame->magic != Tion4sRawUartFrame::FRAME_MAGIC) {
     if (io->available() < sizeof(frame->magic)) {
       // do not flood log while waiting magic
@@ -114,7 +114,7 @@ bool Tion4sUartProtocol::write_frame(uint16_t type, const void *data, size_t siz
   }
 
   uint8_t frame_buf[FRAME_MAX_SIZE];
-  auto frame = reinterpret_cast<Tion4sRawUartFrame *>(frame_buf);
+  auto *frame = reinterpret_cast<Tion4sRawUartFrame *>(frame_buf);
   frame->magic = Tion4sRawUartFrame::FRAME_MAGIC;
   frame->size = frame_size;
   frame->data.type = type;

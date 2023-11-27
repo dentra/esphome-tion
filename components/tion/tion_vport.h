@@ -12,9 +12,8 @@ namespace tion {
 enum TionVPortType : uint8_t { VPORT_UNKNOWN = 0, VPORT_BLE, VPORT_UART, VPORT_TCP };
 
 template<class protocol_type> class TionIO {
-  static_assert(
-      std::is_base_of<dentra::tion::TionProtocol<typename protocol_type::frame_spec_type>, protocol_type>::value,
-      "protocol_type must derived from dentra::tion::TionProtocol class");
+  static_assert(std::is_base_of_v<dentra::tion::TionProtocol<typename protocol_type::frame_spec_type>, protocol_type>,
+                "protocol_type must derived from dentra::tion::TionProtocol class");
 
  public:
   using frame_spec_type = typename protocol_type::frame_spec_type;
@@ -31,14 +30,14 @@ template<class protocol_type> class TionIO {
 };
 
 template<class frame_spec_t, class api_t> class TionVPortApi : public api_t, public vport::VPortListener<frame_spec_t> {
-  static_assert(std::is_base_of<dentra::tion::TionApiBaseWriter, api_t>::value, "api_t is not TionApi");
+  static_assert(std::is_base_of_v<dentra::tion::TionApiBaseWriter, api_t>, "api_t is not TionApi");
 
  public:
   using vport_t = vport::VPort<frame_spec_t>;
 
   TionVPortApi(vport_t *vport) : vport_(vport) {
     vport->add_listener(this);
-    using this_t = typename std::remove_pointer<decltype(this)>::type;
+    using this_t = std::remove_pointer_t<decltype(this)>;
     api_t::set_writer(api_t::writer_type::template create<this_t, &this_t::write_frame_>(*this));
   }
 

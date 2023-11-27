@@ -101,12 +101,12 @@ bool TionClimate::enable_preset_(climate::ClimatePreset new_preset) {
 
   if (old_preset == climate::CLIMATE_PRESET_BOOST) {
     ESP_LOGD(TAG, "Cancel preset boost");
-    this->cancel_boost_();
+    this->cancel_boost();
   }
 
   ESP_LOGD(TAG, "Enable preset %s", LOG_STR_ARG(climate::climate_preset_to_string(new_preset)));
   if (new_preset == climate::CLIMATE_PRESET_BOOST) {
-    if (!this->enable_boost_()) {
+    if (!this->enable_boost()) {
       return false;
     }
     this->saved_preset_ = old_preset;

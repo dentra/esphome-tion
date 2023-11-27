@@ -21,7 +21,7 @@ void TionComponent::call_setup() {
     call.set_value(boost_time);
     call.perform();
     this->boost_time_->add_on_state_callback([this](float state) {
-      uint8_t boost_time = state;
+      const uint8_t boost_time = state;
       this->boost_rtc_.save(&boost_time);
     });
   }
@@ -42,7 +42,7 @@ void TionComponent::update_dev_info_(const dentra::tion::tion_dev_info_t &info) 
     work_mode_str = "UNKNOWN";
   }
   ESP_LOGV(TAG, "Work Mode       : %d (%s)", info.work_mode, work_mode_str);
-  ESP_LOGV(TAG, "Device type     : %08X", info.device_type);
+  ESP_LOGV(TAG, "Device type     : %08" PRIX32, info.device_type);
   ESP_LOGV(TAG, "Hardware version: %04X", info.hardware_version);
   ESP_LOGV(TAG, "Firmware version: %04X", info.firmware_version);
 #endif

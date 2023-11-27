@@ -1,8 +1,7 @@
-#include <utility>
+#include <cstdint>
 #include <cstring>
 #include <cstdlib>
 
-#include "crc.h"
 #include "utils.h"
 #include "log.h"
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "esphome/components/switch/switch.h"
+
 #include "../tion_4s.h"
 #include "../../tion/tion_climate_component.h"
 
@@ -38,11 +40,11 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   // #endif
 
 #ifdef TION_ENABLE_PRESETS
-  void on_turbo(const tion4s_turbo_t &turbo, const uint32_t request_id);
+  void on_turbo(const tion4s_turbo_t &turbo, uint32_t request_id);
 #endif
 #ifdef TION_ENABLE_SCHEDULER
-  void on_time(const time_t time, const uint32_t request_id);
-  void on_timer(const uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id);
+  void on_time(time_t time, uint32_t request_id);
+  void on_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id);
   void on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id);
   void dump_timers();
   void reset_timers();
@@ -84,8 +86,8 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
  protected:
   switch_::Switch *recirculation_{};
 #ifdef TION_ENABLE_PRESETS
-  bool enable_boost_() override;
-  void cancel_boost_() override;
+  bool enable_boost() override;
+  void cancel_boost() override;
 #endif
 
   bool get_recirculation_() const {

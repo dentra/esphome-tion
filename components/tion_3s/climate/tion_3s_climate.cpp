@@ -91,7 +91,6 @@ void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_posi
   ControlState control;
   control.gate_position = gate_position;
 
-  climate::ClimateMode mode = this->mode;
   if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
     // TODO необходимо проверять batch_active
     if (this->mode == climate::CLIMATE_MODE_HEAT) {

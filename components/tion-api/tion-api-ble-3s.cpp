@@ -43,7 +43,7 @@ bool Tion3sBleProtocol::read_data(const uint8_t *data, size_t size) {
     TION_LOGW(TAG, "Invalid frame size %zu", size);
     return false;
   }
-  auto frame = reinterpret_cast<const Tion3sRawBleFrame *>(data);
+  const auto *frame = reinterpret_cast<const Tion3sRawBleFrame *>(data);
   if (frame->magic != Tion3sRawBleFrame::FRAME_MAGIC) {
     TION_LOGW(TAG, "Invalid frame magic %02X", frame->magic);
     return false;

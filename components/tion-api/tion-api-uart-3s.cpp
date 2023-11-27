@@ -40,7 +40,7 @@ void Tion3sUartProtocol::read_uart_data(TionUartReader *io) {
 }
 
 Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUartReader *io) {
-  auto frame = reinterpret_cast<Tion3sRawUartFrame *>(this->buf_);
+  auto *frame = reinterpret_cast<Tion3sRawUartFrame *>(this->buf_);
 
   if (frame->rx.head != this->head_type_) {
     if (io->available() < sizeof(frame->rx.head)) {

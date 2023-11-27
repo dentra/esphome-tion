@@ -92,7 +92,7 @@ struct tion4s_state_set_t {
     st_set.sound_state = state.flags.sound_state;
     st_set.led_state = state.flags.led_state;
     st_set.heater_mode = state.flags.heater_mode;
-    st_set.last_com_source = 1;
+    st_set.last_com_source = true;
 
     st_set.gate_position = state.gate_position;
     st_set.target_temperature = state.target_temperature;

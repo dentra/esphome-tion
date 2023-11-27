@@ -20,7 +20,7 @@ namespace tion {
 template<class protocol_t> class TionUartIO : public TionIO<protocol_t>, public dentra::tion::TionUartReader {
  public:
   explicit TionUartIO(uart::UARTComponent *uart) : uart_(uart) {
-    using this_t = typename std::remove_pointer<decltype(this)>::type;
+    using this_t = std::remove_pointer_t<decltype(this)>;
     this->protocol_.writer.template set<this_t, &this_t::write_>(*this);
   }
 

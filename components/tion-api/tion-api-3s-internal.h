@@ -7,9 +7,9 @@
 namespace dentra {
 namespace tion_3s {
 
-#define FRAME_TYPE(typ, cmd) ((cmd << 8) | (typ & 0xFF))
+#define FRAME_TYPE(typ, cmd) (((cmd) << 8) | ((typ) & 0xFF))
 #define FRAME_TYPE_REQ(cmd) FRAME_TYPE(FRAME_MAGIC_REQ, cmd)
-#define FRAME_TYPE_RSP(cmd) FRAME_TYPE(FRAME_MAGIC_RSP, (cmd << 4))
+#define FRAME_TYPE_RSP(cmd) FRAME_TYPE(FRAME_MAGIC_RSP, ((cmd) << 4))
 
 enum : uint8_t {
   // request state

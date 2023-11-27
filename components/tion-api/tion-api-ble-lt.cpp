@@ -102,7 +102,7 @@ bool TionLtBleProtocol::read_frame_(const void *data, uint32_t size) {
     TION_LOGW(TAG, "Invalid frame size: %u", frame->size);
     return false;
   }
-  uint16_t crc = crc16_ccitt_false_ffff(frame, size);
+  const uint16_t crc = crc16_ccitt_false_ffff(frame, size);
   if (crc != 0) {
     TION_LOGW(TAG, "Invalid frame crc: %04X", crc);
     return false;

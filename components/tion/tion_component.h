@@ -71,7 +71,7 @@ class TionComponent : public PollingComponent {
   ESPPreferenceObject boost_rtc_;
 #endif
 
-  void update_dev_info_(const dentra::tion::tion_dev_info_t &status);
+  void update_dev_info_(const dentra::tion::tion_dev_info_t &info);
 };
 }  // namespace tion
 }  // namespace esphome
