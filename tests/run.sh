@@ -4,8 +4,10 @@ if [ $USER != "vscode" ]; then
   WORKSPACE_DIR=$(realpath $(dirname $BASH_SOURCE)/..)
 fi
 
-ESPHOME_LIB_DIR="$WORKSPACE_DIR/.esphome/include"
-ARDUINO_LIB_DIR="$WORKSPACE_DIR/.esphome/libdeps/esp32-arduino"
+export BUILD_DIR="$WORKSPACE_DIR/.build"
+
+ESPHOME_LIB_DIR="$BUILD_DIR/esphome/include"
+ARDUINO_LIB_DIR="$BUILD_DIR/esphome/libdeps/esp32-arduino"
 
 DEFS=(
   TION_ESPHOME

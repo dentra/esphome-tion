@@ -23,12 +23,16 @@ if [ -z "$PLATFORMIO_CORE_DIR" ]; then
   export PLATFORMIO_CORE_DIR=$(realpath $(dirname $BASH_SOURCE)/../../.platformio)
 fi
 
+if [[ -z "${BUILD_DIR}" ]]; then
+  export BUILD_DIR=".build"
+fi
+
 EX_TEST_DEFINES=$(IFS=$';'; echo "${DEFS[*]}")
 EX_TEST_SOURCES=$(IFS=$';'; echo "${SRCS[*]}")
 EX_TEST_INCLUDES=$(IFS=$';'; echo "${INCS[*]}")
 EX_TEST_SOURCES_ESPHOME=$(IFS=$';'; echo "${SRCS_ESPHOME[*]}")
 echo $EX_TEST_SOURCES_ESPHOME
-BLD=.esphome/tests/$TYP
+BLD="$BUILD_DIR/tests/$TYP"
 cmake -B $BLD -S $(dirname $0) -DCMAKE_BUILD_TYPE=$TYP \
   -DEX_TEST_DEFINES="$EX_TEST_DEFINES" \
   -DEX_TEST_INCLUDES="$EX_TEST_INCLUDES" \
