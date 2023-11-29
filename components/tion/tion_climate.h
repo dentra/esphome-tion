@@ -10,14 +10,25 @@ namespace tion {
 
 #ifdef TION_ENABLE_PRESETS
 // default boost time - 10 minutes
-#define DEFAULT_BOOST_TIME_SEC 10 * 60
+#define DEFAULT_BOOST_TIME_SEC (10 * 60)
 
-struct tion_preset_t {
+enum TionClimateGatePosition : uint8_t {
+  TION_CLIMATE_GATE_POSITION_AUTO = 0,
+  TION_CLIMATE_GATE_POSITION_OUTDOOR = 1,
+  TION_CLIMATE_GATE_POSITION_INDOOR = 2,
+  TION_CLIMATE_GATE_POSITION_MIXED = 3,
+  TION_CLIMATE_GATE_POSITION__LAST = 4,  // NOLINT (bugprone-reserved-identifier)
+};
+
+struct TionPreset {
   uint8_t fan_speed;
   int8_t target_temperature;
   climate::ClimateMode mode;
+  TionClimateGatePosition gate_position;
   bool is_initialized() const { return this->fan_speed != 0; }
-};
+} PACKED;
+
+#define TION_MAX_PRESETS (climate::CLIMATE_PRESET_ACTIVITY + 1)
 #endif  // TION_ENABLE_PRESETS
 
 #define TION_DEFAULT_MAX_TEMPERATURE 25
@@ -35,7 +46,9 @@ class TionClimate : public climate::Climate {
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;
 
-  virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) = 0;
+  virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                                     TionClimateGatePosition gate_position) = 0;
+  virtual TionClimateGatePosition get_gate_position() const = 0;
 #ifdef TION_ENABLE_PRESETS
   /**
    * Update default preset.
@@ -44,28 +57,31 @@ class TionClimate : public climate::Climate {
    * @param fan_speed fan speed to update. set to 0 for skip update.
    * @param target_temperature target temperature to update. set to 0 for skip update.
    */
-  bool update_preset(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed,
-                     int8_t target_temperature) {
-    if (preset > climate::CLIMATE_PRESET_NONE && preset <= climate::CLIMATE_PRESET_ACTIVITY) {
-      if (mode == climate::CLIMATE_MODE_HEAT || mode == climate::CLIMATE_MODE_FAN_ONLY ||
-          mode == climate::CLIMATE_MODE_OFF) {
-        this->presets_[preset].mode = mode;
-      }
-      if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
-        this->presets_[preset].fan_speed = fan_speed;
-      }
-      // FIXME у Lite тербуется проверка возможности греть до 30 градусов.
-      if (target_temperature > 0 && target_temperature <= TION_MAX_TEMPERATURE) {
-        this->presets_[preset].target_temperature = target_temperature;
-      }
-      if (this->presets_[preset].mode == climate::CLIMATE_MODE_OFF) {
-        this->supported_presets_.erase(preset);
-      } else {
-        this->supported_presets_.insert(preset);
-      }
-      return true;
+  bool update_preset(climate::ClimatePreset preset, climate::ClimateMode mode, uint8_t fan_speed = 0,
+                     int8_t target_temperature = 0,
+                     TionClimateGatePosition gate_position = TION_CLIMATE_GATE_POSITION_AUTO) {
+    if (preset <= climate::CLIMATE_PRESET_NONE || preset > climate::CLIMATE_PRESET_ACTIVITY) {
+      return false;
     }
-    return false;
+
+    if (mode == climate::CLIMATE_MODE_OFF || mode == climate::CLIMATE_MODE_HEAT ||
+        mode == climate::CLIMATE_MODE_FAN_ONLY) {
+      this->presets_[preset].mode = mode;
+    }
+
+    if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
+      this->presets_[preset].fan_speed = fan_speed;
+    }
+
+    if (target_temperature > 0 && target_temperature <= TION_MAX_TEMPERATURE) {
+      this->presets_[preset].target_temperature = target_temperature;
+    }
+
+    if (gate_position >= TION_CLIMATE_GATE_POSITION_AUTO && gate_position < TION_CLIMATE_GATE_POSITION__LAST) {
+      this->presets_[preset].gate_position = gate_position;
+    }
+
+    return true;
   }
 #endif  // TION_ENABLE_PRESETS
   void dump_presets(const char *tag) const;
@@ -93,26 +109,57 @@ class TionClimate : public climate::Climate {
     this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
     this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed();
     this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
+    this->presets_[climate::CLIMATE_PRESET_NONE].gate_position = this->get_gate_position();
   }
-  virtual bool enable_boost_() = 0;
-  virtual void cancel_boost_() = 0;
+  virtual bool enable_boost() = 0;
+  virtual void cancel_boost() = 0;
   climate::ClimatePreset saved_preset_{climate::CLIMATE_PRESET_NONE};
 
-  tion_preset_t presets_[climate::CLIMATE_PRESET_ACTIVITY + 1] = {
-      {},                                                                                  // NONE, saved data
-      {.fan_speed = 2, .target_temperature = 20, .mode = climate::CLIMATE_MODE_HEAT},      // HOME
-      {.fan_speed = 1, .target_temperature = 10, .mode = climate::CLIMATE_MODE_FAN_ONLY},  // AWAY
-      {.fan_speed = 6, .target_temperature = 10, .mode = climate::CLIMATE_MODE_FAN_ONLY},  // BOOST
-      {.fan_speed = 2, .target_temperature = 23, .mode = climate::CLIMATE_MODE_HEAT},      // COMFORT
-      {.fan_speed = 1, .target_temperature = 16, .mode = climate::CLIMATE_MODE_HEAT},      // ECO
-      {.fan_speed = 1, .target_temperature = 18, .mode = climate::CLIMATE_MODE_HEAT},      // SLEEP
-      {.fan_speed = 3, .target_temperature = 18, .mode = climate::CLIMATE_MODE_HEAT},      // ACTIVITY
+  TionPreset presets_[TION_MAX_PRESETS] = {
+      {},  // NONE, saved data
+      {.fan_speed = 2,
+       .target_temperature = 20,
+       .mode = climate::CLIMATE_MODE_HEAT,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // HOME
+      {.fan_speed = 1,
+       .target_temperature = 10,
+       .mode = climate::CLIMATE_MODE_FAN_ONLY,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // AWAY
+      {.fan_speed = 6,
+       .target_temperature = 10,
+       .mode = climate::CLIMATE_MODE_FAN_ONLY,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // BOOST
+      {.fan_speed = 2,
+       .target_temperature = 23,
+       .mode = climate::CLIMATE_MODE_HEAT,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // COMFORT
+      {.fan_speed = 1,
+       .target_temperature = 16,
+       .mode = climate::CLIMATE_MODE_HEAT,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // ECO
+      {.fan_speed = 1,
+       .target_temperature = 18,
+       .mode = climate::CLIMATE_MODE_HEAT,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // SLEEP
+      {.fan_speed = 3,
+       .target_temperature = 18,
+       .mode = climate::CLIMATE_MODE_HEAT,
+       .gate_position = TION_CLIMATE_GATE_POSITION_AUTO},  // ACTIVITY
   };
 
-  std::set<climate::ClimatePreset> supported_presets_{};
+  void for_each_preset_(const std::function<void(climate::ClimatePreset index)> &fn) const {
+    for (size_t i = climate::CLIMATE_PRESET_NONE + 1; i < TION_MAX_PRESETS; i++) {
+      // "off" mean preset is disabled
+      if (this->presets_[i].mode != climate::CLIMATE_MODE_OFF) {
+        fn(static_cast<climate::ClimatePreset>(i));
+      }
+    }
+  }
+
+  void dump_preset_(const char *tag, climate::ClimatePreset index) const;
 #endif  // TION_ENABLE_PRESETS
 };
 
 }  // namespace tion
 }  // namespace esphome
-#endif
+#endif  // USE_CLIMATE

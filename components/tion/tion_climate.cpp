@@ -26,10 +26,8 @@ climate::ClimateTraits TionClimate::traits() {
     traits.add_supported_custom_fan_mode(this->fan_speed_to_mode_(i));
   }
 #ifdef TION_ENABLE_PRESETS
-  if (!this->supported_presets_.empty()) {
-    traits.set_supported_presets(this->supported_presets_);
-    traits.add_supported_preset(climate::CLIMATE_PRESET_NONE);
-  }
+  traits.add_supported_preset(climate::CLIMATE_PRESET_NONE);
+  this->for_each_preset_([&traits](auto index) { traits.add_supported_preset(index); });
 #endif
   traits.set_supports_action(true);
   return traits;
@@ -65,14 +63,15 @@ void TionClimate::control(const climate::ClimateCall &call) {
     this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  this->control_climate_state(mode, fan_speed, target_temperature);
+  this->control_climate_state(mode, fan_speed, target_temperature, TION_CLIMATE_GATE_POSITION_AUTO);
 }
 
 void TionClimate::set_fan_speed_(uint8_t fan_speed) {
   if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
     this->custom_fan_mode = this->fan_speed_to_mode_(fan_speed);
   } else {
-    if (!(this->mode == climate::CLIMATE_MODE_OFF && fan_speed == 0)) {
+    auto ok_fan_speed = this->mode == climate::CLIMATE_MODE_OFF && fan_speed == 0;
+    if (!ok_fan_speed) {
       ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, TION_MAX_FAN_SPEED);
     }
   }
@@ -80,17 +79,38 @@ void TionClimate::set_fan_speed_(uint8_t fan_speed) {
 
 void TionClimate::dump_presets(const char *tag) const {
 #ifdef TION_ENABLE_PRESETS
-  ESP_LOGCONFIG(tag, "  Presets:");
-  for (size_t i = 1; i < sizeof(this->presets_) / sizeof(this->presets_[0]); i++) {
-    ESP_LOGCONFIG(tag, "    %s: fan speed=%u, target temperature=%d, mode=%s",
-                  LOG_STR_ARG(climate::climate_preset_to_string(static_cast<climate::ClimatePreset>(i))),
-                  this->presets_[i].fan_speed, this->presets_[i].target_temperature,
-                  LOG_STR_ARG(climate::climate_mode_to_string(this->presets_[i].mode)));
+  auto has_presets = false;
+  this->for_each_preset_([&has_presets](auto index) { has_presets = true; });
+  if (has_presets) {
+    ESP_LOGCONFIG(tag, "  Presets (fan_speed, target_temperature, mode, gate_position):");
+    this->for_each_preset_([tag, this](auto index) { this->dump_preset_(tag, index); });
   }
 #endif
 }
 
 #ifdef TION_ENABLE_PRESETS
+void TionClimate::dump_preset_(const char *tag, climate::ClimatePreset index) const {
+  auto gate_position_to_string = [](TionClimateGatePosition gp) -> const char * {
+    switch (gp) {
+      case TION_CLIMATE_GATE_POSITION_AUTO:
+        return "auto";
+      case TION_CLIMATE_GATE_POSITION_OUTDOOR:
+        return "outdoor";
+      case TION_CLIMATE_GATE_POSITION_INDOOR:
+        return "indoor";
+      case TION_CLIMATE_GATE_POSITION_MIXED:
+        return "mixed";
+      default:
+        return "unknown";
+    }
+  };
+  const auto &preset = this->presets_[index];
+  const auto *preset_str = LOG_STR_ARG(climate::climate_preset_to_string(index));
+  const auto *mode_str = LOG_STR_ARG(climate::climate_mode_to_string(preset.mode));
+  const auto *gate_pos_str = gate_position_to_string(preset.gate_position);
+  ESP_LOGCONFIG(tag, "    %-8s: %u, %2d, %-8s, %s", str_lower_case(preset_str).c_str(), preset.fan_speed,
+                preset.target_temperature, str_lower_case(mode_str).c_str(), gate_pos_str);
+}
 
 bool TionClimate::enable_preset_(climate::ClimatePreset new_preset) {
   const auto old_preset = *this->preset;
@@ -130,7 +150,7 @@ bool TionClimate::enable_preset_(climate::ClimatePreset new_preset) {
   }
 
   this->control_climate_state(this->presets_[new_preset].mode, this->presets_[new_preset].fan_speed,
-                              this->presets_[new_preset].target_temperature);
+                              this->presets_[new_preset].target_temperature, this->presets_[new_preset].gate_position);
 
   this->preset = new_preset;
 

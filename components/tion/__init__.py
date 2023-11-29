@@ -1,35 +1,35 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.cpp_generator import MockObjClass
 from esphome.components import (
-    climate,
-    switch,
-    sensor,
-    text_sensor,
     binary_sensor,
+    button,
+    climate,
     number,
     select,
-    button,
+    sensor,
+    switch,
+    text_sensor,
 )
 from esphome.const import (
     CONF_ICON,
     CONF_ID,
     CONF_VERSION,
-    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_DURATION,
     DEVICE_CLASS_PROBLEM,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
     UNIT_CELSIUS,
-    UNIT_MINUTE,
-    UNIT_SECOND,
     UNIT_CUBIC_METER,
     UNIT_HOUR,
+    UNIT_MINUTE,
+    UNIT_SECOND,
 )
-from .. import vport  # pylint: disable=relative-beyond-top-level
+from esphome.cpp_generator import MockObjClass
 
+from .. import vport  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
 # ESP_PLATFORMS = [PLATFORM_ESP32]
@@ -61,6 +61,7 @@ CONF_PRESETS = "presets"
 CONF_PRESET_MODE = "mode"
 CONF_PRESET_FAN_SPEED = "fan_speed"
 CONF_PRESET_TARGET_TEMPERATURE = "target_temperature"
+CONF_PRESET_GATE_POSITION = "gate_position"
 CONF_RESET_FILTER = "reset_filter"
 CONF_RESET_FILTER_CONFIRM = "reset_filter_confirm"
 CONF_STATE_TIMEOUT = "state_timeout"
@@ -80,6 +81,7 @@ TionResetFilterButtonT = tion_ns.class_("TionResetFilterButton", button.Button)
 TionResetFilterConfirmSwitchT = tion_ns.class_(
     "TionResetFilterConfirmSwitch", switch.Switch
 )
+TionClimateGatePosition = tion_ns.enum("TionClimateGatePosition")
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -87,11 +89,23 @@ PRESET_MODES = {
     "fan_only": climate.ClimateMode.CLIMATE_MODE_FAN_ONLY,
 }
 
+PRESET_GATE_POSITIONS = {
+    "auto": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_AUTO,
+    "outdoor": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_OUTDOOR,
+    "indoor": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_INDOOR,
+    "mixed": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_MIXED,
+}
+
+PRESETS = []
+
 PRESET_SCHEMA = cv.Schema(
     {
         cv.Optional(CONF_PRESET_MODE): cv.one_of(*PRESET_MODES, lower=True),
         cv.Optional(CONF_PRESET_FAN_SPEED): cv.int_range(min=1, max=6),
-        cv.Optional(CONF_PRESET_TARGET_TEMPERATURE): cv.int_range(min=1, max=25),
+        cv.Optional(CONF_PRESET_TARGET_TEMPERATURE): cv.int_range(min=1, max=30),
+        cv.Optional(CONF_PRESET_GATE_POSITION): cv.one_of(
+            *PRESET_GATE_POSITIONS, lower=True
+        ),
     }
 )
 
@@ -264,24 +278,33 @@ async def setup_select(config, key, setter, parent, options):
 async def setup_presets(config, key, setter) -> bool:
     """Setup presets"""
     if key not in config:
-        return None
+        return False
     conf = config[key]
-    has_presets = False
-    for _, (preset, options) in enumerate(conf.items()):
-        preset = climate.CLIMATE_PRESETS[preset.upper()]
-        options = options or {}
+
+    for preset_name, preset in climate.CLIMATE_PRESETS.items():
+        preset_name = preset_name.lower()
+        if preset_name == "none":
+            continue
+        if preset_name not in conf:
+            # use OFF to disable preset
+            cg.add(setter(preset, climate.ClimateMode.CLIMATE_MODE_OFF))
+            continue
+
+        options = conf[preset_name] or {}
         mode = (
             PRESET_MODES[options[CONF_PRESET_MODE]]
             if CONF_PRESET_MODE in options
-            else climate.ClimateMode.CLIMATE_MODE_AUTO
+            else climate.ClimateMode.CLIMATE_MODE_AUTO  # use AUTO to do not touch default mode
         )
         fan_speed = options.get(CONF_PRESET_FAN_SPEED, 0)
         target_temperature = options.get(CONF_PRESET_TARGET_TEMPERATURE, 0)
-        cg.add(setter(preset, mode, fan_speed, target_temperature))
-        if not has_presets:
-            has_presets = True
-            cg.add_build_flag("-DTION_ENABLE_PRESETS")
-    return has_presets
+        gate_position_str = options.get(CONF_PRESET_GATE_POSITION, "auto")
+        gate_position = PRESET_GATE_POSITIONS[gate_position_str]
+        cg.add(setter(preset, mode, fan_speed, target_temperature, gate_position))
+
+    cg.add_build_flag("-DTION_ENABLE_PRESETS")
+
+    return True
 
 
 async def setup_button(config, key, setter, parent):

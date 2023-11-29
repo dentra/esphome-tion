@@ -105,10 +105,10 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
 }
 
 void Tion4sClimate::control_recirculation_state(bool state) {
-  ControlState control;
-  control.recirculation = state;
+  ControlState control{};
+  control.gate_position = state ? tion4s_state_t::GATE_POSITION_RECIRCULATION : tion4s_state_t::GATE_POSITION_INFLOW;
 
-  if (state) {
+  if (control.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION) {
     // TODO необходимо проверять batch_active
     if (this->mode == climate::CLIMATE_MODE_HEAT) {
       ESP_LOGW(TAG, "Enabled recirculation allow only FAN_ONLY mode");
@@ -119,8 +119,9 @@ void Tion4sClimate::control_recirculation_state(bool state) {
   this->control_state_(control);
 }
 
-void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
-  ControlState control;
+void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                                          TionClimateGatePosition gate_position) {
+  ControlState control{};
 
   control.fan_speed = fan_speed;
   control.target_temperature = target_temperature;
@@ -135,11 +136,22 @@ void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan
                                                              : tion4s_state_t::HEATER_MODE_TEMPERATURE_MAINTENANCE;
   }
 
+  switch (gate_position) {
+    case TION_CLIMATE_GATE_POSITION_OUTDOOR:
+      control.gate_position = tion4s_state_t::GATE_POSITION_INFLOW;
+      break;
+    case TION_CLIMATE_GATE_POSITION_INDOOR:
+      control.gate_position = tion4s_state_t::GATE_POSITION_RECIRCULATION;
+      break;
+    default:
+      control.gate_position = this->get_gate_position_();
+      break;
+  }
+
   if (mode == climate::CLIMATE_MODE_HEAT) {
-    auto recirculation = this->get_recirculation_();
-    if (recirculation) {
+    if (control.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION) {
       ESP_LOGW(TAG, "HEAT mode allow only disabled recirculation");
-      control.recirculation = false;
+      control.gate_position = tion4s_state_t::GATE_POSITION_INFLOW;
     }
   }
 
@@ -177,9 +189,8 @@ void Tion4sClimate::control_state_(const ControlState &state) {
     }
   }
 
-  if (state.recirculation.has_value()) {
-    st.gate_position =
-        *state.recirculation ? tion4s_state_t::GATE_POSITION_RECIRCULATION : tion4s_state_t::GATE_POSITION_INFLOW;
+  if (state.gate_position.has_value()) {
+    st.gate_position = *state.gate_position;
     if (this->state_.gate_position != st.gate_position) {
       ESP_LOGD(TAG, "New gate position %u -> %u", this->state_.gate_position, st.gate_position);
     }

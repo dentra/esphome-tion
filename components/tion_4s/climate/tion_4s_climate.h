@@ -55,19 +55,31 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    ControlState control;
+    ControlState control{};
     control.buzzer = state;
     this->control_state_(control);
   }
 
   void control_led_state(bool state) {
-    ControlState control;
+    ControlState control{};
     control.led = state;
     this->control_state_(control);
   }
 
   void control_recirculation_state(bool state);
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                             TionClimateGatePosition gate_position) override;
+
+  TionClimateGatePosition get_gate_position() const override {
+    switch (this->get_gate_position_()) {
+      case tion4s_state_t::GATE_POSITION_INFLOW:
+        return TION_CLIMATE_GATE_POSITION_OUTDOOR;
+      case tion4s_state_t::GATE_POSITION_RECIRCULATION:
+        return TION_CLIMATE_GATE_POSITION_INDOOR;
+      default:
+        return TION_CLIMATE_GATE_POSITION_OUTDOOR;
+    }
+  }
 
   optional<int8_t> get_pcb_ctl_temperature() const {
     if (this->state_.is_initialized()) {
@@ -90,11 +102,14 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   void cancel_boost() override;
 #endif
 
-  bool get_recirculation_() const {
+  tion4s_state_t::GatePosition get_gate_position_() const {
     if (!this->batch_active_ && this->recirculation_) {
-      return this->recirculation_->state;
+      if (this->recirculation_->state) {
+        return tion4s_state_t::GATE_POSITION_RECIRCULATION;
+      }
+      return tion4s_state_t::GATE_POSITION_INFLOW;
     }
-    return this->state_.gate_position == tion4s_state_t::GATE_POSITION_RECIRCULATION;
+    return this->state_.gate_position;
   }
 
   struct ControlState {
@@ -104,7 +119,7 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
     optional<int8_t> target_temperature;
     optional<bool> buzzer;
     optional<bool> led;
-    optional<bool> recirculation;
+    optional<tion4s_state_t::GatePosition> gate_position;
   };
 
   void control_state_(const ControlState &state);

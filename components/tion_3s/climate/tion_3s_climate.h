@@ -27,14 +27,28 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
   void reset_filter() { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    ControlState control;
+    ControlState control{};
     control.buzzer = state;
     this->control_state_(control);
   }
 
   void control_gate_position(tion3s_state_t::GatePosition gate_position);
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                             TionClimateGatePosition gate_position) override;
+
+  TionClimateGatePosition get_gate_position() const override {
+    switch (this->get_gate_position_()) {
+      case tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR:
+        return TION_CLIMATE_GATE_POSITION_OUTDOOR;
+      case tion3s_state_t::GatePosition::GATE_POSITION_INDOOR:
+        return TION_CLIMATE_GATE_POSITION_INDOOR;
+      case tion3s_state_t::GatePosition::GATE_POSITION_MIXED:
+        return TION_CLIMATE_GATE_POSITION_MIXED;
+      default:
+        return TION_CLIMATE_GATE_POSITION_OUTDOOR;
+    }
+  }
 
  protected:
   select::Select *air_intake_{};

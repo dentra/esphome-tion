@@ -22,18 +22,21 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    ControlState control;
+    ControlState control{};
     control.buzzer = state;
     this->control_state_(control);
   }
 
   void control_led_state(bool state) {
-    ControlState control;
+    ControlState control{};
     control.led = state;
     this->control_state_(control);
   }
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) override;
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                             TionClimateGatePosition gate_position) override;
+
+  TionClimateGatePosition get_gate_position() const override { return TION_CLIMATE_GATE_POSITION_AUTO; }
 
   optional<int8_t> get_pcb_temperature() const {
     if (this->state_.is_initialized()) {

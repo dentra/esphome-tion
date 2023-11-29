@@ -3,6 +3,18 @@
 
 #include "tion_3s_climate.h"
 
+#ifdef TION_ENABLE_OFF_BEFORE_HEAT
+#define TION_OPTION_STR_OFF_BEFORE_HEAT "enabled"
+#else
+#define TION_OPTION_STR_OFF_BEFORE_HEAT "disabled"
+#endif
+
+#ifdef TION_ENABLE_ANTIFRIZE
+#define TION_OPTION_STR_ANTIFRIZE "enabled"
+#else
+#define TION_OPTION_STR_ANTIFRIZE "disabled"
+#endif
+
 namespace esphome {
 namespace tion {
 
@@ -11,20 +23,8 @@ static const char *const TAG = "tion_3s";
 void Tion3sClimate::dump_config() {
   this->dump_settings(TAG, "Tion 3S");
   LOG_SELECT("  ", "Air Intake", this->air_intake_);
-  ESP_LOGCONFIG("  ", "OFF befor HEAT: "
-#ifdef TION_ENABLE_OFF_BEFORE_HEAT
-                      "enabled"
-#else
-                      "disabled"
-#endif
-  );
-  ESP_LOGCONFIG("  ", "antifrize: "
-#ifdef TION_ENABLE_ANTIFRIZE
-                      "enabled"
-#else
-                      "disabled"
-#endif
-  );
+  ESP_LOGCONFIG("  ", "OFF befor HEAT: %s", TION_OPTION_STR_OFF_BEFORE_HEAT);
+  ESP_LOGCONFIG("  ", "Antifrize: %s", TION_OPTION_STR_ANTIFRIZE);
   this->dump_presets(TAG);
 }
 
@@ -88,7 +88,7 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
 }
 
 void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) {
-  ControlState control;
+  ControlState control{};
   control.gate_position = gate_position;
 
   if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
@@ -102,8 +102,9 @@ void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_posi
   this->control_state_(control);
 }
 
-void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature) {
-  ControlState control;
+void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+                                          TionClimateGatePosition gate_position) {
+  ControlState control{};
   control.fan_speed = fan_speed;
   control.target_temperature = target_temperature;
 
@@ -116,9 +117,23 @@ void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan
     control.heater_state = mode == climate::CLIMATE_MODE_HEAT;
   }
 
+  switch (gate_position) {
+    case TION_CLIMATE_GATE_POSITION_OUTDOOR:
+      control.gate_position = tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR;
+      break;
+    case TION_CLIMATE_GATE_POSITION_INDOOR:
+      control.gate_position = tion3s_state_t::GatePosition::GATE_POSITION_INDOOR;
+      break;
+    case TION_CLIMATE_GATE_POSITION_MIXED:
+      control.gate_position = tion3s_state_t::GatePosition::GATE_POSITION_MIXED;
+      break;
+    default:
+      control.gate_position = this->get_gate_position_();
+      break;
+  }
+
   if (mode == climate::CLIMATE_MODE_HEAT) {
-    auto gate_position = this->get_gate_position_();
-    if (gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
+    if (control.gate_position == tion3s_state_t::GatePosition::GATE_POSITION_INDOOR) {
       ESP_LOGW(TAG, "HEAT mode allow only OUTDOOR gate position");
       control.gate_position = tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR;
     }
