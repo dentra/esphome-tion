@@ -6,6 +6,8 @@
 
 #include "esphome/components/vport/vport.h"
 
+#include "../tion-api/tion-api.h"
+
 namespace esphome {
 namespace tion {
 

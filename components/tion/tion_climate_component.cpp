@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cmath>
 #include <string>
+#include <cstring>
 
 #include "esphome/core/log.h"
 #include "esphome/core/preferences.h"
@@ -27,51 +28,77 @@ void TionClimateComponentBase::call_setup() {
   TionComponent::call_setup();
 
 #ifdef TION_ENABLE_PRESETS_WITH_API
-  constexpr auto presets_count = (sizeof(this->presets_) / sizeof(this->presets_[0]));
-  this->rtc_ = global_preferences->make_preference<TionPreset[presets_count]>(this->get_object_id_hash());
-  if (this->rtc_.load(this->presets_)) {
+  this->presets_rtc_ = global_preferences->make_preference<TionPreset[TION_MAX_PRESETS]>(fnv1_hash("presets"));
+  if (this->presets_rtc_.load(&this->presets_)) {
+    this->presets_[0].fan_speed = 0;  // reset initialization
     ESP_LOGD(TAG, "Presets loaded");
   }
   this->register_service(&TionClimateComponentBase::update_preset_service_, "update_preset",
-                         {"preset", "mode", "fan_speed", "target_temperature"});
+                         {"preset", "mode", "fan_speed", "target_temperature", "gate_position"});
 #endif  // TION_ENABLE_PRESETS_WITH_API
-
-  // auto state = this->restore_state_();
-  // if (state.has_value()) {
-  //   this->control(state->to_call(this));
-  // }
 }
 
 #ifdef TION_ENABLE_PRESETS
 #ifdef USE_API
+// esphome services allows only pass copy of strings
 void TionClimateComponentBase::update_preset_service_(std::string preset_str, std::string mode_str, int fan_speed,
-                                                      int target_temperature) {
-  preset_str = str_upper_case(preset_str);
+                                                      int target_temperature, std::string gate_position_str) {
   climate::ClimatePreset preset = climate::ClimatePreset::CLIMATE_PRESET_NONE;
-  for (int i = preset; i < climate::ClimatePreset::CLIMATE_PRESET_ACTIVITY; i++) {
-    auto p = static_cast<climate::ClimatePreset>(i);
-    if (preset_str == LOG_STR_ARG(climate::climate_preset_to_string(p))) {
-      preset = p;
-      break;
+  if (preset_str.length() > 0) {
+    auto preset_ch = std::tolower(preset_str[0]);
+    if (preset_ch == 'h') {  // Home
+      preset = climate::ClimatePreset::CLIMATE_PRESET_HOME;
+    } else if (preset_ch == 'a') {  // Away/Activity
+      if (preset_str.length() > 1) {
+        preset_ch = std::tolower(preset_str[1]);
+        if (preset_ch == 'w') {  // aWay
+          preset = climate::ClimatePreset::CLIMATE_PRESET_AWAY;
+        } else if (preset_ch == 'c') {  // aCtivity
+          preset = climate::ClimatePreset::CLIMATE_PRESET_ACTIVITY;
+        }
+      }
+    } else if (preset_ch == 'b') {  // Boost
+      preset = climate::ClimatePreset::CLIMATE_PRESET_BOOST;
+    } else if (preset_ch == 'c') {  // Comform
+      preset = climate::ClimatePreset::CLIMATE_PRESET_COMFORT;
+    } else if (preset_ch == 'e') {  // Eco
+      preset = climate::ClimatePreset::CLIMATE_PRESET_ECO;
+    } else if (preset_ch == 's') {  // Sleep
+      preset = climate::ClimatePreset::CLIMATE_PRESET_SLEEP;
     }
   }
 
-  mode_str = str_upper_case(mode_str);
-  climate::ClimateMode mode = climate::ClimateMode::CLIMATE_MODE_OFF;
-  for (int i = mode; i < climate::ClimateMode::CLIMATE_MODE_OFF; i++) {
-    auto m = static_cast<climate::ClimateMode>(i);
-    if (mode_str == LOG_STR_ARG(climate::climate_mode_to_string(m))) {
-      mode = m;
-      break;
+  auto mode = climate::ClimateMode::CLIMATE_MODE_AUTO;
+  if (mode_str.length() > 0) {
+    auto mode_ch = std::tolower(mode_str[0]);
+    if (mode_ch == 'h') {  // Heat
+      mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
+    } else if (mode_ch == 'f') {  // Fan_only
+      mode = climate::ClimateMode::CLIMATE_MODE_FAN_ONLY;
+    } else if (mode_ch == 'o') {  // Off
+      mode = climate::ClimateMode::CLIMATE_MODE_OFF;
     }
   }
 
-  if (this->update_preset(preset, mode, fan_speed, target_temperature)) {
-    if (this->rtc_.save(this->presets_)) {
-      ESP_LOGD(TAG, "Preset %s was updated", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
+  TionClimateGatePosition gate_position = TION_CLIMATE_GATE_POSITION_AUTO;
+  if (gate_position_str.length() > 0) {
+    auto gate_position_ch = std::tolower(gate_position_str[0]);
+    if (gate_position_ch == 'o') {  // Outdoor
+      gate_position = TION_CLIMATE_GATE_POSITION_OUTDOOR;
+    } else if (gate_position_ch == 'i') {  // Indoor
+      gate_position = TION_CLIMATE_GATE_POSITION_INDOOR;
+    } else if (gate_position_ch == 'm') {  // Mixed
+      gate_position = TION_CLIMATE_GATE_POSITION_MIXED;
+    }
+  }
+
+  if (this->update_preset(preset, mode, fan_speed, target_temperature, gate_position)) {
+    if (this->presets_rtc_.save(&this->presets_)) {
+      ESP_LOGCONFIG(TAG, "Preset was updated:");
+      this->dump_preset_(TAG, preset);
     }
   } else {
-    ESP_LOGW(TAG, "Preset %s was't updated", LOG_STR_ARG(climate::climate_preset_to_string(preset)));
+    ESP_LOGW(TAG, "Preset %s was't updated", preset_str.c_str());
   }
 }
 #endif  // USE_API

@@ -1,3 +1,5 @@
+#include <cinttypes>
+
 #include "esphome/core/log.h"
 
 #include "tion_climate.h"
