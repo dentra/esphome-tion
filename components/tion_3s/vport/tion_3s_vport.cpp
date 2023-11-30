@@ -40,8 +40,8 @@ void Tion3sBleVPort::setup() {
   }
 #ifdef TION_ENABLE_MAC_CHAHGE
   uint64_t address{};
-  auto pref = global_preferences->make_preference<uint64_t>(RTC_MAC_ADDRESS, true);
-  if (pref.load(&address)) {
+  this->mac_rtc_ = global_preferences->make_preference<uint64_t>(RTC_MAC_ADDRESS, true);
+  if (this->mac_rtc_.load(&address)) {
     this->io_->set_address(address);
     ESP_LOGI(TAG, "MAC address loaded from flash: %12" PRIX64, address);
   }
@@ -55,7 +55,7 @@ void Tion3sBleVPort::save_mac_address(const std::string &mac_address) {
   const uint64_t address = std::strtoul(copy.c_str(), nullptr, 16);
   if (address > 0) {
     this->io_->set_address(address);
-    global_preferences->make_preference<uint64_t>(RTC_MAC_ADDRESS, true).save(&address);
+    this->rtc_mac_.save(&address);
     ESP_LOGI(TAG, "MAC address saved to flash: %12" PRIX64, address);
   } else {
     ESP_LOGW(TAG, "Invalid MAC: %s", mac_address.c_str());
