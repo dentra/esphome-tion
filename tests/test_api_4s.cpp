@@ -1,4 +1,5 @@
 #include "esphome/components/climate/climate_mode.h"
+
 #include "../components/tion-api/tion-api-4s-internal.h"
 #include "../components/tion_4s/climate/tion_4s_climate.h"
 #include "../components/tion_4s_uart/tion_4s_uart.h"
@@ -36,7 +37,7 @@ class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_
     } __attribute__((__packed__));
 
     if (type == FRAME_TYPE_STATE_SET && size == sizeof(req_t)) {
-      auto req = static_cast<const req_t *>(data);
+      const auto *req = static_cast<const req_t *>(data);
 
       this->state_.flags.power_state = req->data.power_state;
       this->state_.flags.heater_mode = req->data.heater_mode;
@@ -65,6 +66,19 @@ class Tion4sTest : public Tion4sClimate {
     this->state_.counters.work_time = 0xFFFF;
   }
   tion4s_state_t &state() { return this->state_; };
+
+  void update_preset_service(std::string preset_str, std::string mode_str, int fan_speed, int target_temperature,
+                             std::string gate_position_str) {
+    this->update_preset_service_(preset_str, mode_str, fan_speed, target_temperature, gate_position_str);
+  }
+
+  const esphome::tion::TionPreset &get_preset(esphome::climate::ClimatePreset index) const {
+    return this->presets_[index];
+  }
+
+  void for_each_preset(const std::function<void(esphome::climate::ClimatePreset index)> &fn) const {
+    this->for_each_preset_(fn);
+  }
 };
 
 /*
@@ -194,6 +208,46 @@ bool test_heat_cool() {
   return res;
 }
 
+bool test_preset_update() {
+  bool res = true;
+
+  esphome::uart::UARTComponent uart;
+  Tion4sUartIOTest io(&uart);
+  Tion4sUartVPort vport(&io);
+  Tion4sUartVPortApiTest api(&vport);
+  Tion4sTest comp(&api, vport.get_type());
+
+  cloak::setup_and_loop({&vport, &comp});
+
+  comp.for_each_preset([&comp](auto index) { comp.update_preset(index, esphome::climate::CLIMATE_MODE_OFF); });
+
+  comp.update_preset_service("eco", "fan_only", 1, 11, "outdoor");
+  auto preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
+  res &= cloak::check_data("preset.fan_speed==1", preset.fan_speed, 1);
+  res &= cloak::check_data("preset.target_temperature==11", preset.target_temperature, 11);
+  res &= cloak::check_data("preset.mode==fan_only", preset.mode, esphome::climate::CLIMATE_MODE_FAN_ONLY);
+
+  res &= cloak::check_data("preset.gate_position==outdoor", preset.gate_position,
+                           esphome::tion::TION_CLIMATE_GATE_POSITION_OUTDOOR);
+
+  comp.update_preset_service("eco", "fan_only", 1, 11, "indoor");
+  preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
+  res &= cloak::check_data("preset.gate_position==indoor", preset.gate_position,
+                           esphome::tion::TION_CLIMATE_GATE_POSITION_INDOOR);
+
+  comp.update_preset_service("eco", "fan_only", 1, 11, "mixed");
+  preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
+  res &= cloak::check_data("preset.gate_position==mixed", preset.gate_position,
+                           esphome::tion::TION_CLIMATE_GATE_POSITION_MIXED);
+
+  comp.update_preset_service("eco", "off", 1, 11, "mixed");
+  preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
+  res &= cloak::check_data("preset.mode==off", preset.mode, esphome::climate::CLIMATE_MODE_OFF);
+
+  return res;
+}
+
 REGISTER_TEST(test_api_4s);
 REGISTER_TEST(test_presets);
 REGISTER_TEST(test_heat_cool);
+REGISTER_TEST(test_preset_update);

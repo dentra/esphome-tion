@@ -64,9 +64,8 @@ namespace internal {
 int char2int(char ch);
 
 bool test(const char *tag, const std::string &name, bool data1, bool data2);
-bool test(const char *tag, const std::string &name, uint8_t data1, uint8_t data2);
-bool test(const char *tag, const std::string &name, uint16_t data1, uint16_t data2);
 bool test(const char *tag, const std::string &name, uint32_t data1, uint32_t data2);
+bool test(const char *tag, const std::string &name, int32_t data1, int32_t data2);
 
 bool test(const char *tag, const std::string &name, const std::vector<uint8_t> &data1,
           const std::vector<uint8_t> &data2);
@@ -96,13 +95,13 @@ inline bool test(const char *tag, const std::string &name, cloak::Cloak &data1, 
 
 inline void setup_and_loop(std::vector<esphome::Component *> components) {
   for (auto c : components) {
-    c->setup();
+    c->call_setup();
   }
   for (auto c : components) {
-    c->dump_config();
+    c->call_dump_config();
   }
   for (auto c : components) {
-    c->loop();
+    c->call_loop();
   }
 }
 

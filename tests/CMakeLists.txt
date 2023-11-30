@@ -33,3 +33,11 @@ endforeach(ex_include)
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_BINARY_DIR}/include")
 # set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  message("Debug build.")
+ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
+  message("Release build.")
+ELSE()
+  message("Some other build type.")
+ENDIF()

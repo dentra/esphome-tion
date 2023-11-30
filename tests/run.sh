@@ -7,7 +7,6 @@ fi
 export BUILD_DIR="$WORKSPACE_DIR/.build"
 
 ESPHOME_LIB_DIR="$BUILD_DIR/esphome/include"
-ARDUINO_LIB_DIR="$BUILD_DIR/esphome/libdeps/esp32-arduino"
 
 DEFS=(
   TION_ESPHOME
@@ -21,29 +20,25 @@ DEFS=(
   USE_VPORT_BLE
 )
 
-VPORT_DIR=$WORKSPACE_DIR/components/vport
-if [ ! -e $VPORT_DIR ]; then
-  VPORT_DIR=""
-fi
+LIB_DIR=$WORKSPACE_DIR/lib
+LIB_ETL_DIR=$LIB_DIR/etl
+LIB_COMPO_DIR=$LIB_DIR/esphome-components
+LIB_COMPO_VPORT_DIR="$LIB_COMPO_DIR/esphome/components/vport"
 
-if [ -z "$VPORT_DIR" ]; then
- SRCS=(
-    "$ESPHOME_LIB_DIR/esphome-components/esphome/components/vport/*.cpp"
-  )
-else
-  SRCS=(
-    "$VPORT_DIR/*.cpp"
-  )
-  SRCS_ESPHOME=(
-    $VPORT_DIR
-  )
-fi
+SRCS=(
+  "$LIB_COMPO_VPORT_DIR/*.cpp"
+)
+
+SRCS_ESPHOME=(
+  # $LIB_COMPO_VPORT_DIR
+)
 
 SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump)/.+\\.cpp$"
 
+
 INCS=(
-  "$ESPHOME_LIB_DIR/esphome-components"
-  "$ARDUINO_LIB_DIR/Embedded Template Library/include"
+  "$LIB_COMPO_DIR"
+  "$LIB_ETL_DIR/include"
 )
 
 .  $(dirname $0)/_cloak/runner.sh

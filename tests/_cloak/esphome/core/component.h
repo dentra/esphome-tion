@@ -116,7 +116,7 @@ class Component {
    */
   virtual void mark_failed() { this->component_state_ |= COMPONENT_STATE_FAILED; }
 
-  // bool is_failed() { return this->component_state_ & COMPONENT_STATE_FAILED; }
+  bool is_failed() { return this->component_state_ & COMPONENT_STATE_FAILED; }
 
   // virtual bool can_proceed();
 
@@ -149,12 +149,12 @@ class Component {
    */
   const char *get_component_source() const;
 
- protected:
-  friend class Application;
-
   virtual void call_loop() { this->loop(); }
   virtual void call_setup() { this->setup(); }
   virtual void call_dump_config() { this->dump_config(); }
+
+ protected:
+  friend class Application;
 
   /** Set an interval function with a unique name. Empty name means no cancelling possible.
    *
