@@ -11,7 +11,7 @@ static const char *const TAG = "tion_climate";
 climate::ClimateTraits TionClimate::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supports_current_temperature(true);
-  traits.set_visual_min_temperature(1.0f);
+  traits.set_visual_min_temperature(TION_MIN_TEMPERATURE);
   traits.set_visual_max_temperature(TION_MAX_TEMPERATURE);
   traits.set_visual_temperature_step(1.0f);
   traits.set_supported_modes({
@@ -63,7 +63,7 @@ void TionClimate::control(const climate::ClimateCall &call) {
     this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  this->control_climate_state(mode, fan_speed, target_temperature, TION_CLIMATE_GATE_POSITION_AUTO);
+  this->control_climate_state(mode, fan_speed, target_temperature, TION_CLIMATE_GATE_POSITION_NONE);
 }
 
 void TionClimate::set_fan_speed_(uint8_t fan_speed) {
@@ -92,8 +92,8 @@ void TionClimate::dump_presets(const char *tag) const {
 void TionClimate::dump_preset_(const char *tag, climate::ClimatePreset index) const {
   auto gate_position_to_string = [](TionClimateGatePosition gp) -> const char * {
     switch (gp) {
-      case TION_CLIMATE_GATE_POSITION_AUTO:
-        return "auto";
+      case TION_CLIMATE_GATE_POSITION_NONE:
+        return "none";
       case TION_CLIMATE_GATE_POSITION_OUTDOOR:
         return "outdoor";
       case TION_CLIMATE_GATE_POSITION_INDOOR:

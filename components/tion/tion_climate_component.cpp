@@ -80,7 +80,7 @@ void TionClimateComponentBase::update_preset_service_(std::string preset_str, st
     }
   }
 
-  TionClimateGatePosition gate_position = TION_CLIMATE_GATE_POSITION_AUTO;
+  TionClimateGatePosition gate_position = TION_CLIMATE_GATE_POSITION_NONE;
   if (gate_position_str.length() > 0) {
     auto gate_position_ch = std::tolower(gate_position_str[0]);
     if (gate_position_ch == 'o') {  // Outdoor

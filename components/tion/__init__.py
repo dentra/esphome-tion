@@ -90,7 +90,7 @@ PRESET_MODES = {
 }
 
 PRESET_GATE_POSITIONS = {
-    "auto": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_AUTO,
+    "none": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_NONE,
     "outdoor": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_OUTDOOR,
     "indoor": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_INDOOR,
     "mixed": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_MIXED,
@@ -298,7 +298,7 @@ async def setup_presets(config, key, setter) -> bool:
         )
         fan_speed = options.get(CONF_PRESET_FAN_SPEED, 0)
         target_temperature = options.get(CONF_PRESET_TARGET_TEMPERATURE, 0)
-        gate_position_str = options.get(CONF_PRESET_GATE_POSITION, "auto")
+        gate_position_str = options.get(CONF_PRESET_GATE_POSITION, "none")
         gate_position = PRESET_GATE_POSITIONS[gate_position_str]
         cg.add(setter(preset, mode, fan_speed, target_temperature, gate_position))
 
