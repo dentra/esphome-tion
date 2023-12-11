@@ -41,8 +41,8 @@ void TionClimateComponentBase::call_setup() {
 #ifdef TION_ENABLE_PRESETS
 #ifdef USE_API
 // esphome services allows only pass copy of strings
-void TionClimateComponentBase::update_preset_service_(std::string preset_str, std::string mode_str, int fan_speed,
-                                                      int target_temperature, std::string gate_position_str) {
+void TionClimateComponentBase::update_preset_service_(std::string preset_str, std::string mode_str, int32_t fan_speed,
+                                                      int32_t target_temperature, std::string gate_position_str) {
   climate::ClimatePreset preset = climate::ClimatePreset::CLIMATE_PRESET_NONE;
   if (preset_str.length() > 0) {
     auto preset_ch = std::tolower(preset_str[0]);
