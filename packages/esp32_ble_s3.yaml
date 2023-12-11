@@ -1,0 +1,29 @@
+substitutions:
+  board: esp32-s3-devkitc-1
+
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+    build_flags:
+      - -std=gnu++17
+    build_unflags:
+      - -std=gnu++11
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+wifi:
+  power_save_mode: light
+
+esp32_ble_tracker:
+
+ble_client:
+  mac_address: $tion_mac_address
+  id: tion_ble_client
+
+ota:
+  on_begin:
+    then:
+      lambda: id(tion_ble_client).set_enabled(false);
