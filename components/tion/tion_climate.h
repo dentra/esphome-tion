@@ -45,10 +45,11 @@ struct TionPreset {
 
 class TionClimate : public climate::Climate {
  public:
+  TionClimate() { this->target_temperature = NAN; }
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;
 
-  virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+  virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                                      TionClimateGatePosition gate_position) = 0;
   virtual TionClimateGatePosition get_gate_position() const = 0;
 #ifdef TION_ENABLE_PRESETS

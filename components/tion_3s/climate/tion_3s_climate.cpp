@@ -102,11 +102,13 @@ void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_posi
   this->control_state_(control);
 }
 
-void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+void Tion3sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                                           TionClimateGatePosition gate_position) {
   ControlState control{};
   control.fan_speed = fan_speed;
-  control.target_temperature = target_temperature;
+  if (!std::isnan(target_temperature)) {
+    control.target_temperature = target_temperature;
+  }
 
   if (mode == climate::CLIMATE_MODE_OFF) {
     control.power_state = false;

@@ -67,7 +67,7 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   }
 
   void control_recirculation_state(bool state);
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                              TionClimateGatePosition gate_position) override;
 
   TionClimateGatePosition get_gate_position() const override {

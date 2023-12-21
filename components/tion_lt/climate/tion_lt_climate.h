@@ -33,7 +33,7 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
     this->control_state_(control);
   }
 
-  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+  void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                              TionClimateGatePosition gate_position) override;
 
   TionClimateGatePosition get_gate_position() const override { return TION_CLIMATE_GATE_POSITION_NONE; }

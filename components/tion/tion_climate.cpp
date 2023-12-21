@@ -56,10 +56,10 @@ void TionClimate::control(const climate::ClimateCall &call) {
     this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  int8_t target_temperature = this->target_temperature;
+  float target_temperature = this->target_temperature;
   if (call.get_target_temperature().has_value()) {
     target_temperature = *call.get_target_temperature();
-    ESP_LOGD(TAG, "Set target temperature %d °C", target_temperature);
+    ESP_LOGD(TAG, "Set target temperature %d °C", int(target_temperature));
     this->preset = climate::CLIMATE_PRESET_NONE;
   }
 

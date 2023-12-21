@@ -66,11 +66,13 @@ void TionLtClimate::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "test_type      : %u", state.test_type);
 }
 
-void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, int8_t target_temperature,
+void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                                           /*[[maybe_unused]]*/ TionClimateGatePosition) {
   ControlState control{};
   control.fan_speed = fan_speed;
-  control.target_temperature = target_temperature;
+  if (!std::isnan(target_temperature)) {
+    control.target_temperature = target_temperature;
+  }
 
   if (mode == climate::CLIMATE_MODE_OFF) {
     control.power_state = false;
