@@ -23,5 +23,11 @@ Doxygen
 /*-dev.yaml
 /*-gen.yaml
 /*-bin.yaml
+/*.log
+/sdkconfig
 
 /components/vport
+/components/nvs
+/components/settings
+/components/vport
+/components/web_server_idf
