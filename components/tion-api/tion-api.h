@@ -10,13 +10,16 @@ namespace dentra {
 namespace tion {
 
 #pragma pack(push, 1)
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion_dev_info_t {
+  // NOLINTNEXTLINE(readability-identifier-naming)
   enum work_mode_t : uint8_t {
     // обычный режим работы
     NORMAL = 1,
     // бризер находится в режиме обновления
     UPDATE = 2,
   } work_mode;
+  // NOLINTNEXTLINE(readability-identifier-naming)
   enum device_type_t : uint32_t {
     // Tion IQ 200
     IQ200 = 0x8001,
@@ -30,6 +33,7 @@ struct tion_dev_info_t {
   uint8_t reserved[16];
 };
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 template<tion_dev_info_t::device_type_t DT> struct tion_state_counters_t {
   // Motor time counter in seconds. power_up_time
   uint32_t work_time;
@@ -57,7 +61,7 @@ template<tion_dev_info_t::device_type_t DT> struct tion_state_counters_t {
 class TionApiBaseWriter {
  public:
   using writer_type = etl::delegate<bool(uint16_t type, const void *data, size_t size)>;
-  void set_writer(writer_type &&writer) { this->writer_ = std::move(writer); }
+  void set_writer(writer_type &&writer) { this->writer_ = writer; }
 
   // Write any frame data.
   bool write_frame(uint16_t type, const void *data, size_t size) const;
@@ -99,7 +103,7 @@ template<class state_type_t> class TionApiBase : public TionApiBaseWriter {
 
   using on_ready_type = etl::delegate<void()>;
   /// Set callback listener for monitoring ready state
-  void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = std::move(on_ready); }
+  void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = on_ready; }
 
   on_dev_info_type on_dev_info{};
   on_state_type on_state{};
@@ -110,6 +114,7 @@ template<class state_type_t> class TionApiBase : public TionApiBaseWriter {
   on_ready_type on_ready_{};
 };
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 template<class data_type> struct tion_frame_t {
   uint16_t type;
   data_type data;
@@ -117,6 +122,7 @@ template<class data_type> struct tion_frame_t {
 } __attribute__((__packed__));
 using tion_any_frame_t = tion_frame_t<uint8_t[0]>;
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 template<class data_type> struct tion_ble_frame_t {
   uint16_t type;
   uint32_t ble_request_id;  // always 1
@@ -133,12 +139,12 @@ template<class frame_spec_t> class TionProtocol {
   using reader_type = etl::delegate<void(const frame_spec_t &data, size_t size)>;
   // TODO move to protected
   reader_type reader{};
-  void set_reader(reader_type &&reader) { this->reader = std::move(reader); }
+  void set_reader(reader_type &&reader) { this->reader = reader; }
 
   using writer_type = etl::delegate<bool(const uint8_t *data, size_t size)>;
   // TODO move to protected
   writer_type writer{};
-  void set_writer(writer_type &&writer) { this->writer = std::move(writer); }
+  void set_writer(writer_type &&writer) { this->writer = writer; }
 };
 
 }  // namespace tion

@@ -23,7 +23,7 @@ template<class protocol_type> class TionBleIO : public TionIO<protocol_type>, pu
     this->set_ble_char_rx(this->protocol_.get_ble_char_rx());
   }
 
-  void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = std::move(on_ready); }
+  void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = on_ready; }
 
   void on_ble_ready() override { this->on_ready_.call_if(); }
   bool on_ble_data(const uint8_t *data, uint16_t size) override { return this->protocol_.read_data(data, size); }

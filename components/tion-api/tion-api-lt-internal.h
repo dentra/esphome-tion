@@ -27,6 +27,7 @@ enum {
 #pragma pack(push, 1)
 
 // used to change state of device
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tionlt_state_set_t {
   struct {
     // Байт 0, бит 0

@@ -6,6 +6,7 @@ namespace dentra {
 namespace tion {
 
 #pragma pack(push, 1)
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_state_t {
   enum HeaterMode : uint8_t {
     HEATER_MODE_HEATING = 0,
@@ -81,6 +82,7 @@ struct tion4s_state_t {
   bool filter_warnout() const { return this->flags.filter_warnout; }
 };
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_turbo_t {
   uint8_t is_active;
   uint16_t turbo_time;  // time in seconds
@@ -88,6 +90,7 @@ struct tion4s_turbo_t {
 };
 
 #ifdef TION_ENABLE_SCHEDULER
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_timers_state_t {
   enum { TIMERS_COUNT = 12u };
   struct {
@@ -96,6 +99,7 @@ struct tion4s_timers_state_t {
 };
 
 /// Timer settings. Used for get and set operations.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_timer_t {
   struct {
     bool monday : 1;

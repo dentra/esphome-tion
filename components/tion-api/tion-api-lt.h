@@ -6,7 +6,7 @@ namespace dentra {
 namespace tion {
 
 #pragma pack(push, 1)
-
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tionlt_state_t {
   enum GateState : uint8_t {
     // закрыто
@@ -62,6 +62,7 @@ struct tionlt_state_t {
     } cnt;
   } errors;
   // Байт 48-53.
+  // NOLINTNEXTLINE(readability-identifier-naming)
   struct button_presets_t {
     enum { PRESET_NUMBER = 3 };
     int8_t temp[PRESET_NUMBER];

@@ -19,6 +19,7 @@ uint16_t TionLtApi::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 void TionLtApi::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
   if (frame_type == FRAME_TYPE_STATE_RSP) {
+    // NOLINTNEXTLINE(readability-identifier-naming)
     struct state_frame_t {
       uint32_t request_id;
       tionlt_state_t state;

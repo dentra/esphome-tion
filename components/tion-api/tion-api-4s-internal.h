@@ -46,8 +46,8 @@ enum {
 };
 
 #pragma pack(push, 1)
-
 // структура для изменения состояния
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_state_set_t {
   // Байт 0-1.
   struct {
@@ -106,11 +106,13 @@ struct tion4s_state_set_t {
 };
 
 #ifdef TION_ENABLE_SCHEDULER
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_time_t {
   int64_t unix_time;
 };
 #endif
 #ifdef TION_ENABLE_DIAGNOSTIC
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_errors_t {
   enum { ERROR_TYPES_COUNT = 32u };
   uint8_t er[ERROR_TYPES_COUNT];

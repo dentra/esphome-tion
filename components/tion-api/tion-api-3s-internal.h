@@ -36,6 +36,7 @@ enum : uint8_t {
 
 #pragma pack(push, 1)
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion3s_frame_t {
   enum {
     FRAME_DATA_SIZE = 17,
@@ -45,6 +46,7 @@ struct tion3s_frame_t {
   uint8_t magic;
 };
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion3s_state_set_t {
   // Байт 0. Скорость вентиляции.
   uint8_t fan_speed;

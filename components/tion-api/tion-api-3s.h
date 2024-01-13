@@ -13,6 +13,7 @@ enum : uint8_t {
   FRAME_MAGIC_END = 0x5A,
 };
 
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct tion3s_state_t {
   enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
   // Байт 0, бит 0-3. Скорость вентиляции.
@@ -74,9 +75,9 @@ struct tion3s_state_t {
   int current_temperature() const {
     // Исходная формула:
     // ((bArr[4] <= 0 ? bArr[5] : bArr[4]) + (bArr[5] <= 0 ? bArr[4] : bArr[5])) / 2;
-    auto bArr_4 = this->current_temperature1;
-    auto bArr_5 = this->current_temperature2;
-    return ((bArr_4 <= 0 ? bArr_5 : bArr_4) + (bArr_5 <= 0 ? bArr_4 : bArr_5)) / 2;
+    auto barr_4 = this->current_temperature1;
+    auto barr_5 = this->current_temperature2;
+    return ((barr_4 <= 0 ? barr_5 : barr_4) + (barr_5 <= 0 ? barr_4 : barr_5)) / 2;
   }
 
   bool is_initialized() const { return this->firmware_version != 0; }

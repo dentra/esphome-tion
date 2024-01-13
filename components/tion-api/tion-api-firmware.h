@@ -41,6 +41,7 @@ enum {
 };
 
 // Использется при ответе FRAME_TYPE_UPDATE_PREPARE_RSP.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct firmware_versions_t {
   uint32_t device_type;
   uint16_t unknown1;  // always 0
@@ -48,6 +49,7 @@ struct firmware_versions_t {
 };
 
 // Использется при запросе FRAME_TYPE_UPDATE_START_REQ.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct firmware_info_t {
   // firmware_size + sizeof(this->data) + crc_size
   uint32_t size;
@@ -57,6 +59,7 @@ struct firmware_info_t {
 };
 
 // Использется при запросе FRAME_TYPE_UPDATE_CHUNK_REQ.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct firmware_chunk_t {
   enum { SIZE = 512 };  // в приложении 1000
   uint32_t offset;
@@ -64,6 +67,7 @@ struct firmware_chunk_t {
 };
 
 // Использется при запросе FRAME_TYPE_UPDATE_CHUNK_REQ.
+// NOLINTNEXTLINE(readability-identifier-naming)
 struct firmware_chunk_crc_t {
   enum { MARKER = 0xFFFFFFFF };
   uint32_t marker{MARKER};
