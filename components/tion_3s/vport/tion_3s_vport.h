@@ -43,15 +43,9 @@ class Tion3sBleVPort : public TionVPortBLEComponent<Tion3sBleIO, Tion3sBleIO::fr
 
   void set_api(dentra::tion::Tion3sApi *api) { this->api_ = api; }
 
-#ifdef TION_ENABLE_MAC_CHAHGE
-  void save_mac_address(const std::string &mac_address);
-#endif
-
  protected:
   ESPPreferenceObject rtc_;
-#ifdef TION_ENABLE_MAC_CHAHGE
-  ESPPreferenceObject mac_rtc_;
-#endif
+
   int8_t pair_state_{};  // 0: not paired, >0: paired, <0: pairing
   bool experimental_always_pair_{};
   dentra::tion::Tion3sApi *api_{};
