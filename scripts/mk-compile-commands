@@ -1,0 +1,33 @@
+#!/bin/sh
+
+prj_path=$(dirname $0)/..
+
+export IDF_TARGET=esp32
+export IDF_PYTHON_ENV_PATH=$HOME/.espressif/python_env/idf5.2_py3.11_env
+export IDF_PATH=$(realpath $prj_path/../esp/esp-idf)
+TOOLS_VERSION=esp-12.2.0_20230208
+export PATH=$IDF_PYTHON_ENV_PATH/bin:$PATH
+for tc in riscv32-esp-elf xtensa-esp32-elf xtensa-esp32s3-elf xtensa-esp32s2-elf ; do
+  export PATH=$HOME/.espressif/tools/$tc/$TOOLS_VERSION/$tc/bin:$PATH
+done
+
+SRC_DIR=$prj_path
+BLD_DIR=$prj_path/.build/Debug
+
+echo "venv: $VIRTUAL_ENV"
+echo "idf : $IDF_PATH"
+echo "path: $PATH"
+
+rm -rf $BLD_DIR
+rm $prj_path/sdkconfig
+
+cmake --no-warn-unused-cli \
+  -DESP_PLATFORM=1 \
+  -DIDF_TARGET=$IDF_TARGET \
+  -DCCACHE_ENABLE=0 \
+  -DCMAKE_BUILD_TYPE:STRING=Debug \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
+  -S$SRC_DIR \
+  -B$BLD_DIR \
+  -G Ninja \
+  -DCMAKE_TOOLCHAIN_FILE=$IDF_PATH/tools/cmake/toolchain-$IDF_TARGET.cmake

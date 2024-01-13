@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+import logging as log
+import os
+import subprocess
+import sys
+
+WORKSPACE_PATH = os.path.dirname(os.path.realpath(__file__)) + "/.."
+SRC_PATH = f"{WORKSPACE_PATH}/components/"
+
+log.basicConfig(
+    filename=f"{WORKSPACE_PATH}/clang-tidyw.log",
+    filemode="a",
+    format="%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s",
+    datefmt="%H:%M:%S",
+    level=log.DEBUG,
+)
+
+
+def main(argv: list[str]):
+    invocation = ["/usr/local/bin/clang-tidy"]
+    invocation.extend(argv[1:])
+
+    if "--" in invocation:
+        index = invocation.index("--")
+        file = invocation[index - 1]
+        log.info("Processing: %s", file)
+        if not file.startswith(SRC_PATH):
+            log.warning("File %s is not in source path %s", file, SRC_PATH)
+            sys.exit(1)
+        log.debug(invocation)
+
+    # if sys.stdout.isatty():
+    #     invocation.append("--use-color")
+
+    proc = subprocess.run(invocation, encoding="utf-8", check=False)
+    sys.exit(proc.returncode)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
