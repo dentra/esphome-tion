@@ -15,7 +15,7 @@ using Tion4sUartIO = TionUartIO<dentra::tion::Tion4sUartProtocol>;
 
 class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO, Tion4sUartIO::frame_spec_type> {
  public:
-  explicit Tion4sUartVPort(Tion4sUartIO *io) : TionVPortUARTComponent(io){};
+  explicit Tion4sUartVPort(Tion4sUartIO *io) : TionVPortUARTComponent(io) {}
 
   void dump_config() override;
   void setup() override;

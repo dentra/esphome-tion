@@ -112,18 +112,24 @@ bool test_api_4s() {
   io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
   // vport.set_persistent_connection(true);
 
-  // cloak::setup_and_loop({&vport, &comp});
+  cloak::setup_and_loop({&vport});
 
   api.request_state();
+  vport.call_loop();
   res &= cloak::check_data("request_state", io, "80.0C.00.3A.AD 32.32 01.00.00.00 64.F7");
 
   api.request_dev_info();
+  vport.call_loop();
   res &= cloak::check_data("request_dev_info", io, "80.0C.00.3A.AD 32.33 01.00.00.00 CE.A6");
 
   api.request_timer(0, 1);
+  vport.call_loop();
   res &= cloak::check_data("request_timer", io, "80.11.00.3A.AD 32.34 01.00.00.00 01.00.00.00.00 DB.D5");
 
   api.request_timers(1);
+  for (int i = 0; i < 12; i++) {
+    vport.call_loop();
+  }
   res &= cloak::check_data("request_timers", io,
                            "80.11.00.3A.AD.32.34.01.00.00.00.01.00.00.00.00.DB.D5"
                            "80.11.00.3A.AD.32.34.01.00.00.00.01.00.00.00.01.CB.F4"

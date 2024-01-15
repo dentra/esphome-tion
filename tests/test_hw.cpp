@@ -241,15 +241,20 @@ bool test_hw_uart() {
 
   cloak::setup_and_loop({&vport});
 
+  vport.call_loop();
+
   cloak::check_data("on_heartbeat", uart, "3A.07.00.32.39.CE.EC");
 
   api.send_heartbeat();
+  vport.call_loop();
   cloak::check_data("send_heartbeat", uart, "3A.07.00.32.39.CE.EC");
 
   api.request_state();
+  vport.call_loop();
   cloak::check_data("request_state", uart, "3A.07.00.32.32.7F.87");
 
   api.request_time(0);
+  vport.call_loop();
   cloak::check_data("request_time", uart, "3A.0B.00.32.36.00.00.00.00.B0.E0");
 
   return res;
@@ -268,17 +273,22 @@ bool test_hw_ble() {
   Tion4sCompTest comp(&api);
 
   io.node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
-  vport.setup();
-  vport.loop();
+  cloak::setup_and_loop({&vport});
 
   io.test_data_push(cloak::from_hex("80 0D00 3AAD 3139 01000000 00 184B"));
+  vport.call_loop();
   res &= cloak::check_data("on_heartbeat", io, "80.0C.00.3A.AD.32.39.01.00.00.00.88.08");
 
   api.send_heartbeat();
+  vport.call_loop();
   res &= cloak::check_data("send_heartbeat", io, "80.0C.00.3A.AD.32.39.01.00.00.00.88.08");
+
   api.request_state();
+  vport.call_loop();
   res &= cloak::check_data("request_state", io, "80.0C.00.3A.AD.32.32.01.00.00.00.64.F7");
+
   api.request_time(0);
+  vport.call_loop();
   res &= cloak::check_data("request_time", io, "80.10.00.3A.AD.32.36.01.00.00.00.00.00.00.00.B9.37");
 
   io.connect();
@@ -299,14 +309,47 @@ bool test_hw_uart_on_ready() {
 
   res &= cloak::check_data("not ready", comp.is_ready(), false);
 
-  vport.setup();
+  vport.call_setup();
 
   res &= cloak::check_data("is ready", comp.is_ready(), true);
 
   return res;
 }
 
+std::string hex_sanitize(const std::string &str) {
+  std::string out;
+  std::copy_if(str.begin(), str.end(), std::back_inserter(out), [](const char &c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  });
+  return out;
+}
+bool parse_mac(std::string mac, uint64_t *result) {
+  if (mac.length() < 12) {
+    return false;
+  }
+  mac = hex_sanitize(mac);
+  if (mac.length() != 12) {
+    return false;
+  }
+  if (parse_hex(mac.c_str(), mac.length(), reinterpret_cast<uint8_t *>(result), sizeof(*result)) == 0) {
+    return false;
+  }
+  *result = byteswap(*result) & 0xFFFFFFFFFFFFULL;
+  return true;
+}
+
+bool test_111() {
+  // 11:22:33:44:55:FF
+  // 0x1122334455FFULL
+  printf("%llx\n", 0x1122334455FFULL);
+  uint64_t mac = 0xeeeeeeeeeeeeeeeeULL;
+  parse_mac("11:22:33:44:55:FF", &mac);
+  printf("%llx\n", mac);
+  return true;
+}
+
 REGISTER_TEST(test_hw_protocol);
 REGISTER_TEST(test_hw_uart);
 REGISTER_TEST(test_hw_ble);
 REGISTER_TEST(test_hw_uart_on_ready);
+REGISTER_TEST(test_111);

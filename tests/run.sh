@@ -18,6 +18,7 @@ DEFS=(
   TION_ENABLE_DIAGNOSTIC
   USE_VPORT_UART
   USE_VPORT_BLE
+  USE_VPORT_COMMAND_QUEUE_SIZE=16
 )
 
 LIB_DIR=$WORKSPACE_DIR/lib
@@ -33,7 +34,7 @@ SRCS_ESPHOME=(
   # $LIB_COMPO_VPORT_DIR
 )
 
-SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump)/.+\\.cpp$"
+SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump|settings)/.+\\.cpp$"
 
 
 INCS=(

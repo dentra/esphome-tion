@@ -33,21 +33,27 @@ logger::Logger logger(0, 0, logger::UART_SELECTION_UART0);
 bool run_tests(const std::set<std::string> &run_only) {
   logger.pre_setup();
 
-  bool res = true;
+  std::vector<std::string> failed_tests;
+
   for (const auto &[test, name] : kit->tests) {
     if (run_only.empty() || run_only.find(name) != run_only.end()) {
       printf("****************************************\n\n");
       printf("    %s\n\n", name.c_str());
       printf("****************************************\n");
-      res &= test();
+      if (!test()) {
+        failed_tests.push_back(name);
+      }
     }
   }
-  if (res) {
+  if (failed_tests.empty()) {
     ESP_LOGI(TAG, "SUCCESS");
   } else {
     ESP_LOGE(TAG, "FAILED");
+    for (auto name : failed_tests) {
+      ESP_LOGE(TAG, "  %s", name.c_str());
+    }
   }
-  return res;
+  return failed_tests.empty();
 }
 
 int run_tests(int argc, char const *argv[]) {
@@ -135,6 +141,16 @@ bool test(const char *tag, const std::string &name, uint32_t data1, uint32_t dat
 
 bool test(const char *tag, const std::string &name, int32_t data1, int32_t data2) {
   print_data2(tag, data1 == data2, name, "%d", "0x%X", data1, data2);
+}
+
+bool test(const char *tag, const std::string &name, double data1, double data2) {
+  print_data1(tag, data1 == data2, name, "%lf", data1, data2);
+}
+
+bool test(const char *tag, const std::string &name, const std::string data1, const std::string data2) {
+  printf("checking string %s == %s, %u\n", data1.c_str(), data2.c_str(), data1 == data2);
+  printf("%zu, %zu\n", data1.size(), data2.size());
+  print_data1(tag, data1 == data2, name, "%s", data1.c_str(), data2.c_str());
 }
 
 bool test(const char *tag, const std::string &name, const std::vector<uint8_t> &data1,

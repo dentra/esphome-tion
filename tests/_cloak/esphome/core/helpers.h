@@ -17,6 +17,14 @@ namespace esphome {
 #define ALWAYS_INLINE __attribute__((always_inline))
 #define PACKED __attribute__((packed))
 
+// Various functions can be constexpr in C++14, but not in C++11 (because their body isn't just a return statement).
+// Define a substitute constexpr keyword for those functions, until we can drop C++11 support.
+#if __cplusplus >= 201402L
+#define constexpr14 constexpr
+#else
+#define constexpr14 inline  // constexpr implies inline
+#endif
+
 std::string hex(const void *data, uint32_t size, char sep, bool add_size);
 
 inline std::string format_hex(const void *data, uint32_t size) { return hex(data, size, 0, false); }
@@ -59,6 +67,31 @@ inline void get_mac_address_raw(uint8_t *mac) { mac[0] = mac[1] = mac[2] = mac[3
 
 std::string str_sprintf(const char *fmt, ...);
 std::string str_snprintf(const char *fmt, size_t len, ...);
+
+// std::byteswap from C++23
+template<typename T> constexpr14 T byteswap(T n) {
+  T m;
+  for (size_t i = 0; i < sizeof(T); i++)
+    reinterpret_cast<uint8_t *>(&m)[i] = reinterpret_cast<uint8_t *>(&n)[sizeof(T) - 1 - i];
+  return m;
+}
+template<> constexpr14 uint8_t byteswap(uint8_t n) { return n; }
+template<> constexpr14 uint16_t byteswap(uint16_t n) { return __builtin_bswap16(n); }
+template<> constexpr14 uint32_t byteswap(uint32_t n) { return __builtin_bswap32(n); }
+template<> constexpr14 uint64_t byteswap(uint64_t n) { return __builtin_bswap64(n); }
+template<> constexpr14 int8_t byteswap(int8_t n) { return n; }
+template<> constexpr14 int16_t byteswap(int16_t n) { return __builtin_bswap16(n); }
+template<> constexpr14 int32_t byteswap(int32_t n) { return __builtin_bswap32(n); }
+template<> constexpr14 int64_t byteswap(int64_t n) { return __builtin_bswap64(n); }
+
+/// Convert a value between host byte order and big endian (most significant byte first) order.
+template<typename T> constexpr14 T convert_big_endian(T val) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  return byteswap(val);
+#else
+  return val;
+#endif
+}
 
 /// Encode a 16-bit value given the most and least significant byte.
 constexpr uint16_t encode_uint16(uint8_t msb, uint8_t lsb) {
@@ -120,5 +153,56 @@ template<typename T> class Parented {
 
 std::string str_lower_case(const std::string &str);
 std::string str_upper_case(const std::string &str);
+
+/** Parse bytes from a hex-encoded string into a byte array.
+ *
+ * When \p len is less than \p 2*count, the result is written to the back of \p data (i.e. this function treats \p str
+ * as if it were padded with zeros at the front).
+ *
+ * @param str String to read from.
+ * @param len Length of \p str (excluding optional null-terminator), is a limit on the number of characters parsed.
+ * @param data Byte array to write to.
+ * @param count Length of \p data.
+ * @return The number of characters parsed from \p str.
+ */
+size_t parse_hex(const char *str, size_t len, uint8_t *data, size_t count);
+/// Parse \p count bytes from the hex-encoded string \p str of at least \p 2*count characters into array \p data.
+inline bool parse_hex(const char *str, uint8_t *data, size_t count) {
+  return parse_hex(str, strlen(str), data, count) == 2 * count;
+}
+/// Parse \p count bytes from the hex-encoded string \p str of at least \p 2*count characters into array \p data.
+inline bool parse_hex(const std::string &str, uint8_t *data, size_t count) {
+  return parse_hex(str.c_str(), str.length(), data, count) == 2 * count;
+}
+/// Parse \p count bytes from the hex-encoded string \p str of at least \p 2*count characters into vector \p data.
+inline bool parse_hex(const char *str, std::vector<uint8_t> &data, size_t count) {
+  data.resize(count);
+  return parse_hex(str, strlen(str), data.data(), count) == 2 * count;
+}
+/// Parse \p count bytes from the hex-encoded string \p str of at least \p 2*count characters into vector \p data.
+inline bool parse_hex(const std::string &str, std::vector<uint8_t> &data, size_t count) {
+  data.resize(count);
+  return parse_hex(str.c_str(), str.length(), data.data(), count) == 2 * count;
+}
+/** Parse a hex-encoded string into an unsigned integer.
+ *
+ * @param str String to read from, starting with the most significant byte.
+ * @param len Length of \p str (excluding optional null-terminator), is a limit on the number of characters parsed.
+ */
+template<typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0>
+optional<T> parse_hex(const char *str, size_t len) {
+  T val = 0;
+  if (len > 2 * sizeof(T) || parse_hex(str, len, reinterpret_cast<uint8_t *>(&val), sizeof(T)) == 0)
+    return {};
+  return convert_big_endian(val);
+}
+/// Parse a hex-encoded null-terminated string (starting with the most significant byte) into an unsigned integer.
+template<typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0> optional<T> parse_hex(const char *str) {
+  return parse_hex<T>(str, strlen(str));
+}
+/// Parse a hex-encoded null-terminated string (starting with the most significant byte) into an unsigned integer.
+template<typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0> optional<T> parse_hex(const std::string &str) {
+  return parse_hex<T>(str.c_str(), str.length());
+}
 
 }  // namespace esphome

@@ -61,13 +61,16 @@ bool test_api_3s() {
   cloak::setup_and_loop({&vport, &comp});
 
   api.request_state();
+  vport.call_loop();
   res &= cloak::check_data("request_state", io, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   comp.state().firmware_version = 0xFFFF;  // to pass initialized
   api.write_state(comp.state(), 0);
+  vport.call_loop();
   res &= cloak::check_data("write_state empty", io, "3D.02.00.00.00.00.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   api.reset_filter(comp.state());
+  vport.call_loop();
   res &= cloak::check_data("reset_filter", io, "3D.02.00.00.00.00.01.02.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   comp.state().fan_speed = 1;
@@ -80,6 +83,7 @@ bool test_api_3s() {
   comp.state().minutes = 45;
   comp.state().gate_position = dentra::tion::tion3s_state_t::GATE_POSITION_OUTDOOR;
   api.write_state(comp.state(), 0);
+  vport.call_loop();
   res &= cloak::check_data("write_state params", io, "3D.02.01.17.02.0B.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   auto copy = comp.state();
@@ -130,13 +134,14 @@ bool test_uart_3s() {
 
   cloak::setup_and_loop({&vport, &comp});
   for (int i = 0; i < 5; i++) {
-    vport.loop();
+    vport.call_loop();
   }
 
   auto act = std::vector<uint8_t>((uint8_t *) &comp.state(), (uint8_t *) &comp.state() + sizeof(comp.state()));
   res &= cloak::check_data_(act, state);
 
   res &= cloak::check_data("request_state call", api.request_state(), true);
+  vport.call_loop();
   res &= cloak::check_data("request_state data", uart, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   res &= cloak::check_data("send_heartbeat call", api.send_heartbeat(), false);
@@ -146,6 +151,7 @@ bool test_uart_3s() {
   printf("0x%04X\n", comp.state().counters.filter_time);
 
   res &= cloak::check_data("reset_filter call", api.reset_filter(comp.state()), true);
+  vport.call_loop();
   res &= cloak::check_data("reset_filter data", uart, "3D:02:01:17:02:0A:01:02:00:00:00:00:00:00:00:00:00:00:00:5A");
 
   return res;
@@ -173,8 +179,8 @@ bool test_uart_3s_proxy() {
 
   cloak::setup_and_loop({&vport, &comp, &proxy});
   for (int i = 0; i < 5; i++) {
-    proxy.loop();
-    vport.loop();
+    proxy.call_loop();
+    vport.call_loop();
   }
 
   res &= cloak::check_data("inp data", uart_inp, out);
