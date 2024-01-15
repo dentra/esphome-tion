@@ -1,5 +1,4 @@
 substitutions:
-  framework_type: esp-idf
   board: esp32-s3-devkitc-1
   tx_pin: GPIO20
   rx_pin: GPIO19
@@ -8,15 +7,11 @@ substitutions:
 esphome:
   platformio_options:
     board_build.flash_mode: dio
-    build_flags:
-      - -std=gnu++17
-    build_unflags:
-      - -std=gnu++11
 
 esp32:
   board: $board
   framework:
-    type: $framework_type
+    type: esp-idf
 
 wifi:
   power_save_mode: none

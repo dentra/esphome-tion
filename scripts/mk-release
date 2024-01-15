@@ -7,7 +7,7 @@ fi
 
 base_path=$(dirname $0)
 
-$base_path/mk_config $1
-$base_path/mk_readme $1
+$base_path/mk-config $1
+$base_path/mk-readme $1
 
 

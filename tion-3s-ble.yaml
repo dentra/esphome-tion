@@ -7,8 +7,7 @@ substitutions:
   friendly_name: $node_name
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "false"
-  # setup your board or leave it as is.
-  board: esp32dev
+
   # wifi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
@@ -16,7 +15,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: 2023.7.0 # cant use substitutions here
+    ref: master # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
@@ -24,28 +23,45 @@ packages:
       - packages/rssi_signal.yaml
       ## Enable additional Uptime sensor. Comment next line to disable.
       - packages/uptime.yaml
-      ## Uncomment next line to enable additional restart button.
+      ## Enable additional Restart button. Comment next line to disable.
       - packages/restart.yaml
+      ## Base climate definition. Do not comment or move or remove.
+      - packages/tion_3s_climate.yaml
+      ## Enable maximum target temperature to 30°C. Comment next line to disable.
+      - packages/tion_temperature30c.yaml
+      ## Enable heat_cool mode to workaraund when using Home Assistant turn_on service.
+      # - packages/tion_enable_heat_cool.yaml
+      ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
+      - packages/tion_3s_enable_antifrize.yaml
+      ## Turn the breezer off before enable heat mode.
+      - packages/tion_3s_enable_off_before_heat.yaml
+      ## Common configuration settings. Do not comment or move or remove.
+      - packages/base.yaml
+      ## BLE configuration settings. Do not comment or move or remove.
+      - packages/esp32_ble.yaml
       ## Uncomment next line to enable persistent connection runtime control switch.
       # - packages/persistent.yaml
       ## Uncomment next line to enable additional connect switch useful for debugging.
       # - packages/connect.yaml
-      ## Common configuration settings.
-      - packages/base.yaml
-      - packages/esp32_ble.yaml
-      ## Uncomment next line to if you wish to compile via ESP IDF.
-      # - packages/idf.yaml
+      ## Uncomment next line to enable monitor internal ESP temperature.
+      # - packages/esp32_temperature.yaml
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
 
-# Enable Home Assistant API connection.
-api:
-
 # Uncomment to enable MQTT connecion.
+# WARNINIG: If you leave next api section for logging purpose
+#           and do not use Home Assistant, you need to uncomment
+#           reboot_timeout parameter.
 # mqtt:
 #   broker: !secret mqtt_borker
+#   port: !secret mqtt_port
 #   username: !secret mqtt_username
 #   password: !secret mqtt_password
+
+# Enable Home Assistant API connection. Please do not remove to keep logs functioning.
+api:
+  # Uncomment next line if you do not use Home Assistant.
+  #reboot_timeout: 0s
 
 # WiFi hotspot configuration.
 # Comment next 3 lines to enable manual WiFi conviguration via access point.
@@ -56,61 +72,76 @@ wifi:
 # Virtual port configuration
 vport:
   - platform: tion_3s
-    id: tion3s_ble_vport
+    id: tion_ble_vport
     ble_client_id: tion_ble_client
-    # Optional, Do not disconnect after receiving state. Default: false.
+    ## Optional, Do not disconnect after receiving state. Default: false.
     persistent_connection: false
-    # Optional, Timeout to reconnect if no state answer received. Default: 15s.
-    state_timeout: 15s
-    # Optional, Send a pair command after every connect (experimental feature)
-    #experimental_always_pair: false
-    # Optional, Allow to disable other BLE device scanning when breezer is already connected.
-    disable_scan: false
+    ## Optional, Allow to disable other BLE device scanning when breezer is already connected. Default: false.
+    # disable_scan: false
+    ## Optional, Send a pair command after every connect (experimental feature)
+    # experimental_always_pair: false
+    ## Optional, Interval between sending commmands. Set to 0ms to send one command per loop.
+    # command_interval: 100ms
+    ## Optional, Command queue size. Default: 10.
+    # command_queue_size: 16
 
-# Main component configuration.
+# Main climate component configuration.
 climate:
-  - platform: tion_3s
-    id: tion_climate
-    vport_id: tion3s_ble_vport
+  - id: !extend tion_climate
+    # Required, the name of climate entity
     name: None # use friendly_name
-    # Optional, Buzzer control switch.
-    buzzer:
-      name: "Buzzer"
+    # Optional, virtual port id. Default: autodetect
+    vport_id: tion_ble_vport
     # Optional, Temperatire of air before heater, °C (celsius).
     outdoor_temperature:
       name: "Outdoor Temperature"
+    # Optional, Buzzer control switch.
+    buzzer:
+      name: "Buzzer"
+    # Optional, Air Intake control.
+    air_intake:
+      name: "Air Intake"
     # Optional, Current productivity, m³/h (cubic meters per hour).
     productivity:
       name: "Productivity"
     # Optional, Filter time left counter, days.
     filter_time_left:
       name: "Filter Time Left"
-    # Optional, Air Intake control.
-    air_intake:
-      name: "Air Intake"
+    # Optional, Filter warning state.
+    filter_warnout:
+      name: "Filter Warnout"
     # Optional, Tion firmware version.
     version:
       name: "Version"
-    # Optional, Enable presets. Default: <empty>
-    # Awailable configurable presets: home, away, boost, comfort, eco, sleep, activity.
+    # Optional, Enable presets. Default: <empty> (no presets)
+    # Available configurable presets: home, away, boost, comfort, eco, sleep, activity.
     # Defaults:
-    #   home    : { fan_speed: 2, target_temperature: 20, mode: heat }
-    #   away    : { fan_speed: 1, target_temperature: 10, mode: fan_only }
-    #   boost   : { fan_speed: 6, target_temperature: 10, mode: fan_only }
-    #   comfort : { fan_speed: 2, target_temperature: 23, mode: heat }
-    #   eco     : { fan_speed: 1, target_temperature: 16, mode: heat }
-    #   sleep   : { fan_speed: 1, target_temperature: 18, mode: heat }
-    #   activity: { fan_speed: 3, target_temperature: 18, mode: heat }
+    #   home    : { fan_speed: 2, target_temperature: 20, gate_position: auto, mode: heat }
+    #   away    : { fan_speed: 1, target_temperature: 10, gate_position: auto, mode: fan_only }
+    #   boost   : { fan_speed: 6, target_temperature: 10, gate_position: auto, mode: fan_only }
+    #   comfort : { fan_speed: 2, target_temperature: 23, gate_position: auto, mode: heat }
+    #   eco     : { fan_speed: 1, target_temperature: 16, gate_position: auto, mode: heat }
+    #   sleep   : { fan_speed: 1, target_temperature: 18, gate_position: auto, mode: heat }
+    #   activity: { fan_speed: 3, target_temperature: 18, gate_position: auto, mode: heat }
     # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
+    # Available mode:
+    #  * off - define but disable preset
+    #  * heat - enable heater
+    #  * fan_only - fan only
+    # Available gate_position (this option is optional):
+    #  * auto - use current gate position
+    #  * outdoor - set gate position to outdoor air intake (3S and 4S only)
+    #  * indoor - set gate position to indoor air intake (3S and 4S only)
+    #  * mixed - set gate position to mixed air intake (3S only)
     presets:
-      # enable and override "home" preset
-      home: { fan_speed: 2, target_temperature: 20, mode: heat }
-      # enable "away" preset
+      # enable "home" preset and override default settings
+      home: { fan_speed: 2, target_temperature: 16, gate_position: outdoor, mode: heat }
+      # enable "away" preset with default settings
       away:
-      # enable "boost" preset
+      # enable "boost" preset with default settings
       boost:
-      # enable and override "sleep" preset
-      sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
+      # enable "sleep" preset and override default settings
+      sleep: { fan_speed: 1, target_temperature: 18, gate_position: outdoor, mode: heat }
     # Optional, configure boost time
     boost_time:
       name: "Boost Time"
@@ -119,16 +150,27 @@ climate:
       name: "Boost Time Left"
     # Optional, How often query device state. Default: 60s.
     update_interval: 60s
+    # Optional, reset filter button
+    reset_filter:
+      name: "Reset Filter"
+    # Optional, reset filter confirmation. When off then reset_filter will not work.
+    reset_filter_confirm:
+      name: "Reset Filter Confirm"
+    # Optional, Informs about get state problem from breezer.
+    state_warnout:
+      name: "State Warnout"
+    # Optional, Timout when state_warnout will be informed. Default: 3s.
+    state_timeout: 3s
 
 button:
   - platform: template
     name: "Pair"
     on_press:
-      lambda: id(tion3s_ble_vport).pair();
+      lambda: id(tion_ble_vport).pair();
     entity_category: config
   ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
   # - platform: template
   #   name: "Reset Pair"
   #   on_press:
-  #     lambda: id(tion3s_ble_vport).reset_pair();
+  #     lambda: id(tion_ble_vport).reset_pair();
   #   entity_category: config

@@ -11,12 +11,13 @@ esphome:
 esp32:
   board: $board
   framework:
-    type: $framework_type
+    type: esp-idf
 
 wifi:
   power_save_mode: light
 
 esp32_ble_tracker:
+  id: tion_esp32_ble_tracker
 
 ble_client:
   mac_address: $tion_mac_address
@@ -25,4 +26,5 @@ ble_client:
 ota:
   on_begin:
     then:
-      lambda: id(tion_ble_client).set_enabled(false);
+      lambda: |-
+        id(tion_ble_client).set_enabled(false);
