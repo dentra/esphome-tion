@@ -108,8 +108,13 @@ void TionClimate::dump_preset_(const char *tag, climate::ClimatePreset index) co
   const auto *preset_str = LOG_STR_ARG(climate::climate_preset_to_string(index));
   const auto *mode_str = LOG_STR_ARG(climate::climate_mode_to_string(preset.mode));
   const auto *gate_pos_str = gate_position_to_string(preset.gate_position);
+#ifdef USE_ESP8266
+  ESP_LOGCONFIG(tag, "    %-8s: %u, %2d, %-8s, %s", preset_str, preset.fan_speed, preset.target_temperature, mode_str,
+                gate_pos_str);
+#else
   ESP_LOGCONFIG(tag, "    %-8s: %u, %2d, %-8s, %s", str_lower_case(preset_str).c_str(), preset.fan_speed,
                 preset.target_temperature, str_lower_case(mode_str).c_str(), gate_pos_str);
+#endif
 }
 
 bool TionClimate::enable_preset_(climate::ClimatePreset new_preset) {
