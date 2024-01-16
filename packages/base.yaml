@@ -1,6 +1,6 @@
 substitutions:
   # project version
-  project_version: "master"
+  project_version: "2024.1.0"
   # project branch
   project_branch: $project_version
   # project git source
@@ -16,7 +16,7 @@ substitutions:
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "true"
   # vport and additional components configuration parameters
-  vport_version: "master"
+  vport_version: "2024.1.0"
   vport_source: github://dentra/esphome-components@$vport_version
   vport_source_refresh: 1d
 
@@ -27,7 +27,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version"
-  min_version: "2023.12.5"
+  min_version: "2023.12.6"
   platformio_options:
     build_flags:
       - -std=gnu++17

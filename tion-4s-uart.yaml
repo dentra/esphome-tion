@@ -13,7 +13,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: master # cant use substitutions here
+    ref: 2024.1.0 # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
@@ -31,7 +31,7 @@ packages:
       # - packages/tion_energy.yaml
       ## Common configuration settings. Do not comment or move or remove.
       - packages/base.yaml
-      # change to esp32_s2.yaml to use with ESP32-S2 chip or change to esp32.yaml to use with ESP32 chip.
+      # change to esp32_s2.yaml/esp32_c3.yaml to use with ESP32-S2/ESP32-C3 chip or change to esp32.yaml to use with ESP32 chip.
       - packages/esp32_s3.yaml
       ## Uncomment next line to enable additional internal timers support.
       # - packages/tion_4s_timers.yaml
@@ -156,5 +156,7 @@ climate:
     # Optional, Informs about get state problem from breezer.
     state_warnout:
       name: "State Warnout"
-    # Optional, Timout when state_warnout will be informed. Default: 3s.
+    # Optional, Timeout when state_warnout will be informed. Default: 3s.
     state_timeout: 3s
+    # Optional, Timeout to combine update operations. Default: 200ms.
+    batch_timeout: 200ms

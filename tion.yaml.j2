@@ -88,7 +88,7 @@ packages:
       - packages/esp8266.yaml
       {%- endif %}
       {%- if type == "4s" and port == "uart" %}
-      # change to esp32_s2.yaml to use with ESP32-S2 chip or change to esp32.yaml to use with ESP32 chip.
+      # change to esp32_s2.yaml/esp32_c3.yaml to use with ESP32-S2/ESP32-C3 chip or change to esp32.yaml to use with ESP32 chip.
       - packages/esp32_s3.yaml
       {%- endif %}
       {%- if port == "ble" %}
@@ -257,8 +257,10 @@ climate:
     # Optional, Informs about get state problem from breezer.
     state_warnout:
       name: "State Warnout"
-    # Optional, Timout when state_warnout will be informed. Default: 3s.
+    # Optional, Timeout when state_warnout will be informed. Default: 3s.
     state_timeout: 3s
+    # Optional, Timeout to combine update operations. Default: 200ms.
+    batch_timeout: 200ms
 
 {%- if type == "3s" and port == "ble" %}
 

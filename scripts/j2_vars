@@ -5,7 +5,7 @@ if [ "$1" != "" ]; then
   version_tion=$1
 fi
 
-version_vport=master
+version_vport=2024.1.0
 
 version_esphome=($(esphome version))
 version_esphome=${version_esphome[1]}

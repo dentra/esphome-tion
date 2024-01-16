@@ -15,7 +15,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: master # cant use substitutions here
+    ref: 2024.1.0 # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
@@ -164,5 +164,7 @@ climate:
     # Optional, Informs about get state problem from breezer.
     state_warnout:
       name: "State Warnout"
-    # Optional, Timout when state_warnout will be informed. Default: 3s.
+    # Optional, Timeout when state_warnout will be informed. Default: 3s.
     state_timeout: 3s
+    # Optional, Timeout to combine update operations. Default: 200ms.
+    batch_timeout: 200ms
