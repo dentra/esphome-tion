@@ -15,7 +15,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: 2024.1.0 # cant use substitutions here
+    ref: 2024.1.1 # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml

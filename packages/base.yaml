@@ -1,6 +1,6 @@
 substitutions:
   # project version
-  project_version: "2024.1.0"
+  project_version: "2024.1.1"
   # project branch
   project_branch: $project_version
   # project git source
