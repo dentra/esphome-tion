@@ -28,6 +28,7 @@ LIB_COMPO_VPORT_DIR="$LIB_COMPO_DIR/esphome/components/vport"
 
 SRCS=(
   "$LIB_COMPO_VPORT_DIR/*.cpp"
+  "$LIB_COMPO_DIR/esphome/components/nvs/*.cpp"
 )
 
 SRCS_ESPHOME=(
