@@ -161,6 +161,7 @@ void TionClimateComponentBase::dump_settings(const char *TAG, const char *compon
   LOG_SWITCH("  ", "Reset Filter Confirm", this->reset_filter_confirm_);
   LOG_BINARY_SENSOR("  ", "State Warnout", this->filter_warnout_);
   ESP_LOGCONFIG(TAG, "  State timeout: %.1fs", this->state_timeout_ / 1000.0f);
+  ESP_LOGCONFIG(TAG, "  Batch timeout: %.1fs", this->batch_timeout_ / 1000.0f);
 #ifdef TION_ENABLE_PRESETS
   LOG_NUMBER("  ", "Boost Time", this->boost_time_);
   LOG_SENSOR("  ", "Boost Time Left", this->boost_time_left_);
