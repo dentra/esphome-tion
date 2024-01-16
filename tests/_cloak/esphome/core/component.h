@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <cmath>
+#include <map>
 
 #include "esphome/core/optional.h"
 
@@ -153,6 +154,13 @@ class Component {
   virtual void call_setup() { this->setup(); }
   virtual void call_dump_config() { this->dump_config(); }
 
+  bool test_timeout{};
+  void test_timeout_run() {
+    for (auto [k, v] : this->test_timeouts_) {
+      v();
+    }
+  }
+
  protected:
   friend class Application;
 
@@ -233,12 +241,16 @@ class Component {
    */
   void set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f)  // NOLINT
   {
-    f();
+    if (this->test_timeout) {
+      this->test_timeouts_.emplace(name, std::move(f));
+    } else {
+      f();
+    }
   }
 
   void set_timeout(uint32_t timeout, std::function<void()> &&f)  // NOLINT
   {
-    f();
+    this->set_timeout("__default__", timeout, std::move(f));
   }
 
   /** Cancel a timeout function.
@@ -248,6 +260,9 @@ class Component {
    */
   bool cancel_timeout(const std::string &name)  // NOLINT
   {
+    if (this->test_timeout) {
+      return this->test_timeouts_.erase(name) != 0;
+    }
     return true;
   }
 
@@ -278,6 +293,8 @@ class Component {
   uint32_t component_state_{0x0000};  ///< State of this component.
   float setup_priority_override_{NAN};
   const char *component_source_{nullptr};
+
+  std::map<std::string, std::function<void()>> test_timeouts_;
 };
 
 /** This class simplifies creating components that periodically check a state.

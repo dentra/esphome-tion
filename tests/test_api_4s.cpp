@@ -28,8 +28,9 @@ class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_
     this->state_.counters.work_time = 0xFFFF;
   }
 
- protected:
   tion4s_state_t state_{};
+
+ protected:
   bool test_write_(uint16_t type, const void *data, size_t size) {
     struct req_t {
       uint32_t request_id;
@@ -46,6 +47,8 @@ class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_
       }
       this->state_.target_temperature = req->data.target_temperature;
       this->state_.gate_position = req->data.gate_position;
+      this->state_.flags.led_state = req->data.led_state;
+      this->state_.flags.sound_state = req->data.sound_state;
       // add others
 
       this->on_state(this->state_, req->request_id);
@@ -253,7 +256,34 @@ bool test_preset_update() {
   return res;
 }
 
+bool test_batch() {
+  bool res = true;
+
+  esphome::uart::UARTComponent uart;
+  Tion4sUartIOTest io(&uart);
+  Tion4sUartVPort vport(&io);
+  Tion4sUartVPortApiTest api(&vport);
+  Tion4sTest comp(&api, vport.get_type());
+
+  cloak::setup_and_loop({&vport, &comp});
+
+  comp.test_timeout = true;
+
+  comp.control_led_state(true);
+  vport.call_loop();
+  comp.control_buzzer_state(true);
+  vport.call_loop();
+  comp.test_timeout_run();
+  vport.call_loop();
+
+  res &= cloak::check_data("batch data led_state", api.state_.flags.led_state, true);
+  res &= cloak::check_data("batch data sound_state", api.state_.flags.sound_state, true);
+
+  return res;
+}
+
 REGISTER_TEST(test_api_4s);
 REGISTER_TEST(test_presets);
 REGISTER_TEST(test_heat_cool);
 REGISTER_TEST(test_preset_update);
+REGISTER_TEST(test_batch);
