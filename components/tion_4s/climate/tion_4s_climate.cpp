@@ -71,6 +71,10 @@ void Tion4sClimate::update_state(const tion4s_state_t &state) {
   if (this->recirculation_) {
     this->recirculation_->publish_state(state.gate_position != tion4s_state_t::GATE_POSITION_INFLOW);
   }
+
+  if (this->errors_) {
+    this->errors_->publish_state(state.errors);
+  }
 }
 
 void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
@@ -100,8 +104,10 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "ma_connect     : %s", ONOFF(state.flags.ma_connect));
   ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.flags.ma_auto));
   ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
-  ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);
   ESP_LOGV(TAG, "errors         : %08" PRIX32, state.errors);
+  ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);
+
+  this->enum_errors(state.errors, [this](auto code) { ESP_LOGW(TAG, "Breezer alert: %s", code.c_str()); });
 }
 
 void Tion4sClimate::control_recirculation_state(bool state) {
@@ -119,8 +125,7 @@ void Tion4sClimate::control_recirculation_state(bool state) {
   this->control_state_(control);
 }
 
-void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed,
-                                          float target_temperature,
+void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                                           TionClimateGatePosition gate_position) {
   ControlState control{};
 
@@ -307,5 +312,24 @@ void Tion4sClimate::reset_timers() {
   }
 }
 #endif
+
+void Tion4sClimate::enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const {
+  if (errors == 0) {
+    return;
+  }
+  for (uint32_t i = tion4s_state_t::ERROR_MIN_BIT; i <= tion4s_state_t::ERROR_MAX_BIT; i++) {
+    uint32_t mask = 1 << i;
+    if ((errors & mask) == mask) {
+      fn(str_snprintf("EC%02" PRIu32, 4, i + 1));
+    }
+  }
+  for (uint32_t i = tion4s_state_t::WARNING_MIN_BIT; i <= tion4s_state_t::WARNING_MAX_BIT; i++) {
+    uint32_t mask = 1 << i;
+    if ((errors & mask) == mask) {
+      fn(str_snprintf("WS%02" PRIu32, 4, i + 1));
+    }
+  }
+}
+
 }  // namespace tion
 }  // namespace esphome

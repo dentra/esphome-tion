@@ -261,6 +261,20 @@ climate:
     state_timeout: 3s
     # Optional, Timeout to combine update operations. Default: 200ms.
     batch_timeout: 200ms
+    # Optional, Reports internal errors/warnings.
+    errors:
+      name: "Errors"
+      ## You can decode this value to Tion's EC/WS codes.
+      ## where id(tion_error_codes) is a template text_sensor.
+      #on_value:
+      #  then:
+      #    lambda: |-
+      #      std::string codes;
+      #      id(tion_climate).enum_errors(x, [&codes](auto code) {
+      #        codes += (codes.empty() ? "" : ", ") + code;
+      #      });
+      #      id(tion_error_codes).publish_state(codes);
+
 
 {%- if type == "3s" and port == "ble" %}
 
@@ -277,3 +291,9 @@ button:
   #     lambda: id(tion_{{ port }}_vport).reset_pair();
   #   entity_category: config
 {%- endif %}
+
+## Uncomment if you plan to use decoded errors/warnings
+#text_sensor:
+#  - platform: template
+#    id: tion_error_codes
+#    name: "Error Codes"

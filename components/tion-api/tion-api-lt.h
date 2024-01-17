@@ -8,6 +8,8 @@ namespace tion {
 #pragma pack(push, 1)
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tionlt_state_t {
+  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 27 };
+
   enum GateState : uint8_t {
     // закрыто
     CLOSED = 1,

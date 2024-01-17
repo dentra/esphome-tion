@@ -21,6 +21,7 @@ from esphome.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_NONE,
     UNIT_CELSIUS,
     UNIT_CUBIC_METER,
     UNIT_HOUR,
@@ -69,6 +70,7 @@ CONF_STATE_WARNOUT = "state_warnout"
 CONF_FILTER_WARNOUT = "filter_warnout"
 CONF_PRODUCTIVITY = "productivity"
 CONF_BATCH_TIMEOUT = "batch_timeout"
+CONF_ERRORS = "errors"
 
 UNIT_DAYS = "d"
 UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/{UNIT_HOUR}"
@@ -204,6 +206,12 @@ def tion_schema(
                 cv.Optional(
                     CONF_BATCH_TIMEOUT, default="200ms"
                 ): cv.positive_time_period_milliseconds,
+                cv.Optional(CONF_ERRORS): sensor.sensor_schema(
+                    accuracy_decimals=0,
+                    icon="mdi:alert",
+                    state_class=STATE_CLASS_NONE,
+                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                ),
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -353,6 +361,7 @@ async def setup_tion_core(config, component_reg):
     await setup_sensor(config, CONF_PRODUCTIVITY, var.set_productivity)
 
     cg.add(var.set_batch_timeout(config[CONF_BATCH_TIMEOUT]))
+    await setup_sensor(config, CONF_ERRORS, var.set_errors)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

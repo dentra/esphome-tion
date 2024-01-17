@@ -1,3 +1,4 @@
+#include <cinttypes>
 #include "esphome/core/log.h"
 #include "esphome/core/defines.h"
 
@@ -59,6 +60,9 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
   if (this->productivity_) {
     this->productivity_->publish_state(state.productivity);
   }
+  if (this->errors_) {
+    this->errors_->publish_state(state.last_error);
+  }
 }
 
 void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
@@ -85,6 +89,8 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "productivity : %u", state.productivity);
   ESP_LOGV(TAG, "filter_days  : %u", state.filter_days);
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
+
+  this->enum_errors(state.last_error, [this](auto code) { ESP_LOGW(TAG, "Breezer alert: %s", code.c_str()); });
 }
 
 void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) {
@@ -210,6 +216,12 @@ void Tion3sClimate::control_state_(const ControlState &state) {
   // #endif
 
   this->write_api_state_(st);
+}
+
+void Tion3sClimate::enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const {
+  if (errors != 0) {
+    fn(str_snprintf("EC%02" PRIu32, 4, errors));
+  }
 }
 
 }  // namespace tion

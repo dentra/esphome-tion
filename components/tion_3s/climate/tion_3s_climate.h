@@ -50,6 +50,8 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
     }
   }
 
+  void enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const;
+
  protected:
   select::Select *air_intake_{};
 

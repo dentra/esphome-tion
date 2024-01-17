@@ -95,6 +95,8 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
     return {};
   }
 
+  void enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const;
+
  protected:
   switch_::Switch *recirculation_{};
 #ifdef TION_ENABLE_PRESETS

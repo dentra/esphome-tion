@@ -8,6 +8,8 @@ namespace tion {
 #pragma pack(push, 1)
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_state_t {
+  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 29 };
+
   enum HeaterMode : uint8_t {
     HEATER_MODE_HEATING = 0,
     HEATER_MODE_TEMPERATURE_MAINTENANCE = 1,
@@ -42,7 +44,7 @@ struct tion4s_state_t {
     uint8_t last_com_source : 1;
     // Байт 0, бит 6. Предупреждение о необходимости замены фильтра.
     bool filter_warnout : 1;
-    // Байт 0, бит 7. Мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW.
+    // Байт 0, бит 7, Байт 1, бит 0-1. Мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW.
     HeaterPresent heater_present : 3;
     // Байт 1, бит 2. Состояния подключения MagicAir.
     bool ma_connect : 1;
@@ -61,15 +63,15 @@ struct tion4s_state_t {
   uint8_t fan_speed;
   // Байт 5. sensor: outdoor temperature.
   int8_t outdoor_temperature;
-  // Байт 6.  sensor: current temperature.
+  // Байт 6. sensor: current temperature.
   int8_t current_temperature;
-  // sensor: ctrl pcb temperature.
+  // Байт 7. sensor: ctrl pcb temperature.
   int8_t pcb_ctl_temperature;
-  // sensor: pwr pcb temperature.
+  // Байт 8. sensor: pwr pcb temperature.
   int8_t pcb_pwr_temperature;
-  // counters.
+  // Байт 9-24. 9-12 - work_time, 13-16 - fan_time, 17-20 - filter_time, 21-24 - airflow_counter
   tion_state_counters_t<tion_dev_info_t::BR4S> counters;
-  // errors.
+  // Байт 25-28. Ошибки и/или предупредждения.
   uint32_t errors;
   // fan speed limit.
   uint8_t max_fan_speed;

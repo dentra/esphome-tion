@@ -52,6 +52,8 @@ class TionLtClimate : public TionLtClimateComponent<TionLtApi> {
     return {};
   }
 
+  void enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const;
+
  protected:
   binary_sensor::BinarySensor *gate_state_{};
 
