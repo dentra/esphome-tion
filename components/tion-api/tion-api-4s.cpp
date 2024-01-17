@@ -299,5 +299,17 @@ bool TionApi4s::request_test() const {
   return this->write_frame(FRAME_TYPE_TEST_REQ);
 }
 #endif
+
+bool TionApi4s::reset_errors(const tion4s_state_t &state, uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Errors reset", request_id);
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
+  auto st_set = tion4s_state_set_t::create(state);
+  st_set.error_reset = true;
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+}
+
 }  // namespace tion
 }  // namespace dentra

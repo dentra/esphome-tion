@@ -297,3 +297,13 @@ button:
 #  - platform: template
 #    id: tion_error_codes
 #    name: "Error Codes"
+
+{%- if type == "4s" or type == "lt" %}
+
+## Uncomment if you plan to use reset errors/warnings functionality
+#button:
+#  - platform: template
+#    name: "Reset Errors"
+#    on_press:
+#      - lambda: id(tion_climate).reset_errors();
+{%- endif %}

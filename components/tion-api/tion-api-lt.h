@@ -95,6 +95,7 @@ class TionLtApi : public TionApiBase<tionlt_state_t> {
   bool write_state(const tionlt_state_t &state, uint32_t request_id) const;
   bool reset_filter(const tionlt_state_t &state, uint32_t request_id = 1) const;
   bool factory_reset(const tionlt_state_t &state, uint32_t request_id = 1) const;
+  bool reset_errors(const tionlt_state_t &state, uint32_t request_id = 1) const;
 
 #ifdef TION_ENABLE_HEARTBEAT
   bool send_heartbeat() const { return false; }

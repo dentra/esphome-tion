@@ -152,6 +152,7 @@ class TionApi4s : public TionApiBase<tion4s_state_t> {
   bool write_state(const tion4s_state_t &state, uint32_t request_id) const;
   bool reset_filter(const tion4s_state_t &state, uint32_t request_id = 1) const;
   bool factory_reset(const tion4s_state_t &state, uint32_t request_id = 1) const;
+  bool reset_errors(const tion4s_state_t &state, uint32_t request_id = 1) const;
 
 #ifdef TION_ENABLE_PRESETS
   bool request_turbo() const;

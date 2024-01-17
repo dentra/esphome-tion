@@ -99,5 +99,16 @@ bool TionLtApi::factory_reset(const tionlt_state_t &state, uint32_t request_id) 
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
+bool TionLtApi::reset_errors(const tionlt_state_t &state, uint32_t request_id) const {
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Error reset", request_id);
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State is not initialized");
+    return false;
+  }
+  auto st_set = tionlt_state_set_t::create(state);
+  st_set.error_reset = true;
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+}
+
 }  // namespace tion
 }  // namespace dentra
