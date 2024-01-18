@@ -89,6 +89,7 @@ PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
     "heat": climate.ClimateMode.CLIMATE_MODE_HEAT,
     "fan_only": climate.ClimateMode.CLIMATE_MODE_FAN_ONLY,
+    "heat_cool": climate.ClimateMode.CLIMATE_MODE_HEAT_COOL,
 }
 
 PRESET_GATE_POSITIONS = {
