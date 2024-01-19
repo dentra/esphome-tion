@@ -13,7 +13,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: 2024.1.1 # cant use substitutions here
+    ref: 2024.1.2 # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
@@ -160,3 +160,20 @@ climate:
     state_timeout: 3s
     # Optional, Timeout to combine update operations. Default: 200ms.
     batch_timeout: 200ms
+    # Optional, Reports Tion's errors (EC) and warnings (WS).
+    errors:
+      name: "Errors"
+
+## Uncomment if you plan to use decoded errors/warnings
+#text_sensor:
+#  - platform: template
+#    id: tion_error_codes
+#    name: "Error Codes"
+
+## Uncomment if you plan to use reset errors/warnings functionality.
+## This feature is experimental and may partially work or no work as expected.
+#button:
+#  - platform: template
+#    name: "Reset Errors"
+#    on_press:
+#      - lambda: id(tion_climate).reset_errors();

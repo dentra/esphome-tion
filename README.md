@@ -6,7 +6,7 @@
 [![Support author][donate-boosty-shield]][donate-boosty]
 [![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
 
-[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2024.1.1&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2024.1.2&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
