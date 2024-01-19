@@ -33,7 +33,9 @@ void TionLtClimate::update_state(const tionlt_state_t &state) {
   }
 
   if (this->errors_) {
-    this->errors_->publish_state(state.errors.reg);
+    std::string codes;
+    this->enum_errors(state.errors.reg, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
+    this->errors_->publish_state(codes);
   }
 }
 

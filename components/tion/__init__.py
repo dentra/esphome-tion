@@ -207,10 +207,8 @@ def tion_schema(
                 cv.Optional(
                     CONF_BATCH_TIMEOUT, default="200ms"
                 ): cv.positive_time_period_milliseconds,
-                cv.Optional(CONF_ERRORS): sensor.sensor_schema(
-                    accuracy_decimals=0,
+                cv.Optional(CONF_ERRORS): text_sensor.text_sensor_schema(
                     icon="mdi:alert",
-                    state_class=STATE_CLASS_NONE,
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
             }
@@ -362,7 +360,7 @@ async def setup_tion_core(config, component_reg):
     await setup_sensor(config, CONF_PRODUCTIVITY, var.set_productivity)
 
     cg.add(var.set_batch_timeout(config[CONF_BATCH_TIMEOUT]))
-    await setup_sensor(config, CONF_ERRORS, var.set_errors)
+    await setup_text_sensor(config, CONF_ERRORS, var.set_errors)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

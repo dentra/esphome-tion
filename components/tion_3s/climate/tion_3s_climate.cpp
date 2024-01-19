@@ -61,7 +61,9 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
     this->productivity_->publish_state(state.productivity);
   }
   if (this->errors_) {
-    this->errors_->publish_state(state.last_error);
+    std::string codes;
+    this->enum_errors(state.last_error, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
+    this->errors_->publish_state(codes);
   }
 }
 
