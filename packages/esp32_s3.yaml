@@ -7,6 +7,10 @@ substitutions:
 esphome:
   platformio_options:
     board_build.flash_mode: dio
+    build_flags:
+      - -std=gnu++17
+    build_unflags:
+      - -std=gnu++11
 
 esp32:
   board: $board
