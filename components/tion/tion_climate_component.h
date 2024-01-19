@@ -82,7 +82,10 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     this->api_->set_on_ready(tion_api_type::on_ready_type::template create<this_t, &this_t::on_ready>(*this));
   }
 
-  void update() override { this->api_->request_state(); }
+  void update() override {
+    this->api_->request_state();
+    this->schedule_state_check_();
+  }
 
   void on_ready() {
     if (!this->state_.is_initialized()) {
@@ -95,10 +98,8 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   void on_state(const tion_state_type &state, const uint32_t request_id) {
     this->update_state(state);
 
-    if (this->state_warnout_ && this->state_timeout_ > 0) {
-      this->state_warnout_->publish_state(false);
-      this->cancel_timeout("state_timeout");
-    }
+    this->cancel_state_check_();
+
     if (this->outdoor_temperature_) {
       this->outdoor_temperature_->publish_state(state.outdoor_temperature);
     }
@@ -111,7 +112,7 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     if (this->filter_warnout_) {
       this->filter_warnout_->publish_state(state.filter_warnout());
     }
-
+    // do not update state in batch mode
     if (!this->batch_active_) {
       this->state_ = state;
     }
@@ -125,19 +126,31 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   uint32_t request_id_{};
   bool batch_active_{};
   void write_api_state_(const tion_state_type &state) {
-    ESP_LOGD("tion_climate_component", "%s batch update %u", this->batch_active_ ? "Continue" : "Starting",
+    ESP_LOGD("tion_climate_component", "%s batch update for %u ms", this->batch_active_ ? "Continue" : "Starting",
              this->batch_timeout_);
     this->batch_active_ = true;
     this->state_ = state;
-    this->set_timeout("batch_update", this->batch_timeout_, [this]() {
-      ESP_LOGD("tion_climate_component", "Write out batch changes");
-      this->api_->write_state(this->state_, ++this->request_id_);
-      if (this->state_warnout_ && this->state_timeout_ > 0) {
-        this->set_timeout("state_timeout", this->state_timeout_,
-                          [this]() { this->state_warnout_->publish_state(true); });
-      }
-      this->batch_active_ = false;
-    });
+    this->set_timeout("batch_update", this->batch_timeout_, [this]() { this->write_batch_state_(); });
+  }
+
+  void write_batch_state_() {
+    ESP_LOGD("tion_climate_component", "Write out batch changes");
+    this->api_->write_state(this->state_, ++this->request_id_);
+    this->batch_active_ = false;
+    this->schedule_state_check_();
+  }
+
+  void schedule_state_check_() {
+    if (this->state_warnout_ && this->state_timeout_ > 0) {
+      this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
+    }
+  }
+
+  void cancel_state_check_() {
+    if (this->state_warnout_ && this->state_timeout_ > 0) {
+      this->state_warnout_->publish_state(false);
+      this->cancel_timeout("state_timeout");
+    }
   }
 };
 
