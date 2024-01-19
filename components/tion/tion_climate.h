@@ -8,10 +8,6 @@
 namespace esphome {
 namespace tion {
 
-#ifdef TION_ENABLE_PRESETS
-// default boost time - 10 minutes
-#define DEFAULT_BOOST_TIME_SEC (10 * 60)
-
 enum TionClimateGatePosition : uint8_t {
   TION_CLIMATE_GATE_POSITION_NONE = 0,
   TION_CLIMATE_GATE_POSITION_OUTDOOR = 1,
@@ -19,6 +15,10 @@ enum TionClimateGatePosition : uint8_t {
   TION_CLIMATE_GATE_POSITION_MIXED = 3,
   TION_CLIMATE_GATE_POSITION__LAST = 4,  // NOLINT (bugprone-reserved-identifier)
 };
+
+#ifdef TION_ENABLE_PRESETS
+// default boost time - 10 minutes
+#define DEFAULT_BOOST_TIME_SEC (10 * 60)
 
 struct TionPreset {
   uint8_t fan_speed;
