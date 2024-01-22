@@ -15,7 +15,7 @@ substitutions:
 packages:
   tion:
     url: https://github.com/dentra/esphome-tion
-    ref: 2024.1.2 # cant use substitutions here
+    ref: 2024.1.3 # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
@@ -135,6 +135,7 @@ climate:
     #  * off - define but disable preset
     #  * heat - enable heater
     #  * fan_only - fan only
+    #  * heat_cool - do not change, use current
     # Available gate_position (this option is optional):
     #  * auto - use current gate position
     #  * outdoor - set gate position to outdoor air intake (3S and 4S only)
