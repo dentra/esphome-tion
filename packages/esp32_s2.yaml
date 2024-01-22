@@ -7,15 +7,15 @@ substitutions:
 esphome:
   platformio_options:
     board_build.flash_mode: dio
+    build_flags:
+      - -std=gnu++17
+    build_unflags:
+      - -std=gnu++11
 
 esp32:
   board: $board
   framework:
     type: esp-idf
-    build_flags:
-      - -std=gnu++17
-    build_unflags:
-      - -std=gnu++11
 
 wifi:
   power_save_mode: none
@@ -23,6 +23,8 @@ wifi:
 logger:
   # Make sure logging is not using the serial port
   baud_rate: 0
+  # Switch USB_from CDC
+  hardware_uart: UART0
 
 uart:
   - id: uart_tion
