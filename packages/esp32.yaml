@@ -8,10 +8,6 @@ esp32:
   board: $board
   framework:
     type: esp-idf
-    build_flags:
-      - -std=gnu++17
-    build_unflags:
-      - -std=gnu++11
 
 wifi:
   power_save_mode: none
