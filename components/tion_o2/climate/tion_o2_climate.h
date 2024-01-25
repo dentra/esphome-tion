@@ -29,6 +29,13 @@ class TionO2Climate : public TionClimateComponent<TionO2Api> {
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                              TionClimateGatePosition gate_position) override;
 
+  void control_buzzer_state(bool state) {
+    // FIXME implement buzzer support
+    // ControlState control{};
+    // control.buzzer = state;
+    // this->control_state_(control);
+  }
+
  protected:
   struct ControlState {
     optional<bool> power_state;

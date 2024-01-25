@@ -187,5 +187,7 @@ bool TionO2Api::send_work_mode(uint8_t work_mode) const {
   return this->write_frame(FRAME_TYPE_SET_WORK_MODE_REQ_04, data);
 }
 
+bool TionO2Api::reset_filter(const tiono2_state_t &state, uint32_t request_id) const { return false; }
+
 }  // namespace tion_o2
 }  // namespace dentra

@@ -33,7 +33,7 @@ void TionO2UartProtocol::skip_uart_data_(tion::TionUartReader *io) {
   // read out all uart data, so we can start from command delay
   while (io->available()) {
     io->read_array(buf, 1);
-    ESP_LOGD(TAG, "Skipped %02X", *buf);
+    TION_LOGD(TAG, "Skipped %02X", *buf);
   }
   this->frame_size_ = 0;
 }

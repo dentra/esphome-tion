@@ -152,7 +152,7 @@ wifi:
 
 # Virtual port configuration
 vport:
-  - platform: tion_{{ type }}{{ "_uart" if port == "uart" else "" }}
+  - platform: tion_{{ type }}{{ "_uart" if port == "uart" and type != "o2" else "" }}
     id: tion_{{ port }}_vport
     {%- if port == "ble" %}
     ble_client_id: tion_{{ port }}_client

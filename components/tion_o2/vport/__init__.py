@@ -1,7 +1,8 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 
-from .. import tion, vport  # pylint: disable=relative-beyond-top-level
+# pylint: disable-next=relative-beyond-top-level
+from ... import tion, vport
 
 AUTO_LOAD = ["vport", "tion"]
 
