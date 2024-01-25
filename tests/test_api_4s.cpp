@@ -267,17 +267,26 @@ bool test_batch() {
 
   cloak::setup_and_loop({&vport, &comp});
 
-  comp.test_timeout = true;
+  comp.test_timeout(true);
 
   comp.control_led_state(true);
   vport.call_loop();
   comp.control_buzzer_state(true);
   vport.call_loop();
-  comp.test_timeout_run();
+  comp.control_climate_state(climate::CLIMATE_MODE_HEAT, 3, 23,
+                             TionClimateGatePosition::TION_CLIMATE_GATE_POSITION_NONE);
+  vport.call_loop();
+
+  comp.test_timeout(false);
   vport.call_loop();
 
   res &= cloak::check_data("batch data led_state", api.state_.flags.led_state, true);
   res &= cloak::check_data("batch data sound_state", api.state_.flags.sound_state, true);
+  // res &= cloak::check_data("batch data heater_state", api.state_.flags.heater_state, true);
+  res &= cloak::check_data("batch data heater_mode", api.state_.flags.heater_mode,
+                           tion4s_state_t::HeaterMode::HEATER_MODE_HEATING);
+  res &= cloak::check_data("batch data fan_speed", api.state_.fan_speed, 3);
+  res &= cloak::check_data("batch data target_temperature", api.state_.target_temperature, 23);
 
   return res;
 }

@@ -9,10 +9,12 @@ substitutions:
   # name for main climate entity and prefix for all others.
   friendly_name: $node_name
   # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "{{ 'true' if node_add_mac_suffix == 'true' else 'false' }}"
+  node_add_mac_suffix: "{{ 'true' if enable_node_add_mac_suffix == 'true' else 'false' }}"
   {%- if type == "3s" and port == "uart" %}
   # board
   board: esp01_1m
+  {%- endif %}
+  {%- if type in ["3s", "o2"] and port == "uart" %}
   # uart configuration
   # make sure to use YOUR pins!
   tx_pin: TX
@@ -63,21 +65,27 @@ packages:
       ## Enable maximum target temperature to 30°C. Comment next line to disable.
       - packages/tion_temperature30c.yaml
       {%- endif %}
-      ## Enable heat_cool mode to workaraund when using Home Assistant turn_on service.
-      {{ "" if tion_enable_heat_cool == "true" else "# " -}}
+      ## Uncomment to enable heat_cool mode to workaraund when using Home Assistant turn_on service.
+      {{ "" if enable_heat_cool == "true" else "# " -}}
       - packages/tion_enable_heat_cool.yaml
       {%- if type != "3s" %}
       ## Uncomment next line to enable additional energy sensor.
-      {{ "" if tion_energy == "true" else "# " -}}
+      {{ "" if enable_energy == "true" else "# " -}}
       - packages/tion_energy.yaml
       {%- endif %}
       {%- if type == "3s" and port == "uart" %}
       ## Comment to disable uart proxy support.
       - packages/tion_3s_proxy.yaml
       {%- endif %}
-      {%- if type == "3s" %}
+      {%- if type == "o2" and port == "uart" %}
+      ## Unomment to enable uart proxy support.
+      # - packages/tion_o2_proxy.yaml
+      {%- endif %}
+      {%- if type in ["3s", "o2"] %}
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_3s_enable_antifrize.yaml
+      {%- endif %}
+      {%- if type == "3s" %}
       ## Turn the breezer off before enable heat mode.
       - packages/tion_3s_enable_off_before_heat.yaml
       {%- endif %}
@@ -87,8 +95,12 @@ packages:
       ## Change to packages/esp32.yaml if you want to use ESP32.
       - packages/esp8266.yaml
       {%- endif %}
+      {%- if type == "o2" and port == "uart" %}
+      # Change to esp32_s2.yaml/esp32_c3.yaml/esp32_s3.yaml to use with ESP32-S2/C3/S3 chip.
+      - packages/esp32.yaml
+      {%- endif %}
       {%- if type == "4s" and port == "uart" %}
-      # change to esp32_s2.yaml/esp32_c3.yaml to use with ESP32-S2/ESP32-C3 chip or change to esp32.yaml to use with ESP32 chip.
+      # Change to esp32_s2.yaml/esp32_c3.yaml to use with ESP32-S2/ESP32-C3 chip or change to esp32.yaml to use with ESP32 chip.
       - packages/esp32_s3.yaml
       {%- endif %}
       {%- if port == "ble" %}
@@ -105,8 +117,12 @@ packages:
       {%- endif %}
       {%- if type != "3s" or port != "uart" %}
       ## Uncomment next line to enable monitor internal ESP temperature.
+      {{ "" if enable_esp32_temperature == "true" else "# " -}}
       # - packages/esp32_temperature.yaml
       {%- endif %}
+      ## Uncomment next line to enable web server support.
+      {{ "" if enable_web_server == "true" else "# " -}}
+      - packages/web_server.yaml
       ## Uncomment next line to enable additional debug information.
       # - packages/debug.yaml
     {%- if (packages_refresh|length) > 0 %}
@@ -159,6 +175,10 @@ vport:
     ## Optional, Interval between sending heartbeat commands. Default: 5s.
     # heartbeat_interval: 5s
     {%- endif %}
+    {%- if type == "o2" and port == "uart" %}
+    ## Optional, Interval between sending heartbeat commands. Default: 200ms.
+    # heartbeat_interval: 200ms
+    {%- endif %}
 
 # Main climate component configuration.
 climate:
@@ -178,7 +198,7 @@ climate:
     led:
       name: "Led"
     {%- endif %}
-    {%- if type != "3s" %}
+    {%- if type not in ["3s", "o2"] %}
     # Optional, Heater power, W (watt).
     heater_power:
       name: "Heater power"
@@ -284,13 +304,7 @@ button:
   #   entity_category: config
 {%- endif %}
 
-## Uncomment if you plan to use decoded errors/warnings
-#text_sensor:
-#  - platform: template
-#    id: tion_error_codes
-#    name: "Error Codes"
-
-{%- if type == "4s" or type == "lt" %}
+{%- if type in ["4s", "lt"] %}
 
 ## Uncomment if you plan to use reset errors/warnings functionality.
 ## This feature is experimental and may partially work or no work as expected.

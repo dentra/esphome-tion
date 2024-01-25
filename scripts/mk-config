@@ -6,7 +6,7 @@ prj_path=$(dirname $0)/..
 
 tfn=$prj_path/tion.yaml.j2
 
-types=(lt-ble 4s-ble 4s-uart 3s-ble 3s-uart)
+types=(lt-ble 4s-ble 4s-uart 3s-ble 3s-uart o2-uart)
 for br in "${types[@]}" ; do
   parts=(${br//-/ })
   port=${parts[1]}

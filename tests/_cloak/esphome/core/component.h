@@ -154,14 +154,18 @@ class Component {
   virtual void call_setup() { this->setup(); }
   virtual void call_dump_config() { this->dump_config(); }
 
-  bool test_timeout{};
-  void test_timeout_run() {
-    for (auto [k, v] : this->test_timeouts_) {
-      v();
+  void test_timeout(bool start) {
+    if (!start) {
+      for (auto [k, v] : this->test_timeouts_) {
+        v();
+      }
     }
+    this->test_timeout_ = start;
   }
 
  protected:
+  bool test_timeout_{};
+
   friend class Application;
 
   /** Set an interval function with a unique name. Empty name means no cancelling possible.
@@ -241,7 +245,7 @@ class Component {
    */
   void set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f)  // NOLINT
   {
-    if (this->test_timeout) {
+    if (this->test_timeout_) {
       this->test_timeouts_.emplace(name, std::move(f));
     } else {
       f();
@@ -260,7 +264,7 @@ class Component {
    */
   bool cancel_timeout(const std::string &name)  // NOLINT
   {
-    if (this->test_timeout) {
+    if (this->test_timeout_) {
       return this->test_timeouts_.erase(name) != 0;
     }
     return true;
