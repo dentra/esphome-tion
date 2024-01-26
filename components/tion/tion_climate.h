@@ -41,7 +41,9 @@ struct TionPreset {
 #define TION_MAX_TEMPERATURE TION_DEFAULT_MAX_TEMPERATURE
 #endif
 
+#ifndef TION_MAX_FAN_SPEED
 #define TION_MAX_FAN_SPEED 6
+#endif
 
 class TionClimate : public climate::Climate {
  public:
@@ -128,7 +130,7 @@ class TionClimate : public climate::Climate {
        .target_temperature = 10,
        .mode = climate::CLIMATE_MODE_FAN_ONLY,
        .gate_position = TION_CLIMATE_GATE_POSITION_NONE},  // AWAY
-      {.fan_speed = 6,
+      {.fan_speed = TION_MAX_FAN_SPEED,
        .target_temperature = 10,
        .mode = climate::CLIMATE_MODE_FAN_ONLY,
        .gate_position = TION_CLIMATE_GATE_POSITION_NONE},  // BOOST

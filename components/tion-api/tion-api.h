@@ -14,6 +14,7 @@ namespace tion {
 struct tion_dev_info_t {
   // NOLINTNEXTLINE(readability-identifier-naming)
   enum work_mode_t : uint8_t {
+    UNKNOWN = 0,
     // обычный режим работы
     NORMAL = 1,
     // бризер находится в режиме обновления
@@ -21,6 +22,8 @@ struct tion_dev_info_t {
   } work_mode;
   // NOLINTNEXTLINE(readability-identifier-naming)
   enum device_type_t : uint32_t {
+    BRO2 = 1,
+    BR3S = 2,
     // Tion IQ 200
     IQ200 = 0x8001,
     // Tion Lite

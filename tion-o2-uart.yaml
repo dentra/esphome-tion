@@ -1,0 +1,151 @@
+substitutions:
+  # name of the node.
+  node_name: tion-o2
+  # name for main climate entity and prefix for all others.
+  friendly_name: $node_name
+  # add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "false"
+  # uart configuration
+  # make sure to use YOUR pins!
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: "115200"
+  # uart proxy configuration (optional)
+  # make sure to use YOUR pins!
+  proxy_tx_pin: GPIO15
+  proxy_rx_pin: GPIO13
+  proxy_baud_rate: "115200"
+
+  # wifi settings.
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password
+
+  project_source_refresh: 1h
+  project_branch: master
+
+packages:
+  tion:
+    refresh: 1h
+    url: https://github.com/dentra/esphome-tion
+    ref: master # cant use substitutions here
+    files:
+      ## Enable additional WiFi signal sensor. Comment next line to disable.
+      - packages/wifi_signal.yaml
+      ## Enable additional Uptime sensor. Comment next line to disable.
+      - packages/uptime.yaml
+      ## Enable additional Restart button. Comment next line to disable.
+      - packages/restart.yaml
+      ## Base climate definition. Do not comment or move or remove.
+      - packages/tion_o2_climate.yaml
+      ## Enable maximum target temperature to 30°C. Comment next line to disable.
+      - packages/tion_temperature30c.yaml
+      ## Uncomment to enable heat_cool mode to workaraund when using Home Assistant turn_on service.
+      # - packages/tion_enable_heat_cool.yaml
+      ## Uncomment next line to enable additional energy sensor.
+      # - packages/tion_energy.yaml
+      ## Unomment to enable uart proxy support.
+      #- packages/tion_o2_proxy.yaml
+      ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
+      - packages/tion_3s_enable_antifrize.yaml
+      ## Common configuration settings. Do not comment or move or remove.
+      - packages/base.yaml
+      # Change to esp32_s2.yaml/esp32_c3.yaml/esp32_s3.yaml to use with ESP32-S2/C3/S3 chip.
+      - packages/esp32.yaml
+      ## Uncomment next line to enable monitor internal ESP temperature.
+      # # - packages/esp32_temperature.yaml
+      ## Uncomment next line to enable web server support.
+      # - packages/web_server.yaml
+      ## Uncomment next line to enable additional debug information.
+      # - packages/debug.yaml
+
+# Uncomment to enable MQTT connecion.
+# WARNINIG: If you leave next api section for logging purpose
+#           and do not use Home Assistant, you need to uncomment
+#           reboot_timeout parameter.
+# mqtt:
+#   broker: !secret mqtt_borker
+#   port: !secret mqtt_port
+#   username: !secret mqtt_username
+#   password: !secret mqtt_password
+
+# Enable Home Assistant API connection. Please do not remove to keep logs functioning.
+api:
+  # Uncomment next line if you do not use Home Assistant.
+  #reboot_timeout: 0s
+
+# WiFi hotspot configuration.
+# Comment next 3 lines to enable manual WiFi conviguration via access point.
+wifi:
+  ssid: $wifi_ssid
+  password: $wifi_password
+
+# Virtual port configuration
+vport:
+  - platform: tion_o2
+    id: tion_uart_vport
+    uart_id: uart_tion
+    ## Optional, Interval between sending commmands. Set to 0ms to send one command per loop.
+    # command_interval: 20ms
+    ## Optional, Command queue size. Default: 10.
+    # command_queue_size: 16
+    ## Optional, Interval between sending heartbeat commands. Default: 200ms.
+    # heartbeat_interval: 200ms
+
+# Main climate component configuration.
+climate:
+  - id: !extend tion_climate
+    # Required, the name of climate entity
+    name: None # use friendly_name
+    # Optional, virtual port id. Default: autodetect
+    vport_id: tion_uart_vport
+    # Optional, Temperatire of air before heater, °C (celsius).
+    outdoor_temperature:
+      name: "Outdoor Temperature"
+    # Optional, Current productivity, m³/h (cubic meters per hour).
+    productivity:
+      name: "Productivity"
+    # Optional, Tion firmware version.
+    version:
+      name: "Version"
+    # Optional, Enable presets. Default: <empty> (no presets)
+    # Available configurable presets: home, away, boost, comfort, eco, sleep, activity.
+    # Defaults:
+    #   home    : { fan_speed: 2, target_temperature: 20, gate_position: auto, mode: heat }
+    #   away    : { fan_speed: 1, target_temperature: 10, gate_position: auto, mode: fan_only }
+    #   boost   : { fan_speed: 6, target_temperature: 10, gate_position: auto, mode: fan_only }
+    #   comfort : { fan_speed: 2, target_temperature: 23, gate_position: auto, mode: heat }
+    #   eco     : { fan_speed: 1, target_temperature: 16, gate_position: auto, mode: heat }
+    #   sleep   : { fan_speed: 1, target_temperature: 18, gate_position: auto, mode: heat }
+    #   activity: { fan_speed: 3, target_temperature: 18, gate_position: auto, mode: heat }
+    # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
+    # Available mode:
+    #  * off - define but disable preset
+    #  * heat - enable heater
+    #  * fan_only - fan only
+    #  * heat_cool - do not change, use current
+    # Available gate_position (this option is optional and only if supports by your breezer):
+    #  * auto - use current gate position
+    presets:
+      # enable "home" preset and override default settings
+      home: { fan_speed: 2, target_temperature: 16, mode: heat }
+      # enable "away" preset with default settings
+      away:
+      # enable "boost" preset with default settings
+      boost:
+      # enable "sleep" preset and override default settings
+      sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
+    # Optional, configure boost time
+    boost_time:
+      name: "Boost Time"
+    # Optional, display remaining boost time
+    boost_time_left:
+      name: "Boost Time Left"
+    # Optional, How often query device state. Default: 60s.
+    update_interval: 30s
+    # Optional, Informs about get state problem from breezer.
+    state_warnout:
+      name: "State Warnout"
+    # Optional, Timeout when state_warnout will be informed. Default: 3s.
+    state_timeout: 3s
+    # Optional, Timeout to combine update operations. Default: 200ms.
+    batch_timeout: 200ms

@@ -190,9 +190,11 @@ climate:
     # Optional, Temperatire of air before heater, °C (celsius).
     outdoor_temperature:
       name: "Outdoor Temperature"
+    {%- if type != "o2" %}
     # Optional, Buzzer control switch.
     buzzer:
       name: "Buzzer"
+    {%- endif %}
     {%- if type == "4s" %}
     # Optional, Led control switch.
     led:
@@ -224,12 +226,14 @@ climate:
     # Optional, Current productivity, m³/h (cubic meters per hour).
     productivity:
       name: "Productivity"
+    {%- if type != "o2" %}
     # Optional, Filter time left counter, days.
     filter_time_left:
       name: "Filter Time Left"
     # Optional, Filter warning state.
     filter_warnout:
       name: "Filter Warnout"
+    {%- endif %}
     # Optional, Tion firmware version.
     version:
       name: "Version"
@@ -249,11 +253,15 @@ climate:
     #  * heat - enable heater
     #  * fan_only - fan only
     #  * heat_cool - do not change, use current
-    # Available gate_position (this option is optional):
+    # Available gate_position (this option is optional and only if supports by your breezer):
     #  * auto - use current gate position
+    {%- if type in ["3s", "4s"] %}
     #  * outdoor - set gate position to outdoor air intake (3S and 4S only)
     #  * indoor - set gate position to indoor air intake (3S and 4S only)
+    {%- endif %}
+    {%- if type == "3s" %}
     #  * mixed - set gate position to mixed air intake (3S only)
+    {%- endif %}
     presets:
       # enable "home" preset and override default settings
       home: { fan_speed: 2, target_temperature: 16, gate_position: outdoor, mode: heat }
@@ -271,12 +279,14 @@ climate:
       name: "Boost Time Left"
     # Optional, How often query device state. Default: 60s.
     update_interval: {{ "30s" if port == "uart" else "60s" }}
+    {%- if type != "o2" %}
     # Optional, reset filter button
     reset_filter:
       name: "Reset Filter"
     # Optional, reset filter confirmation. When off then reset_filter will not work.
     reset_filter_confirm:
       name: "Reset Filter Confirm"
+    {%- endif %}
     # Optional, Informs about get state problem from breezer.
     state_warnout:
       name: "State Warnout"
@@ -284,9 +294,11 @@ climate:
     state_timeout: 3s
     # Optional, Timeout to combine update operations. Default: 200ms.
     batch_timeout: 200ms
+    {%- if type != "o2" %}
     # Optional, Reports Tion's errors (EC) and warnings (WS).
     errors:
       name: "Errors"
+    {%- endif %}
 
 {%- if type == "3s" and port == "ble" %}
 

@@ -1,5 +1,5 @@
+import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import select
 from esphome.cpp_generator import MockObjClass
 
 # pylint: disable-next=relative-beyond-top-level
@@ -20,3 +20,4 @@ async def setup_tion_o2(config, compoent_reg):
     """Code generation entry point"""
     # pylint: disable-next=unused-variable
     var = await tion.setup_tion_core(config, compoent_reg)
+    cg.add_build_flag("-DTION_MAX_FAN_SPEED=4")
