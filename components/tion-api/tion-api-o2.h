@@ -43,19 +43,13 @@ struct tiono2_state_t {
   struct {
     // Время наработки в секундах.
     uint32_t work_time;
-    uint32_t work_time_days() const { return this->work_time / (24 * 60 * 60); }
-    uint8_t filter_time_left() const { return 0; }
+    uint32_t filter_time;
+    uint32_t work_time_days() const { return this->work_time / (24 * 3600); }
+    uint32_t filter_time_left() const { return this->filter_time / (24 * 3600); }
   } counters;
-  // Байт 14.
-  uint8_t unknown14;
-  // Байт 15.
-  uint8_t unknown15;  // F4 | F5 | F6 | 73?
-  // Байт 16. Возможно остаток ресурса фильтра, были значения 203, на след день 202
-  uint8_t unknown16;  // CA | CB?
-  // Байт 17.
-  uint8_t unknown17;  // 01
 
-  bool filter_warnout() const { return false; }
+  bool filter_warnout() const { return this->counters.filter_time <= 30; }
+
   // FIXME сейчас первое попавшееся значение
   bool is_initialized() const { return this->counters.work_time != 0; }
 
