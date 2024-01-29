@@ -148,19 +148,41 @@ void TionClimateComponentBase::cancel_boost() {
 void TionClimateComponentBase::dump_settings(const char *TAG, const char *component) const {
   LOG_CLIMATE(component, "", this);
   LOG_UPDATE_INTERVAL(this);
+#ifdef USE_TION_VERSION
   LOG_TEXT_SENSOR("  ", "Version", this->version_);
+#endif
+#ifdef USE_TION_BUZZER
   LOG_SWITCH("  ", "Buzzer", this->buzzer_);
+#endif
+#ifdef USE_TION_LED
   LOG_SWITCH("  ", "Led", this->led_);
+#endif
+#ifdef USE_TION_OUTDOOR_TEMPERATURE
   LOG_SENSOR("  ", "Outdoor Temperature", this->outdoor_temperature_);
+#endif
+#ifdef USE_TION_HEATER_POWER
   LOG_SENSOR("  ", "Heater Power", this->heater_power_);
+#endif
+#ifdef USE_TION_PRODUCTIVITY
   LOG_SENSOR("  ", "Productivity", this->productivity_);
+#endif
+#ifdef USE_TION_AIRFLOW_COUNTER
   LOG_SENSOR("  ", "Airflow Counter", this->airflow_counter_);
+#endif
+#ifdef USE_TION_FILTER_TIME_LEFT
   LOG_SENSOR("  ", "Filter Time Left", this->filter_time_left_);
+#endif
+#ifdef USE_TION_FILTER_WARNOUT
   LOG_BINARY_SENSOR("  ", "Filter Warnout", this->filter_warnout_);
+#endif
+#ifdef USE_TION_RESET_FILTER
   LOG_BUTTON("  ", "Reset Filter", this->reset_filter_);
   LOG_SWITCH("  ", "Reset Filter Confirm", this->reset_filter_confirm_);
-  LOG_BINARY_SENSOR("  ", "State Warnout", this->filter_warnout_);
+#endif
+#ifdef USE_TION_STATE_WARNOUT
+  LOG_BINARY_SENSOR("  ", "State Warnout", this->state_warnout_);
   ESP_LOGCONFIG(TAG, "  State timeout: %.1fs", this->state_timeout_ / 1000.0f);
+#endif
   ESP_LOGCONFIG(TAG, "  Batch timeout: %.1fs", this->batch_timeout_ / 1000.0f);
 #ifdef TION_ENABLE_PRESETS
   LOG_NUMBER("  ", "Boost Time", this->boost_time_);

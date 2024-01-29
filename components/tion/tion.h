@@ -49,9 +49,11 @@ template<class parent_t> class TionResetFilterButton : public Parented<parent_t>
  public:
   explicit TionResetFilterButton(parent_t *parent) : Parented<parent_t>(parent) {}
   void press_action() override {
+#ifdef USE_TION_RESET_FILTER
     if (this->parent_->is_reset_filter_confirmed()) {
       this->parent_->reset_filter();
     }
+#endif
   }
 };
 #endif

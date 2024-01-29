@@ -99,19 +99,31 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     this->update_state(state);
 
     this->cancel_state_check_();
-
+#ifdef USE_TION_OUTDOOR_TEMPERATURE
     if (this->outdoor_temperature_) {
       this->outdoor_temperature_->publish_state(state.outdoor_temperature);
     }
+#endif
+#ifdef USE_TION_BUZZER
     if (this->buzzer_) {
       this->buzzer_->publish_state(state.flags.sound_state);
     }
+#endif
+#ifdef USE_TION_FILTER_TIME_LEFT
     if (this->filter_time_left_) {
       this->filter_time_left_->publish_state(state.counters.filter_time_left());
     }
+#endif
+#ifdef USE_TION_FILTER_WARNOUT
     if (this->filter_warnout_) {
       this->filter_warnout_->publish_state(state.filter_warnout());
     }
+#endif
+#ifdef USE_TION_WORK_TIME
+    if (this->work_time_) {
+      this->work_time_->publish_state(state.counters.work_time);
+    }
+#endif
     // do not update state in batch mode
     if (!this->batch_active_) {
       this->state_ = state;
@@ -141,16 +153,20 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
   }
 
   void schedule_state_check_() {
+#ifdef USE_TION_STATE_WARNOUT
     if (this->state_warnout_ && this->state_timeout_ > 0) {
       this->set_timeout("state_timeout", this->state_timeout_, [this]() { this->state_warnout_->publish_state(true); });
     }
+#endif
   }
 
   void cancel_state_check_() {
+#ifdef USE_TION_STATE_WARNOUT
     if (this->state_warnout_ && this->state_timeout_ > 0) {
       this->state_warnout_->publish_state(false);
       this->cancel_timeout("state_timeout");
     }
+#endif
   }
 };
 
@@ -165,22 +181,30 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
   }
 
   void on_state(const tion_state_type &state, const uint32_t request_id) {
+#ifdef USE_TION_PRODUCTIVITY
     // this->state_ will set to new state in TionClimateComponent::on_state,
     // so save some vars here
     auto prev_airflow_counter = this->state_.counters.airflow_counter;
     auto prev_fan_time = this->state_.counters.fan_time;
+#endif
 
     TionClimateComponent<tion_api_type>::on_state(state, request_id);
-
+#ifdef USE_TION_LED
     if (this->led_) {
       this->led_->publish_state(state.flags.led_state);
     }
+#endif
+#ifdef USE_TION_HEATER_POWER
     if (this->heater_power_) {
       this->heater_power_->publish_state(state.heater_power());
     }
+#endif
+#ifdef USE_TION_AIRFLOW_COUNTER
     if (this->airflow_counter_) {
       this->airflow_counter_->publish_state(state.counters.airflow());
     }
+#endif
+#ifdef USE_TION_PRODUCTIVITY
     if (this->productivity_ && prev_fan_time != 0) {
       auto diff_time = state.counters.fan_time - prev_fan_time;
       if (diff_time == 0) {
@@ -190,6 +214,7 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
         this->productivity_->publish_state(float(diff_airflow) / float(diff_time) * float(state.counters.airflow_k()));
       }
     }
+#endif
   }
 };
 

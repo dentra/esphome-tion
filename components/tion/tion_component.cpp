@@ -31,9 +31,11 @@ void TionComponent::call_setup() {
 }
 
 void TionComponent::update_dev_info_(const dentra::tion::tion_dev_info_t &info) {
+#ifdef USE_TION_VERSION
   if (this->version_ != nullptr) {
     this->version_->publish_state(str_snprintf("%04X", 4, info.firmware_version));
   }
+#endif
 #if TION_LOG_LEVEL >= TION_LOG_LEVEL_VERBOSE
   const char *work_mode_str;
   if (info.work_mode == dentra::tion::tion_dev_info_t::NORMAL) {

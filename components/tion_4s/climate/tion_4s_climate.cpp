@@ -72,11 +72,13 @@ void Tion4sClimate::update_state(const tion4s_state_t &state) {
     this->recirculation_->publish_state(state.gate_position != tion4s_state_t::GATE_POSITION_INFLOW);
   }
 
+#ifdef USE_TION_ERRORS
   if (this->errors_) {
     std::string codes;
     this->enum_errors(state.errors, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
     this->errors_->publish_state(codes);
   }
+#endif
 }
 
 void Tion4sClimate::dump_state(const tion4s_state_t &state) const {

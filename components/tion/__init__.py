@@ -71,6 +71,7 @@ CONF_FILTER_WARNOUT = "filter_warnout"
 CONF_PRODUCTIVITY = "productivity"
 CONF_BATCH_TIMEOUT = "batch_timeout"
 CONF_ERRORS = "errors"
+CONF_WORK_TIME = "work_time"
 
 UNIT_DAYS = "d"
 UNIT_CUBIC_METER_PER_HOUR = f"{UNIT_CUBIC_METER}/{UNIT_HOUR}"
@@ -211,6 +212,13 @@ def tion_schema(
                     icon="mdi:alert",
                     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
                 ),
+                cv.Optional(CONF_WORK_TIME): sensor.sensor_schema(
+                    unit_of_measurement=UNIT_SECOND,
+                    accuracy_decimals=0,
+                    icon="mdi:power",
+                    device_class=DEVICE_CLASS_DURATION,
+                    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+                ),
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -222,39 +230,43 @@ def tion_vport_ble_schema(vport_class: MockObjClass, io_class: MockObjClass):
     return vport.vport_ble_schema(vport_class, io_class)
 
 
-async def setup_binary_sensor(config, key, setter):
+async def setup_binary_sensor(config: dict, key: str, setter):
     """Setup binary sensor"""
     if key not in config:
         return None
     sens = await binary_sensor.new_binary_sensor(config[key])
     cg.add(setter(sens))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return sens
 
 
-async def setup_switch(config, key, setter, parent):
+async def setup_switch(config: dict, key: str, setter, parent):
     """Setup switch"""
     if key not in config:
         return None
     swch = await switch.new_switch(config[key], parent)
     cg.add(setter(swch))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return swch
 
 
-async def setup_sensor(config, key, setter):
+async def setup_sensor(config: dict, key: str, setter):
     """Setup sensor"""
     if key not in config:
         return None
     sens = await sensor.new_sensor(config[key])
     cg.add(setter(sens))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return sens
 
 
-async def setup_text_sensor(config, key, setter):
+async def setup_text_sensor(config: dict, key: str, setter):
     """Setup text sensor"""
     if key not in config:
         return None
     sens = await text_sensor.new_text_sensor(config[key])
     cg.add(setter(sens))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return sens
 
 
@@ -268,10 +280,11 @@ async def setup_number(
         config[CONF_BOOST_TIME], min_value=min_value, max_value=max_value, step=step
     )
     cg.add(setter(numb))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return numb
 
 
-async def setup_select(config, key, setter, parent, options):
+async def setup_select(config: dict, key: str, setter, parent, options):
     """Setup select"""
     if key not in config:
         return None
@@ -279,6 +292,7 @@ async def setup_select(config, key, setter, parent, options):
     slct = cg.new_Pvariable(conf[CONF_ID], parent)
     await select.register_select(slct, conf, options=options)
     cg.add(setter(slct))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return slct
 
 
@@ -314,12 +328,13 @@ async def setup_presets(config, key, setter) -> bool:
     return True
 
 
-async def setup_button(config, key, setter, parent):
+async def setup_button(config: dict, key: str, setter, parent):
     """Setup button"""
     if key not in config:
         return None
     butn = await button.new_button(config[key], parent)
     cg.add(setter(butn))
+    cg.add_define(f"USE_TION_{key.upper()}")
     return butn
 
 
@@ -361,6 +376,8 @@ async def setup_tion_core(config, component_reg):
 
     cg.add(var.set_batch_timeout(config[CONF_BATCH_TIMEOUT]))
     await setup_text_sensor(config, CONF_ERRORS, var.set_errors)
+
+    await setup_sensor(config, CONF_WORK_TIME, var.set_work_time)
 
     cg.add_build_flag("-DTION_ESPHOME")
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")

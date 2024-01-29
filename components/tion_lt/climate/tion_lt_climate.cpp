@@ -31,12 +31,13 @@ void TionLtClimate::update_state(const tionlt_state_t &state) {
   if (this->gate_state_) {
     this->gate_state_->publish_state(state.gate_state == tionlt_state_t::GateState::OPENED);
   }
-
+#ifdef USE_TION_ERRORS
   if (this->errors_) {
     std::string codes;
     this->enum_errors(state.errors.reg, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
     this->errors_->publish_state(codes);
   }
+#endif
 }
 
 void TionLtClimate::dump_state(const tionlt_state_t &state) const {

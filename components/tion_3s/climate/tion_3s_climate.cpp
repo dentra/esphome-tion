@@ -47,24 +47,29 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
-
+#ifdef USE_TION_VERSION
   if (this->version_ && state.firmware_version > 0) {
     this->version_->publish_state(str_snprintf("%04X", 4, state.firmware_version));
   }
+#endif
   if (this->air_intake_) {
     auto air_intake = this->air_intake_->at(state.gate_position);
     if (air_intake.has_value()) {
       this->air_intake_->publish_state(*air_intake);
     }
   }
+#ifdef USE_TION_PRODUCTIVITY
   if (this->productivity_) {
     this->productivity_->publish_state(state.productivity);
   }
+#endif
+#ifdef USE_TION_ERRORS
   if (this->errors_) {
     std::string codes;
     this->enum_errors(state.last_error, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
     this->errors_->publish_state(codes);
   }
+#endif
 }
 
 void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
@@ -198,12 +203,9 @@ void Tion3sClimate::control_state_(const ControlState &state) {
   }
 
 #ifdef TION_ENABLE_ANTIFRIZE
-  if (st.flags.power_state && !st.flags.heater_state && this->outdoor_temperature_) {
-    auto outdoor_temperature = this->outdoor_temperature_->state;
-    if (!std::isnan(outdoor_temperature) && outdoor_temperature < 0.001) {
-      ESP_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
-      st.flags.heater_state = true;
-    }
+  if (st.flags.power_state && !st.flags.heater_state && st.outdoor_temperature < 0) {
+    ESP_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
+    st.flags.heater_state = true;
   }
 #endif
 
