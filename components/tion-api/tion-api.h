@@ -47,9 +47,10 @@ template<tion_dev_info_t::device_type_t DT> struct tion_state_counters_t {
   // Airflow counter, m3=airflow_counter * 15.0 / 3600.0.
   uint32_t airflow_counter;
   // Calculated airflow in m3.
-  float airflow() const { return airflow_counter * (float(airflow_k()) / 3600.0f); }
+  float airflow() const { return this->airflow_counter * (float(this->airflow_k()) / 3600.0f); }
   // Calculated filter days left
-  uint32_t filter_time_left() const { return filter_time / (24 * 3600); }
+  uint32_t filter_time_left() const { return this->filter_time / (24 * 3600); }
+  uint32_t work_time_days() const { return this->work_time / (24 * 3600); }
 
   constexpr size_t airflow_k() const {
     if constexpr (DT == tion_dev_info_t::device_type_t::BRLT) {

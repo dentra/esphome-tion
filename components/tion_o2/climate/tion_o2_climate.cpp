@@ -49,10 +49,11 @@ void TionO2Climate::update_state(const tiono2_state_t &state) {
   this->target_temperature = state.target_temperature;
   this->set_fan_speed_(state.fan_speed);
   this->publish_state();
-
+#ifdef USE_TION_PRODUCTIVITY
   if (this->productivity_) {
     this->productivity_->publish_state(state.productivity);
   }
+#endif
 }
 
 static char bits_str_buf[9]{};
@@ -65,19 +66,18 @@ const char *bits_str(uint8_t v) {
 
 void TionO2Climate::dump_state(const tiono2_state_t &state) const {
   ESP_LOGD(TAG, "flags       : %s", bits_str(*reinterpret_cast<const uint8_t *>(&state.flags)));
-  ESP_LOGD(TAG, "outdoor_temp: %d", state.outdoor_temperature);
-  ESP_LOGD(TAG, "current_temp: %d", state.current_temperature);
-  ESP_LOGD(TAG, "target_temp : %d", state.current_temperature);
-  ESP_LOGD(TAG, "fan_speed   : %d", state.fan_speed);
-  ESP_LOGD(TAG, "productivity: %d", state.productivity);
+  ESP_LOGV(TAG, "flags.power : %s", ONOFF(state.flags.power_state));
+  ESP_LOGV(TAG, "flags.heat  : %s", ONOFF(state.flags.heater_state));
+  ESP_LOGV(TAG, "outdoor_temp: %d", state.outdoor_temperature);
+  ESP_LOGV(TAG, "current_temp: %d", state.current_temperature);
+  ESP_LOGV(TAG, "target_temp : %d", state.current_temperature);
+  ESP_LOGV(TAG, "fan_speed   : %d", state.fan_speed);
+  ESP_LOGV(TAG, "productivity: %d", state.productivity);
   DUMP_UNK(unknown7);
   DUMP_UNK(unknown8);
   DUMP_UNK(unknown9);
-  ESP_LOGD(TAG, "work_time   : %" PRIu32, state.counters.work_time_days());
-  DUMP_UNK(unknown14);
-  DUMP_UNK(unknown15);
-  DUMP_UNK(unknown16);
-  DUMP_UNK(unknown17);
+  ESP_LOGV(TAG, "work_time   : %" PRIu32, state.counters.work_time_days());
+  ESP_LOGV(TAG, "filter_time : %" PRIu32, state.counters.filter_time_left());
 }
 
 void TionO2Climate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
@@ -132,12 +132,9 @@ void TionO2Climate::control_state_(const ControlState &state) {
   }
 
 #ifdef TION_ENABLE_ANTIFRIZE
-  if (st.flags.power_state && !st.flags.heater_state && this->outdoor_temperature_) {
-    auto outdoor_temperature = this->outdoor_temperature_->state;
-    if (!std::isnan(outdoor_temperature) && outdoor_temperature < 0.001) {
-      ESP_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
-      st.flags.heater_state = true;
-    }
+  if (st.flags.power_state && !st.flags.heater_state && st.outdoor_temperature < 0) {
+    ESP_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
+    st.flags.heater_state = true;
   }
 #endif
 

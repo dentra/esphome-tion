@@ -208,6 +208,11 @@ climate:
     #airflow_counter:
     #  name: "Airflow counter"
     {%- endif %}
+    {%- if type != "3s" %}
+    # Optional, Total work time counter, seconds.
+    #work_time:
+    #  name: "Work Time"
+    {%- endif %}
     {%- if type == "3s" %}
     # Optional, Air Intake control.
     air_intake:
