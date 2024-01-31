@@ -2,7 +2,7 @@
 
 #include "esphome/core/defines.h"
 
-#include "../../tion/tion.h"
+#include "../../tion/tion_controls.h"
 #include "../../tion/tion_vport_uart.h"
 #include "../../tion-api/tion-api-o2.h"
 #include "../../tion-api/tion-api-uart-o2.h"
