@@ -18,132 +18,10 @@ namespace tion {
 
 static const char *const TAG = "tion_climate_component";
 
-// boost time update interval
-#define BOOST_TIME_UPDATE_INTERVAL_SEC 20
-
-// application scheduler name
-static const char *const ASH_BOOST = "tion-boost";
-
 void TionClimateComponentBase::call_setup() {
   TionComponent::call_setup();
-
-#ifdef TION_ENABLE_PRESETS_WITH_API
-  this->presets_rtc_ = global_preferences->make_preference<TionPreset[TION_MAX_PRESETS]>(fnv1_hash("presets"));
-  if (this->presets_rtc_.load(&this->presets_)) {
-    this->presets_[0].fan_speed = 0;  // reset initialization
-    ESP_LOGD(TAG, "Presets loaded");
-  }
-  this->register_service(&TionClimateComponentBase::update_preset_service_, "update_preset",
-                         {"preset", "mode", "fan_speed", "target_temperature", "gate_position"});
-#endif  // TION_ENABLE_PRESETS_WITH_API
+  this->setup_presets();
 }
-
-#ifdef TION_ENABLE_PRESETS
-#ifdef USE_API
-// esphome services allows only pass copy of strings
-void TionClimateComponentBase::update_preset_service_(std::string preset_str, std::string mode_str, int32_t fan_speed,
-                                                      int32_t target_temperature, std::string gate_position_str) {
-  climate::ClimatePreset preset = climate::ClimatePreset::CLIMATE_PRESET_NONE;
-  if (preset_str.length() > 0) {
-    auto preset_ch = std::tolower(preset_str[0]);
-    if (preset_ch == 'h') {  // Home
-      preset = climate::ClimatePreset::CLIMATE_PRESET_HOME;
-    } else if (preset_ch == 'a') {  // Away/Activity
-      if (preset_str.length() > 1) {
-        preset_ch = std::tolower(preset_str[1]);
-        if (preset_ch == 'w') {  // aWay
-          preset = climate::ClimatePreset::CLIMATE_PRESET_AWAY;
-        } else if (preset_ch == 'c') {  // aCtivity
-          preset = climate::ClimatePreset::CLIMATE_PRESET_ACTIVITY;
-        }
-      }
-    } else if (preset_ch == 'b') {  // Boost
-      preset = climate::ClimatePreset::CLIMATE_PRESET_BOOST;
-    } else if (preset_ch == 'c') {  // Comform
-      preset = climate::ClimatePreset::CLIMATE_PRESET_COMFORT;
-    } else if (preset_ch == 'e') {  // Eco
-      preset = climate::ClimatePreset::CLIMATE_PRESET_ECO;
-    } else if (preset_ch == 's') {  // Sleep
-      preset = climate::ClimatePreset::CLIMATE_PRESET_SLEEP;
-    }
-  }
-
-  auto mode = climate::ClimateMode::CLIMATE_MODE_AUTO;
-  if (mode_str.length() > 0) {
-    auto mode_ch = std::tolower(mode_str[0]);
-    if (mode_ch == 'h') {  // Heat
-      mode = climate::ClimateMode::CLIMATE_MODE_HEAT;
-    } else if (mode_ch == 'f') {  // Fan_only
-      mode = climate::ClimateMode::CLIMATE_MODE_FAN_ONLY;
-    } else if (mode_ch == 'o') {  // Off
-      mode = climate::ClimateMode::CLIMATE_MODE_OFF;
-    }
-  }
-
-  TionClimateGatePosition gate_position = TION_CLIMATE_GATE_POSITION_NONE;
-  if (gate_position_str.length() > 0) {
-    auto gate_position_ch = std::tolower(gate_position_str[0]);
-    if (gate_position_ch == 'o') {  // Outdoor
-      gate_position = TION_CLIMATE_GATE_POSITION_OUTDOOR;
-    } else if (gate_position_ch == 'i') {  // Indoor
-      gate_position = TION_CLIMATE_GATE_POSITION_INDOOR;
-    } else if (gate_position_ch == 'm') {  // Mixed
-      gate_position = TION_CLIMATE_GATE_POSITION_MIXED;
-    }
-  }
-
-  if (this->update_preset(preset, mode, fan_speed, target_temperature, gate_position)) {
-    if (this->presets_rtc_.save(&this->presets_)) {
-      ESP_LOGCONFIG(TAG, "Preset was updated:");
-      this->dump_preset_(TAG, preset);
-    }
-  } else {
-    ESP_LOGW(TAG, "Preset %s was't updated", preset_str.c_str());
-  }
-}
-#endif  // USE_API
-
-bool TionClimateComponentBase::enable_boost() {
-  auto boost_time = this->get_boost_time_();
-  if (boost_time == 0) {
-    ESP_LOGW(TAG, "Boost time is not configured");
-    return false;
-  }
-
-  // if boost_time_left not configured, just schedule stop boost after boost_time
-  if (this->boost_time_left_ == nullptr) {
-    ESP_LOGD(TAG, "Schedule boost timeout for %" PRIu32 " s", boost_time);
-    this->set_timeout(ASH_BOOST, boost_time * 1000, [this]() { this->cancel_preset_(climate::CLIMATE_PRESET_BOOST); });
-    return true;
-  }
-
-  // if boost_time_left is configured, schedule update it
-  ESP_LOGD(TAG, "Schedule boost interval up to %" PRIu32 " s", boost_time);
-  this->boost_time_left_->publish_state(static_cast<float>(boost_time));
-  this->set_interval(ASH_BOOST, BOOST_TIME_UPDATE_INTERVAL_SEC * 1000, [this]() {
-    const int32_t time_left = static_cast<int32_t>(this->boost_time_left_->state) - BOOST_TIME_UPDATE_INTERVAL_SEC;
-    ESP_LOGV(TAG, "Boost time left %" PRId32 " s", time_left);
-    if (time_left > 0) {
-      this->boost_time_left_->publish_state(static_cast<float>(time_left));
-    } else {
-      this->cancel_preset_(climate::CLIMATE_PRESET_BOOST);
-    }
-  });
-
-  return true;
-}
-
-void TionClimateComponentBase::cancel_boost() {
-  if (this->boost_time_left_) {
-    ESP_LOGV(TAG, "Cancel boost interval");
-    this->cancel_interval(ASH_BOOST);
-    this->boost_time_left_->publish_state(NAN);
-  } else {
-    ESP_LOGV(TAG, "Cancel boost timeout");
-    this->cancel_timeout(ASH_BOOST);
-  }
-}
-#endif  // TION_ENABLE_PRESETS
 
 void TionClimateComponentBase::dump_settings(const char *TAG, const char *component) const {
   LOG_CLIMATE(component, "", this);
@@ -184,10 +62,72 @@ void TionClimateComponentBase::dump_settings(const char *TAG, const char *compon
   ESP_LOGCONFIG(TAG, "  State timeout: %.1fs", this->state_timeout_ / 1000.0f);
 #endif
   ESP_LOGCONFIG(TAG, "  Batch timeout: %.1fs", this->batch_timeout_ / 1000.0f);
+}
+
+climate::ClimateTraits TionClimateComponentBase::traits() {
+  auto traits = climate::ClimateTraits();
+  traits.set_supports_current_temperature(true);
+  traits.set_visual_min_temperature(TION_MIN_TEMPERATURE);
+  traits.set_visual_max_temperature(TION_MAX_TEMPERATURE);
+  traits.set_visual_temperature_step(1.0f);
+  traits.set_supported_modes({
+      climate::CLIMATE_MODE_OFF,
+#ifdef TION_ENABLE_CLIMATE_MODE_HEAT_COOL
+      climate::CLIMATE_MODE_HEAT_COOL,
+#endif
+      climate::CLIMATE_MODE_HEAT,
+      climate::CLIMATE_MODE_FAN_ONLY,
+  });
+  for (uint8_t i = 1, max = i + TION_MAX_FAN_SPEED; i < max; i++) {
+    traits.add_supported_custom_fan_mode(fan_speed_to_mode(i));
+  }
+  this->add_presets(traits);
+  traits.set_supports_action(true);
+  return traits;
+}
+
+void TionClimateComponentBase::control(const climate::ClimateCall &call) {
 #ifdef TION_ENABLE_PRESETS
-  LOG_NUMBER("  ", "Boost Time", this->boost_time_);
-  LOG_SENSOR("  ", "Boost Time Left", this->boost_time_left_);
-#endif  // TION_ENABLE_PRESETS
+  if (call.get_preset().has_value()) {
+    if (this->enable_preset_(*call.get_preset())) {
+      return;
+    }
+  }
+#endif
+
+  climate::ClimateMode mode = this->mode;
+  if (call.get_mode().has_value()) {
+    mode = *call.get_mode();
+    ESP_LOGD(TAG, "Set mode %s", LOG_STR_ARG(climate::climate_mode_to_string(mode)));
+    this->preset = climate::CLIMATE_PRESET_NONE;
+  }
+
+  uint8_t fan_speed = fan_mode_to_speed(this->custom_fan_mode);
+  if (call.get_custom_fan_mode().has_value()) {
+    fan_speed = fan_mode_to_speed(*call.get_custom_fan_mode());
+    ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
+    this->preset = climate::CLIMATE_PRESET_NONE;
+  }
+
+  float target_temperature = this->target_temperature;
+  if (call.get_target_temperature().has_value()) {
+    target_temperature = *call.get_target_temperature();
+    ESP_LOGD(TAG, "Set target temperature %d °C", int(target_temperature));
+    this->preset = climate::CLIMATE_PRESET_NONE;
+  }
+
+  this->control_climate_state(mode, fan_speed, target_temperature, TION_CLIMATE_GATE_POSITION_NONE);
+}
+
+void TionClimateComponentBase::set_fan_speed_(uint8_t fan_speed) {
+  if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
+    this->custom_fan_mode = fan_speed_to_mode(fan_speed);
+  } else {
+    auto ok_fan_speed = this->mode == climate::CLIMATE_MODE_OFF && fan_speed == 0;
+    if (!ok_fan_speed) {
+      ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, TION_MAX_FAN_SPEED);
+    }
+  }
 }
 
 }  // namespace tion

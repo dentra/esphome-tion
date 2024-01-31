@@ -2,59 +2,56 @@
 
 #include "esphome/core/defines.h"
 
-#ifdef USE_CLIMATE
-#include "esphome/components/climate/climate.h"
+#include "esphome/components/sensor/sensor.h"
+#ifdef USE_NUMBER
+#include "esphome/components/number/number.h"
+#endif
+
+#include "tion_defines.h"
+#include "tion_helpers.h"
 
 namespace esphome {
 namespace tion {
 
-enum TionClimateGatePosition : uint8_t {
-  TION_CLIMATE_GATE_POSITION_NONE = 0,
-  TION_CLIMATE_GATE_POSITION_OUTDOOR = 1,
-  TION_CLIMATE_GATE_POSITION_INDOOR = 2,
-  TION_CLIMATE_GATE_POSITION_MIXED = 3,
-  TION_CLIMATE_GATE_POSITION__LAST = 4,  // NOLINT (bugprone-reserved-identifier)
+#ifndef TION_ENABLE_PRESETS
+class TionPresets {
+ public:
+  void dump_presets(const char *tag) const {}
+  void setup_presets() const {}
+  void add_presets(climate::ClimateTraits&traits)const{}
 };
+#endif
+
+}  // namespace tion
+}  // namespace esphome
 
 #ifdef TION_ENABLE_PRESETS
+
 // default boost time - 10 minutes
 #define DEFAULT_BOOST_TIME_SEC (10 * 60)
 
-struct TionPreset {
+#define TION_MAX_PRESETS (climate::CLIMATE_PRESET_ACTIVITY + 1)
+
+namespace esphome {
+namespace tion {
+
+struct TionClimatePresetData {
   uint8_t fan_speed;
   int8_t target_temperature;
   climate::ClimateMode mode;
   TionClimateGatePosition gate_position;
   bool is_initialized() const { return this->fan_speed != 0; }
+  bool is_enabled() const { return this->mode != climate::CLIMATE_MODE_OFF; }
 } PACKED;
 
-#define TION_MAX_PRESETS (climate::CLIMATE_PRESET_ACTIVITY + 1)
-#endif  // TION_ENABLE_PRESETS
-
-#define TION_MIN_TEMPERATURE 1
-
-#define TION_DEFAULT_MAX_TEMPERATURE 25
-#ifndef TION_MAX_TEMPERATURE
-#define TION_MAX_TEMPERATURE TION_DEFAULT_MAX_TEMPERATURE
-#endif
-#if TION_MAX_TEMPERATURE > 30 || TION_MAX_TEMPERATURE < 20
-#define TION_MAX_TEMPERATURE TION_DEFAULT_MAX_TEMPERATURE
-#endif
-
-#ifndef TION_MAX_FAN_SPEED
-#define TION_MAX_FAN_SPEED 6
-#endif
-
-class TionClimate : public climate::Climate {
+class TionPresets {
  public:
-  TionClimate() { this->target_temperature = NAN; }
-  climate::ClimateTraits traits() override;
-  void control(const climate::ClimateCall &call) override;
+  void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
+  void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
 
-  virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
-                                     TionClimateGatePosition gate_position) = 0;
-  virtual TionClimateGatePosition get_gate_position() const = 0;
-#ifdef TION_ENABLE_PRESETS
+  void setup_presets();
+  void add_presets(climate::ClimateTraits&traits);
+
   /**
    * Update default preset.
    * @param preset preset to update.
@@ -88,39 +85,32 @@ class TionClimate : public climate::Climate {
 
     return true;
   }
-#endif  // TION_ENABLE_PRESETS
   void dump_presets(const char *tag) const;
 
-  uint8_t get_fan_speed() const { return this->fan_mode_to_speed_(this->custom_fan_mode); }
+  virtual TionClimateGatePosition get_gate_position() const = 0;
 
  protected:
-  void set_fan_speed_(uint8_t fan_speed);
+  number::Number *boost_time_{};
+  sensor::Sensor *boost_time_left_{};
+  ESPPreferenceObject boost_rtc_;
 
-  uint8_t fan_mode_to_speed_(const optional<std::string> &fan_mode) const {
-    if (fan_mode.has_value()) {
-      return *fan_mode.value().c_str() - '0';
-    }
-    return 0;
-  }
+  bool presets_enable_boost_(Component *component, climate::Climate *climate);
+  void presets_cancel_boost_(Component *component, climate::Climate *climate);
 
-  std::string fan_speed_to_mode_(uint8_t fan_speed) const {
-    char fan_mode[2] = {static_cast<char>(fan_speed + '0'), 0};
-    return std::string(fan_mode);
-  }
-#ifdef TION_ENABLE_PRESETS
-  bool enable_preset_(climate::ClimatePreset new_preset);
-  void cancel_preset_(climate::ClimatePreset old_preset);
-  void update_default_preset_() {
-    this->presets_[climate::CLIMATE_PRESET_NONE].mode = this->mode;
-    this->presets_[climate::CLIMATE_PRESET_NONE].fan_speed = this->get_fan_speed();
-    this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = this->target_temperature;
-    this->presets_[climate::CLIMATE_PRESET_NONE].gate_position = this->get_gate_position();
-  }
-  virtual bool enable_boost() = 0;
-  virtual void cancel_boost() = 0;
+  TionClimatePresetData *presets_enable_preset_(climate::ClimatePreset new_preset, Component *component,
+                                                climate::Climate *climate);
+  TionClimatePresetData *presets_cancel_preset_(climate::ClimatePreset old_preset, Component *component,
+                                                climate::Climate *climate);
+
+#ifdef USE_API
+  void update_preset_service_(std::string preset, std::string mode, int32_t fan_speed, int32_t target_temperature,
+                              std::string gate_position);
+  ESPPreferenceObject presets_rtc_;
+#endif
+
   climate::ClimatePreset saved_preset_{climate::CLIMATE_PRESET_NONE};
 
-  TionPreset presets_[TION_MAX_PRESETS] = {
+  TionClimatePresetData presets_[TION_MAX_PRESETS] = {
       {},  // NONE, saved data
       {.fan_speed = 2,
        .target_temperature = 20,
@@ -154,17 +144,28 @@ class TionClimate : public climate::Climate {
 
   void for_each_preset_(const std::function<void(climate::ClimatePreset index)> &fn) const {
     for (size_t i = climate::CLIMATE_PRESET_NONE + 1; i < TION_MAX_PRESETS; i++) {
-      // "off" mean preset is disabled
-      if (this->presets_[i].mode != climate::CLIMATE_MODE_OFF) {
+      if (this->presets_[i].is_enabled()) {
         fn(static_cast<climate::ClimatePreset>(i));
       }
     }
   }
 
   void dump_preset_(const char *tag, climate::ClimatePreset index) const;
-#endif  // TION_ENABLE_PRESETS
+
+  void update_default_preset_(climate::Climate *climate);
+
+  /// returns boost time in seconds.
+  uint32_t get_boost_time_() const {
+    if (this->boost_time_ == nullptr) {
+      return DEFAULT_BOOST_TIME_SEC;
+    }
+    if (this->boost_time_->traits.get_unit_of_measurement()[0] == 's') {
+      return this->boost_time_->state;
+    }
+    return this->boost_time_->state * 60;
+  }
 };
 
 }  // namespace tion
 }  // namespace esphome
-#endif  // USE_CLIMATE
+#endif  // TION_ENABLE_PRESETS

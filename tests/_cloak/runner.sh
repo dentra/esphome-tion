@@ -16,7 +16,7 @@ if [ "$1" == "verbose" ]; then
 fi
 
 if [ -z "$PLATFORMIO_CORE_DIR" ]; then
-  export PLATFORMIO_CORE_DIR=$(realpath $(dirname $BASH_SOURCE)/../../.platformio)
+  export PLATFORMIO_CORE_DIR=$(pio system info --json-output|jq -r .core_dir.value)
 fi
 
 if [[ -z "${BUILD_DIR}" ]]; then

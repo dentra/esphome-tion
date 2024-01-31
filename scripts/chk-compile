@@ -2,7 +2,7 @@
 
 prj_path=$(dirname $0)/..
 
-$prj_path/scripts/mk-config $1
+# $prj_path/scripts/mk-config $1
 
 types=(lt-ble 4s-ble 4s-uart 3s-ble 3s-uart o2-uart)
 

@@ -10,26 +10,6 @@ namespace tion {
 
 static const char *const TAG = "tion_component";
 
-void TionComponent::call_setup() {
-  PollingComponent::call_setup();
-#ifdef TION_ENABLE_PRESETS
-  if (this->boost_time_) {
-    this->boost_rtc_ = global_preferences->make_preference<uint8_t>(fnv1_hash("boost_time"));
-    uint8_t boost_time;
-    if (!this->boost_rtc_.load(&boost_time)) {
-      boost_time = DEFAULT_BOOST_TIME_SEC / 60;
-    }
-    auto call = this->boost_time_->make_call();
-    call.set_value(boost_time);
-    call.perform();
-    this->boost_time_->add_on_state_callback([this](float state) {
-      const uint8_t boost_time = state;
-      this->boost_rtc_.save(&boost_time);
-    });
-  }
-#endif
-}
-
 void TionComponent::update_dev_info_(const dentra::tion::tion_dev_info_t &info) {
 #ifdef USE_TION_VERSION
   if (this->version_ != nullptr) {

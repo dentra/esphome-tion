@@ -26,6 +26,7 @@ namespace switch_ {
 
 class Switch : public EntityBase {
  public:
+  virtual ~Switch() {}
   bool state;
   void publish_state(bool state) { this->state = state; }
   bool is_inverted() const { return false; }

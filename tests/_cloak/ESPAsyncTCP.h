@@ -16,7 +16,7 @@ class AsyncClient : public cloak::Cloak {
   ~AsyncClient() { this->disconnect(); }
   bool connect(const char *host, uint16_t port);
   void disconnect();
-  size_t add(const char *data, size_t size) {
+  size_t add(const char *data, size_t size, int flags = 0) {
     this->data_.insert(this->data_.end(), data, data + size);
     return size;
   }
@@ -35,6 +35,7 @@ class AsyncClient : public cloak::Cloak {
     this->arg_data_ = arg;
   }
   bool connected() { return this->connected_; }
+  void close() { this->disconnect(); }
 
   void test_data_push(const void *data, size_t len);
   void test_data_push(const char *str) { this->test_data_push(str, strlen(str)); }

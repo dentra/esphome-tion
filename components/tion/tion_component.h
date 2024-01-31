@@ -16,7 +16,6 @@ namespace esphome {
 namespace tion {
 class TionComponent : public PollingComponent {
  public:
-  void call_setup() override;
 #ifdef USE_TION_VERSION
   void set_version(text_sensor::TextSensor *version) { this->version_ = version; }
 #endif
@@ -47,10 +46,6 @@ class TionComponent : public PollingComponent {
   void set_filter_warnout(binary_sensor::BinarySensor *filter_warnout) { this->filter_warnout_ = filter_warnout; }
 #endif
 
-#ifdef TION_ENABLE_PRESETS
-  void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
-  void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
-#endif
 #ifdef USE_TION_RESET_FILTER
   void set_reset_filter(button::Button *reset_filter) { this->reset_filter_ = reset_filter; };
   void set_reset_filter_confirm(switch_::Switch *reset_filter_confirm) {
@@ -122,12 +117,6 @@ class TionComponent : public PollingComponent {
 #endif
 #ifdef USE_TION_WORK_TIME
   sensor::Sensor *work_time_{};
-#endif
-
-#ifdef TION_ENABLE_PRESETS
-  number::Number *boost_time_{};
-  sensor::Sensor *boost_time_left_{};
-  ESPPreferenceObject boost_rtc_;
 #endif
 
   void update_dev_info_(const dentra::tion::tion_dev_info_t &info);
