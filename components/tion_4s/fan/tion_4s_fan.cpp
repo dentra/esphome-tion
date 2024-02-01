@@ -1,3 +1,6 @@
+#include "esphome/core/defines.h"
+#ifdef USE_FAN
+
 #include "esphome/core/log.h"
 
 #include <cstddef>
@@ -14,3 +17,4 @@ static const char *const TAG = "tion_4s_fan";
 
 }
 }  // namespace esphome
+#endif  // USE_FAN

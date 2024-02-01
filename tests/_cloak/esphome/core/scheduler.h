@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
+#include <map>
 
 #include "esphome/core/component.h"
 
@@ -11,8 +13,10 @@ class Component;
 
 class Scheduler {
  public:
-  void set_timeout(Component *component, const std::string &name, uint32_t timeout, std::function<void()> func) {}
-  bool cancel_timeout(Component *component, const std::string &name) { return true; }
+  void set_timeout(Component *component, const std::string &name, uint32_t timeout, std::function<void()> func);
+
+  bool cancel_timeout(Component *component, const std::string &name);
+
   void set_interval(Component *component, const std::string &name, uint32_t interval, std::function<void()> func);
   bool cancel_interval(Component *component, const std::string &name);
 
@@ -26,7 +30,19 @@ class Scheduler {
 
   void process_to_add();
 
+  void test_timeout(bool start) {
+    if (!start) {
+      for (auto [k, v] : this->test_timeouts_) {
+        v();
+      }
+    }
+    this->test_timeout_ = start;
+  }
+
  protected:
+  bool test_timeout_{};
+  std::map<std::string, std::function<void()>> test_timeouts_;
+
   struct SchedulerItem {
     Component *component;
     std::string name;

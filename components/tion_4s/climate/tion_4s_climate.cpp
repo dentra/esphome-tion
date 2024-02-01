@@ -130,7 +130,7 @@ void Tion4sClimate::control_recirculation_state(bool state) {
 }
 
 void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
-                                          TionClimateGatePosition gate_position) {
+                                          TionGatePosition gate_position) {
   ControlState control{};
 
   control.fan_speed = fan_speed;
@@ -149,10 +149,10 @@ void Tion4sClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan
   }
 
   switch (gate_position) {
-    case TION_CLIMATE_GATE_POSITION_OUTDOOR:
+    case TionGatePosition::OUTDOOR:
       control.gate_position = tion4s_state_t::GATE_POSITION_INFLOW;
       break;
-    case TION_CLIMATE_GATE_POSITION_INDOOR:
+    case TionGatePosition::INDOOR:
       control.gate_position = tion4s_state_t::GATE_POSITION_RECIRCULATION;
       break;
     default:

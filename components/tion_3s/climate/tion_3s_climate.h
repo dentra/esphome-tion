@@ -35,18 +35,18 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
   void control_gate_position(tion3s_state_t::GatePosition gate_position);
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
-                             TionClimateGatePosition gate_position) override;
+                             TionGatePosition gate_position) override;
 
-  TionClimateGatePosition get_gate_position() const override {
+  TionGatePosition get_gate_position() const override {
     switch (this->get_gate_position_()) {
       case tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR:
-        return TION_CLIMATE_GATE_POSITION_OUTDOOR;
+        return TionGatePosition::OUTDOOR;
       case tion3s_state_t::GatePosition::GATE_POSITION_INDOOR:
-        return TION_CLIMATE_GATE_POSITION_INDOOR;
+        return TionGatePosition::INDOOR;
       case tion3s_state_t::GatePosition::GATE_POSITION_MIXED:
-        return TION_CLIMATE_GATE_POSITION_MIXED;
+        return TionGatePosition::MIXED;
       default:
-        return TION_CLIMATE_GATE_POSITION_OUTDOOR;
+        return TionGatePosition::OUTDOOR;
     }
   }
 

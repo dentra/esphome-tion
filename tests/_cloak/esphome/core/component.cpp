@@ -1,4 +1,5 @@
 #include "component.h"
+#include "application.h"
 
 namespace esphome {
 
@@ -30,5 +31,16 @@ const uint32_t STATUS_LED_MASK = 0xFF00;
 const uint32_t STATUS_LED_OK = 0x0000;
 const uint32_t STATUS_LED_WARNING = 0x0100;
 const uint32_t STATUS_LED_ERROR = 0x0200;
+
+void Component::test_timeout(bool start) { App.scheduler.test_timeout(start); }
+void Component::set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f) {
+  App.scheduler.set_timeout(this, name, timeout, std::move(f));
+}
+
+void Component::set_timeout(uint32_t timeout, std::function<void()> &&f) {
+  this->set_timeout("__default__", timeout, std::move(f));
+}
+
+bool Component::cancel_timeout(const std::string &name) { App.scheduler.cancel_timeout(this, name); }
 
 }  // namespace esphome

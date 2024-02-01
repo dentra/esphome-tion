@@ -1,3 +1,5 @@
+#include "esphome/core/defines.h"
+#ifdef USE_CLIMATE
 #include <cinttypes>
 #include <cstdint>
 #include <cmath>
@@ -115,7 +117,7 @@ void TionClimateComponentBase::control(const climate::ClimateCall &call) {
     this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  this->control_climate_state(mode, fan_speed, target_temperature, TION_CLIMATE_GATE_POSITION_NONE);
+  this->control_climate_state(mode, fan_speed, target_temperature, TionGatePosition::NONE);
 }
 
 void TionClimateComponentBase::set_fan_speed_(uint8_t fan_speed) {
@@ -131,3 +133,4 @@ void TionClimateComponentBase::set_fan_speed_(uint8_t fan_speed) {
 
 }  // namespace tion
 }  // namespace esphome
+#endif  // USE_CLIMATE

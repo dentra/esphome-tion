@@ -1,4 +1,7 @@
+#include "esphome/core/defines.h"
+#ifdef USE_CLIMATE
 #ifdef TION_ENABLE_PRESETS
+#include <cinttypes>
 #include "esphome/core/defines.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
@@ -7,7 +10,7 @@
 #include "esphome/components/api/custom_api_device.h"
 #endif
 
-#include "tion_presets.h"
+#include "tion_climate_presets.h"
 
 namespace esphome {
 namespace tion {
@@ -20,7 +23,7 @@ static const char *const TAG = "tion_presets";
 // application scheduler name
 static const char *const ASH_BOOST = "tion-boost";
 
-void TionPresets::setup_presets() {
+void TionClimatePresets::setup_presets() {
   if (this->boost_time_) {
     this->boost_rtc_ = global_preferences->make_preference<uint8_t>(fnv1_hash("boost_time"));
     uint8_t boost_time;
@@ -44,20 +47,20 @@ void TionPresets::setup_presets() {
     ESP_LOGD(TAG, "Presets loaded");
   }
   api::CustomAPIDevice api;
-  api.register_service(&TionPresets::update_preset_service_, "update_preset",
+  api.register_service(&TionClimatePresets::update_preset_service_, "update_preset",
                        {"preset", "mode", "fan_speed", "target_temperature", "gate_position"});
 #endif
 }
 
-void TionPresets::add_presets(climate::ClimateTraits &traits) {
+void TionClimatePresets::add_presets(climate::ClimateTraits &traits) {
   traits.add_supported_preset(climate::CLIMATE_PRESET_NONE);
   this->for_each_preset_([&traits](auto index) { traits.add_supported_preset(index); });
 }
 
 #ifdef USE_API
 // esphome services allows only pass copy of strings
-void TionPresets::update_preset_service_(std::string preset_str, std::string mode_str, int32_t fan_speed,
-                                         int32_t target_temperature, std::string gate_position_str) {
+void TionClimatePresets::update_preset_service_(std::string preset_str, std::string mode_str, int32_t fan_speed,
+                                                int32_t target_temperature, std::string gate_position_str) {
   climate::ClimatePreset preset = climate::ClimatePreset::CLIMATE_PRESET_NONE;
   if (preset_str.length() > 0) {
     auto preset_ch = std::tolower(preset_str[0]);
@@ -95,15 +98,15 @@ void TionPresets::update_preset_service_(std::string preset_str, std::string mod
     }
   }
 
-  TionClimateGatePosition gate_position = TION_CLIMATE_GATE_POSITION_NONE;
+  TionGatePosition gate_position = TionGatePosition::NONE;
   if (gate_position_str.length() > 0) {
     auto gate_position_ch = std::tolower(gate_position_str[0]);
     if (gate_position_ch == 'o') {  // Outdoor
-      gate_position = TION_CLIMATE_GATE_POSITION_OUTDOOR;
+      gate_position = TionGatePosition::OUTDOOR;
     } else if (gate_position_ch == 'i') {  // Indoor
-      gate_position = TION_CLIMATE_GATE_POSITION_INDOOR;
+      gate_position = TionGatePosition::INDOOR;
     } else if (gate_position_ch == 'm') {  // Mixed
-      gate_position = TION_CLIMATE_GATE_POSITION_MIXED;
+      gate_position = TionGatePosition::MIXED;
     }
   }
 
@@ -118,7 +121,7 @@ void TionPresets::update_preset_service_(std::string preset_str, std::string mod
 }
 #endif  // USE_API
 
-void TionPresets::dump_presets(const char *TAG) const {
+void TionClimatePresets::dump_presets(const char *TAG) const {
   LOG_NUMBER("  ", "Boost Time", this->boost_time_);
   LOG_SENSOR("  ", "Boost Time Left", this->boost_time_left_);
   auto has_presets = false;
@@ -129,16 +132,16 @@ void TionPresets::dump_presets(const char *TAG) const {
   }
 }
 
-void TionPresets::dump_preset_(const char *tag, climate::ClimatePreset index) const {
-  auto gate_position_to_string = [](TionClimateGatePosition gp) -> const char * {
+void TionClimatePresets::dump_preset_(const char *tag, climate::ClimatePreset index) const {
+  auto gate_position_to_string = [](TionGatePosition gp) -> const char * {
     switch (gp) {
-      case TION_CLIMATE_GATE_POSITION_NONE:
+      case TionGatePosition::NONE:
         return "none";
-      case TION_CLIMATE_GATE_POSITION_OUTDOOR:
+      case TionGatePosition::OUTDOOR:
         return "outdoor";
-      case TION_CLIMATE_GATE_POSITION_INDOOR:
+      case TionGatePosition::INDOOR:
         return "indoor";
-      case TION_CLIMATE_GATE_POSITION_MIXED:
+      case TionGatePosition::MIXED:
         return "mixed";
       default:
         return "unknown";
@@ -157,8 +160,8 @@ void TionPresets::dump_preset_(const char *tag, climate::ClimatePreset index) co
 #endif
 }
 
-TionClimatePresetData *TionPresets::presets_enable_preset_(climate::ClimatePreset new_preset, Component *component,
-                                                           climate::Climate *climate) {
+TionClimatePresetData *TionClimatePresets::presets_enable_preset_(climate::ClimatePreset new_preset,
+                                                                  Component *component, climate::Climate *climate) {
   const auto old_preset = *climate->preset;
   if (new_preset == old_preset) {
     ESP_LOGD(TAG, "Preset was not changed");
@@ -204,15 +207,15 @@ TionClimatePresetData *TionPresets::presets_enable_preset_(climate::ClimatePrese
 }
 
 // TODO remove this method and use this->enable_preset_(this->saved_preset_);
-TionClimatePresetData *TionPresets::presets_cancel_preset_(climate::ClimatePreset old_preset, Component *component,
-                                                           climate::Climate *climate) {
+TionClimatePresetData *TionClimatePresets::presets_cancel_preset_(climate::ClimatePreset old_preset,
+                                                                  Component *component, climate::Climate *climate) {
   if (old_preset == climate::CLIMATE_PRESET_BOOST) {
     return this->presets_enable_preset_(this->saved_preset_, component, climate);
   }
   return nullptr;
 }
 
-void TionPresets::update_default_preset_(climate::Climate *climate) {
+void TionClimatePresets::update_default_preset_(climate::Climate *climate) {
   this->presets_[climate::CLIMATE_PRESET_NONE].mode = climate->mode;
   this->presets_[climate::CLIMATE_PRESET_NONE].target_temperature = climate->target_temperature;
   this->presets_[climate::CLIMATE_PRESET_NONE].gate_position = this->get_gate_position();
@@ -222,7 +225,7 @@ void TionPresets::update_default_preset_(climate::Climate *climate) {
   }
 }
 
-bool TionPresets::presets_enable_boost_(Component *component, climate::Climate *climate) {
+bool TionClimatePresets::presets_enable_boost_(Component *component, climate::Climate *climate) {
   auto boost_time = this->get_boost_time_();
   if (boost_time == 0) {
     ESP_LOGW(TAG, "Boost time is not configured");
@@ -255,7 +258,7 @@ bool TionPresets::presets_enable_boost_(Component *component, climate::Climate *
   return true;
 }
 
-void TionPresets::presets_cancel_boost_(Component *component, climate::Climate *climate) {
+void TionClimatePresets::presets_cancel_boost_(Component *component, climate::Climate *climate) {
   if (this->boost_time_left_) {
     ESP_LOGV(TAG, "Cancel boost interval");
     App.scheduler.cancel_interval(component, ASH_BOOST);
@@ -269,3 +272,4 @@ void TionPresets::presets_cancel_boost_(Component *component, climate::Climate *
 }  // namespace tion
 }  // namespace esphome
 #endif  // TION_ENABLE_PRESETS
+#endif  // USE_CLIMATE

@@ -1,21 +1,20 @@
 #pragma once
-
 #include "esphome/core/defines.h"
-
 #ifdef USE_CLIMATE
+
 #include "esphome/core/helpers.h"
 #include "esphome/components/climate/climate.h"
 
 #include "../tion-api/tion-api.h"
 
 #include "tion_component.h"
-#include "tion_presets.h"
+#include "tion_climate_presets.h"
 #include "tion_vport.h"
 
 namespace esphome {
 namespace tion {
 
-class TionClimateComponentBase : public climate::Climate, public TionPresets, public TionComponent {
+class TionClimateComponentBase : public climate::Climate, public TionClimatePresets, public TionComponent {
  public:
   TionClimateComponentBase() = delete;
   TionClimateComponentBase(const TionClimateComponentBase &) = delete;             // non construction-copyable
@@ -29,7 +28,7 @@ class TionClimateComponentBase : public climate::Climate, public TionPresets, pu
   void control(const climate::ClimateCall &call) override;
 
   virtual void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
-                                     TionClimateGatePosition gate_position) = 0;
+                                     TionGatePosition gate_position) = 0;
 
   uint8_t get_fan_speed() const { return fan_mode_to_speed(this->custom_fan_mode); }
 
@@ -57,8 +56,7 @@ class TionClimateComponentBase : public climate::Climate, public TionPresets, pu
     }
   }
 #endif
-
-};  // namespace tion
+};
 
 /**
  * @param tion_api_type TionApi implementation.
@@ -223,4 +221,4 @@ class TionBoostTimeNumber : public number::Number {
 
 }  // namespace tion
 }  // namespace esphome
-#endif
+#endif  // USE_CLIMATE

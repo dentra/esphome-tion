@@ -20,16 +20,20 @@ inline std::string fan_speed_to_mode(uint8_t fan_speed) {
   return std::string(fan_mode);
 }
 
-#ifdef USE_CLIMATE
-enum TionClimateGatePosition : uint8_t {
-  TION_CLIMATE_GATE_POSITION_NONE = 0,
-  TION_CLIMATE_GATE_POSITION_OUTDOOR = 1,
-  TION_CLIMATE_GATE_POSITION_INDOOR = 2,
-  TION_CLIMATE_GATE_POSITION_MIXED = 3,
-  TION_CLIMATE_GATE_POSITION__LAST = 4,  // NOLINT (bugprone-reserved-identifier)
-};
+enum class TionGatePosition : uint8_t { NONE = 0, OUTDOOR = 1, INDOOR = 2, MIXED = 3, _LAST = 4 };
 
+#ifdef USE_CLIMATE
+using TionClimateGatePosition = TionGatePosition;
 #endif
+
+template<typename mode_type, mode_type off_value> struct TionPresetData {
+  uint8_t fan_speed;
+  int8_t target_temperature;
+  mode_type mode;
+  TionGatePosition gate_position;
+  bool is_initialized() const { return this->fan_speed != 0; }
+  bool is_enabled() const { return this->mode != off_value; }
+} PACKED;
 
 }  // namespace tion
 }  // namespace esphome

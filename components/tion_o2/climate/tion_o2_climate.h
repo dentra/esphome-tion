@@ -22,12 +22,12 @@ class TionO2Climate : public TionClimateComponent<TionO2Api> {
   void update_state(const tiono2_state_t &state) override;
   void dump_state(const tiono2_state_t &state) const;
 
-  TionClimateGatePosition get_gate_position() const override { return TION_CLIMATE_GATE_POSITION_NONE; }
+  TionGatePosition get_gate_position() const override { return TionGatePosition::NONE; }
 
   void reset_filter() { this->api_->reset_filter(this->state_); }
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
-                             TionClimateGatePosition gate_position) override;
+                             TionGatePosition gate_position) override;
 
   void control_buzzer_state(bool state) {
     // FIXME implement buzzer support

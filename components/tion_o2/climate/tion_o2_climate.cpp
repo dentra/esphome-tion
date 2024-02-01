@@ -81,7 +81,7 @@ void TionO2Climate::dump_state(const tiono2_state_t &state) const {
 }
 
 void TionO2Climate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
-                                          TionClimateGatePosition gate_position) {
+                                          TionGatePosition gate_position) {
   ControlState control{};
   control.fan_speed = fan_speed;
   if (!std::isnan(target_temperature)) {

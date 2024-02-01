@@ -75,7 +75,7 @@ class Tion4sTest : public Tion4sClimate {
     this->update_preset_service_(preset_str, mode_str, fan_speed, target_temperature, gate_position_str);
   }
 
-  const esphome::tion::TionPreset &get_preset(esphome::climate::ClimatePreset index) const {
+  const esphome::tion::TionClimatePresetData &get_preset(esphome::climate::ClimatePreset index) const {
     return this->presets_[index];
   }
 
@@ -236,18 +236,18 @@ bool test_preset_update() {
   res &= cloak::check_data("preset.target_temperature==11", preset.target_temperature, 11);
   res &= cloak::check_data("preset.mode==fan_only", preset.mode, esphome::climate::CLIMATE_MODE_FAN_ONLY);
 
-  res &= cloak::check_data("preset.gate_position==outdoor", preset.gate_position,
-                           esphome::tion::TION_CLIMATE_GATE_POSITION_OUTDOOR);
+  res &= cloak::check_data("preset.gate_position==outdoor", (uint8_t) preset.gate_position,
+                           (uint8_t) esphome::tion::TionGatePosition::OUTDOOR);
 
   comp.update_preset_service("eco", "fan_only", 1, 11, "indoor");
   preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
-  res &= cloak::check_data("preset.gate_position==indoor", preset.gate_position,
-                           esphome::tion::TION_CLIMATE_GATE_POSITION_INDOOR);
+  res &= cloak::check_data("preset.gate_position==indoor", (uint8_t) preset.gate_position,
+                           (uint8_t) esphome::tion::TionGatePosition::INDOOR);
 
   comp.update_preset_service("eco", "fan_only", 1, 11, "mixed");
   preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
-  res &= cloak::check_data("preset.gate_position==mixed", preset.gate_position,
-                           esphome::tion::TION_CLIMATE_GATE_POSITION_MIXED);
+  res &= cloak::check_data("preset.gate_position==mixed", (uint8_t) preset.gate_position,
+                           (uint8_t) esphome::tion::TionGatePosition::MIXED);
 
   comp.update_preset_service("eco", "off", 1, 11, "mixed");
   preset = comp.get_preset(esphome::climate::CLIMATE_PRESET_ECO);
@@ -273,8 +273,7 @@ bool test_batch() {
   vport.call_loop();
   comp.control_buzzer_state(true);
   vport.call_loop();
-  comp.control_climate_state(climate::CLIMATE_MODE_HEAT, 3, 23,
-                             TionClimateGatePosition::TION_CLIMATE_GATE_POSITION_NONE);
+  comp.control_climate_state(climate::CLIMATE_MODE_HEAT, 3, 23, TionGatePosition::NONE);
   vport.call_loop();
 
   comp.test_timeout(false);
@@ -290,6 +289,45 @@ bool test_batch() {
 
   return res;
 }
+
+template<typename mode_type, mode_type off_value> struct TionPresetDataTest {
+  uint8_t fan_speed;
+  int8_t target_temperature;
+  mode_type mode;
+  TionGatePosition gate_position;
+  bool is_initialized() const { return this->fan_speed != 0; }
+  bool is_enabled() const { return this->mode != off_value; }
+  // uint8_t misalign[10];
+} PACKED;
+
+using ClimatePresetDataTest1 = TionPresetDataTest<esphome::climate::ClimateMode, esphome::climate::CLIMATE_MODE_OFF>;
+using FanPresetDataTest1 = TionPresetDataTest<bool, false>;
+
+struct ClimatePresetDataTest2 : public ClimatePresetDataTest1 {};
+
+struct FanPresetDataTest2 : public TionPresetDataTest<bool, false> {
+} __attribute__((aligned(sizeof(uint32_t))));
+
+bool test_ttt() {
+  ClimatePresetDataTest1 cdata1{.mode = esphome::climate::CLIMATE_MODE_HEAT};
+  printf("size=%zu, speed=%u, mode=%u, is_enabled=%s\n", sizeof(cdata1), cdata1.fan_speed, cdata1.mode,
+         ONOFF(cdata1.is_enabled()));
+
+  ClimatePresetDataTest2 cdata2{};
+  printf("size=%zu, speed=%u, mode=%u, is_enabled=%s\n", sizeof(cdata2), cdata2.fan_speed, cdata2.mode,
+         ONOFF(cdata2.is_enabled()));
+
+  FanPresetDataTest1 fdata1{.mode = true};
+  printf("size=%zu, speed=%u, mode=%u, is_enabled=%s\n", sizeof(fdata1), fdata1.fan_speed, fdata1.mode,
+         ONOFF(fdata1.is_enabled()));
+
+  FanPresetDataTest2 fdata2{};
+  printf("size=%zu, speed=%u, mode=%u, is_enabled=%s\n", sizeof(fdata2), fdata2.fan_speed, fdata2.mode,
+         ONOFF(fdata2.is_enabled()));
+
+  return true;
+}
+REGISTER_TEST(test_ttt);
 
 REGISTER_TEST(test_api_4s);
 REGISTER_TEST(test_presets);

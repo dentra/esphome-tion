@@ -154,18 +154,9 @@ class Component {
   virtual void call_setup() { this->setup(); }
   virtual void call_dump_config() { this->dump_config(); }
 
-  void test_timeout(bool start) {
-    if (!start) {
-      for (auto [k, v] : this->test_timeouts_) {
-        v();
-      }
-    }
-    this->test_timeout_ = start;
-  }
+  void test_timeout(bool start);
 
  protected:
-  bool test_timeout_{};
-
   friend class Application;
 
   /** Set an interval function with a unique name. Empty name means no cancelling possible.
@@ -243,32 +234,16 @@ class Component {
    *
    * @see cancel_timeout()
    */
-  void set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f)  // NOLINT
-  {
-    if (this->test_timeout_) {
-      this->test_timeouts_.emplace(name, std::move(f));
-    } else {
-      f();
-    }
-  }
+  void set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f);
 
-  void set_timeout(uint32_t timeout, std::function<void()> &&f)  // NOLINT
-  {
-    this->set_timeout("__default__", timeout, std::move(f));
-  }
+  void set_timeout(uint32_t timeout, std::function<void()> &&f);
 
   /** Cancel a timeout function.
    *
    * @param name The identifier for this timeout function.
    * @return Whether a timeout functions was deleted.
    */
-  bool cancel_timeout(const std::string &name)  // NOLINT
-  {
-    if (this->test_timeout_) {
-      return this->test_timeouts_.erase(name) != 0;
-    }
-    return true;
-  }
+  bool cancel_timeout(const std::string &name);
 
   /** Defer a callback to the next loop() call.
    *
@@ -297,8 +272,6 @@ class Component {
   uint32_t component_state_{0x0000};  ///< State of this component.
   float setup_priority_override_{NAN};
   const char *component_source_{nullptr};
-
-  std::map<std::string, std::function<void()>> test_timeouts_;
 };
 
 /** This class simplifies creating components that periodically check a state.

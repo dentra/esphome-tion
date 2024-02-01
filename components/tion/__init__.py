@@ -21,7 +21,6 @@ from esphome.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     ENTITY_CATEGORY_NONE,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_NONE,
     UNIT_CELSIUS,
     UNIT_CUBIC_METER,
     UNIT_HOUR,
@@ -84,7 +83,7 @@ TionResetFilterButtonT = tion_ns.class_("TionResetFilterButton", button.Button)
 TionResetFilterConfirmSwitchT = tion_ns.class_(
     "TionResetFilterConfirmSwitch", switch.Switch
 )
-TionClimateGatePosition = tion_ns.enum("TionClimateGatePosition")
+TionGatePosition = tion_ns.namespace("TionGatePosition")
 
 PRESET_MODES = {
     "off": climate.ClimateMode.CLIMATE_MODE_OFF,
@@ -94,10 +93,10 @@ PRESET_MODES = {
 }
 
 PRESET_GATE_POSITIONS = {
-    "none": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_NONE,
-    "outdoor": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_OUTDOOR,
-    "indoor": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_INDOOR,
-    "mixed": TionClimateGatePosition.TION_CLIMATE_GATE_POSITION_MIXED,
+    "none": TionGatePosition.NONE,
+    "outdoor": TionGatePosition.OUTDOOR,
+    "indoor": TionGatePosition.INDOOR,
+    "mixed": TionGatePosition.MIXED,
 }
 
 PRESETS = []
