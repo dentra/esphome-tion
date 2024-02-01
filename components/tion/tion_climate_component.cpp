@@ -88,36 +88,96 @@ climate::ClimateTraits TionClimateComponentBase::traits() {
 }
 
 void TionClimateComponentBase::control(const climate::ClimateCall &call) {
+  auto gate_position = TionGatePosition::NONE;
+  auto mode = this->mode;
+  auto fan_speed = fan_mode_to_speed(this->custom_fan_mode);
+  auto target_temperature = this->target_temperature;
+
+  const bool has_changes = call.get_mode().has_value() || call.get_custom_fan_mode().has_value() ||
+                           call.get_target_temperature().has_value();
+
 #ifdef TION_ENABLE_PRESETS
+  const auto old_preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
   if (call.get_preset().has_value()) {
-    if (this->enable_preset_(*call.get_preset())) {
-      return;
+    const auto new_preset = *call.get_preset();
+    auto *preset_data = this->presets_enable_preset_(new_preset, this, this);
+    if (preset_data) {
+      ESP_LOGD(TAG, "Set preset %s", LOG_STR_ARG(climate::climate_preset_to_string(new_preset)));
+      gate_position = preset_data->gate_position;
+      mode = preset_data->mode;
+      fan_speed = preset_data->fan_speed;
+      target_temperature = preset_data->target_temperature;
+      this->preset = new_preset;
+      // если буст, то больне ничеего не даем изменять и выходим
+      if (new_preset == climate::CLIMATE_PRESET_BOOST) {
+        if (has_changes) {
+          ESP_LOGW(TAG, "No more changes can be performed");
+          if (call.get_mode().has_value()) {
+            ESP_LOGW(TAG, "  Change of mode was skipped");
+          }
+          if (call.get_custom_fan_mode().has_value()) {
+            ESP_LOGW(TAG, "  Change of fan speed was skipped");
+          }
+          if (call.get_target_temperature().has_value()) {
+            ESP_LOGW(TAG, "  Change of target temperature was skipped");
+          }
+        }
+        return;
+      }
+    }
+  } else if (old_preset == climate::CLIMATE_PRESET_BOOST && has_changes) {
+    auto *preset_data = this->presets_enable_preset_(this->saved_preset_, this, this);
+    if (preset_data) {
+      ESP_LOGD(TAG, "Restored preset %s data", LOG_STR_ARG(climate::climate_preset_to_string(this->saved_preset_)));
+      gate_position = preset_data->gate_position;
+      mode = preset_data->mode;
+      fan_speed = preset_data->fan_speed;
+      target_temperature = preset_data->target_temperature;
     }
   }
+  const auto new_preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
+#else
+  const auto old_preset = climate::CLIMATE_PRESET_NONE;
+  const auto new_preset = climate::CLIMATE_PRESET_NONE;
 #endif
 
-  climate::ClimateMode mode = this->mode;
   if (call.get_mode().has_value()) {
     mode = *call.get_mode();
     ESP_LOGD(TAG, "Set mode %s", LOG_STR_ARG(climate::climate_mode_to_string(mode)));
-    this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  uint8_t fan_speed = fan_mode_to_speed(this->custom_fan_mode);
   if (call.get_custom_fan_mode().has_value()) {
     fan_speed = fan_mode_to_speed(*call.get_custom_fan_mode());
     ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
-    this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  float target_temperature = this->target_temperature;
   if (call.get_target_temperature().has_value()) {
     target_temperature = *call.get_target_temperature();
     ESP_LOGD(TAG, "Set target temperature %d °C", int(target_temperature));
-    this->preset = climate::CLIMATE_PRESET_NONE;
   }
 
-  this->control_climate_state(mode, fan_speed, target_temperature, TionGatePosition::NONE);
+  if (!has_changes && old_preset == new_preset) {
+    ESP_LOGW(TAG, "No changes was performed");
+    return;
+  }
+
+#ifdef TION_ENABLE_PRESETS
+  // в любом случае сбрасываем пресет если были изменения
+  if (has_changes) {
+    this->preset = climate::CLIMATE_PRESET_NONE;
+  }
+#endif
+
+  this->control_climate_state(mode, fan_speed, target_temperature, gate_position);
+}
+
+void TionClimateComponentBase::reset_preset_() {
+#ifdef TION_ENABLE_PRESETS
+  const auto preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
+  if (preset == climate::CLIMATE_PRESET_BOOST) {
+  }
+  this->preset = climate::CLIMATE_PRESET_NONE;
+#endif
 }
 
 void TionClimateComponentBase::set_fan_speed_(uint8_t fan_speed) {

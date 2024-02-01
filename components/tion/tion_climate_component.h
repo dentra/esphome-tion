@@ -20,7 +20,10 @@ class TionClimateComponentBase : public climate::Climate, public TionClimatePres
   TionClimateComponentBase(const TionClimateComponentBase &) = delete;             // non construction-copyable
   TionClimateComponentBase &operator=(const TionClimateComponentBase &) = delete;  // non copyable
 
-  TionClimateComponentBase(TionVPortType vport_type) : vport_type_(vport_type) { this->target_temperature = NAN; }
+  TionClimateComponentBase(TionVPortType vport_type) : vport_type_(vport_type) {
+    this->target_temperature = NAN;
+    this->preset = climate::CLIMATE_PRESET_NONE;
+  }
   void call_setup() override;
   void dump_settings(const char *tag, const char *component) const;
 
@@ -36,6 +39,8 @@ class TionClimateComponentBase : public climate::Climate, public TionClimatePres
   const TionVPortType vport_type_;
 
   void set_fan_speed_(uint8_t fan_speed);
+
+  void reset_preset_();
 
 #ifdef TION_ENABLE_PRESETS
   virtual bool enable_boost() { return this->presets_enable_boost_(this, this); }

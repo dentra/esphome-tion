@@ -26,13 +26,14 @@ void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, uint32_t request_id) {
   }
 
   // change preset if turbo changed outside
+  const auto preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
   if (turbo.is_active) {
-    if (*this->preset != climate::CLIMATE_PRESET_BOOST) {
-      this->saved_preset_ = *this->preset;
+    if (preset != climate::CLIMATE_PRESET_BOOST) {
+      this->saved_preset_ = preset;
       this->preset = climate::CLIMATE_PRESET_BOOST;
     }
   } else {
-    if (*this->preset == climate::CLIMATE_PRESET_BOOST) {
+    if (preset == climate::CLIMATE_PRESET_BOOST) {
       this->enable_preset_(this->saved_preset_);
     }
   }

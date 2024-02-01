@@ -162,7 +162,7 @@ void TionClimatePresets::dump_preset_(const char *tag, climate::ClimatePreset in
 
 TionClimatePresetData *TionClimatePresets::presets_enable_preset_(climate::ClimatePreset new_preset,
                                                                   Component *component, climate::Climate *climate) {
-  const auto old_preset = *climate->preset;
+  const auto old_preset = climate->preset.value_or(climate::CLIMATE_PRESET_NONE);
   if (new_preset == old_preset) {
     ESP_LOGD(TAG, "Preset was not changed");
     return nullptr;
