@@ -10,7 +10,6 @@
 #include "esphome/components/climate/climate_mode.h"
 
 #include "tion_component.h"
-#include "tion_climate.h"
 #include "tion_climate_component.h"
 
 namespace esphome {

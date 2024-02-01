@@ -9,7 +9,7 @@
 #include "../tion-api/tion-api.h"
 
 #include "tion_component.h"
-#include "tion_climate.h"
+#include "tion_presets.h"
 #include "tion_vport.h"
 
 namespace esphome {
