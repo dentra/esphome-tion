@@ -29,23 +29,23 @@ void Tion4sClimate::on_turbo(const tion4s_turbo_t &turbo, uint32_t request_id) {
   const auto preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
   if (turbo.is_active) {
     if (preset != climate::CLIMATE_PRESET_BOOST) {
-      this->saved_preset_ = preset;
+      this->presets_saved_preset_ = preset;
       this->preset = climate::CLIMATE_PRESET_BOOST;
     }
   } else {
     if (preset == climate::CLIMATE_PRESET_BOOST) {
-      this->enable_preset_(this->saved_preset_);
+      this->presets_cancel_boost_(this);
     }
   }
 
-  if (this->boost_time_left_) {
+  if (this->presets_boost_time_left_) {
     if (turbo.turbo_time == 0) {
-      this->boost_time_left_->publish_state(NAN);
+      this->presets_boost_time_left_->publish_state(NAN);
     } else {
       const auto boost_time = this->get_boost_time_();
       const auto boost_time_one_percent = boost_time / 100;
-      this->boost_time_left_->publish_state(static_cast<float>(turbo.turbo_time) /
-                                            static_cast<float>(boost_time_one_percent));
+      this->presets_boost_time_left_->publish_state(static_cast<float>(turbo.turbo_time) /
+                                                    static_cast<float>(boost_time_one_percent));
     }
   }
 
@@ -238,8 +238,8 @@ bool Tion4sClimate::enable_boost() {
   }
 
   this->api_->set_turbo(boost_time, ++this->request_id_);
-  if (this->boost_time_left_) {
-    this->boost_time_left_->publish_state(100);
+  if (this->presets_boost_time_left_) {
+    this->presets_boost_time_left_->publish_state(100);
   }
 
   return true;

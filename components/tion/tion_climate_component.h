@@ -20,10 +20,8 @@ class TionClimateComponentBase : public climate::Climate, public TionClimatePres
   TionClimateComponentBase(const TionClimateComponentBase &) = delete;             // non construction-copyable
   TionClimateComponentBase &operator=(const TionClimateComponentBase &) = delete;  // non copyable
 
-  TionClimateComponentBase(TionVPortType vport_type) : vport_type_(vport_type) {
-    this->target_temperature = NAN;
-    this->preset = climate::CLIMATE_PRESET_NONE;
-  }
+  TionClimateComponentBase(TionVPortType vport_type);
+
   void call_setup() override;
   void dump_settings(const char *tag, const char *component) const;
 
@@ -40,26 +38,9 @@ class TionClimateComponentBase : public climate::Climate, public TionClimatePres
 
   void set_fan_speed_(uint8_t fan_speed);
 
-  void reset_preset_();
-
 #ifdef TION_ENABLE_PRESETS
-  virtual bool enable_boost() { return this->presets_enable_boost_(this, this); }
-  virtual void cancel_boost() { this->presets_cancel_boost_(this, this); }
-  bool enable_preset_(climate::ClimatePreset new_preset) {
-    auto *preset_data = this->presets_enable_preset_(new_preset, this, this);
-    if (!preset_data) {
-      return false;
-    }
-    this->control_climate_state(preset_data->mode, preset_data->fan_speed, preset_data->target_temperature,
-                                preset_data->gate_position);
-    this->preset = new_preset;
-    return true;
-  }
-  void cancel_preset_(climate::ClimatePreset old_preset) {
-    if (this->presets_cancel_preset_(old_preset, this, this)) {
-      this->preset = old_preset;
-    }
-  }
+  virtual bool enable_boost() { return this->presets_enable_boost_timer_(this, this); }
+  virtual void cancel_boost() { this->presets_cancel_boost_timer_(this); }
 #endif
 };
 

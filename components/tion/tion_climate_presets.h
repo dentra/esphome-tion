@@ -16,8 +16,6 @@ namespace tion {
 #ifndef TION_ENABLE_PRESETS
 class TionClimatePresets {
  public:
-  void setup_presets() const {}
-  void add_presets(climate::ClimateTraits &traits) const {}
   void dump_presets(const char *tag) const {}
 };
 #endif
@@ -39,11 +37,14 @@ using TionClimatePresetData = TionPresetData<climate::ClimateMode, climate::CLIM
 
 class TionClimatePresets {
  public:
-  void set_boost_time(number::Number *boost_time) { this->boost_time_ = boost_time; }
-  void set_boost_time_left(sensor::Sensor *boost_time_left) { this->boost_time_left_ = boost_time_left; }
+  void set_boost_time(number::Number *boost_time) { this->presets_boost_time_ = boost_time; }
+  void set_boost_time_left(sensor::Sensor *boost_time_left) { this->presets_boost_time_left_ = boost_time_left; }
 
   void setup_presets();
   void add_presets(climate::ClimateTraits &traits);
+  void dump_presets(const char *tag) const;
+
+  virtual TionGatePosition get_gate_position() const = 0;
 
   /**
    * Update default preset.
@@ -60,49 +61,46 @@ class TionClimatePresets {
 
     if (mode == climate::CLIMATE_MODE_OFF || mode == climate::CLIMATE_MODE_HEAT ||
         mode == climate::CLIMATE_MODE_FAN_ONLY) {
-      this->presets_[preset].mode = mode;
+      this->presets_data_[preset].mode = mode;
     }
 
     if (fan_speed > 0 && fan_speed <= TION_MAX_FAN_SPEED) {
-      this->presets_[preset].fan_speed = fan_speed;
+      this->presets_data_[preset].fan_speed = fan_speed;
     }
 
     if (target_temperature >= TION_MIN_TEMPERATURE && target_temperature <= TION_MAX_TEMPERATURE) {
-      this->presets_[preset].target_temperature = target_temperature;
+      this->presets_data_[preset].target_temperature = target_temperature;
     }
 
     if (gate_position < TionGatePosition::_LAST) {
-      this->presets_[preset].gate_position = gate_position;
+      this->presets_data_[preset].gate_position = gate_position;
     }
 
     return true;
   }
-  void dump_presets(const char *tag) const;
-
-  virtual TionGatePosition get_gate_position() const = 0;
 
  protected:
-  number::Number *boost_time_{};
-  sensor::Sensor *boost_time_left_{};
-  ESPPreferenceObject boost_rtc_;
+  number::Number *presets_boost_time_{};
+  sensor::Sensor *presets_boost_time_left_{};
+  ESPPreferenceObject presets_boost_rtc_;
 
-  bool presets_enable_boost_(Component *component, climate::Climate *climate);
-  void presets_cancel_boost_(Component *component, climate::Climate *climate);
-
-  TionClimatePresetData *presets_enable_preset_(climate::ClimatePreset new_preset, Component *component,
-                                                climate::Climate *climate);
-  TionClimatePresetData *presets_cancel_preset_(climate::ClimatePreset old_preset, Component *component,
-                                                climate::Climate *climate);
+  bool presets_enable_boost_timer_(Component *component, climate::Climate *climate);
+  void presets_cancel_boost_timer_(Component *component);
+  // partially activate preset, caller must perform actions with returned result if it is not null.
+  TionClimatePresetData *presets_activate_preset_(climate::ClimatePreset new_preset, Component *component,
+                                                  climate::Climate *climate);
+  // Cancel boost and activate saved preset with making climate call.
+  void presets_cancel_boost_(climate::Climate *climate);
 
 #ifdef USE_API
-  void update_preset_service_(std::string preset, std::string mode, int32_t fan_speed, int32_t target_temperature,
-                              std::string gate_position);
-  ESPPreferenceObject presets_rtc_;
+  void presets_update_service_(std::string preset, std::string mode, int32_t fan_speed, int32_t target_temperature,
+                               std::string gate_position);
+  ESPPreferenceObject presets_data_rtc_;
 #endif
 
-  climate::ClimatePreset saved_preset_{climate::CLIMATE_PRESET_NONE};
+  climate::ClimatePreset presets_saved_preset_{climate::CLIMATE_PRESET_NONE};
 
-  TionClimatePresetData presets_[TION_MAX_PRESETS] = {
+  TionClimatePresetData presets_data_[TION_MAX_PRESETS] = {
       {},  // NONE, saved data
       {.fan_speed = 2,
        .target_temperature = 20,
@@ -134,27 +132,33 @@ class TionClimatePresets {
        .gate_position = TionGatePosition::NONE},  // ACTIVITY
   };
 
-  void for_each_preset_(const std::function<void(climate::ClimatePreset index)> &fn) const {
+  void presets_for_each_(const std::function<void(climate::ClimatePreset index)> &fn) const {
     for (size_t i = climate::CLIMATE_PRESET_NONE + 1; i < TION_MAX_PRESETS; i++) {
-      if (this->presets_[i].is_enabled()) {
+      if (this->presets_data_[i].is_enabled()) {
         fn(static_cast<climate::ClimatePreset>(i));
       }
     }
   }
 
-  void dump_preset_(const char *tag, climate::ClimatePreset index) const;
+  bool has_presets() const {
+    auto has_presets = false;
+    this->presets_for_each_([&has_presets](auto index) { has_presets = true; });
+    return has_presets;
+  }
 
-  void update_default_preset_(climate::Climate *climate);
+  void presets_dump_preset_(const char *tag, climate::ClimatePreset index) const;
+
+  void presets_save_default_(climate::Climate *climate);
 
   /// returns boost time in seconds.
   uint32_t get_boost_time_() const {
-    if (this->boost_time_ == nullptr) {
+    if (this->presets_boost_time_ == nullptr) {
       return DEFAULT_BOOST_TIME_SEC;
     }
-    if (this->boost_time_->traits.get_unit_of_measurement()[0] == 's') {
-      return this->boost_time_->state;
+    if (this->presets_boost_time_->traits.get_unit_of_measurement()[0] == 's') {
+      return this->presets_boost_time_->state;
     }
-    return this->boost_time_->state * 60;
+    return this->presets_boost_time_->state * 60;
   }
 };
 

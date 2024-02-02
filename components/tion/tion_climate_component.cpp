@@ -19,9 +19,18 @@ namespace tion {
 
 static const char *const TAG = "tion_climate_component";
 
+TionClimateComponentBase::TionClimateComponentBase(TionVPortType vport_type) : vport_type_(vport_type) {
+  this->target_temperature = NAN;
+#ifdef TION_ENABLE_PRESETS
+  this->preset = climate::CLIMATE_PRESET_NONE;
+#endif
+}
+
 void TionClimateComponentBase::call_setup() {
   TionComponent::call_setup();
+#ifdef TION_ENABLE_PRESETS
   this->setup_presets();
+#endif
 }
 
 void TionClimateComponentBase::dump_settings(const char *TAG, const char *component) const {
@@ -47,6 +56,9 @@ void TionClimateComponentBase::dump_settings(const char *TAG, const char *compon
 #endif
 #ifdef USE_TION_AIRFLOW_COUNTER
   LOG_SENSOR("  ", "Airflow Counter", this->airflow_counter_);
+#endif
+#ifdef USE_TION_WORK_TIME
+  LOG_SENSOR("  ", "Work Time", this->work_time_);
 #endif
 #ifdef USE_TION_FILTER_TIME_LEFT
   LOG_SENSOR("  ", "Filter Time Left", this->filter_time_left_);
@@ -82,7 +94,9 @@ climate::ClimateTraits TionClimateComponentBase::traits() {
   for (uint8_t i = 1, max = i + TION_MAX_FAN_SPEED; i < max; i++) {
     traits.add_supported_custom_fan_mode(fan_speed_to_mode(i));
   }
+#ifdef TION_ENABLE_PRESETS
   this->add_presets(traits);
+#endif
   traits.set_supports_action(true);
   return traits;
 }
@@ -98,41 +112,45 @@ void TionClimateComponentBase::control(const climate::ClimateCall &call) {
 
 #ifdef TION_ENABLE_PRESETS
   const auto old_preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
-  if (call.get_preset().has_value()) {
-    const auto new_preset = *call.get_preset();
-    auto *preset_data = this->presets_enable_preset_(new_preset, this, this);
-    if (preset_data) {
-      ESP_LOGD(TAG, "Set preset %s", LOG_STR_ARG(climate::climate_preset_to_string(new_preset)));
-      gate_position = preset_data->gate_position;
-      mode = preset_data->mode;
-      fan_speed = preset_data->fan_speed;
-      target_temperature = preset_data->target_temperature;
-      this->preset = new_preset;
-      // если буст, то больне ничеего не даем изменять и выходим
-      if (new_preset == climate::CLIMATE_PRESET_BOOST) {
-        if (has_changes) {
-          ESP_LOGW(TAG, "No more changes can be performed");
-          if (call.get_mode().has_value()) {
-            ESP_LOGW(TAG, "  Change of mode was skipped");
+  if (this->has_presets()) {
+    if (call.get_preset().has_value()) {
+      const auto new_preset = *call.get_preset();
+      auto *preset_data = this->presets_activate_preset_(new_preset, this, this);
+      if (preset_data) {
+        ESP_LOGD(TAG, "Set preset %s", LOG_STR_ARG(climate::climate_preset_to_string(new_preset)));
+        gate_position = preset_data->gate_position;
+        mode = preset_data->mode;
+        fan_speed = preset_data->fan_speed;
+        target_temperature = preset_data->target_temperature;
+        this->preset = new_preset;
+        // если буст, то больне ничеего не даем изменять и выходим
+        if (new_preset == climate::CLIMATE_PRESET_BOOST) {
+          if (has_changes) {
+            ESP_LOGW(TAG, "No more changes can be performed");
+            if (call.get_mode().has_value()) {
+              ESP_LOGW(TAG, "  Change of mode was skipped");
+            }
+            if (call.get_custom_fan_mode().has_value()) {
+              ESP_LOGW(TAG, "  Change of fan speed was skipped");
+            }
+            if (call.get_target_temperature().has_value()) {
+              ESP_LOGW(TAG, "  Change of target temperature was skipped");
+            }
           }
-          if (call.get_custom_fan_mode().has_value()) {
-            ESP_LOGW(TAG, "  Change of fan speed was skipped");
-          }
-          if (call.get_target_temperature().has_value()) {
-            ESP_LOGW(TAG, "  Change of target temperature was skipped");
-          }
+          this->control_climate_state(mode, fan_speed, target_temperature, gate_position);
+          return;
         }
-        return;
       }
-    }
-  } else if (old_preset == climate::CLIMATE_PRESET_BOOST && has_changes) {
-    auto *preset_data = this->presets_enable_preset_(this->saved_preset_, this, this);
-    if (preset_data) {
-      ESP_LOGD(TAG, "Restored preset %s data", LOG_STR_ARG(climate::climate_preset_to_string(this->saved_preset_)));
-      gate_position = preset_data->gate_position;
-      mode = preset_data->mode;
-      fan_speed = preset_data->fan_speed;
-      target_temperature = preset_data->target_temperature;
+    } else if (old_preset == climate::CLIMATE_PRESET_BOOST && has_changes) {
+      auto *preset_data = this->presets_activate_preset_(this->presets_saved_preset_, this, this);
+      if (preset_data) {
+        ESP_LOGD(TAG, "Restored preset %s",
+                 LOG_STR_ARG(climate::climate_preset_to_string(this->presets_saved_preset_)));
+        gate_position = preset_data->gate_position;
+        mode = preset_data->mode;
+        fan_speed = preset_data->fan_speed;
+        target_temperature = preset_data->target_temperature;
+      }
     }
   }
   const auto new_preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
@@ -164,20 +182,14 @@ void TionClimateComponentBase::control(const climate::ClimateCall &call) {
 #ifdef TION_ENABLE_PRESETS
   // в любом случае сбрасываем пресет если были изменения
   if (has_changes) {
-    this->preset = climate::CLIMATE_PRESET_NONE;
+    if (old_preset != climate::CLIMATE_PRESET_NONE) {
+      ESP_LOGD(TAG, "Reset preset");
+      this->preset = climate::CLIMATE_PRESET_NONE;
+    }
   }
 #endif
 
   this->control_climate_state(mode, fan_speed, target_temperature, gate_position);
-}
-
-void TionClimateComponentBase::reset_preset_() {
-#ifdef TION_ENABLE_PRESETS
-  const auto preset = this->preset.value_or(climate::CLIMATE_PRESET_NONE);
-  if (preset == climate::CLIMATE_PRESET_BOOST) {
-  }
-  this->preset = climate::CLIMATE_PRESET_NONE;
-#endif
 }
 
 void TionClimateComponentBase::set_fan_speed_(uint8_t fan_speed) {
