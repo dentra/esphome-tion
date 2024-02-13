@@ -1,0 +1,56 @@
+только подключились
+2024-02-09 19:49:25,901 o2_main INFO    Proxy mode enabled: /dev/cu.usbmodem553C0055831
+2024-02-09 19:49:26,146 protocol DEBUG   [RF] RX: 00 FF (2)
+2024-02-09 19:49:26,147 protocol DEBUG   [RF] TX: 10 04 10 01 00 FA (6)
+2024-02-09 19:49:26,233 protocol DEBUG   [RF] RX: 07 F8 (2)
+2024-02-09 19:49:26,233 protocol DEBUG   [RF] TX: 17 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 61 0E 13 04 10 EC 19 79 (26)
+2024-02-09 19:49:26,248 protocol DEBUG   [RF] RX: 01 FE (2)
+2024-02-09 19:49:26,456 protocol DEBUG   [RF] RX: 03 FC (2)
+2024-02-09 19:49:26,462 protocol DEBUG   [O2] RX: 13 00 EC (3)
+2024-02-09 19:49:26,462 emu INFO    O2 new value DEV_MODE_RSP[13]: 00 [00000000]
+2024-02-09 19:49:26,473 protocol DEBUG   [RF] RX: 04 02 F9 (3)
+2024-02-09 19:49:26,473 commands INFO    New work mode 0x00 -> 0x02 | 0000 0000 -> 0000 0010
+2024-02-09 19:49:26,479 protocol DEBUG   [O2] RX: 55 AA (2)
+2024-02-09 19:49:26,479 emu INFO    O2 new value: SET_WORK_MODE_RSP[55]:  (0)
+
+активируем на O2 режим сопряжения
+2024-02-09 19:52:00,574 protocol DEBUG   [O2] RX: 13 03 EF (3)
+2024-02-09 19:52:00,575 emu INFO    O2 new value DEV_MODE_RSP[13]: 03 [00000011]
+2024-02-09 19:52:00,594 emu INFO    O2 new value DEV_MODE_RSP[13]: 00 [00000000]
+2024-02-09 19:52:01,055 protocol DEBUG   [O2] RX: 13 02 EE (3)
+2024-02-09 19:52:01,056 emu INFO    O2 new value DEV_MODE_RSP[13]: 02 [00000010]
+2024-02-09 19:52:01,068 protocol DEBUG   [RF] RX: 04 03 F8 (3)
+2024-02-09 19:52:01,068 commands INFO    New work mode 0x02 -> 0x03 | 0000 0010 -> 0000 0011
+2024-02-09 19:52:01,070 emu INFO    O2 new value DEV_MODE_RSP[13]: 00 [00000000]
+вклчючаем сопряжение
+2024-02-09 19:52:41,698 protocol DEBUG   [RF] RX: 04 06 FD (3)
+2024-02-09 19:52:41,698 commands INFO    New work mode 0x03 -> 0x06 | 0000 0011 -> 0000 0110
+2024-02-09 19:52:42,114 protocol DEBUG   [RF] RX: 04 16 ED (3)
+2024-02-09 19:52:42,115 commands INFO    New work mode 0x06 -> 0x16 | 0000 0110 -> 0001 0110
+2024-02-09 19:52:42,131 protocol DEBUG   [RF] RX: 05 FA (2)
+
+удаляем сопряжение
+2024-02-09 19:54:02,222 commands INFO    New work mode 0x16 -> 0x06 | 0001 0110 -> 0000 0110
+
+вклчючаем сопряжение еще раз
+2024-02-09 19:56:20,062 emu INFO    O2 new value DEV_MODE_RSP[13]: 03 [00000011]
+2024-02-09 19:56:20,074 commands INFO    New work mode 0x06 -> 0x03 | 0000 0110 -> 0000 0011
+2024-02-09 19:56:20,080 emu INFO    O2 new value DEV_MODE_RSP[13]: 00 [00000000]
+2024-02-09 19:56:20,542 emu INFO    O2 new value DEV_MODE_RSP[13]: 02 [00000010]
+2024-02-09 19:56:20,766 emu INFO    O2 new value DEV_MODE_RSP[13]: 00 [00000000]
+2024-02-09 19:56:34,705 commands INFO    New work mode 0x03 -> 0x06 | 0000 0011 -> 0000 0110
+2024-02-09 19:56:35,169 commands INFO    New work mode 0x06 -> 0x16 | 0000 0110 -> 0001 0110
+
+сопряжение успешно
+2024-02-09 20:02:11,317 emu WARNING O2 port is closed
+
+включили авто режим
+2024-02-09 20:21:31,289 commands INFO    Set state: fan=1, T(t)=16, pwr=1, heat=1, src=1
+2024-02-09 20:21:58,136 protocol DEBUG   [RF] RX: 02 02 10 01 01 00 EF (7)
+2024-02-09 20:21:58,136 commands INFO    Set state: fan=2, T(t)=16, pwr=1, heat=1, src=0
+2024-02-09 20:21:58,168 protocol DEBUG   [RF] RX: 04 1E E5 (3)
+2024-02-09 20:21:58,169 commands INFO    New work mode 0x16 -> 0x1E | 0001 0110 -> 0001 1110
+
+выключили авто режим
+2024-02-09 20:23:14,476 commands INFO    Set state: fan=4, T(t)=16, pwr=1, heat=1, src=0
+2024-02-09 20:23:14,507 commands INFO    New work mode 0x1E -> 0x16 | 0001 1110 -> 0001 0110
