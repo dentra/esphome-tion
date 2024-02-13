@@ -24,10 +24,10 @@ void TionO2Climate::dump_config() {
 void TionO2Climate::update_state(const tiono2_state_t &state) {
   this->dump_state(state);
 
-  if (!state.power_state) {
+  if (!state.flags.power_state) {
     this->mode = climate::CLIMATE_MODE_OFF;
     this->action = climate::CLIMATE_ACTION_OFF;
-  } else if (state.heater_state) {
+  } else if (state.flags.heater_state) {
     this->mode = climate::CLIMATE_MODE_HEAT;
     this->action = this->mode == state.is_heating() ? climate::CLIMATE_ACTION_HEATING : climate::CLIMATE_ACTION_FAN;
   } else {
@@ -47,14 +47,15 @@ void TionO2Climate::update_state(const tiono2_state_t &state) {
 }
 
 void TionO2Climate::dump_state(const tiono2_state_t &state) const {
+  auto flags = *static_cast<const uint8_t *>(static_cast<const void *>(&state.flags));
   static char flags_bits[CHAR_BIT + 1]{};
   for (int i = 0; i < CHAR_BIT; i++) {
-    flags_bits[7 - i] = ((state.flags >> i) & 1) + '0';
+    flags_bits[7 - i] = ((flags >> i) & 1) + '0';
   }
   ESP_LOGD(TAG, "flags       : %s", flags_bits);
-  ESP_LOGV(TAG, "filter_state: %s", ONOFF(state.filter_state));
-  ESP_LOGV(TAG, "power_state : %s", ONOFF(state.power_state));
-  ESP_LOGV(TAG, "heater_state: %s", ONOFF(state.heater_state));
+  ESP_LOGV(TAG, "filter_state: %s", ONOFF(state.flags.filter_state));
+  ESP_LOGV(TAG, "power_state : %s", ONOFF(state.flags.power_state));
+  ESP_LOGV(TAG, "heater_state: %s", ONOFF(state.flags.heater_state));
   ESP_LOGV(TAG, "outdoor_temp: %d", state.outdoor_temperature);
   ESP_LOGV(TAG, "current_temp: %d", state.current_temperature);
   ESP_LOGV(TAG, "target_temp : %d", state.current_temperature);
@@ -98,16 +99,16 @@ void TionO2Climate::TionO2Call::perform() {
   auto ns = cs;
 
   if (this->power_state_.has_value()) {
-    ns.power_state = *this->power_state_;
-    if (cs.power_state != ns.power_state) {
-      ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(cs.power_state), ONOFF(ns.power_state));
+    ns.flags.power_state = *this->power_state_;
+    if (cs.flags.power_state != ns.flags.power_state) {
+      ESP_LOGD(TAG, "New power state %s -> %s", ONOFF(cs.flags.power_state), ONOFF(ns.flags.power_state));
     }
   }
 
   if (this->heater_state_.has_value()) {
-    ns.heater_state = *this->heater_state_;
-    if (cs.heater_state != ns.heater_state) {
-      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(cs.heater_state), ONOFF(ns.heater_state));
+    ns.flags.heater_state = *this->heater_state_;
+    if (cs.flags.heater_state != ns.flags.heater_state) {
+      ESP_LOGD(TAG, "New heater state %s -> %s", ONOFF(cs.flags.heater_state), ONOFF(ns.flags.heater_state));
     }
   }
 
@@ -126,9 +127,9 @@ void TionO2Climate::TionO2Call::perform() {
   }
 
 #ifdef TION_ENABLE_ANTIFRIZE
-  if (ns.power_state && !ns.heater_state && ns.outdoor_temperature < 0) {
+  if (ns.flags.power_state && !ns.flags.heater_state && ns.outdoor_temperature < 0) {
     ESP_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
-    ns.heater_state = true;
+    ns.flags.heater_state = true;
   }
 #endif
 

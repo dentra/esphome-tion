@@ -81,6 +81,8 @@ struct tion3s_state_set_t {
     // в tion remote всегда выставляется этот бит
     st_set.flags.preset_state = true;
 
+    // TODO set comm_source
+
     return st_set;
   }
 };

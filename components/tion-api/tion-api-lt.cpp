@@ -13,24 +13,26 @@ using namespace tion_lt;
 static const char *const TAG = "tion-api-lt";
 
 void tionlt_state_t::for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const {
-  if (this->errors.reg == 0) {
+  if (this->errors == 0) {
     return;
   }
   for (uint32_t i = tionlt_state_t::ERROR_MIN_BIT; i <= tionlt_state_t::ERROR_MAX_BIT; i++) {
     uint32_t mask = 1 << i;
-    if ((this->errors.reg & mask) == mask) {
+    if ((this->errors & mask) == mask) {
       fn(i + 1, "EC");
     }
   }
   for (uint32_t i = tionlt_state_t::WARNING_MIN_BIT; i <= tionlt_state_t::WARNING_MAX_BIT; i++) {
     uint32_t mask = 1 << i;
-    if ((this->errors.reg & mask) == mask) {
+    if ((this->errors & mask) == mask) {
       fn(i + 1, "WS");
     }
   }
 }
 
-float tionlt_state_t::heater_power() const { return flags.heater_present ? heater_var * (0.01f * 1000.0f) : 0.0f; }
+float tionlt_state_t::heater_power() const {
+  return this->flags.heater_present ? this->heater_var * (0.01f * 1000.0f) : 0.0f;
+}
 
 uint16_t TionLtApi::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 

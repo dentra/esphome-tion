@@ -10,6 +10,11 @@ namespace dentra {
 namespace tion {
 
 #pragma pack(push, 1)
+
+enum class CommSource : uint8_t { AUTO = 0, USER = 1 };
+
+inline const char *comm_sourse_str(CommSource value) { return value == CommSource::AUTO ? "AUTO" : "USER"; }
+
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion_dev_info_t {
   // NOLINTNEXTLINE(readability-identifier-naming)

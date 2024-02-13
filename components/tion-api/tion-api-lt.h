@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "tion-api.h"
 
 namespace dentra {
@@ -26,11 +28,11 @@ struct tionlt_state_t {
     // Байт 0, бит 2. Состояние световых оповещений
     bool led_state : 1;
     // Байт 0, бит 3.
-    uint8_t last_com_source : 1;
+    CommSource comm_source : 1;
     // Байт 0, бит 4. Предупреждение о необходимости замены фильтра.
     bool filter_warnout : 1;
     // Байт 0, бит 5.
-    bool auto_co2 : 1;
+    bool ma_auto : 1;
     // Байт 0, бит 6.
     bool heater_state : 1;
     // Байт 0, бит 7.
@@ -55,14 +57,13 @@ struct tionlt_state_t {
   int8_t pcb_temperature;
   // Байт 8-23. 8-11 - work_time, 12-15 - fan_time, 16-19 - filter_time, 20-23 - airflow_counter
   tion_state_counters_t<tion_dev_info_t::BRLT> counters;
-  // Байт 24-47.
+  // Байт 24-27.
+  uint32_t errors;
+  // Байт 28-47.
   struct {
-    uint32_t reg;
-    struct {
-      enum { ERROR_TYPE_NUMBER = 20 };
-      uint8_t er[ERROR_TYPE_NUMBER];
-    } cnt;
-  } errors;
+    enum { ERROR_TYPE_NUMBER = 20 };
+    uint8_t er[ERROR_TYPE_NUMBER];
+  } errors_cnt;
   // Байт 48-53.
   // NOLINTNEXTLINE(readability-identifier-naming)
   struct button_presets_t {
@@ -76,6 +77,7 @@ struct tionlt_state_t {
   uint8_t heater_var;
   // Байт 56.
   uint8_t test_type;
+
   float heater_power() const;
   bool is_initialized() const { return this->counters.work_time != 0; }
   bool filter_warnout() const { return this->flags.filter_warnout; }

@@ -74,9 +74,9 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "timer_state  : %s", ONOFF(state.flags.timer_state));
   ESP_LOGV(TAG, "sound_state  : %s", ONOFF(state.flags.sound_state));
   ESP_LOGV(TAG, "preset_state : %s", ONOFF(state.flags.preset_state));
-  ESP_LOGV(TAG, "auto_state   : %s", ONOFF(state.flags.auto_state));
-  ESP_LOGV(TAG, "ma_connect   : %s", ONOFF(state.flags.ma_connect));
   ESP_LOGV(TAG, "save         : %s", ONOFF(state.flags.save));
+  ESP_LOGV(TAG, "ma_auto      : %s", ONOFF(state.flags.ma_auto));
+  ESP_LOGV(TAG, "ma_connected : %s", ONOFF(state.flags.ma_connected));
   ESP_LOGV(TAG, "ma_pairing   : %s", ONOFF(state.flags.ma_pairing));
   ESP_LOGV(TAG, "reserved     : 0x%02X", state.flags.reserved);
   ESP_LOGV(TAG, "current_temp1: %d", state.current_temperature1);

@@ -32,18 +32,18 @@ void tion4s_state_t::for_each_error(const std::function<void(uint8_t error, cons
 }
 
 float tion4s_state_t::heater_power() const {
-  if (heater_var == 0 || !flags.heater_state) {
+  if (this->heater_var == 0 || !this->flags.heater_state) {
     return 0.0f;
   }
-  switch (flags.heater_present) {
+  switch (this->flags.heater_present) {
     case HEATER_PRESENT_NONE:
       return 0.0f;
     case HEATER_PRESENT_1000W:
-      return heater_var * (0.01f * 1000.0f);
+      return this->heater_var * (0.01f * 1000.0f);
     case HEATER_PRESENT_1400W:
-      return heater_var * (0.01f * 1400.0f);
+      return this->heater_var * (0.01f * 1400.0f);
     default:
-      TION_LOGW(TAG, "unknown heater_present value %u", flags.heater_present);
+      TION_LOGW(TAG, "unknown heater_present value %u", this->flags.heater_present);
       return NAN;
   }
 }

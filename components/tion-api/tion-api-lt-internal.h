@@ -37,11 +37,11 @@ struct tionlt_state_set_t {
     // Байт 0, бит 2
     bool led_state : 1;
     // Байт 0, бит 3
-    uint8_t auto_co2 : 1;
+    bool ma_auto : 1;
     // Байт 0, бит 4
-    uint8_t heater_state : 1;
+    bool heater_state : 1;
     // Байт 0, бит 5
-    uint8_t last_com_source : 1;  // last_com_source или save
+    tion::CommSource comm_source : 1;  // last_com_source или save
     // Байт 0, бит 6
     bool factory_reset : 1;
     // Байт 0, бит 7
@@ -78,6 +78,9 @@ struct tionlt_state_set_t {
     st_set.heater_state = state.flags.heater_state;
 
     st_set.button_presets = state.button_presets;
+
+    st_set.ma_auto = state.flags.ma_auto;
+    st_set.comm_source = st_set.ma_auto ? tion::CommSource::AUTO : tion::CommSource::USER;
 
     return st_set;
   }

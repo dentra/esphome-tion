@@ -15,7 +15,7 @@ struct tion_hw_set_state_t {
     bool sound_state : 1;                    // ???
     bool led_state : 1;                      // ???
     uint8_t /*HeaterMode*/ heater_mode : 1;  // 0 - heating, 1 - temperature maintance
-    bool last_com_source : 1;                // ???
+    CommSource last_com_source : 1;          // ???
     bool factory_reset : 1;                  // ???
     bool error_reset : 1;                    // ???
     bool filter_reset : 1;                   // ???

@@ -234,14 +234,18 @@ bool TionO2Api::write_state(const tiono2_state_t &state, uint32_t request_id) co
   tiono2_state_set_t data{
       .fan_speed = state.fan_speed,
       .target_temperature = state.target_temperature,
-      .power = state.power_state,
-      .heat = state.heater_state,
-      .source = tiono2_state_set_t::USER,
+      .power = state.flags.power_state,
+      .heat = state.flags.heater_state,
+      // TODO set right comm_source
+      .comm_source = tion::CommSource::USER,
   };
   return this->write_frame(FRAME_TYPE_STATE_SET_REQ, data);
 }
 
-bool TionO2Api::reset_filter(const tiono2_state_t &state, uint32_t request_id) const { return false; }
+bool TionO2Api::reset_filter(const tiono2_state_t &state, uint32_t request_id) const {
+  TION_LOGW(TAG, "reset_filter is not implemented");
+  return false;
+}
 
 }  // namespace tion_o2
 }  // namespace dentra

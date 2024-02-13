@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "tion-api.h"
 
 namespace dentra {
@@ -41,13 +43,13 @@ struct tion4s_state_t {
     // Байт 0, бит 4. Режим обогрева.
     HeaterMode heater_mode : 1;
     // Байт 0, бит 5.
-    uint8_t last_com_source : 1;
+    CommSource comm_source : 1;
     // Байт 0, бит 6. Предупреждение о необходимости замены фильтра.
     bool filter_warnout : 1;
     // Байт 0, бит 7, Байт 1, бит 0-1. Мощность тэна: 0 - 0 kW, 1 - 1 kW, 2 - 1.4 kW.
     HeaterPresent heater_present : 3;
     // Байт 1, бит 2. Состояния подключения MagicAir.
-    bool ma_connect : 1;
+    bool ma_connected : 1;
     // Байт 1, бит 3. MagicAir auto control.
     bool ma_auto : 1;
     // Байт 1, бит 4.

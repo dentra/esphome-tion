@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "tion-api.h"
 
 namespace dentra {
@@ -33,10 +35,10 @@ struct tion3s_state_t {
     // Байт 2, бит 3. Включены звуковые оповещения.
     bool sound_state : 1;
     // Байт 2, бит 4.
-    bool auto_state : 1;
+    bool ma_auto : 1;
     // Байт 2, бит 5. Состояния подключения MagicAir.
-    bool ma_connect : 1;
-    // Байт 2, бит 6.
+    bool ma_connected : 1;
+    // Байт 2, бит 6. Возможно это comm_source
     bool save : 1;
     // Байт 2, бит 7.
     bool ma_pairing : 1;

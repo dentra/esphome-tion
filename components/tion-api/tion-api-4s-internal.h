@@ -60,7 +60,7 @@ struct tion4s_state_set_t {
     // Байт 0, бит 3.
     tion::tion4s_state_t::HeaterMode heater_mode : 1;
     // Байт 0, бит 4.
-    bool last_com_source : 1;
+    tion::CommSource comm_source : 1;
     // Байт 0, бит 5.
     bool factory_reset : 1;
     // Байт 0, бит 6.
@@ -68,7 +68,7 @@ struct tion4s_state_set_t {
     // Байт 0, бит 7.
     bool filter_reset : 1;
     // Байт 1, бит 0.
-    bool ma_connect : 1;
+    bool ma_connected : 1;
     // Байт 1, бит 1.
     bool ma_auto : 1;
     uint8_t reserved : 6;
@@ -92,14 +92,14 @@ struct tion4s_state_set_t {
     st_set.sound_state = state.flags.sound_state;
     st_set.led_state = state.flags.led_state;
     st_set.heater_mode = state.flags.heater_mode;
-    st_set.last_com_source = true;
 
     st_set.gate_position = state.gate_position;
     st_set.target_temperature = state.target_temperature;
 
     // st_set.filter_time = state.counters.filter_time;
-    // st_set.ma_auto = state.flags.ma_auto;
-    // st_set.ma_connect = state.flags.ma_connect;
+    st_set.ma_connected = state.flags.ma_connected;
+    st_set.ma_auto = state.flags.ma_auto;
+    st_set.comm_source = st_set.ma_auto ? tion::CommSource::AUTO : tion::CommSource::USER;
 
     return st_set;
   }

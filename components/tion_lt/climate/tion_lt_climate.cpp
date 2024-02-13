@@ -42,8 +42,6 @@ void TionLtClimate::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "airflow_counter: %" PRIu32, state.counters.airflow_counter);
   ESP_LOGV(TAG, "filter_warnout : %s", ONOFF(state.flags.filter_warnout));
   ESP_LOGV(TAG, "filter_time    : %" PRIu32, state.counters.filter_time);
-  ESP_LOGV(TAG, "last_com_source: %u", state.flags.last_com_source);
-  ESP_LOGV(TAG, "auto_co2       : %s", ONOFF(state.flags.auto_co2));
   ESP_LOGV(TAG, "heater_state   : %s", ONOFF(state.flags.heater_state));
   ESP_LOGV(TAG, "heater_present : %s", ONOFF(state.flags.heater_present));
   ESP_LOGV(TAG, "heater_var     : %u", state.heater_var);
@@ -54,9 +52,11 @@ void TionLtClimate::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "pcb_temperature: %u", state.pcb_temperature);
   ESP_LOGV(TAG, "fan_time       : %" PRIu32, state.counters.fan_time);
   ESP_LOGV(TAG, "work_time      : %" PRIu32, state.counters.work_time);
-  ESP_LOGV(TAG, "errors.reg     : %" PRIu32, state.errors.reg);
-  ESP_LOGV(TAG, "errors.cnt     : %s",
-           format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors.cnt), sizeof(state.errors.cnt)).c_str());
+  ESP_LOGV(TAG, "ma_auto        : %s", ONOFF(state.flags.ma_auto));
+  ESP_LOGV(TAG, "comm_source    : %s", comm_sourse_str(state.flags.comm_source));
+  ESP_LOGV(TAG, "errors         : %" PRIu32, state.errors);
+  ESP_LOGV(TAG, "errors_cnt     : %s",
+           format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors_cnt), sizeof(state.errors_cnt)).c_str());
   ESP_LOGV(TAG, "btn_prs0.temp  : %d", state.button_presets.temp[0]);
   ESP_LOGV(TAG, "btn_prs0.fan_sp: %d", state.button_presets.fan_speed[0]);
   ESP_LOGV(TAG, "btn_prs1.temp  : %d", state.button_presets.temp[1]);

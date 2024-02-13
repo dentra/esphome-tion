@@ -20,16 +20,13 @@ struct tiono2_state_t {
   enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10 };
 
   // Байт 1.
-  union {
-    struct {
-      bool filter_state : 1;
-      bool power_state : 1;
-      bool unknown2_state : 1;
-      bool heater_state : 1;
-      uint8_t reserved_state : 4;
-    };
-    uint8_t flags;
-  };
+  struct {
+    bool filter_state : 1;
+    bool power_state : 1;
+    bool unknown2_state : 1;
+    bool heater_state : 1;
+    uint8_t reserved_state : 4;
+  } flags;
   // Байт 2. Температура до нагревателя.
   int8_t outdoor_temperature;
   // Байт 3. Температура после нагревателя.
@@ -60,7 +57,7 @@ struct tiono2_state_t {
   bool is_initialized() const { return this->counters.work_time != 0; }
 
   bool is_heating() const {
-    if (!this->heater_state) {
+    if (!this->flags.heater_state) {
       return false;
     }
     // heating detection borrowed from:
@@ -97,7 +94,8 @@ struct tiono2_state_set_t {
     bool heat : 8;
   };
   // Байт 5. Иозможно источник:  0 - auto, 1 - user
-  enum : uint8_t { AUTO = 0, USER = 1 } source;
+  // большое подозрение, что это эквивалент last_com_source
+  tion::CommSource comm_source;
 };
 
 static_assert(sizeof(tiono2_state_set_t) == 5, "Invalid tiono2_state_set_t size");
