@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "tion-api.h"
 
 namespace dentra {
@@ -15,34 +17,38 @@ namespace tion_o2 {
 // Байт 4 - нагрев
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tiono2_state_t {
+  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10 };
+
   // Байт 1.
-  struct {
-    uint8_t unknown : 1;
-    bool power_state : 1;
-    bool sound_state : 1;
-    bool heater_state : 1;
-    uint8_t reserved : 4;
-  } flags;
-  // Байт 2. температура
+  union {
+    struct {
+      bool filter_state : 1;
+      bool power_state : 1;
+      bool unknown2_state : 1;
+      bool heater_state : 1;
+      uint8_t reserved_state : 4;
+    };
+    uint8_t flags;
+  };
+  // Байт 2. Температура до нагревателя.
   int8_t outdoor_temperature;
-  // Байт 3.
+  // Байт 3. Температура после нагревателя.
   int8_t current_temperature;
   // Байт 4. Целевая температура [-20:25].
   int8_t target_temperature;
   // Байт 5. Скорость вентиляции [1-4].
   uint8_t fan_speed;
-  // Байт 6. Производительность
+  // Байт 6. Производительность бризера в m3.
   uint8_t productivity;
-  // Байт 7.
-  uint8_t unknown7;  // 04
-  // Байт 8.
-  uint8_t unknown8;  // 00
-  // Байт 9.
-  uint8_t unknown9;  // 00
-  // Байт 10,11,12,13
+  // Байт 7. Всегда 0x04 - возможно максимально-допустимая скорость вентиляции.
+  uint8_t unknown7;
+  // Байт 8,9.
+  uint16_t errors;
+  // Байт 10,11,12,13.
   struct {
     // Время наработки в секундах.
     uint32_t work_time;
+    // Остаток ресура фильтра в секундах.
     uint32_t filter_time;
     uint32_t work_time_days() const { return this->work_time / (24 * 3600); }
     uint32_t filter_time_left() const { return this->filter_time / (24 * 3600); }
@@ -54,7 +60,7 @@ struct tiono2_state_t {
   bool is_initialized() const { return this->counters.work_time != 0; }
 
   bool is_heating() const {
-    if (!this->flags.heater_state) {
+    if (!this->heater_state) {
       return false;
     }
     // heating detection borrowed from:
@@ -63,6 +69,8 @@ struct tiono2_state_t {
     return (this->target_temperature - this->outdoor_temperature) > 3 &&
            (this->current_temperature > this->outdoor_temperature);
   }
+
+  void for_each_error(const std::function<void(uint8_t error)> &fn) const;
 };
 
 static_assert(sizeof(tiono2_state_t) == 17, "Invalid tiono2_state_t size");
@@ -88,8 +96,8 @@ struct tiono2_state_set_t {
   struct {
     bool heat : 8;
   };
-  // Байт 5. Иозможно источник:  0 - ma_auto, 1 - app
-  enum : uint8_t { MA = 0, APP = 1 } source;
+  // Байт 5. Иозможно источник:  0 - auto, 1 - user
+  enum : uint8_t { AUTO = 0, USER = 1 } source;
 };
 
 static_assert(sizeof(tiono2_state_set_t) == 5, "Invalid tiono2_state_set_t size");
@@ -97,27 +105,49 @@ static_assert(sizeof(tiono2_state_set_t) == 5, "Invalid tiono2_state_set_t size"
 // 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
 // 17 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 61 0E 13 04 10 EC 19 79
 struct tiono2_dev_info_t {
-  // Байт 1.
+  // Байт 1. Всегда 0x04 - возможно максимально-допустимая скорость вентиляции.
   uint8_t unknown1;
   // Байт 2-16. заполнено 00
   uint8_t unknown2_16[15];
-  // Байт 17.
-  uint8_t unknown17;
-  // Байт 18.
-  uint8_t unknown18;
-  // Байт 19.
-  uint8_t unknown19;
-  // Байт 20.
-  uint8_t unknown20;
-  // Байт 21,22. Версия прошивки бризера.
+  // Байт 17,18. Версия железа бризера.
+  uint16_t hardware_version;
+  // Байт 19,20. Версия прошивки бризера.
   uint16_t firmware_version;
-  // Байт 23.
-  uint8_t unknown23;
-  // Байт 24.
-  uint8_t unknown24;
+  // Байт 21. Всегда 0x04 - возможно максимально-допустимая скорость вентиляции.
+  uint8_t unknown21;
+  // Байт 22.
+  uint8_t unknown22;
+  // Байт 23. Минимальная темература нагревателя.
+  int8_t heater_min;
+  // Байт 24. Максимальная температура нагревателя.
+  int8_t heater_max;
 };
 
 static_assert(sizeof(tiono2_dev_info_t) == 24, "Invalid tiono2_dev_info_t size");
+
+struct DevModeFlags {
+  // Bit 0. set when pair enabled.
+  bool pair;
+  // Bit 1. set when user click buttons on breezer.
+  bool user;
+  // Bit 2-7. unknown bits.
+  uint8_t reserved : 6;
+};
+
+struct WorkModeFlags {
+  // Бит 0. Возможно признак подтверждения, что принят режим сопряжения.
+  bool unknown0 : 1;
+  // Бит 1. Установлен когда RF-модуль подключен.
+  bool rf_connected : 1;
+  // Бит 2. Возможно устанавливаетсмя во время сопряжения с MA.
+  bool unknown2 : 1;
+  // Бит 3. Установлен когда включен режим AUTO на MA.
+  bool ma_auto : 1;
+  // Бит 4. Установлен когда станция MA подключена.
+  bool ma_connected : 1;
+  // Бит 5,6,7. Возможно неиспользуются.
+  uint8_t reserved : 3;
+};
 
 #pragma pack(pop)
 
@@ -142,8 +172,8 @@ class TionO2Api : public tion::TionApiBase<tiono2_state_t> {
   bool factory_reset(const tiono2_state_t &state, uint32_t request_id = 1) const;
   bool reset_errors(const tiono2_state_t &state, uint32_t request_id = 1) const;
 
-  bool send_heartbeat() const;
-  bool send_work_mode(uint8_t work_mode = 0) const;
+  bool request_dev_mode() const;
+  bool set_work_mode(WorkModeFlags work_mode) const;
 };
 
 }  // namespace tion_o2

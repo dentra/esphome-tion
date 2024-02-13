@@ -29,22 +29,16 @@ class TionO2Climate : public TionClimateComponent<TionO2Api> {
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                              TionGatePosition gate_position) override;
 
-  void control_buzzer_state(bool state) {
-    // FIXME implement buzzer support
-    // ControlState control{};
-    // control.buzzer = state;
-    // this->control_state_(control);
-  }
+  void control_buzzer_state(bool state) {}
 
  protected:
-  struct ControlState {
-    optional<bool> power_state;
-    optional<bool> heater_state;
-    optional<uint8_t> fan_speed;
-    optional<int8_t> target_temperature;
+  class TionO2Call : public TionCall<TionO2Climate> {
+   public:
+    explicit TionO2Call(TionO2Climate *parent) : TionCall(parent) {}
+    void perform();
   };
 
-  void control_state_(const ControlState &state);
+  TionO2Call make_tion_call() { return TionO2Call(this); }
 };
 
 }  // namespace tion

@@ -1,8 +1,11 @@
-import esphome.config_validation as cv
+import logging
+
 import esphome.codegen as cg
+import esphome.config_validation as cv
 from esphome.components import uart
-from esphome.const import CONF_ID
-from .. import vport, tion  # pylint: disable=relative-beyond-top-level
+from esphome.const import CONF_ID, CONF_PLATFORM
+
+from .. import tion, vport  # pylint: disable=relative-beyond-top-level
 
 tion_o2_proxy_ns = cg.esphome_ns.namespace("tion_o2_proxy")
 TionO2Proxy = tion_o2_proxy_ns.class_("TionO2Proxy", cg.Component)
@@ -23,6 +26,9 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
+    logging.warning("%s is not supported at this moment", config[CONF_PLATFORM])
+    return
+
     prt = await vport.vport_get_var(config)
     api = cg.new_Pvariable(
         config[tion.CONF_TION_API_ID],

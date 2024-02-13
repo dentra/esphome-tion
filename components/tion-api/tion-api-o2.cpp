@@ -63,23 +63,23 @@ using namespace tion;
 static const char *const TAG = "tion-api-uart-o2";
 
 size_t get_req_frame_size(uint8_t frame_type) {
-  if (frame_type == FRAME_TYPE_HEARTBEAT_REQ_03) {
+  if (frame_type == FRAME_TYPE_DEV_MODE_REQ) {
     return 1;
   }
-  if (frame_type == FRAME_TYPE_SET_WORK_MODE_REQ_04) {
+  if (frame_type == FRAME_TYPE_SET_WORK_MODE_REQ) {
     return 2;
   }
-  if (frame_type == FRAME_TYPE_STATE_GET_REQ_01) {
+  if (frame_type == FRAME_TYPE_STATE_GET_REQ) {
     return 1;
   }
-  if (frame_type == FRAME_TYPE_STATE_SET_REQ_02) {
+  if (frame_type == FRAME_TYPE_STATE_SET_REQ) {
     // 02 01 EC 01 01 01 11
     return 6;
   }
-  if (frame_type == FRAME_TYPE_DEV_INFO_REQ_07) {
+  if (frame_type == FRAME_TYPE_DEV_INFO_REQ) {
     return 1;
   }
-  if (frame_type == FRAME_TYPE_CONNECT_REQ_00) {
+  if (frame_type == FRAME_TYPE_CONNECT_REQ) {
     return 1;
   }
   if (frame_type == FRAME_TYPE_TIME_GET_REQ) {
@@ -93,28 +93,28 @@ size_t get_req_frame_size(uint8_t frame_type) {
 }
 
 size_t get_rsp_frame_size(uint8_t frame_type) {
-  if (frame_type == FRAME_TYPE_HEARTBEAT_RSP_13) {
+  if (frame_type == FRAME_TYPE_DEV_MODE_RSP) {
     // 13 00 EC
     return 2;
   }
-  if (frame_type == FRAME_TYPE_SET_WORK_MODE_RSP_55) {
+  if (frame_type == FRAME_TYPE_SET_WORK_MODE_RSP) {
     // 55 AA
     return 1;
   }
-  if (frame_type == FRAME_TYPE_STATE_GET_RSP_11) {
+  if (frame_type == FRAME_TYPE_STATE_GET_RSP) {
     // 11 0C FE 0D 0A 02 3C 04
     // 00 00 E0 D7 DC 01 21 F4
     // CA 01 D5
     return 18;
   }
-  if (frame_type == FRAME_TYPE_DEV_INFO_RSP_17) {
+  if (frame_type == FRAME_TYPE_DEV_INFO_RSP) {
     // 17 04 00 00 00 00 00 00
     // 00 00 00 00 00 00 00 00
     // 00 08 61 0E 13 04 10 EC
     // 19 79
     return 25;
   }
-  if (frame_type == FRAME_TYPE_CONNECT_RSP_10) {
+  if (frame_type == FRAME_TYPE_CONNECT_RSP) {
     // 10 04 10 01 00 FA
     return 5;
   }
@@ -125,8 +125,20 @@ size_t get_rsp_frame_size(uint8_t frame_type) {
   return 0;
 }
 
+void tiono2_state_t::for_each_error(const std::function<void(uint8_t error)> &fn) const {
+  if (errors == 0) {
+    return;
+  }
+  for (uint32_t i = tiono2_state_t::ERROR_MIN_BIT; i <= tiono2_state_t::ERROR_MAX_BIT; i++) {
+    uint32_t mask = 1 << i;
+    if ((errors & mask) == mask) {
+      fn(i + 1);
+    }
+  }
+}
+
 void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
-  if (frame_type == FRAME_TYPE_STATE_GET_RSP_11) {
+  if (frame_type == FRAME_TYPE_STATE_GET_RSP) {
     TION_LOGD(TAG, "Response[] State Get");
     if (this->on_state) {
       this->on_state(*static_cast<const tiono2_state_t *>(frame_data), 0);
@@ -134,32 +146,29 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     return;
   }
 
-  if (frame_type == FRAME_TYPE_HEARTBEAT_RSP_13) {
+  if (frame_type == FRAME_TYPE_DEV_MODE_RSP) {
     // 13 00 EC
-    struct RawHeartbeatFrame {
-      // possibly work_mode as in the 4S
-      uint8_t work_mode;  // always 0
+    struct RawDevModeFrame {
+      union {
+        DevModeFlags dev_mode;
+        uint8_t data;
+      };
     } PACKED;
-    auto *frame = static_cast<const RawHeartbeatFrame *>(frame_data);
-    if (frame->work_mode != 0) {
-      // Log the data as info if it is not 0x00
-      TION_LOGI(TAG, "Response[] Heartbeat: %u", frame->work_mode);
-    } else {
-      TION_LOGV(TAG, "Response[] Heartbeat: %u", frame->work_mode);
-    }
-    // if (this->on_heartbeat) {
-    //   this->on_heartbeat(frame->work_mode);
+    auto *frame = static_cast<const RawDevModeFrame *>(frame_data);
+    TION_LOGD(TAG, "Response[] Dev mode: %02X", frame->data);
+    // if (this->on_dev_mode) {
+    //   this->on_dev_mode(frame->dev_mode);
     // }
     return;
   }
 
-  if (frame_type == FRAME_TYPE_SET_WORK_MODE_RSP_55) {
+  if (frame_type == FRAME_TYPE_SET_WORK_MODE_RSP) {
     // 55 AA
-    TION_LOGV(TAG, "Response[] Work Mode");
+    TION_LOGD(TAG, "Response[] Work Mode");
     return;
   }
 
-  if (frame_type == FRAME_TYPE_DEV_INFO_RSP_17) {
+  if (frame_type == FRAME_TYPE_DEV_INFO_RSP) {
     // 17 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 61 0E 13 04 10 EC 19 79
     TION_LOGD(TAG, "Response[] Device info: %s", hexencode(frame_data, frame_data_size).c_str());
     if (this->on_dev_info) {
@@ -168,7 +177,7 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
           .work_mode = tion::tion_dev_info_t::UNKNOWN,
           .device_type = tion::tion_dev_info_t::BRO2,
           .firmware_version = data->firmware_version,
-          .hardware_version = 0,
+          .hardware_version = data->hardware_version,
           .reserved = {},
       };
       this->on_dev_info(info);
@@ -176,7 +185,7 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     return;
   }
 
-  if (frame_type == FRAME_TYPE_CONNECT_RSP_10) {
+  if (frame_type == FRAME_TYPE_CONNECT_RSP) {
     // 10 04 10 01 00 FA
     TION_LOGD(TAG, "Response[] Connect: %s", hexencode(frame_data, frame_data_size).c_str());
     return;
@@ -194,30 +203,30 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
 
 bool TionO2Api::request_connect() const {
   TION_LOGD(TAG, "Request[] Connect");
-  return this->write_frame(FRAME_TYPE_CONNECT_REQ_00);
+  return this->write_frame(FRAME_TYPE_CONNECT_REQ);
 }
 
 bool TionO2Api::request_dev_info() const {
   TION_LOGD(TAG, "Request[] Device info");
-  return this->write_frame(FRAME_TYPE_DEV_INFO_REQ_07);
+  return this->write_frame(FRAME_TYPE_DEV_INFO_REQ);
 }
 
 bool TionO2Api::request_state() const {
   TION_LOGD(TAG, "Request[] State Get");
-  return this->write_frame(FRAME_TYPE_STATE_GET_REQ_01);
+  return this->write_frame(FRAME_TYPE_STATE_GET_REQ);
 }
 
-bool TionO2Api::send_heartbeat() const {
-  TION_LOGV(TAG, "Request[] Heartbeat");
-  return this->write_frame(FRAME_TYPE_HEARTBEAT_REQ_03);
+bool TionO2Api::request_dev_mode() const {
+  TION_LOGV(TAG, "Request[] Dev mode");
+  return this->write_frame(FRAME_TYPE_DEV_MODE_REQ);
 }
 
-bool TionO2Api::send_work_mode(uint8_t work_mode) const {
+bool TionO2Api::set_work_mode(WorkModeFlags work_mode) const {
   TION_LOGV(TAG, "Request[] Work mode");
   const struct {
-    uint8_t work_mode;
+    WorkModeFlags work_mode;
   } PACKED data{.work_mode = work_mode};
-  return this->write_frame(FRAME_TYPE_SET_WORK_MODE_REQ_04, data);
+  return this->write_frame(FRAME_TYPE_SET_WORK_MODE_REQ, data);
 }
 
 bool TionO2Api::write_state(const tiono2_state_t &state, uint32_t request_id) const {
@@ -225,11 +234,11 @@ bool TionO2Api::write_state(const tiono2_state_t &state, uint32_t request_id) co
   tiono2_state_set_t data{
       .fan_speed = state.fan_speed,
       .target_temperature = state.target_temperature,
-      .power = state.flags.power_state,
-      .heat = state.flags.heater_state,
-      .source = tiono2_state_set_t::APP,
+      .power = state.power_state,
+      .heat = state.heater_state,
+      .source = tiono2_state_set_t::USER,
   };
-  return this->write_frame(FRAME_TYPE_STATE_SET_REQ_02, data);
+  return this->write_frame(FRAME_TYPE_STATE_SET_REQ, data);
 }
 
 bool TionO2Api::reset_filter(const tiono2_state_t &state, uint32_t request_id) const { return false; }

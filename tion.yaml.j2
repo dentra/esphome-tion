@@ -138,6 +138,7 @@ packages:
 #   port: !secret mqtt_port
 #   username: !secret mqtt_username
 #   password: !secret mqtt_password
+#   discovery: false # remove or set to true if you plan to use with Home Assistant
 
 # Enable Home Assistant API connection. Please do not remove to keep logs functioning.
 api:
@@ -174,10 +175,6 @@ vport:
     {%- if type == "4s" and port == "uart" %}
     ## Optional, Interval between sending heartbeat commands. Default: 5s.
     # heartbeat_interval: 5s
-    {%- endif %}
-    {%- if type == "o2" and port == "uart" %}
-    ## Optional, Interval between sending heartbeat commands. Default: 200ms.
-    # heartbeat_interval: 200ms
     {%- endif %}
 
 # Main climate component configuration.
@@ -297,11 +294,9 @@ climate:
     state_timeout: 3s
     # Optional, Timeout to combine update operations. Default: 200ms.
     batch_timeout: 200ms
-    {%- if type != "o2" %}
     # Optional, Reports Tion's errors (EC) and warnings (WS).
     errors:
       name: "Errors"
-    {%- endif %}
 
 {%- if type == "3s" and port == "ble" %}
 
