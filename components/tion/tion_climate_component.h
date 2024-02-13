@@ -105,6 +105,15 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
       this->work_time_->publish_state(state.counters.work_time);
     }
 #endif
+#ifdef USE_TION_ERRORS
+    if (this->errors_) {
+      std::string codes;
+      state.for_each_error([&codes](auto code, auto type) {
+        codes += (codes.empty() ? "" : ", ") + str_snprintf("%s%02u", 4, type, code);
+      });
+      this->errors_->publish_state(codes);
+    }
+#endif
     // do not update state in batch mode
     if (!this->batch_active_) {
       this->state_ = state;

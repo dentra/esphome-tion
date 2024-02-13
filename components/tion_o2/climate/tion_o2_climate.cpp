@@ -44,14 +44,6 @@ void TionO2Climate::update_state(const tiono2_state_t &state) {
     this->productivity_->publish_state(state.productivity);
   }
 #endif
-#ifdef USE_TION_ERRORS
-  if (this->errors_) {
-    std::string codes;
-    state.for_each_error(
-        [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + str_snprintf("EC%02u", 4, code); });
-    this->errors_->publish_state(codes);
-  }
-#endif
 }
 
 void TionO2Climate::dump_state(const tiono2_state_t &state) const {
@@ -75,7 +67,7 @@ void TionO2Climate::dump_state(const tiono2_state_t &state) const {
   if (state.unknown7 != 0x04) {
     ESP_LOGW(TAG, "Please report unknown7=%02X", state.unknown7);
   }
-  state.for_each_error([](auto code) { ESP_LOGW(TAG, "Breezer alert: EC%02u", code); });
+  state.for_each_error([](auto code, auto type) { ESP_LOGW(TAG, "Breezer alert: %s%02u", type, code); });
 }
 
 void TionO2Climate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,

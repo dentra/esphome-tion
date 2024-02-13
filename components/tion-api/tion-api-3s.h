@@ -93,6 +93,8 @@ struct tion3s_state_t {
     return (this->target_temperature - this->outdoor_temperature) > 3 &&
            (this->current_temperature() > this->outdoor_temperature);
   }
+
+  void for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const;
 };
 
 #pragma pack(pop)

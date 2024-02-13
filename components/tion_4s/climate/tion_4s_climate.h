@@ -95,8 +95,6 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
     return {};
   }
 
-  void enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const;
-
   void reset_errors() const { this->api_->reset_errors(this->state_); }
 
  protected:

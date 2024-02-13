@@ -82,6 +82,8 @@ struct tion4s_state_t {
   float heater_power() const;
   bool is_initialized() const { return this->counters.work_time != 0; }
   bool filter_warnout() const { return this->flags.filter_warnout; }
+
+  void for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const;
 };
 
 // NOLINTNEXTLINE(readability-identifier-naming)

@@ -70,7 +70,7 @@ struct tiono2_state_t {
            (this->current_temperature > this->outdoor_temperature);
   }
 
-  void for_each_error(const std::function<void(uint8_t error)> &fn) const;
+  void for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const;
 };
 
 static_assert(sizeof(tiono2_state_t) == 17, "Invalid tiono2_state_t size");

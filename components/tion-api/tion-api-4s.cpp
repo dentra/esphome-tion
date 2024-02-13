@@ -13,6 +13,24 @@ using namespace tion_4s;
 
 static const char *const TAG = "tion-api-4s";
 
+void tion4s_state_t::for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const {
+  if (this->errors == 0) {
+    return;
+  }
+  for (uint32_t i = tion4s_state_t::ERROR_MIN_BIT; i <= tion4s_state_t::ERROR_MAX_BIT; i++) {
+    uint32_t mask = 1 << i;
+    if ((this->errors & mask) == mask) {
+      fn(i + 1, "EC");
+    }
+  }
+  for (uint32_t i = tion4s_state_t::WARNING_MIN_BIT; i <= tion4s_state_t::WARNING_MAX_BIT; i++) {
+    uint32_t mask = 1 << i;
+    if ((this->errors & mask) == mask) {
+      fn(i + 1, "WS");
+    }
+  }
+}
+
 float tion4s_state_t::heater_power() const {
   if (heater_var == 0 || !flags.heater_state) {
     return 0.0f;

@@ -31,13 +31,6 @@ void TionLtClimate::update_state(const tionlt_state_t &state) {
   if (this->gate_state_) {
     this->gate_state_->publish_state(state.gate_state == tionlt_state_t::GateState::OPENED);
   }
-#ifdef USE_TION_ERRORS
-  if (this->errors_) {
-    std::string codes;
-    this->enum_errors(state.errors.reg, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
-    this->errors_->publish_state(codes);
-  }
-#endif
 }
 
 void TionLtClimate::dump_state(const tionlt_state_t &state) const {
@@ -72,7 +65,7 @@ void TionLtClimate::dump_state(const tionlt_state_t &state) const {
   ESP_LOGV(TAG, "btn_prs2.fan_sp: %d", state.button_presets.fan_speed[2]);
   ESP_LOGV(TAG, "test_type      : %u", state.test_type);
 
-  this->enum_errors(state.errors.reg, [this](auto code) { ESP_LOGW(TAG, "Breezer alert: %s", code.c_str()); });
+  state.for_each_error([](auto code, auto type) { ESP_LOGW(TAG, "Breezer alert: %s%02u", type, code); });
 }
 
 void TionLtClimate::control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
@@ -141,24 +134,6 @@ void TionLtClimate::control_state_(const ControlState &state) {
   }
 
   this->write_api_state_(st);
-}
-
-void TionLtClimate::enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const {
-  if (errors == 0) {
-    return;
-  }
-  for (uint32_t i = tionlt_state_t::ERROR_MIN_BIT; i <= tionlt_state_t::ERROR_MAX_BIT; i++) {
-    uint32_t mask = 1 << i;
-    if ((errors & mask) == mask) {
-      fn(str_snprintf("EC%02" PRIu32, 4, i + 1));
-    }
-  }
-  for (uint32_t i = tionlt_state_t::WARNING_MIN_BIT; i <= tionlt_state_t::WARNING_MAX_BIT; i++) {
-    uint32_t mask = 1 << i;
-    if ((errors & mask) == mask) {
-      fn(str_snprintf("WS%02" PRIu32, 4, i + 1));
-    }
-  }
 }
 
 }  // namespace tion

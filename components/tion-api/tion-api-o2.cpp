@@ -125,14 +125,14 @@ size_t get_rsp_frame_size(uint8_t frame_type) {
   return 0;
 }
 
-void tiono2_state_t::for_each_error(const std::function<void(uint8_t error)> &fn) const {
+void tiono2_state_t::for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const {
   if (errors == 0) {
     return;
   }
   for (uint32_t i = tiono2_state_t::ERROR_MIN_BIT; i <= tiono2_state_t::ERROR_MAX_BIT; i++) {
     uint32_t mask = 1 << i;
     if ((errors & mask) == mask) {
-      fn(i + 1);
+      fn(i + 1, "EC");
     }
   }
 }

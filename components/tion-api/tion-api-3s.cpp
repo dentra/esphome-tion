@@ -12,6 +12,12 @@ using namespace tion_3s;
 
 static const char *const TAG = "tion-api-3s";
 
+void tion3s_state_t::for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const {
+  if (this->last_error != 0) {
+    fn(this->last_error, "EC");
+  }
+}
+
 struct Tion3sTimersResponse {
   struct {
     uint8_t hours;

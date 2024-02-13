@@ -63,13 +63,6 @@ void Tion3sClimate::update_state(const tion3s_state_t &state) {
     this->productivity_->publish_state(state.productivity);
   }
 #endif
-#ifdef USE_TION_ERRORS
-  if (this->errors_) {
-    std::string codes;
-    this->enum_errors(state.last_error, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
-    this->errors_->publish_state(codes);
-  }
-#endif
 }
 
 void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
@@ -97,7 +90,7 @@ void Tion3sClimate::dump_state(const tion3s_state_t &state) const {
   ESP_LOGV(TAG, "filter_days  : %u", state.filter_days);
   ESP_LOGV(TAG, "firmware     : %04X", state.firmware_version);
 
-  this->enum_errors(state.last_error, [this](auto code) { ESP_LOGW(TAG, "Breezer alert: %s", code.c_str()); });
+  state.for_each_error([](auto code, auto type) { ESP_LOGW(TAG, "Breezer alert: %s%02u", type, code); });
 }
 
 void Tion3sClimate::control_gate_position(tion3s_state_t::GatePosition gate_position) {
@@ -220,12 +213,6 @@ void Tion3sClimate::control_state_(const ControlState &state) {
   // #endif
 
   this->write_api_state_(st);
-}
-
-void Tion3sClimate::enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const {
-  if (errors != 0) {
-    fn(str_snprintf("EC%02" PRIu32, 4, errors));
-  }
 }
 
 }  // namespace tion

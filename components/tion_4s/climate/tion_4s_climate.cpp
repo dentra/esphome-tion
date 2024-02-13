@@ -72,14 +72,6 @@ void Tion4sClimate::update_state(const tion4s_state_t &state) {
   if (this->recirculation_) {
     this->recirculation_->publish_state(state.gate_position != tion4s_state_t::GATE_POSITION_INFLOW);
   }
-
-#ifdef USE_TION_ERRORS
-  if (this->errors_) {
-    std::string codes;
-    this->enum_errors(state.errors, [&codes](auto code) { codes += (codes.empty() ? "" : ", ") + code; });
-    this->errors_->publish_state(codes);
-  }
-#endif
 }
 
 void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
@@ -112,7 +104,7 @@ void Tion4sClimate::dump_state(const tion4s_state_t &state) const {
   ESP_LOGV(TAG, "errors         : %08" PRIX32, state.errors);
   ESP_LOGV(TAG, "reserved       : %02X", state.flags.reserved);
 
-  this->enum_errors(state.errors, [this](auto code) { ESP_LOGW(TAG, "Breezer alert: %s", code.c_str()); });
+  state.for_each_error([](auto code, auto type) { ESP_LOGW(TAG, "Breezer alert: %s%02u", type, code); });
 }
 
 void Tion4sClimate::control_recirculation_state(bool state) {
@@ -317,24 +309,6 @@ void Tion4sClimate::reset_timers() {
   }
 }
 #endif
-
-void Tion4sClimate::enum_errors(uint32_t errors, const std::function<void(const std::string &)> &fn) const {
-  if (errors == 0) {
-    return;
-  }
-  for (uint32_t i = tion4s_state_t::ERROR_MIN_BIT; i <= tion4s_state_t::ERROR_MAX_BIT; i++) {
-    uint32_t mask = 1 << i;
-    if ((errors & mask) == mask) {
-      fn(str_snprintf("EC%02" PRIu32, 4, i + 1));
-    }
-  }
-  for (uint32_t i = tion4s_state_t::WARNING_MIN_BIT; i <= tion4s_state_t::WARNING_MAX_BIT; i++) {
-    uint32_t mask = 1 << i;
-    if ((errors & mask) == mask) {
-      fn(str_snprintf("WS%02" PRIu32, 4, i + 1));
-    }
-  }
-}
 
 }  // namespace tion
 }  // namespace esphome
