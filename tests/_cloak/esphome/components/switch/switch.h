@@ -30,7 +30,7 @@ class Switch : public EntityBase {
   bool state;
   void publish_state(bool state) { this->state = state; }
   bool is_inverted() const { return false; }
-  bool assumed_state() const { return false; }
+  virtual bool assumed_state() { return false; }
   std::string get_icon() const { return {}; }
   std::string get_device_class() const { return {}; }
 

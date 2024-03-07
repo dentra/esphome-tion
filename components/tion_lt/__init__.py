@@ -1,20 +1,23 @@
-from esphome.cpp_types import PollingComponent
+import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.cpp_generator import MockObjClass
-from esphome.components import switch, sensor, binary_sensor
+from esphome.components import binary_sensor, sensor, switch
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
+    CONF_ICON,
+    CONF_INVERTED,
+    CONF_TEMPERATURE,
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASS_POWER,
+    ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
-    CONF_ICON,
-    CONF_INVERTED,
-    DEVICE_CLASS_OPENING,
-    ENTITY_CATEGORY_CONFIG,
     UNIT_CUBIC_METER,
     UNIT_WATT,
 )
+from esphome.cpp_generator import MockObjClass
+from esphome.cpp_types import PollingComponent
+
 from .. import tion  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]
@@ -84,3 +87,44 @@ async def setup_tion_lt(config, component_reg):
     await tion.setup_sensor(config, CONF_AIRFLOW_COUNTER, var.set_airflow_counter)
     await tion.setup_binary_sensor(config, CONF_GATE_STATE, var.set_gate_state)
     return var
+
+
+CONF_FAN_SPEED = "fan_speed"
+CONF_BUTTON_PRESETS = "button_presets"
+
+TionLtApiComponent = tion.tion_ns.class_(
+    "TionLtApiComponent", cg.Component, tion.TionApiComponent
+)
+
+BUTTON_PRESETS_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_TEMPERATURE): cv.All(
+            cv.ensure_list(cv.int_range(min=1, max=25)), cv.Length(min=3, max=3)
+        ),
+        cv.Required(CONF_FAN_SPEED): cv.All(
+            cv.ensure_list(cv.int_range(min=1, max=6)), cv.Length(min=3, max=3)
+        ),
+    }
+)
+
+CONFIG_SCHEMA = tion.tion_schema_api(TionLtApiComponent, TionLtApi).extend(
+    {
+        cv.Optional(CONF_BUTTON_PRESETS): BUTTON_PRESETS_SCHEMA,
+    }
+)
+
+
+async def to_code(config: dict):
+    var = await tion.setup_tion_api(config, "lt")
+    if CONF_BUTTON_PRESETS in config:
+        button_presets = config[CONF_BUTTON_PRESETS]
+
+        cg.add(
+            var.set_button_presets(
+                cg.StructInitializer(
+                    "",
+                    ("tmp", button_presets[CONF_TEMPERATURE]),
+                    ("fan", button_presets[CONF_FAN_SPEED]),
+                )
+            )
+        )

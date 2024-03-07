@@ -26,8 +26,11 @@ Doxygen
 /*.log
 /sdkconfig
 
+
+/tests/test_x.cpp
 /components/vport
 /components/nvs
 /components/settings
 /components/vport
 /components/web_server_idf
+/components/*_jtag/

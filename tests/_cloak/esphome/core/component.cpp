@@ -41,6 +41,6 @@ void Component::set_timeout(uint32_t timeout, std::function<void()> &&f) {
   this->set_timeout("__default__", timeout, std::move(f));
 }
 
-bool Component::cancel_timeout(const std::string &name) { App.scheduler.cancel_timeout(this, name); }
+bool Component::cancel_timeout(const std::string &name) { return App.scheduler.cancel_timeout(this, name); }
 
 }  // namespace esphome

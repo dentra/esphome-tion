@@ -16,7 +16,10 @@ template<class parent_t> class Tion3sAirIntakeSelect : public select::Select, pu
  public:
   explicit Tion3sAirIntakeSelect(parent_t *parent) : Parented<parent_t>(parent) {}
   void control(const std::string &value) override {
-    this->parent_->control_gate_position(static_cast<tion3s_state_t::GatePosition>(*this->index_of(value)));
+    auto opt = this->index_of(value);
+    if (opt.has_value()) {
+      this->parent_->control_gate_position(static_cast<TionGatePosition>(*opt));
+    }
   }
 };
 

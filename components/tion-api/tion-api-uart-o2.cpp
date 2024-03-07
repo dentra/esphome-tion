@@ -30,10 +30,10 @@ void TionO2UartProtocol::read_uart_data(tion::TionUartReader *io) {
 
 void TionO2UartProtocol::skip_uart_data_(tion::TionUartReader *io) {
   uint8_t buf[1];
-  // read out all uart data, so we can start from command delay
+  // read out all uart data, so we can start from a new command from some delay
   while (io->available()) {
     io->read_array(buf, 1);
-    TION_LOGD(TAG, "Skipped %02X", *buf);
+    TION_LOGV(TAG, "Skipped %02X", *buf);
   }
   this->frame_size_ = 0;
 }
@@ -75,7 +75,7 @@ int TionO2UartProtocol::read_frame_(tion::TionUartReader *io) {
     return READ_NEXT_LOOP;
   }
 
-  TION_LOGD(TAG, "Read data: [%02X]:%s", frame->type, tion::hexencode(frame->data, data_size).c_str());
+  TION_LOGV(TAG, "RX: [%02X]:%s", frame->type, tion::hexencode(frame->data, data_size).c_str());
   this->reader(*frame, data_size + frame->head_size());
   this->frame_size_ = 0;
   return READ_NEXT_LOOP;
@@ -107,7 +107,7 @@ bool TionO2UartProtocol::write_frame(uint16_t frame_type, const void *frame_data
   uint8_t crc = this->crc(frame, frame_size - sizeof(crc));
   frame->data[frame_data_size] = crc;
 
-  TION_LOGD(TAG, "Write data: %s", tion::hexencode(frame_buf, frame_size).c_str());
+  TION_LOGV(TAG, "TX: %s", tion::hexencode(frame_buf, frame_size).c_str());
 
   return this->writer(frame_buf, frame_size);
 }

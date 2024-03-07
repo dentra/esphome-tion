@@ -9,6 +9,8 @@
 namespace dentra {
 namespace tion {
 
+using namespace tion_3s;
+
 static const char *const TAG = "tion-api-uart-3s";
 
 #pragma pack(push, 1)
@@ -82,7 +84,7 @@ Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUart
     return READ_THIS_LOOP;
   }
 
-  TION_LOGV(TAG, "Read data: %s", hexencode(&frame->data, sizeof(frame->data)).c_str());
+  TION_LOGV(TAG, "RX: %s", hexencode(&frame->data, sizeof(frame->data)).c_str());
 
   if (frame->magic != FRAME_MAGIC_END) {
     TION_LOGW(TAG, "Invlid frame magic %02X", frame->magic);
@@ -107,6 +109,8 @@ bool Tion3sUartProtocol::write_frame(uint16_t frame_type, const void *frame_data
   if (frame_data_size <= sizeof(frame.data.data)) {
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }
+
+  TION_LOGV(TAG, "TX: %s", tion::hexencode(reinterpret_cast<uint8_t *>(&frame), sizeof(frame)).c_str());
 
   return this->writer(reinterpret_cast<uint8_t *>(&frame), sizeof(frame));
 }

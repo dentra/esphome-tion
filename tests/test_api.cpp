@@ -8,9 +8,15 @@ DEFINE_TAG;
 
 using namespace dentra::tion;
 
+class TestTionApiBase : public dentra::tion::TionApiBase {
+ public:
+  void request_state() override { ESP_LOGE(TAG, "request_state is not implemented."); }
+  void write_state(dentra::tion::TionStateCall *call) override { ESP_LOGE(TAG, "write_state is not implemented."); }
+};
+
 class ApiTest {
  public:
-  dentra::tion::TionApiBase<tion4s_state_t> api_;
+  TestTionApiBase api_;
 
   ApiTest(dentra::tion::TionLtBleProtocol *w) {
     w->reader.set<ApiTest, &ApiTest::read_frame>(*this);

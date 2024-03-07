@@ -54,6 +54,7 @@ class ProtocolO2(Protocol):
             if do_log:
                 _LOGGER.warning("%sRX: %s", self.port_name, description)
                 _LOGGER.warning("  Skip: %s (%d)", buf.hex(" ").upper(), len(buf))
+                _LOGGER.warning("      : %s", buf.decode(errors="replace"))
 
         if not self.transport.available:
             return None

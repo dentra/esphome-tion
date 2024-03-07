@@ -13,7 +13,7 @@ namespace tion_3s_proxy {
 
 class Tion3sUartProtocolProxy : public dentra::tion::Tion3sUartProtocol {
  public:
-  Tion3sUartProtocolProxy() : dentra::tion::Tion3sUartProtocol(dentra::tion::FRAME_MAGIC_REQ) {}
+  Tion3sUartProtocolProxy() : dentra::tion::Tion3sUartProtocol(dentra::tion_3s::FRAME_MAGIC_REQ) {}
 };
 
 class Tion3sUartIO : public tion::TionUartIO<Tion3sUartProtocolProxy> {
@@ -27,13 +27,16 @@ class Tion3sUartIO : public tion::TionUartIO<Tion3sUartProtocolProxy> {
 
 class Tion3sProxy;
 
-class Tion3sApiProxy : public dentra::tion::TionApiBase<dentra::tion::tion3s_state_t> {
+class Tion3sApiProxy : public dentra::tion::TionApiBase {
  public:
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
   void set_parent(Tion3sProxy *parent) { this->parent_ = parent; }
 
  protected:
   Tion3sProxy *parent_{};
+  // not used here
+  void request_state() override {}
+  void write_state(dentra::tion::TionStateCall *call) override {}
 };
 
 class Tion3sProxy : public Component {

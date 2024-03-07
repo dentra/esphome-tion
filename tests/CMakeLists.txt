@@ -16,6 +16,9 @@ if(EX_TEST_SOURCES)
   endforeach(ex_src_item)
 endif()
 
+# add_link_options(-v)
+# set(CMAKE_EXE_LINKER_FLAGS -v)
+
 add_executable(${PROJECT_NAME} ${test_SRC})
 target_link_libraries(${PROJECT_NAME} cloak)
 target_include_directories(${PROJECT_NAME} PUBLIC "${EX_TEST_INCLUDES}")

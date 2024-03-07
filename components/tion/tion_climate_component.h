@@ -10,6 +10,7 @@
 #include "tion_component.h"
 #include "tion_climate_presets.h"
 #include "tion_vport.h"
+#include "tion_batch_call.h"
 
 namespace esphome {
 namespace tion {
@@ -46,21 +47,17 @@ class TionClimateComponentBase : public climate::Climate, public TionClimatePres
 
 /**
  * @param tion_api_type TionApi implementation.
- * @param tion_state_type Tion state struct.
  */
 template<class tion_api_type> class TionClimateComponent : public TionClimateComponentBase {
-  using tion_state_type = typename tion_api_type::state_type;
-
-  static_assert(std::is_base_of_v<dentra::tion::TionApiBase<tion_state_type>, tion_api_type>,
+  static_assert(std::is_base_of_v<dentra::tion::TionApiBase, tion_api_type>,
                 "tion_api_type is not derived from TionApiBase");
 
  public:
   explicit TionClimateComponent(tion_api_type *api, TionVPortType vport_type)
       : TionClimateComponentBase(vport_type), api_(api) {
     using this_t = std::remove_pointer_t<decltype(this)>;
-    this->api_->on_dev_info.template set<this_t, &this_t::on_dev_info>(*this);
-    this->api_->on_state.template set<this_t, &this_t::on_state>(*this);
-    this->api_->set_on_ready(tion_api_type::on_ready_type::template create<this_t, &this_t::on_ready>(*this));
+    this->api_->on_dev_info_fn.template set<this_t, &this_t::on_dev_info>(*this);
+    this->api_->on_state_fn.template set<this_t, &this_t::on_state>(*this);
   }
 
   void update() override {
@@ -68,15 +65,9 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
     this->schedule_state_check_();
   }
 
-  void on_ready() {
-    if (!this->state_.is_initialized()) {
-      this->api_->request_dev_info();
-    }
-  }
+  virtual void update_state(const dentra::tion::TionState &state) = 0;
 
-  virtual void update_state(const tion_state_type &state) = 0;
-
-  void on_state(const tion_state_type &state, const uint32_t request_id) {
+  void on_state(const dentra::tion::TionState &state, const uint32_t request_id) {
     this->update_state(state);
 
     this->cancel_state_check_();
@@ -87,31 +78,27 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
 #endif
 #ifdef USE_TION_BUZZER
     if (this->buzzer_) {
-      this->buzzer_->publish_state(state.flags.sound_state);
+      this->buzzer_->publish_state(state.sound_state);
     }
 #endif
 #ifdef USE_TION_FILTER_TIME_LEFT
     if (this->filter_time_left_) {
-      this->filter_time_left_->publish_state(state.counters.filter_time_left());
+      this->filter_time_left_->publish_state(state.filter_time_left_d());
     }
 #endif
 #ifdef USE_TION_FILTER_WARNOUT
     if (this->filter_warnout_) {
-      this->filter_warnout_->publish_state(state.filter_warnout());
+      this->filter_warnout_->publish_state(state.filter_state);
     }
 #endif
 #ifdef USE_TION_WORK_TIME
     if (this->work_time_) {
-      this->work_time_->publish_state(state.counters.work_time);
+      this->work_time_->publish_state(state.work_time);
     }
 #endif
 #ifdef USE_TION_ERRORS
     if (this->errors_) {
-      std::string codes;
-      state.for_each_error([&codes](auto code, auto type) {
-        codes += (codes.empty() ? "" : ", ") + str_snprintf("%s%02u", 4, type, code);
-      });
-      this->errors_->publish_state(codes);
+      this->errors_->publish_state(this->api_->traits().errors_decoder(state.errors));
     }
 #endif
     // do not update state in batch mode
@@ -124,22 +111,20 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
 
  protected:
   tion_api_type *api_;
-  tion_state_type state_{};
+  dentra::tion::TionState state_{};
   uint32_t request_id_{};
   bool batch_active_{};
-  void write_api_state_(const tion_state_type &state) {
-    ESP_LOGD("tion_climate_component", "%s batch update for %u ms", this->batch_active_ ? "Continue" : "Starting",
-             this->batch_timeout_);
-    this->batch_active_ = true;
-    this->state_ = state;
-    this->set_timeout("batch_update", this->batch_timeout_, [this]() { this->write_batch_state_(); });
-  }
 
-  void write_batch_state_() {
-    ESP_LOGD("tion_climate_component", "Write out batch changes");
-    this->api_->write_state(this->state_, ++this->request_id_);
-    this->batch_active_ = false;
-    this->schedule_state_check_();
+  BatchStateCall *state_call_{};
+
+  BatchStateCall *make_api_call() {
+    if (this->state_call_ == nullptr) {
+      state_call_ = new BatchStateCall(this->api_, this, this->batch_timeout_, [this]() {
+        this->state_call_->reset();
+        this->schedule_state_check_();
+      });
+    }
+    return this->state_call_;
   }
 
   void schedule_state_check_() {
@@ -161,32 +146,23 @@ template<class tion_api_type> class TionClimateComponent : public TionClimateCom
 };
 
 template<class tion_api_type> class TionLtClimateComponent : public TionClimateComponent<tion_api_type> {
-  using tion_state_type = typename tion_api_type::state_type;
-
  public:
   explicit TionLtClimateComponent(tion_api_type *api, TionVPortType vport_type)
       : TionClimateComponent<tion_api_type>(api, vport_type) {
     using this_t = std::remove_pointer_t<decltype(this)>;
-    this->api_->on_state.template set<this_t, &this_t::on_state>(*this);
+    this->api_->on_state_fn.template set<this_t, &this_t::on_state>(*this);
   }
 
-  void on_state(const tion_state_type &state, const uint32_t request_id) {
-#ifdef USE_TION_PRODUCTIVITY
-    // this->state_ will set to new state in TionClimateComponent::on_state,
-    // so save some vars here
-    auto prev_airflow_counter = this->state_.counters.airflow_counter;
-    auto prev_fan_time = this->state_.counters.fan_time;
-#endif
-
+  void on_state(const dentra::tion::TionState &state, const uint32_t request_id) {
     TionClimateComponent<tion_api_type>::on_state(state, request_id);
 #ifdef USE_TION_LED
     if (this->led_) {
-      this->led_->publish_state(state.flags.led_state);
+      this->led_->publish_state(state.led_state);
     }
 #endif
 #ifdef USE_TION_HEATER_POWER
     if (this->heater_power_) {
-      this->heater_power_->publish_state(state.heater_power());
+      this->heater_power_->publish_state(state.get_heater_power(this->api_->traits()));
     }
 #endif
 #ifdef USE_TION_AIRFLOW_COUNTER
@@ -195,14 +171,8 @@ template<class tion_api_type> class TionLtClimateComponent : public TionClimateC
     }
 #endif
 #ifdef USE_TION_PRODUCTIVITY
-    if (this->productivity_ && prev_fan_time != 0) {
-      auto diff_time = state.counters.fan_time - prev_fan_time;
-      if (diff_time == 0) {
-        this->productivity_->publish_state(0);
-      } else {
-        auto diff_airflow = state.counters.airflow_counter - prev_airflow_counter;
-        this->productivity_->publish_state(float(diff_airflow) / float(diff_time) * float(state.counters.airflow_k()));
-      }
+    if (this->productivity_) {
+      this->productivity_->publish_state(state.productivity);
     }
 #endif
   }

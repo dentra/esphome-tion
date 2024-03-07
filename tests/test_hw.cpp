@@ -21,62 +21,30 @@ DEFINE_TAG;
 #define HW_MAGIC ((uint8_t) 0x3A)
 
 using namespace esphome;
-using namespace dentra::tion;
 
-enum {
-  FRAME_TYPE_STATE_SET = 0x3230,  // no save req
-  FRAME_TYPE_STATE_RSP = 0x3231,
-  FRAME_TYPE_STATE_REQ = 0x3232,
-  FRAME_TYPE_STATE_SAV = 0x3234,  // save req
+using dentra::tion_4s::tion4s_state_set_t;
+using dentra::tion_4s::tion4s_state_t;
+using dentra::tion::TionGatePosition;
+using dentra::tion::tion_dev_info_t;
+using dentra::tion::TionState;
+using Tion4sApi = dentra::tion_4s::Tion4sApi;
 
-  FRAME_TYPE_DEV_INFO_REQ = 0x3332,
-  FRAME_TYPE_DEV_INFO_RSP = 0x3331,
-
-  FRAME_TYPE_TEST_REQ = 0x3132,
-  FRAME_TYPE_TEST_RSP = 0x3131,
-
-  FRAME_TYPE_TIMER_SET = 0x3430,
-  FRAME_TYPE_TIMER_REQ = 0x3432,
-  FRAME_TYPE_TIMER_RSP = 0x3431,
-
-  FRAME_TYPE_TIMERS_STATE_REQ = 0x3532,
-  FRAME_TYPE_TIMERS_STATE_RSP = 0x3531,
-
-  FRAME_TYPE_TIME_SET = 0x3630,
-  FRAME_TYPE_TIME_REQ = 0x3632,
-  FRAME_TYPE_TIME_RSP = 0x3631,
-
-  FRAME_TYPE_ERR_CNT_REQ = 0x3732,
-  FRAME_TYPE_ERR_CNT_RSP = 0x3731,
-
-  FRAME_TYPE_TEST_SET = 0x3830,  // FRAME_TYPE_CURR_TEST_SET
-  FRAME_TYPE_CURR_TEST_REQ = 0x3832,
-  FRAME_TYPE_CURR_TEST_RSP = 0x3831,
-
-  FRAME_TYPE_TURBO_SET = 0x4130,
-  FRAME_TYPE_TURBO_REQ = 0x4132,
-  FRAME_TYPE_TURBO_RSP = 0x4131,
-
-  FRAME_TYPE_HEARTBIT_REQ = 0x3932,  // every 3 sec
-  FRAME_TYPE_HEARTBIT_RSP = 0x3931,
-};
-
-bool check(const dentra::tion::tion4s_state_t &ss, check_fn_t fn) {
+bool check(const tion4s_state_t &ss, check_fn_t fn) {
   ESP_LOGD(TAG, "  tion_hw_rsp_state_t (size=%zu)", sizeof(ss));
-  ESP_LOGD(TAG, "    power_state    : %s", ONOFF(ss.flags.power_state));
-  ESP_LOGD(TAG, "    sound_state    : %s", ONOFF(ss.flags.sound_state));
-  ESP_LOGD(TAG, "    led_state      : %s", ONOFF(ss.flags.led_state));
-  ESP_LOGD(TAG, "    heater_state   : %s", ONOFF(ss.flags.heater_state));
-  ESP_LOGD(TAG, "    heater_mode    : %u", ss.flags.heater_mode);
-  ESP_LOGD(TAG, "    last_com_source: %s", ONOFF(ss.flags.last_com_source));
-  ESP_LOGD(TAG, "    filter_warnout : %s", ONOFF(ss.flags.filter_warnout));
-  ESP_LOGD(TAG, "    heater_present : %u", ss.flags.heater_present);
-  ESP_LOGD(TAG, "    ma             : %s", ONOFF(ss.flags.ma_connect));
-  ESP_LOGD(TAG, "    ma_auto        : %s", ONOFF(ss.flags.ma_auto));
-  ESP_LOGD(TAG, "    active_timer   : %s", ONOFF(ss.flags.active_timer));
-  ESP_LOGD(TAG, "    reserved       : %02X", ss.flags.reserved);
+  ESP_LOGD(TAG, "    power_state    : %s", ONOFF(ss.power_state));
+  ESP_LOGD(TAG, "    sound_state    : %s", ONOFF(ss.sound_state));
+  ESP_LOGD(TAG, "    led_state      : %s", ONOFF(ss.led_state));
+  ESP_LOGD(TAG, "    heater_state   : %s", ONOFF(ss.heater_state));
+  ESP_LOGD(TAG, "    heater_mode    : %u", ss.heater_mode);
+  ESP_LOGD(TAG, "    last_com_source: %u", uint8_t(ss.comm_source));
+  ESP_LOGD(TAG, "    filter_warnout : %s", ONOFF(ss.filter_state));
+  ESP_LOGD(TAG, "    heater_present : %u", ss.heater_present);
+  ESP_LOGD(TAG, "    ma             : %s", ONOFF(ss.ma_connected));
+  ESP_LOGD(TAG, "    ma_auto        : %s", ONOFF(ss.ma_auto));
+  ESP_LOGD(TAG, "    active_timer   : %s", ONOFF(ss.active_timer));
+  ESP_LOGD(TAG, "    reserved       : %02X", ss.reserved);
   ESP_LOGD(TAG, "    recirculation  : %s",
-           ONOFF(ss.gate_position != dentra::tion::tion4s_state_t::GatePosition::GATE_POSITION_INFLOW));
+           ONOFF(ss.gate_position != tion4s_state_t::GatePosition::GATE_POSITION_OUTDOOR));
   ESP_LOGD(TAG, "    target_temp    : %d", ss.target_temperature);
   ESP_LOGD(TAG, "    fan_speed      : %u", ss.fan_speed);
   ESP_LOGD(TAG, "    current_temp   : %d", ss.current_temperature);
@@ -99,7 +67,7 @@ bool check(const tion_hw_set_state_t &ss, check_fn_t fn) {
   ESP_LOGD(TAG, "    sound_state    : %s", ONOFF(ss.sound_state));
   ESP_LOGD(TAG, "    led_state      : %s", ONOFF(ss.led_state));
   ESP_LOGD(TAG, "    heater_state   : %s", ONOFF(ss.heater_mode == 0));
-  ESP_LOGD(TAG, "    last_com_source: %s", ONOFF(ss.last_com_source));
+  ESP_LOGD(TAG, "    last_com_source: %u", uint8_t(ss.last_com_source));
   ESP_LOGD(TAG, "    factory_reset  : %s", ONOFF(ss.factory_reset));
   ESP_LOGD(TAG, "    error_reset    : %s", ONOFF(ss.error_reset));
   ESP_LOGD(TAG, "    filter_reset   : %s", ONOFF(ss.filter_reset));
@@ -107,7 +75,7 @@ bool check(const tion_hw_set_state_t &ss, check_fn_t fn) {
   ESP_LOGD(TAG, "    ma_auto        : %s", ONOFF(ss.ma_auto));
   ESP_LOGD(TAG, "    reserved       : %02X", ss.reserved);
   ESP_LOGD(TAG, "    recirculation  : %s",
-           ONOFF(ss.gate_position != dentra::tion::tion4s_state_t::GatePosition::GATE_POSITION_INFLOW));
+           ONOFF(ss.gate_position != tion4s_state_t::GatePosition::GATE_POSITION_OUTDOOR));
   ESP_LOGD(TAG, "    target_temp    : %d", ss.target_temperature);
   ESP_LOGD(TAG, "    fan_speed      : %u", ss.fan_speed);
   ESP_LOGD(TAG, "    unknown        : %04X", ss.unknown);
@@ -118,7 +86,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
   ESP_LOGD(TAG, "checking commad %s", hexencode_cstr(data, size));
   ESP_LOGD(TAG, "  command %04X, data: %s", type, hexencode_cstr(data, size));
   switch (type) {
-    case FRAME_TYPE_STATE_SET: {
+    case dentra::tion_4s::FRAME_TYPE_STATE_SET: {
       if (size != sizeof(tion_hw_req_frame_state_t)) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
@@ -128,7 +96,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       return check(frame->state, fn);
     }
 
-    case FRAME_TYPE_STATE_RSP: {
+    case dentra::tion_4s::FRAME_TYPE_STATE_RSP: {
       if (size != sizeof(tion_hw_rsp_frame_state_t)) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
@@ -138,7 +106,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       return check(frame->state, fn);
     }
 
-    case FRAME_TYPE_HEARTBIT_REQ: {
+    case dentra::tion_4s::FRAME_TYPE_HEARTBIT_REQ: {
       if (size != 0) {
         ESP_LOGE(TAG, "Incorrect heartbeat request data size: %zu", size);
         return false;
@@ -146,7 +114,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       break;
     }
 
-    case FRAME_TYPE_HEARTBIT_RSP: {
+    case dentra::tion_4s::FRAME_TYPE_HEARTBIT_RSP: {
       if (size != sizeof(tion_hw_rsp_heartbeat_t)) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;
@@ -155,7 +123,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       return frame->unknown00 == 0;
     }
 
-    case FRAME_TYPE_DEV_INFO_REQ: {
+    case dentra::tion_4s::FRAME_TYPE_DEV_INFO_REQ: {
       if (size != 0) {
         ESP_LOGE(TAG, "Incorrect device info request data size: %zu", size);
         return false;
@@ -183,10 +151,10 @@ bool check_packet(const std::string &hex, check_fn_t fn) {
     return false;
   }
 
-  if (crc16_ccitt_false_ffff(packet, packet->size) != 0) {
+  if (dentra::tion::crc16_ccitt_false_ffff(packet, packet->size) != 0) {
     uint16_t crc = __builtin_bswap16(*(uint16_t *) (raw.data() + raw.size() - sizeof(uint16_t)));
     ESP_LOGD(TAG, "invalid crc %04X (expected: %04X)", crc,
-             crc16_ccitt_false_ffff(raw.data(), raw.size() - sizeof(uint16_t)));
+             dentra::tion::crc16_ccitt_false_ffff(raw.data(), raw.size() - sizeof(uint16_t)));
     return false;
   }
 
@@ -214,19 +182,19 @@ bool test_hw_protocol() {
   return res;
 }
 
-using Tion4sUartVPortApiTest = tion::TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s>;
-using Tion4sBleVPortApiTest = tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, TionApi4s>;
+using Tion4sUartVPortApiTest = tion::TionVPortApi<Tion4sUartIOTest::frame_spec_type, Tion4sApi>;
+using Tion4sBleVPortApiTest = tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, Tion4sApi>;
 using Tion4sUartVPortTest = vport::VPortUARTComponent<Tion4sUartIOTest, Tion4sUartIOTest::frame_spec_type>;
 using TionLtBleVPortTest = vport::VPortBLEComponent<Tion4sBleIOTest, Tion4sBleIOTest::frame_spec_type>;
 
-class Tion4sCompTest : public TionComponentTest<TionApi4s> {
+class Tion4sCompTest : public TionComponentTest<Tion4sApi> {
  public:
-  Tion4sCompTest(TionApi4s *api) : TionComponentTest(api) {
+  Tion4sCompTest(Tion4sApi *api) : TionComponentTest(api) {
     using this_t = typename std::remove_pointer_t<decltype(this)>;
-    api->on_state.set<this_t, &this_t::on_state>(*this);
-    api->on_heartbeat.set<this_t, &this_t::on_heartbeat>(*this);
+    api->on_state_fn.set<this_t, &this_t::on_state>(*this);
+    api->on_heartbeat_fn.set<this_t, &this_t::on_heartbeat>(*this);
   }
-  void on_state(const tion4s_state_t &state, uint32_t request_id) {}
+  void on_state(const TionState &state, uint32_t request_id) {}
   void on_heartbeat(tion_dev_info_t::work_mode_t work_mode) { this->api_->send_heartbeat(); }
 };
 

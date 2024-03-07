@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstdint>
-
-#include "tion-api-lt.h"
+#include "tion-api.h"
 
 namespace dentra {
 namespace tion_lt {
@@ -16,8 +15,11 @@ enum {
   FRAME_TYPE_DEV_INFO_REQ = 0x4009,
   FRAME_TYPE_DEV_INFO_RSP = 0x400A,
 
+  // не существует
   FRAME_TYPE_AUTOKIV_PARAM_SET = 0x1240,
+  // не существует
   FRAME_TYPE_AUTOKIV_PARAM_RSP = 0x1241,
+  // не существует
   FRAME_TYPE_AUTOKIV_PARAM_REQ = 0x1242,
 
   FRAME_TYPE_TEST_REQ = 0x1111,
@@ -25,6 +27,86 @@ enum {
 };
 
 #pragma pack(push, 1)
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+struct button_presets_t {
+  enum { PRESET_NUMBER = 3 };
+  /// Целевая температура.
+  int8_t tmp[PRESET_NUMBER];
+
+  /// Скорость вентиляции.
+  uint8_t fan[PRESET_NUMBER];
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+struct tionlt_state_t {
+  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 27 };
+
+  enum GateState : uint8_t {
+    // закрыто
+    CLOSED = 1,
+    // открыто
+    OPENED = 2,
+  };
+
+  // Байт 0-1.
+  struct {
+    // Байт 0, бит 0. Состояние бризера
+    bool power_state : 1;
+    // Байт 0, бит 1. Состояние звуковых оповещений
+    bool sound_state : 1;
+    // Байт 0, бит 2. Состояние световых оповещений
+    bool led_state : 1;
+    // Байт 0, бит 3.
+    tion::CommSource comm_source : 1;
+    // Байт 0, бит 4. Предупреждение о необходимости замены фильтра.
+    bool filter_state : 1;
+    // Байт 0, бит 5.
+    bool ma_auto : 1;
+    // Байт 0, бит 6.
+    bool heater_state : 1;
+    // Байт 0, бит 7.
+    bool heater_present : 1;
+    // Байт 1, бит 0. the presence of the KIV mode
+    bool kiv_present : 1;
+    // Байт 1, бит 1. state of the KIV mode
+    bool kiv_active : 1;
+    // reserved
+    uint8_t reserved : 6;
+  };
+  GateState gate_state;
+  // Байт 3. Настроенная температура подогрева.
+  int8_t target_temperature;
+  // Байт 4. Скорость вентиляции.
+  uint8_t fan_speed;
+  // Байт 5. Температура воздуха на входе в бризер (температура на улице).
+  int8_t outdoor_temperature;
+  // Байт 6. Текущая температура воздуха после нагревателя (внутри помещения).
+  int8_t current_temperature;
+  // Байт 7. Внутренняя температура платы.
+  int8_t pcb_temperature;
+  // Байт 8-23. 8-11 - work_time, 12-15 - fan_time, 16-19 - filter_time, 20-23 - airflow_counter
+  tion::tion_state_counters_t<10> counters;
+  // Байт 24-27.
+  uint32_t errors;
+  // Байт 28-47.
+  struct {
+    enum { ERROR_TYPE_NUMBER = 20 };
+    uint8_t er[ERROR_TYPE_NUMBER];
+  } errors_cnt;
+  // Байт 48-53.
+  button_presets_t button_presets;
+  // Байт 54.
+  uint8_t max_fan_speed;
+  // Байт 55.
+  uint8_t heater_var;
+  // Байт 56.
+  uint8_t test_type;
+
+  static std::string decode_errors(uint32_t errors) {
+    return tion::decode_errors(errors, ERROR_MIN_BIT, ERROR_MAX_BIT, WARNING_MIN_BIT, WARNING_MAX_BIT);
+  }
+};
 
 // used to change state of device
 // NOLINTNEXTLINE(readability-identifier-naming)
@@ -51,36 +133,48 @@ struct tionlt_state_set_t {
     // uint8_t save;
     uint8_t reserved : 7;
   };
-  // Байт 2
-  tion::tionlt_state_t::GateState gate_state;
-  // Байт 3
+  // Байт 2. Состояние затворки.
+  tionlt_state_t::GateState gate_state;
+  // Байт 3.
   int8_t target_temperature;
   // Байт 4. Скорость вентиляции.
   uint8_t fan_speed;
-  tion::tionlt_state_t::button_presets_t button_presets;
+  // Байт 5-10. Пресеты кнопок.
+  button_presets_t button_presets;
+  // Байт 11-12. Количество __дней__ для сброса ресурса фильтра.
   uint16_t filter_time;
   uint8_t test_type;
 
-  static tionlt_state_set_t create(const tion::tionlt_state_t &state) {
+  static tionlt_state_set_t create(const tion::TionState &state, const button_presets_t &button_presets) {
     tionlt_state_set_t st_set{};
 
+    st_set.power_state = state.power_state;
+    st_set.sound_state = state.sound_state;
+    st_set.led_state = state.led_state;
+    st_set.heater_state = state.heater_state;
+    st_set.ma_auto = state.auto_state;
+
+    // в Tion Remote этот бить не выставляется, возможно он инвертирован
+    // st_set.comm_source = state.auto_state ? tion::CommSource::AUTO : tion::CommSource::USER;
+
+    // перепроверим, что fan_speed != 0
     st_set.fan_speed = state.fan_speed == 0 ? 1 : state.fan_speed;
     st_set.target_temperature = state.target_temperature;
 
-    // // FIXME в tion remote выставляется так:
-    // //   (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED
-    // // т.е. с учетом того что fan_speed всегда > 0, то всегда OPENED
-    st_set.gate_state = state.gate_state;
+    // FIXME корректируем позицию заслонки.
+    // !!! Lite ONLY !!!
+    // Проверить, можем ли мы открыть заслонку при выключенном бризере и вообще упралять ей.
+    // В Tion Remote выставляется так:
+    // gate_pos = (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED;
+    // но с учетом того что  s Tion Remote fan_speed всегда > 0, то вообще всегда OPENED
+    st_set.gate_state = tionlt_state_t::GateState::OPENED;
 
-    st_set.power_state = state.flags.power_state;
-    st_set.sound_state = state.flags.sound_state;
-    st_set.led_state = state.flags.led_state;
-    st_set.heater_state = state.flags.heater_state;
+    // st_set.gate_state =                                        //-//
+    //     state.gate_position == tion::TionGatePosition::OPENED  //-//
+    //         ? tionlt_state_t::GateState::OPENED                //-//
+    //         : tionlt_state_t::GateState::CLOSED;               //-//
 
-    st_set.button_presets = state.button_presets;
-
-    st_set.ma_auto = state.flags.ma_auto;
-    st_set.comm_source = st_set.ma_auto ? tion::CommSource::AUTO : tion::CommSource::USER;
+    st_set.button_presets = button_presets;
 
     return st_set;
   }

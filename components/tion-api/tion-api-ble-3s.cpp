@@ -14,6 +14,8 @@
 namespace dentra {
 namespace tion {
 
+using namespace tion_3s;
+
 static const char *const TAG = "tion-api-ble-3s";
 
 #pragma pack(push, 1)

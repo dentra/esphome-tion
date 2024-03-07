@@ -3,107 +3,71 @@
 #include <functional>
 
 #include "tion-api.h"
+#include "tion-api-lt-internal.h"
+#include "tion-api-defines.h"
 
 namespace dentra {
 namespace tion {
 
-#pragma pack(push, 1)
-// NOLINTNEXTLINE(readability-identifier-naming)
-struct tionlt_state_t {
-  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 27 };
-
-  enum GateState : uint8_t {
-    // закрыто
-    CLOSED = 1,
-    // открыто
-    OPENED = 2,
-  };
-
-  // Байт 0-1.
-  struct {
-    // Байт 0, бит 0. Состояние бризера
-    bool power_state : 1;
-    // Байт 0, бит 1. Состояние звуковых оповещений
-    bool sound_state : 1;
-    // Байт 0, бит 2. Состояние световых оповещений
-    bool led_state : 1;
-    // Байт 0, бит 3.
-    CommSource comm_source : 1;
-    // Байт 0, бит 4. Предупреждение о необходимости замены фильтра.
-    bool filter_warnout : 1;
-    // Байт 0, бит 5.
-    bool ma_auto : 1;
-    // Байт 0, бит 6.
-    bool heater_state : 1;
-    // Байт 0, бит 7.
-    bool heater_present : 1;
-    // Байт 1, бит 0. the presence of the KIV mode
-    bool kiv_present : 1;
-    // Байт 1, бит 1. state of the KIV mode
-    bool kiv_active : 1;
-    // reserved
-    uint8_t reserved : 6;
-  } flags;
-  GateState gate_state;
-  // Байт 3. Настроенная температура подогрева.
-  int8_t target_temperature;
-  // Байт 4. Скорость вентиляции.
-  uint8_t fan_speed;
-  // Байт 5. Температура воздуха на входе в бризер (температура на улице).
-  int8_t outdoor_temperature;
-  // Байт 6. Текущая температура воздуха после нагревателя (внутри помещения).
-  int8_t current_temperature;
-  // Байт 7. Внутренняя температура платы.
-  int8_t pcb_temperature;
-  // Байт 8-23. 8-11 - work_time, 12-15 - fan_time, 16-19 - filter_time, 20-23 - airflow_counter
-  tion_state_counters_t<tion_dev_info_t::BRLT> counters;
-  // Байт 24-27.
-  uint32_t errors;
-  // Байт 28-47.
-  struct {
-    enum { ERROR_TYPE_NUMBER = 20 };
-    uint8_t er[ERROR_TYPE_NUMBER];
-  } errors_cnt;
-  // Байт 48-53.
-  // NOLINTNEXTLINE(readability-identifier-naming)
-  struct button_presets_t {
-    enum { PRESET_NUMBER = 3 };
-    int8_t temp[PRESET_NUMBER];
-    uint8_t fan_speed[PRESET_NUMBER];
-  } button_presets;
-  // Байт 54.
-  uint8_t max_fan_speed;
-  // Байт 55.
-  uint8_t heater_var;
-  // Байт 56.
-  uint8_t test_type;
-
-  float heater_power() const;
-  bool is_initialized() const { return this->counters.work_time != 0; }
-  bool filter_warnout() const { return this->flags.filter_warnout; }
-
-  void for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const;
-};
-
-#pragma pack(pop)
-
-class TionLtApi : public TionApiBase<tionlt_state_t> {
+class TionLtApi : public TionApiBase {
  public:
+  TionLtApi();
+
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
 
   uint16_t get_state_type() const;
 
-  bool request_dev_info() const;
-  bool request_state() const;
-
-  bool write_state(const tionlt_state_t &state, uint32_t request_id) const;
-  bool reset_filter(const tionlt_state_t &state, uint32_t request_id = 1) const;
-  bool factory_reset(const tionlt_state_t &state, uint32_t request_id = 1) const;
-  bool reset_errors(const tionlt_state_t &state, uint32_t request_id = 1) const;
+  bool write_state(const TionState &state, uint32_t request_id) const;
+  bool reset_filter(const TionState &state, uint32_t request_id = 1) const;
+  bool factory_reset(const TionState &state, uint32_t request_id = 1) const;
+  bool reset_errors(const TionState &state, uint32_t request_id = 1) const;
 
 #ifdef TION_ENABLE_HEARTBEAT
   bool send_heartbeat() const { return false; }
 #endif
+
+  void set_button_presets(const dentra::tion_lt::button_presets_t &button_presets);
+
+  void request_state() override;
+  void write_state(TionStateCall *call) override {
+    this->write_state(this->make_write_state_(call), ++this->request_id_);
+  }
+
+ protected:
+  tion_lt::button_presets_t button_presets_{
+      .tmp{
+          TION_LT_BUTTON_PRESET_TMP1,
+          TION_LT_BUTTON_PRESET_TMP2,
+          TION_LT_BUTTON_PRESET_TMP3,
+      },
+      .fan{
+          TION_LT_BUTTON_PRESET_FAN1,
+          TION_LT_BUTTON_PRESET_FAN2,
+          TION_LT_BUTTON_PRESET_FAN3,
+      },
+  };
+
+  bool request_dev_info_() const;
+  bool request_state_() const;
+
+  void dump_state_(const tion_lt::tionlt_state_t &state) const;
+  void update_state_(const tion_lt::tionlt_state_t &state);
+  void update_dev_info_(const tion::tion_dev_info_t &dev_info);
+
+  uint8_t calc_productivity(const tion_lt::tionlt_state_t &state) const {
+    const auto prev_fan_time = this->state_.fan_time;
+    if (prev_fan_time == 0) {
+      return 0;
+    }
+    const auto diff_time = state.counters.fan_time - prev_fan_time;
+    if (diff_time == 0) {
+      return 0;
+    }
+    const auto prev_airflow_counter = this->state_.airflow_counter;
+    const auto diff_airflow = state.counters.airflow_counter - prev_airflow_counter;
+    // return (float(diff_airflow) / float(diff_time) * state.counters.airflow_k());
+    return state.counters.airflow_mult(float(diff_airflow) / float(diff_time));
+  }
 };
 
 }  // namespace tion

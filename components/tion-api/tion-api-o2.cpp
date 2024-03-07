@@ -1,7 +1,9 @@
+#include <cinttypes>
+
 #include "log.h"
 #include "utils.h"
 #include "tion-api-o2.h"
-#include "tion-api-o2-internal.h"
+#include "tion-api-defines.h"
 
 /*
 21.01.2023 20:58 (внешнаяя температура в мск T=-10 (0xF6) T=-12 (0xF4) Td=-13 (0xF3))
@@ -125,24 +127,12 @@ size_t get_rsp_frame_size(uint8_t frame_type) {
   return 0;
 }
 
-void tiono2_state_t::for_each_error(const std::function<void(uint8_t error, const char type[3])> &fn) const {
-  if (errors == 0) {
-    return;
-  }
-  for (uint32_t i = tiono2_state_t::ERROR_MIN_BIT; i <= tiono2_state_t::ERROR_MAX_BIT; i++) {
-    uint32_t mask = 1 << i;
-    if ((errors & mask) == mask) {
-      fn(i + 1, "EC");
-    }
-  }
-}
-
 void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   if (frame_type == FRAME_TYPE_STATE_GET_RSP) {
     TION_LOGD(TAG, "Response[] State Get");
-    if (this->on_state) {
-      this->on_state(*static_cast<const tiono2_state_t *>(frame_data), 0);
-    }
+    auto *frame = static_cast<const tiono2_state_t *>(frame_data);
+    this->update_state_(*frame);
+    this->notify_state_(0);
     return;
   }
 
@@ -156,23 +146,22 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     } PACKED;
     auto *frame = static_cast<const RawDevModeFrame *>(frame_data);
     TION_LOGD(TAG, "Response[] Dev mode: %02X", frame->data);
-    // if (this->on_dev_mode) {
-    //   this->on_dev_mode(frame->dev_mode);
-    // }
+    this->update_dev_mode_(frame->dev_mode);
     return;
   }
 
   if (frame_type == FRAME_TYPE_SET_WORK_MODE_RSP) {
     // 55 AA
-    TION_LOGD(TAG, "Response[] Work Mode");
+    TION_LOGV(TAG, "Response[] Work Mode");
     return;
   }
 
   if (frame_type == FRAME_TYPE_DEV_INFO_RSP) {
     // 17 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 61 0E 13 04 10 EC 19 79
     TION_LOGD(TAG, "Response[] Device info: %s", hexencode(frame_data, frame_data_size).c_str());
-    if (this->on_dev_info) {
-      auto *data = static_cast<const tiono2_dev_info_t *>(frame_data);
+    auto *data = static_cast<const tiono2_dev_info_t *>(frame_data);
+    this->update_dev_info_(*data);
+    if (this->on_dev_info_fn) {
       tion::tion_dev_info_t info{
           .work_mode = tion::tion_dev_info_t::UNKNOWN,
           .device_type = tion::tion_dev_info_t::BRO2,
@@ -180,7 +169,7 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
           .hardware_version = data->hardware_version,
           .reserved = {},
       };
-      this->on_dev_info(info);
+      this->on_dev_info_fn(info);
     }
     return;
   }
@@ -201,50 +190,132 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   TION_LOGW(TAG, "Unsupported frame %02X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
 }
 
-bool TionO2Api::request_connect() const {
+bool TionO2Api::request_connect_() const {
   TION_LOGD(TAG, "Request[] Connect");
   return this->write_frame(FRAME_TYPE_CONNECT_REQ);
 }
 
-bool TionO2Api::request_dev_info() const {
+bool TionO2Api::request_dev_info_() const {
   TION_LOGD(TAG, "Request[] Device info");
   return this->write_frame(FRAME_TYPE_DEV_INFO_REQ);
 }
 
-bool TionO2Api::request_state() const {
+bool TionO2Api::request_state_() const {
   TION_LOGD(TAG, "Request[] State Get");
   return this->write_frame(FRAME_TYPE_STATE_GET_REQ);
 }
 
-bool TionO2Api::request_dev_mode() const {
+bool TionO2Api::request_dev_mode_() const {
   TION_LOGV(TAG, "Request[] Dev mode");
   return this->write_frame(FRAME_TYPE_DEV_MODE_REQ);
 }
 
 bool TionO2Api::set_work_mode(WorkModeFlags work_mode) const {
   TION_LOGV(TAG, "Request[] Work mode");
-  const struct {
-    WorkModeFlags work_mode;
-  } PACKED data{.work_mode = work_mode};
-  return this->write_frame(FRAME_TYPE_SET_WORK_MODE_REQ, data);
+  return this->write_frame(FRAME_TYPE_SET_WORK_MODE_REQ, work_mode);
 }
 
-bool TionO2Api::write_state(const tiono2_state_t &state, uint32_t request_id) const {
+void TionO2Api::write_state(TionStateCall *call) {
   TION_LOGV(TAG, "Request[] State set");
-  tiono2_state_set_t data{
-      .fan_speed = state.fan_speed,
-      .target_temperature = state.target_temperature,
-      .power = state.flags.power_state,
-      .heat = state.flags.heater_state,
-      // TODO set right comm_source
-      .comm_source = tion::CommSource::USER,
-  };
-  return this->write_frame(FRAME_TYPE_STATE_SET_REQ, data);
+  auto st_set = tiono2_state_set_t::create(this->make_write_state_(call));
+  this->write_frame(FRAME_TYPE_STATE_SET_REQ, st_set);
 }
 
-bool TionO2Api::reset_filter(const tiono2_state_t &state, uint32_t request_id) const {
+bool TionO2Api::reset_filter(const tion::TionState &state, uint32_t request_id) const {
   TION_LOGW(TAG, "reset_filter is not implemented");
   return false;
+}
+
+void TionO2Api::request_state() {
+  if (this->state_.firmware_version == 0) {
+    this->request_connect_();
+    this->request_dev_info_();
+  }
+  this->request_dev_mode_();
+  this->request_state_();
+}
+
+TionO2Api::TionO2Api() : TionApiBase() {
+  this->traits_.errors_decoder = tiono2_state_t::decode_errors;
+
+  this->traits_.supports_work_time = true;
+  this->traits_.supports_gate_error = true;
+#ifdef TION_ENABLE_ANTIFRIZE
+  this->traits_.supports_antifrize = true;
+#endif
+  this->traits_.max_heater_power = TION_O2_HEATER_POWER / 10;
+  this->traits_.max_fan_speed = 4;
+  this->traits_.min_target_temperature = -30;
+  this->traits_.max_target_temperature = 25;
+
+  this->traits_.max_fan_power[0] = TION_O2_MAX_FAN_POWER0;
+  this->traits_.max_fan_power[1] = TION_O2_MAX_FAN_POWER1;
+  this->traits_.max_fan_power[2] = TION_O2_MAX_FAN_POWER2;
+  this->traits_.max_fan_power[3] = TION_O2_MAX_FAN_POWER3;
+  this->traits_.max_fan_power[4] = TION_O2_MAX_FAN_POWER4;
+}
+
+void TionO2Api::update_dev_mode_(const DevModeFlags &dev_mode) {
+  this->state_.auto_state = !dev_mode.user;
+  this->state_.comm_source = dev_mode.user ? CommSource::USER : CommSource::AUTO;
+}
+
+void TionO2Api::update_dev_info_(const tiono2_dev_info_t &dev_info) {
+  this->traits_.min_target_temperature = dev_info.heater_min;
+  this->traits_.max_target_temperature = dev_info.heater_max;
+  this->state_.hardware_version = dev_info.hardware_version;
+  this->state_.firmware_version = dev_info.firmware_version;
+}
+
+void TionO2Api::update_state_(const tiono2_state_t &state) {
+  this->traits_.initialized = true;
+
+  this->state_.power_state = state.power_state;
+  this->state_.heater_state = state.heater_state;
+  this->state_.sound_state = false;
+  this->state_.led_state = false;
+  // this->state_.comm_source = CommSource::USER;
+  // this->state_.auto_state = false;
+  this->state_.filter_state = state.filter_state;
+  this->state_.gate_error_state = state.errors & tiono2_state_t::GATE_ERROR_BIT;
+  this->state_.gate_position = state.power_state ? TionGatePosition::OPENED : TionGatePosition::CLOSED;
+  this->state_.fan_speed = state.fan_speed;
+  this->state_.outdoor_temperature = state.outdoor_temperature;
+  this->state_.current_temperature = state.current_temperature;
+  this->state_.target_temperature = state.target_temperature;
+  this->state_.productivity = state.productivity;
+  // this->state_.heater_var = 0;
+  this->state_.work_time = state.work_time;
+  // this->state_.fan_time = 0;
+  this->state_.filter_time_left = state.filter_time;
+  // this->state_.airflow_counter = 0;
+  // this->traits_.max_heater_power = 1450/10;
+  // this->traits_.max_fan_speed = 4;
+  // this->traits_.min_target_temperature = -30;
+  // this->traits_.min_target_temperature = 25;
+  // this->state_.hardware_version = dev_info.hardware_version;
+  // this->state_.firmware_version = dev_info.firmware_version;
+  // this->state_.pcb_ctl_temperature = 0;
+  // this->state_.pcb_pwr_temperature = 0;
+  this->state_.errors = state.errors;
+
+  this->dump_state_(state);
+}
+
+void TionO2Api::dump_state_(const tiono2_state_t &state) const {
+  this->state_.dump(TAG, this->traits_);
+  TION_LOGV(TAG, "productivity: %d", state.productivity);
+
+  // dump values useful for future research
+  auto flags = *static_cast<const uint8_t *>(static_cast<const void *>(&state.flags));
+  static char flags_bits[CHAR_BIT + 1]{};
+  for (int i = 0; i < CHAR_BIT; i++) {
+    flags_bits[(CHAR_BIT - 1) - i] = ((flags >> i) & 1) + '0';
+  }
+  TION_LOGD(TAG, "flags: %s", flags_bits);
+  if (state.unknown7 != 0x04) {
+    TION_LOGW(TAG, "Please report unknown7=%02X", state.unknown7);
+  }
 }
 
 }  // namespace tion_o2

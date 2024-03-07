@@ -10,25 +10,44 @@
 DEFINE_TAG;
 
 using namespace esphome;
-using namespace esphome::tion;
-using namespace dentra::tion;
-using namespace dentra::tion_4s;
 
-using Tion4sBleVPortApiTest = TionVPortApi<Tion4sBleIOTest::frame_spec_type, TionApi4s>;
-// using Tion4sUartVPortApiTest = TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s>;
+using dentra::tion_4s::tion4s_state_set_t;
+using dentra::tion_4s::tion4s_state_t;
+using dentra::tion::TionGatePosition;
+using dentra::tion::TionTraits;
+using dentra::tion::TionState;
+using dentra::tion_4s::Tion4sApi;
 
-class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s> {
+using Tion4sUartVPort = esphome::tion::Tion4sUartVPort;
+using Tion4sBleVPort = esphome::tion::Tion4sBleVPort;
+
+using Tion4sUartVPortApiTestBase = esphome::tion::TionVPortApi<Tion4sUartIOTest::frame_spec_type, Tion4sApi>;
+// using Tion4sBleVPortApiTest = esphome::tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, Tion4sApi>;
+class Tion4sBleVPortApiTest : public esphome::tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, Tion4sApi> {
  public:
-  Tion4sUartVPortApiTest(Tion4sUartVPort *vport) : TionVPortApi<Tion4sUartIOTest::frame_spec_type, TionApi4s>(vport) {
-    this->set_writer(
-        TionApi4s::writer_type::create<Tion4sUartVPortApiTest, &Tion4sUartVPortApiTest::test_write_>(*this));
+  Tion4sBleVPortApiTest(vport_t *vport)
+      : esphome::tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, Tion4sApi>(vport) {}
+  bool request_dev_info() const { return this->request_dev_info_(); }
+};
 
-    this->state_.max_fan_speed = 6;
+class Tion4sUartVPortApiTest : public Tion4sUartVPortApiTestBase {
+ public:
+  Tion4sUartVPortApiTest(Tion4sUartVPort *vport) : Tion4sUartVPortApiTestBase(vport) {
+    this->set_writer(
+        Tion4sApi::writer_type::create<Tion4sUartVPortApiTest, &Tion4sUartVPortApiTest::test_write_>(*this));
+
+    tr.initialized = true;
+    tr.supports_led_state = true;
+    tr.supports_sound_state = true;
+    tr.max_fan_speed = 6;
+
     this->state_.fan_speed = 1;
-    this->state_.counters.work_time = 0xFFFF;
+    this->state_.work_time = 0xFFFF;
   }
 
-  tion4s_state_t state_{};
+  TionTraits tr;
+
+  TionState state_{};
 
  protected:
   bool test_write_(uint16_t type, const void *data, size_t size) {
@@ -37,21 +56,24 @@ class Tion4sUartVPortApiTest : public TionVPortApi<Tion4sUartIOTest::frame_spec_
       tion4s_state_set_t data;
     } __attribute__((__packed__));
 
-    if (type == FRAME_TYPE_STATE_SET && size == sizeof(req_t)) {
+    if (type == dentra::tion_4s::FRAME_TYPE_STATE_SET && size == sizeof(req_t)) {
       const auto *req = static_cast<const req_t *>(data);
 
-      this->state_.flags.power_state = req->data.power_state;
-      this->state_.flags.heater_mode = req->data.heater_mode;
-      if (req->data.fan_speed > 0 && req->data.fan_speed <= this->state_.max_fan_speed) {
+      this->state_.power_state = req->data.power_state;
+      this->state_.heater_state = req->data.heater_mode == tion4s_state_t::HEATER_MODE_HEATING;
+      if (req->data.fan_speed > 0 && req->data.fan_speed <= this->tr.max_fan_speed) {
         this->state_.fan_speed = req->data.fan_speed;
       }
       this->state_.target_temperature = req->data.target_temperature;
-      this->state_.gate_position = req->data.gate_position;
-      this->state_.flags.led_state = req->data.led_state;
-      this->state_.flags.sound_state = req->data.sound_state;
+      this->state_.gate_position =                                          //-//
+          req->data.gate_position == tion4s_state_t::GATE_POSITION_OUTDOOR  //-//
+              ? TionGatePosition::OUTDOOR
+              : TionGatePosition::INDOOR;
+      this->state_.led_state = req->data.led_state;
+      this->state_.sound_state = req->data.sound_state;
       // add others
 
-      this->on_state(this->state_, req->request_id);
+      this->on_state_fn(this->state_, req->request_id);
     }
     return this->write_frame_(type, data, size);
   }
@@ -63,24 +85,29 @@ class Tion4sBleVPortTest : public Tion4sBleVPort {
   // uint16_t get_state_type() const { return this->state_type_; }
 };
 
-class Tion4sTest : public Tion4sClimate {
+class Tion4sTest : public tion::Tion4sClimate {
  public:
-  Tion4sTest(TionApi4s *api, esphome::tion::TionVPortType vport_type) : Tion4sClimate(api, vport_type) {
-    this->state_.counters.work_time = 0xFFFF;
+  Tion4sTest(Tion4sApi *api, esphome::tion::TionVPortType vport_type) : tion::Tion4sClimate(api, vport_type) {
+    auto &tr = api->get_traits_();
+    tr.initialized = true;
+    tr.supports_led_state = true;
+    tr.supports_sound_state = true;
+    tr.max_fan_speed = 6;
+    this->state_.work_time = 0xFFFF;
   }
-  tion4s_state_t &state() { return this->state_; };
+  TionState &state() { return this->state_; };
 
   void update_preset_service(std::string preset_str, std::string mode_str, int fan_speed, int target_temperature,
                              std::string gate_position_str) {
-    this->update_preset_service_(preset_str, mode_str, fan_speed, target_temperature, gate_position_str);
+    this->presets_update_service_(preset_str, mode_str, fan_speed, target_temperature, gate_position_str);
   }
 
   const esphome::tion::TionClimatePresetData &get_preset(esphome::climate::ClimatePreset index) const {
-    return this->presets_[index];
+    return this->presets_data_[index];
   }
 
   void for_each_preset(const std::function<void(esphome::climate::ClimatePreset index)> &fn) const {
-    this->for_each_preset_(fn);
+    this->presets_for_each_(fn);
   }
 };
 
@@ -279,11 +306,10 @@ bool test_batch() {
   comp.test_timeout(false);
   vport.call_loop();
 
-  res &= cloak::check_data("batch data led_state", api.state_.flags.led_state, true);
-  res &= cloak::check_data("batch data sound_state", api.state_.flags.sound_state, true);
+  res &= cloak::check_data("batch data led_state", api.state_.led_state, true);
+  res &= cloak::check_data("batch data sound_state", api.state_.sound_state, true);
   // res &= cloak::check_data("batch data heater_state", api.state_.flags.heater_state, true);
-  res &= cloak::check_data("batch data heater_mode", api.state_.flags.heater_mode,
-                           tion4s_state_t::HeaterMode::HEATER_MODE_HEATING);
+  res &= cloak::check_data("batch data heater_mode", api.state_.heater_state, true);
   res &= cloak::check_data("batch data fan_speed", api.state_.fan_speed, 3);
   res &= cloak::check_data("batch data target_temperature", api.state_.target_temperature, 23);
 

@@ -72,9 +72,7 @@ class TionClimatePresets {
       this->presets_data_[preset].target_temperature = target_temperature;
     }
 
-    if (gate_position < TionGatePosition::_LAST) {
-      this->presets_data_[preset].gate_position = gate_position;
-    }
+    this->presets_data_[preset].gate_position = gate_position;
 
     return true;
   }

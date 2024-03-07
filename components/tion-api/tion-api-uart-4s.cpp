@@ -84,7 +84,7 @@ Tion4sUartProtocol::read_frame_result_t Tion4sUartProtocol::read_frame_(TionUart
     return READ_THIS_LOOP;
   }
 
-  TION_LOGV(TAG, "Read data: %s", hexencode(frame, frame->size).c_str());
+  TION_LOGV(TAG, "RX: %s", hexencode(frame, frame->size).c_str());
 
   auto crc = dentra::tion::crc16_ccitt_false_ffff(frame, frame->size);
   if (crc != 0) {
@@ -122,6 +122,8 @@ bool Tion4sUartProtocol::write_frame(uint16_t type, const void *data, size_t siz
   std::memcpy(frame->data.data, data, size);
   uint16_t crc = __builtin_bswap16(crc16_ccitt_false_ffff(frame, frame_size - sizeof(crc)));
   std::memcpy(&frame->data.data[size], &crc, sizeof(crc));
+
+  TION_LOGV(TAG, "TX: %s", tion::hexencode(frame_buf, frame_size).c_str());
 
   return this->writer(frame_buf, frame_size);
 }

@@ -11,19 +11,19 @@ struct tion_hw_packet_t {
 
 struct tion_hw_set_state_t {
   struct {
-    bool power_state : 1;                    // 0 - off, 1 - on
-    bool sound_state : 1;                    // ???
-    bool led_state : 1;                      // ???
-    uint8_t /*HeaterMode*/ heater_mode : 1;  // 0 - heating, 1 - temperature maintance
-    CommSource last_com_source : 1;          // ???
-    bool factory_reset : 1;                  // ???
-    bool error_reset : 1;                    // ???
-    bool filter_reset : 1;                   // ???
-    bool ma : 1;                             // ???
-    bool ma_auto : 1;                        // ???
+    bool power_state : 1;                          // 0 - off, 1 - on
+    bool sound_state : 1;                          // ???
+    bool led_state : 1;                            // ???
+    uint8_t /*HeaterMode*/ heater_mode : 1;        // 0 - heating, 1 - temperature maintance
+    dentra::tion::CommSource last_com_source : 1;  // ???
+    bool factory_reset : 1;                        // ???
+    bool error_reset : 1;                          // ???
+    bool filter_reset : 1;                         // ???
+    bool ma : 1;                                   // ???
+    bool ma_auto : 1;                              // ???
     uint8_t reserved : 6;
   };
-  dentra::tion::tion4s_state_t::GatePosition gate_position;  // 00 inflow, 01 - recurculation
+  dentra::tion_4s::tion4s_state_t::GatePosition gate_position;  // 00 inflow, 01 - recurculation
   int8_t target_temperature;
   uint8_t fan_speed;
   uint16_t unknown;  // random?
@@ -40,7 +40,7 @@ struct tion_hw_rsp_heartbeat_t {
 
 struct tion_hw_rsp_frame_state_t {
   uint32_t request_id;
-  dentra::tion::tion4s_state_t state;
+  dentra::tion_4s::tion4s_state_t state;
 };
 
 #pragma pack(pop)
@@ -70,22 +70,22 @@ const hw_test_data_t test_data[] = {
     {hw_test_data_t::SET, "Режим рециркуляции", "3a 1200 3032 0d000000 0700 01 0c 02 6d3d 1a22",
      [](const void *data) {
        return static_cast<const tion_hw_set_state_t *>(data)->gate_position ==
-              dentra::tion::tion4s_state_t::GatePosition::GATE_POSITION_RECIRCULATION;
+              dentra::tion_4s::tion4s_state_t::GatePosition::GATE_POSITION_INDOOR;
      }},
     {hw_test_data_t::SET, "Режим приток", "3a12003032 0e000000 0700 00 0c 01 2dad 1fac",
      [](const void *data) {
        return static_cast<const tion_hw_set_state_t *>(data)->gate_position ==
-              dentra::tion::tion4s_state_t::GatePosition::GATE_POSITION_INFLOW;
+              dentra::tion_4s::tion4s_state_t::GatePosition::GATE_POSITION_OUTDOOR;
      }},
     {hw_test_data_t::SET, "Выключение подогрева", "3a12003032 0f000000 0f00 00 0c 02 6cbd 21d4",
      [](const void *data) {
        return static_cast<const tion_hw_set_state_t *>(data)->heater_mode ==
-              dentra::tion::tion4s_state_t::HeaterMode::HEATER_MODE_TEMPERATURE_MAINTENANCE;
+              dentra::tion_4s::tion4s_state_t::HeaterMode::HEATER_MODE_FANONLY;
      }},
     {hw_test_data_t::SET, "включение подогрева", "3a12003032 10000000 0700 00 0c 02 cb8a ae2a",
      [](const void *data) {
        return static_cast<const tion_hw_set_state_t *>(data)->heater_mode ==
-              dentra::tion::tion4s_state_t::HeaterMode::HEATER_MODE_HEATING;
+              dentra::tion_4s::tion4s_state_t::HeaterMode::HEATER_MODE_HEATING;
      }},
     {hw_test_data_t::SET, "0 градусов", "3a12003032 11000000 1700 00 00 02 cb33 38d8",
      [](const void *data) { return static_cast<const tion_hw_set_state_t *>(data)->target_temperature == 0; }},
@@ -96,25 +96,19 @@ const hw_test_data_t test_data[] = {
 
     {hw_test_data_t::RSP, "Выключение 1",
      "3A 2A00 3132 0D000000 0EC1 00 0B 03 00 0A 0E 20 C6D02600 E7772600 19D6C600 6EDE7500 00000000 06 20 01C0",
-     [](const void *data) {
-       return static_cast<const dentra::tion::tion4s_state_t *>(data)->flags.power_state == false;
-     }},
+     [](const void *data) { return static_cast<const dentra::tion_4s::tion4s_state_t *>(data)->power_state == false; }},
     {hw_test_data_t::RSP, "Выключение 2",
      "3A 2A00 3132 0D000000 0EC1 00 0B 03 00 0A 0E 20 C7D02600 E7772600 19D6C600 6EDE7500 00000000 06 00 487A",
-     [](const void *data) {
-       return static_cast<const dentra::tion::tion4s_state_t *>(data)->flags.power_state == false;
-     }},
+     [](const void *data) { return static_cast<const dentra::tion_4s::tion4s_state_t *>(data)->power_state == false; }},
     // {hw_test_data_t::RSP, "Включение 1",
     //  "3A 2A00 3132 0D000000 0E01 00 0B 03 02 0B 0E 21 62D12600 E7772600 19D6C600 6EDE7500 00000000 06 00 47F7",
     //  [](const void *data) {
-    //    return static_cast<const dentra::tion::tion4s_state_t *>(data)->flags.power_state == true;
+    //    return static_cast<const dentra::tion::tion4s_state_t *>(data)->power_state == true;
     //  }},
     {hw_test_data_t::RSP, "Включение 2",
      "3A 2A00 3132 0E 00 00 00 0F 21 00 0B 03 02 0B 0E 21 63 D1 26 00 E7 77 26 00 19 D6 "
      "C6 00 6E DE 75 00 00000000 06 00 3E98",
-     [](const void *data) {
-       return static_cast<const dentra::tion::tion4s_state_t *>(data)->flags.power_state == true;
-     }},
+     [](const void *data) { return static_cast<const dentra::tion_4s::tion4s_state_t *>(data)->power_state == true; }},
 };
 
 /**

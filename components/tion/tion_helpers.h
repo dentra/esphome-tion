@@ -6,6 +6,8 @@
 #include "esphome/components/climate/climate.h"
 #endif
 
+#include "../tion-api/tion-api.h"
+
 namespace esphome {
 namespace tion {
 
@@ -20,11 +22,7 @@ inline std::string fan_speed_to_mode(uint8_t fan_speed) {
   return std::string(fan_mode);
 }
 
-enum class TionGatePosition : uint8_t { NONE = 0, OUTDOOR = 1, INDOOR = 2, MIXED = 3, _LAST = 4 };
-
-#ifdef USE_CLIMATE
-using TionClimateGatePosition = TionGatePosition;
-#endif
+using TionGatePosition = dentra::tion::TionGatePosition;
 
 template<typename mode_type, mode_type off_value> struct TionPresetData {
   uint8_t fan_speed;

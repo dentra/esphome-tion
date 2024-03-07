@@ -11,7 +11,7 @@
 namespace esphome {
 namespace tion {
 
-enum TionVPortType : uint8_t { VPORT_UNKNOWN = 0, VPORT_BLE, VPORT_UART, VPORT_TCP };
+enum TionVPortType : uint8_t { VPORT_UNKNOWN = 0, VPORT_BLE, VPORT_UART, VPORT_JTAG, VPORT_TCP };
 
 template<class protocol_type> class TionIO {
   static_assert(std::is_base_of_v<dentra::tion::TionProtocol<typename protocol_type::frame_spec_type>, protocol_type>,
@@ -43,7 +43,7 @@ template<class frame_spec_t, class api_t> class TionVPortApi : public api_t, pub
     api_t::set_writer(api_t::writer_type::template create<this_t, &this_t::write_frame_>(*this));
   }
 
-  void on_ready() override { this->on_ready_.call_if(); }
+  void on_ready() override { this->on_ready_fn.call_if(); }
 
   void on_frame(const frame_spec_t &frame, size_t size) override {
     this->read_frame(frame.type, frame.data, size - frame_spec_t::head_size());

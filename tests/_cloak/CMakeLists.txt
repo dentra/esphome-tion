@@ -21,6 +21,7 @@ file(GLOB cloak_SRC
   esphome/components/select/*.cpp
   esphome/components/number/*.cpp
   esphome/components/time/*.cpp
+  esphome/components/fan/*.cpp
   esp32/*.cpp
 )
 
@@ -61,4 +62,3 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/esp32
   ${ESP_SDK_INCLUDE}
 )
-

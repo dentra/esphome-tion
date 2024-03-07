@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cstdint>
-
-#include "tion-api-3s.h"
+#include "tion-api.h"
 
 namespace dentra {
 namespace tion_3s {
@@ -36,6 +35,78 @@ enum : uint8_t {
 
 #pragma pack(push, 1)
 
+enum : uint8_t {
+  FRAME_MAGIC_REQ = 0x3D,
+  FRAME_MAGIC_RSP = 0xB3,
+  FRAME_MAGIC_END = 0x5A,
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+struct tion3s_state_t {
+  enum GatePosition : uint8_t { GATE_POSITION_INDOOR = 0, GATE_POSITION_MIXED = 1, GATE_POSITION_OUTDOOR = 2 };
+  // Байт 0, бит 0-3. Скорость вентиляции.
+  uint8_t fan_speed : 4;
+  // Байт 0, бит 4-7. Позиция заслонки.
+  GatePosition gate_position : 4;
+  // Байт 1. Настроенная температура подогрева.
+  int8_t target_temperature;
+  // Байт 2-3. Флаги.
+  struct Flags {
+    // Байт 2, бит 0. Включен режим подогрева.
+    bool heater_state : 1;
+    // Байт 2, бит 1. Включен бризер.
+    bool power_state : 1;
+    // Байт 2, бит 2. Включен таймер.
+    bool timer_state : 1;
+    // Байт 2, бит 3. Включены звуковые оповещения.
+    bool sound_state : 1;
+    // Байт 2, бит 4.
+    bool ma_auto : 1;
+    // Байт 2, бит 5. Состояния подключения MagicAir.
+    bool ma_connected : 1;
+    // Байт 2, бит 6.
+    bool save : 1;
+    // Байт 2, бит 7.
+    bool ma_pairing : 1;
+    // Байт 3, бит 0. Возможно это comm_source т.к. в Tion Remote всегда ставиться в 1.
+    bool preset_state : 1;
+    // Байт 3, бит 1.
+    bool presets_state : 1;
+    // зарезервированно
+    uint8_t reserved : 6;
+  } flags;
+  // Байт 4.
+  int8_t current_temperature1;
+  // Байт 5. Текущая температура воздуха после нагревателя (внутри помещения).
+  int8_t current_temperature2;
+  // Байт 6. Температура воздуха на входе в бризер (температура на улице).
+  int8_t outdoor_temperature;
+  // Байт 7-8. Остаточsный ресурс фильтров в днях. То, что показывается в приложении как "время жизни фильтров".
+  uint16_t filter_time;
+  // Байт 9. Часы.
+  uint8_t hours;
+  // Байт 10. Минуты.
+  uint8_t minutes;
+  // Байт 11. Код последней ошибки. Выводиться в формате "EC%u".
+  uint8_t last_error;
+  // Байт 12. Текущая производительность бризера в кубометрах в час.
+  uint8_t productivity;
+  // Байт 13. Сколько дней прошло с момента установки новых фильтров.
+  uint16_t filter_days;
+  // Байт 15-16. Текущая версия прошивки.
+  uint16_t firmware_version;
+
+  int current_temperature() const {
+    // Исходная формула:
+    // ((bArr[4] <= 0 ? bArr[5] : bArr[4]) + (bArr[5] <= 0 ? bArr[4] : bArr[5])) / 2;
+    auto barr_4 = this->current_temperature1;
+    auto barr_5 = this->current_temperature2;
+    return ((barr_4 <= 0 ? barr_5 : barr_4) + (barr_5 <= 0 ? barr_4 : barr_5)) / 2;
+  }
+
+  static std::string decode_errors(uint32_t errors);
+};
+
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion3s_frame_t {
   enum {
@@ -55,7 +126,7 @@ struct tion3s_state_set_t {
   // Байт 2. Состояние затворки.
   uint8_t /*tion3s_state_t::GatePosition*/ gate_position;
   // Байт 3-4. Флаги.
-  tion::tion3s_state_t::Flags flags;
+  tion3s_state_t::Flags flags;
   // Байт 5-7. Управление фильтрами.
   struct {
     bool save : 1;
@@ -71,17 +142,25 @@ struct tion3s_state_set_t {
 
   //        0  1  2  3  4  5  6  7  8  9
   // 3D:02 01 17 02 0A.01 02.00.00 00 00 00:00:00:00:00:00:00:5A
-  static tion3s_state_set_t create(const tion::tion3s_state_t &state) {
+  static tion3s_state_set_t create(const tion::TionState &state) {
     tion3s_state_set_t st_set{};
+
+    st_set.flags.power_state = state.power_state;
+    st_set.flags.heater_state = state.heater_state;
+    st_set.flags.sound_state = state.sound_state;
+    st_set.flags.ma_auto = state.auto_state;
 
     st_set.fan_speed = state.fan_speed;
     st_set.target_temperature = state.target_temperature;
-    st_set.gate_position = state.gate_position;
-    st_set.flags = state.flags;
+    st_set.gate_position =                                          //-//
+        state.gate_position == tion::TionGatePosition::INDOOR       //-//
+            ? tion3s_state_t::GATE_POSITION_INDOOR                  //-//
+            : state.gate_position == tion::TionGatePosition::MIXED  //-//
+                  ? tion3s_state_t::GATE_POSITION_MIXED             //-//
+                  : tion3s_state_t::GATE_POSITION_OUTDOOR;          //-//
+
     // в tion remote всегда выставляется этот бит
     st_set.flags.preset_state = true;
-
-    // TODO set comm_source
 
     return st_set;
   }

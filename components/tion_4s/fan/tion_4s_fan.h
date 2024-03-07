@@ -8,10 +8,10 @@
 namespace esphome {
 namespace tion {
 
-class Tion4sFan : public TionFanComponent<TionApi4s> {
- public:
-  explicit Tion4sFan(TionApi4s *api, TionVPortType vport_type) : TionFanComponent(api, vport_type) {}
-};
+// class Tion4sFan : public TionFanComponent<Tion4sApi> {
+//  public:
+//   explicit Tion4sFan(Tion4sApi *api, TionVPortType vport_type) : TionFanComponent(api, vport_type) {}
+// };
 
 }  // namespace tion
 }  // namespace esphome

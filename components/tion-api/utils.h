@@ -7,10 +7,15 @@
 #ifdef TION_ESPHOME
 #include "esphome/core/helpers.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/optional.h"
 #define tion_hexencode(data, size) esphome::format_hex_pretty(data, size)
 #define tion_yield() esphome::yield()
+#define tion_millis() esphome::millis()
+using esphome::optional;
 #else
 #define tion_yield()
+#include <optional>
+using std::optional;
 #endif
 
 #if !__has_builtin(__builtin_bswap16)

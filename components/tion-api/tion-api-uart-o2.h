@@ -7,7 +7,7 @@ namespace dentra {
 namespace tion_o2 {
 
 // 20 = sizeof(tiono2_frame_t)+type+crc+1
-class TionO2UartProtocol : public tion::TionUartProtocolBase<20> {
+class TionO2UartProtocol : public tion::TionUartProtocolBase<32> {
  public:
   TionO2UartProtocol(const TionO2UartProtocol &) = delete;             // non construction-copyable
   TionO2UartProtocol &operator=(const TionO2UartProtocol &) = delete;  // non copyable

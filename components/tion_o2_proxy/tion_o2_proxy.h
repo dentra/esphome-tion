@@ -27,13 +27,16 @@ class TionO2UartIO : public tion::TionUartIO<TionO2UartProtocolProxy> {
 
 class TionO2Proxy;
 
-class TionO2ApiProxy : public dentra::tion::TionApiBase<dentra::tion_o2::tiono2_state_t> {
+class TionO2ApiProxy : public dentra::tion::TionApiBase {
  public:
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
   void set_parent(TionO2Proxy *parent) { this->parent_ = parent; }
 
  protected:
   TionO2Proxy *parent_{};
+  // not used here
+  void request_state() override {}
+  void write_state(dentra::tion::TionStateCall *call) override {}
 };
 
 class TionO2Proxy : public Component {

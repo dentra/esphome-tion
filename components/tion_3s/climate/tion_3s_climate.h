@@ -7,6 +7,9 @@ namespace esphome {
 namespace tion {
 
 class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
+  using TionState = dentra::tion::TionState;
+  using TionGatePosition = dentra::tion::TionGatePosition;
+
  public:
   explicit Tion3sClimate(Tion3sApi *api, TionVPortType vport_type) : TionClimateComponent(api, vport_type) {}
 
@@ -14,65 +17,44 @@ class Tion3sClimate : public TionClimateComponent<Tion3sApi> {
 
   void set_air_intake(select::Select *air_intake) { this->air_intake_ = air_intake; }
 
-  void on_ready() {
-    TionClimateComponent::on_ready();
-    if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
-      this->api_->request_command4();
-    }
-  }
+  // void on_ready() {
+  //   TionClimateComponent::on_ready();
+  //   if (this->vport_type_ == TionVPortType::VPORT_UART && this->state_.firmware_version < 0x003C) {
+  //     this->api_->request_command4();
+  //   }
+  // }
 
-  void update_state(const tion3s_state_t &state) override;
-  void dump_state(const tion3s_state_t &state) const;
+  void update_state(const tion::TionState &state) override;
 
   void reset_filter() { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    ControlState control{};
-    control.buzzer = state;
-    this->control_state_(control);
+    auto *call = this->make_api_call();
+    call->set_sound_state(state);
+    call->perform();
   }
 
-  void control_gate_position(tion3s_state_t::GatePosition gate_position);
+  void control_gate_position(TionGatePosition gate_position) {
+    auto *call = this->make_api_call();
+    call->set_gate_position(gate_position);
+    call->perform();
+  }
 
   void control_climate_state(climate::ClimateMode mode, uint8_t fan_speed, float target_temperature,
                              TionGatePosition gate_position) override;
 
   TionGatePosition get_gate_position() const override {
-    switch (this->get_gate_position_()) {
-      case tion3s_state_t::GatePosition::GATE_POSITION_OUTDOOR:
-        return TionGatePosition::OUTDOOR;
-      case tion3s_state_t::GatePosition::GATE_POSITION_INDOOR:
-        return TionGatePosition::INDOOR;
-      case tion3s_state_t::GatePosition::GATE_POSITION_MIXED:
-        return TionGatePosition::MIXED;
-      default:
-        return TionGatePosition::OUTDOOR;
-    }
-  }
-
- protected:
-  select::Select *air_intake_{};
-
-  tion3s_state_t::GatePosition get_gate_position_() const {
     if (!this->batch_active_ && this->air_intake_) {
       auto active_index = this->air_intake_->active_index();
       if (active_index.has_value()) {
-        return static_cast<tion3s_state_t::GatePosition>(*active_index);
+        return static_cast<tion::TionGatePosition>(*active_index);
       }
     }
     return this->state_.gate_position;
   }
 
-  struct ControlState {
-    optional<bool> power_state;
-    optional<bool> heater_state;
-    optional<uint8_t> fan_speed;
-    optional<int8_t> target_temperature;
-    optional<bool> buzzer;
-    optional<tion3s_state_t::GatePosition> gate_position;
-  };
-
-  void control_state_(const ControlState &state);
+ protected:
+  select::Select *air_intake_{};
 };
 
 }  // namespace tion

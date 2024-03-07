@@ -7,6 +7,8 @@
 #include "../components/tion_o2/climate/tion_o2_climate.h"
 #include "../components/tion_o2/vport/tion_o2_vport.h"
 #include "../components/tion_o2_proxy/tion_o2_proxy.h"
+#include "../components/tion_o2/tion_o2.h"
+#include "../components/tion/tion_vport.h"
 
 #include "test_api.h"
 #include "utils.h"
@@ -25,7 +27,7 @@ class TionO2Test : public esphome::tion::TionO2Climate {
 
   esphome::tion::TionVPortType get_vport_type() const { return this->vport_type_; }
 
-  dentra::tion_o2::tiono2_state_t &state() { return this->state_; };
+  dentra::tion::TionState &state() { return this->state_; };
   void state_reset() { this->state_ = {}; }
 
   // void on_state(const dentra::tion::tion3s_state_t &state, uint32_t request_id) {
@@ -152,18 +154,16 @@ bool test_api_o2_data() {
     auto state_ptr = reinterpret_cast<const dentra::tion_o2::tiono2_state_t *>(raw.data() + 1);
     auto &state = *state_ptr;
     ESP_LOGD(TAG, "flags       : %s", bits_str(*reinterpret_cast<const uint8_t *>(&state.flags)));
-    ESP_LOGD(TAG, "flags.power : %s", ONOFF(state.flags.power_state));
-    ESP_LOGD(TAG, "flags.heater: %s", ONOFF(state.flags.heater_state));
+    ESP_LOGD(TAG, "flags.power : %s", ONOFF(state.power_state));
+    ESP_LOGD(TAG, "flags.heater: %s", ONOFF(state.heater_state));
     ESP_LOGD(TAG, "outdoor_temp: %d", state.outdoor_temperature);
     ESP_LOGD(TAG, "current_temp: %d", state.current_temperature);
     ESP_LOGD(TAG, "target_temp : %d", state.current_temperature);
     ESP_LOGD(TAG, "fan_speed   : %d", state.fan_speed);
     ESP_LOGD(TAG, "productivity: %d", state.productivity);
     DUMP_UNK(unknown7);
-    DUMP_UNK(unknown8);
-    DUMP_UNK(unknown9);
-    ESP_LOGD(TAG, "work_time   : %" PRIu32, state.counters.work_time_days());
-    ESP_LOGD(TAG, "filter_time : %" PRIu32, state.counters.filter_time_left());
+    ESP_LOGD(TAG, "work_time   : %" PRIu32, state.work_time);
+    ESP_LOGD(TAG, "filter_time : %" PRIu32, state.filter_time);
 
     printf("346 = 0x%08X\n", 346 * 24 * 3600);
     printf("347 = 0x%08X\n", 347 * 24 * 3600);
@@ -172,6 +172,18 @@ bool test_api_o2_data() {
   return res;
 }
 
+bool test_api_o2_new() {
+  bool res = true;
+  esphome::uart::UARTComponent uart("11 0C 0C 13 10 02 3C 04 00 00 B4 D6 DC 01 01 F6 CA 01 54");
+  TionO2UartIOTest io(&uart);
+  TionO2UartVPortTest vport(&io);
+  TionO2UartVPortApiTest api(&vport);
+  esphome::tion::TionO2ApiComponent comp(&api, esphome::tion::TionVPortType::VPORT_UART);
+  cloak::setup_and_loop({&vport, &comp});
+  return res;
+}
+
 REGISTER_TEST(test_api_o2);
 REGISTER_TEST(test_api_o2_proxy);
 REGISTER_TEST(test_api_o2_data);
+REGISTER_TEST(test_api_o2_new);

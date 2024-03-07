@@ -148,7 +148,7 @@ class Component {
    *
    * Returns "<unknown>" if source not set
    */
-  const char *get_component_source() const;
+  const char *get_component_source() const { return "<unknonw component source>"; }
 
   virtual void call_loop() { this->loop(); }
   virtual void call_setup() { this->setup(); }

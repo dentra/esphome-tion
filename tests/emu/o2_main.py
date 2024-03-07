@@ -179,12 +179,15 @@ def main(argv):
     stop_event = threading.Event()
     setup_log(stop_event)
 
-    port_rf = o2.SerialTransport("loop://?logging=info", 115200)
+    BAUD_RATE = 115200
+    # BAUD_RATE = 460800
+
+    port_rf = o2.SerialTransport("loop://?logging=info", BAUD_RATE)
     if len(argv) > 1:
-        port_rf = o2.SerialTransport(argv[1], 115200)
+        port_rf = o2.SerialTransport(argv[1], BAUD_RATE)
     port_o2 = None
     if len(argv) > 2:
-        port_o2 = o2.SerialTransport(argv[2], 115200)
+        port_o2 = o2.SerialTransport(argv[2], BAUD_RATE)
 
     emu: o2.EmuO2
     if port_o2:

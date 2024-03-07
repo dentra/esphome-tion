@@ -1,4 +1,6 @@
 #pragma once
+#include "esphome/core/defines.h"
+// #ifdef USE_TION_CLIMATE
 
 #include "esphome/components/switch/switch.h"
 
@@ -8,9 +10,11 @@
 namespace esphome {
 namespace tion {
 
-class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
+using Tion4sClimateBase = TionLtClimateComponent<Tion4sApi>;
+
+class Tion4sClimate : public Tion4sClimateBase {
  public:
-  explicit Tion4sClimate(TionApi4s *api, TionVPortType vport_type) : TionLtClimateComponent(api, vport_type) {
+  explicit Tion4sClimate(Tion4sApi *api, TionVPortType vport_type) : Tion4sClimateBase(api, vport_type) {
 #ifdef TION_ENABLE_SCHEDULER
     this->api_->on_time.set<Tion4sClimate, &Tion4sClimate::on_time>(*this);
     this->api_->on_timer.set<Tion4sClimate, &Tion4sClimate::on_timer>(*this);
@@ -19,6 +23,7 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   }
 
   void dump_config() override;
+  void setup() override;
 
   void set_recirculation(switch_::Switch *recirculation) { this->recirculation_ = recirculation; }
 
@@ -40,30 +45,29 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   // #endif
 
 #ifdef TION_ENABLE_PRESETS
-  void on_turbo(const tion4s_turbo_t &turbo, uint32_t request_id);
+  void on_turbo(const dentra::tion_4s::tion4s_turbo_t &turbo, uint32_t request_id);
 #endif
 #ifdef TION_ENABLE_SCHEDULER
   void on_time(time_t time, uint32_t request_id);
-  void on_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id);
-  void on_timers_state(const tion4s_timers_state_t &timers_state, uint32_t request_id);
+  void on_timer(uint8_t timer_id, const dentra::tion_4s::tion4s_timer_t &timer, uint32_t request_id);
+  void on_timers_state(const dentra::tion_4s::tion4s_timers_state_t &timers_state, uint32_t request_id);
   void dump_timers();
   void reset_timers();
 #endif
-  void update_state(const tion4s_state_t &state) override;
-  void dump_state(const tion4s_state_t &state) const;
+  void update_state(const tion::TionState &state) override;
 
   void reset_filter() const { this->api_->reset_filter(this->state_); }
 
   void control_buzzer_state(bool state) {
-    ControlState control{};
-    control.buzzer = state;
-    this->control_state_(control);
+    auto *call = this->make_api_call();
+    call->set_sound_state(state);
+    call->perform();
   }
 
   void control_led_state(bool state) {
-    ControlState control{};
-    control.led = state;
-    this->control_state_(control);
+    auto *call = this->make_api_call();
+    call->set_led_state(state);
+    call->perform();
   }
 
   void control_recirculation_state(bool state);
@@ -71,31 +75,22 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
                              TionGatePosition gate_position) override;
 
   TionGatePosition get_gate_position() const override {
-    switch (this->get_gate_position_()) {
-      case tion4s_state_t::GATE_POSITION_INFLOW:
-        return TionGatePosition::OUTDOOR;
-      case tion4s_state_t::GATE_POSITION_RECIRCULATION:
+    if (!this->batch_active_ && this->recirculation_) {
+      if (this->recirculation_->state) {
         return TionGatePosition::INDOOR;
-      default:
-        return TionGatePosition::OUTDOOR;
+      }
+      return TionGatePosition::OUTDOOR;
     }
-  }
-
-  optional<int8_t> get_pcb_ctl_temperature() const {
-    if (this->state_.is_initialized()) {
-      return this->state_.pcb_ctl_temperature;
-    }
-    return {};
-  }
-
-  optional<int8_t> get_pcb_pwr_temperature() const {
-    if (this->state_.is_initialized()) {
-      return this->state_.pcb_pwr_temperature;
-    }
-    return {};
+    return this->state_.gate_position;
   }
 
   void reset_errors() const { this->api_->reset_errors(this->state_); }
+
+  void set_heartbeat_interval(uint32_t heartbeat_interval) {
+#ifdef TION_ENABLE_HEARTBEAT
+    this->heartbeat_interval_ = heartbeat_interval;
+#endif
+  }
 
  protected:
   switch_::Switch *recirculation_{};
@@ -104,29 +99,12 @@ class Tion4sClimate : public TionLtClimateComponent<TionApi4s> {
   void cancel_boost() override;
 #endif
 
-  tion4s_state_t::GatePosition get_gate_position_() const {
-    if (!this->batch_active_ && this->recirculation_) {
-      if (this->recirculation_->state) {
-        return tion4s_state_t::GATE_POSITION_RECIRCULATION;
-      }
-      return tion4s_state_t::GATE_POSITION_INFLOW;
-    }
-    return this->state_.gate_position;
-  }
-
-  struct ControlState {
-    optional<bool> power_state;
-    optional<tion4s_state_t::HeaterMode> heater_mode;
-    optional<uint8_t> fan_speed;
-    optional<int8_t> target_temperature;
-    optional<bool> buzzer;
-    optional<bool> led;
-    optional<tion4s_state_t::GatePosition> gate_position;
-  };
-
-  void control_state_(const ControlState &state);
+#ifdef TION_ENABLE_HEARTBEAT
+  uint32_t heartbeat_interval_{5000};
+#endif
 };
 
 }  // namespace tion
 
 }  // namespace esphome
+// #endif  // USE_TION_CLIMATE

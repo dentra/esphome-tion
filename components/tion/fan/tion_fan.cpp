@@ -1,49 +1,77 @@
-#include "esphome/core/defines.h"
-#ifdef USE_FAN
+#include <set>
 #include "esphome/core/log.h"
-#include "esphome/core/application.h"
 
-#include "tion_fan_component.h"
-#include "tion_defines.h"
+#include "tion_fan.h"
 
 namespace esphome {
 namespace tion {
 
-static const char *const TAG = "tion_fan_component";
+static const char *const TAG = "tion_fan";
 
-fan::FanTraits TionFanComponentBase::get_traits() {
-  auto traits = fan::FanTraits(false, true, false, TION_MAX_FAN_SPEED);
-#ifdef TION_ENABLE_PRESETS
-  // traits.set_supported_preset_modes();
-#endif
+fan::FanTraits TionFan::get_traits() {
+  auto traits = fan::FanTraits(false, true, false, this->parent_->api()->traits().max_fan_speed);
+
+  const auto presets = this->parent_->api()->get_presets();
+  if (!presets.empty()) {
+    std::set<std::string> fan_presets;
+    for (auto &&preset : presets) {
+      fan_presets.emplace(preset);
+    }
+    traits.set_supported_preset_modes(fan_presets);
+  }
+
   return traits;
 }
 
-void TionFanComponentBase::control(const fan::FanCall &call) {
-#ifdef TION_ENABLE_PRESETS
-  // auto preset_mode = call.get_preset_mode();
-  // if (!preset_mode.empty()) {
-  //   auto it = this->presets_.find(preset_mode);
-  //   if (it != this->presets_.end()) {
-  //   }
-  // }
-#endif
+void TionFan::dump_config() { LOG_FAN("", "Tion Fan", this); }
 
-  bool state = this->state;
+void TionFan::control(const fan::FanCall &call) {
+  auto *tion = this->parent_->make_call();
+  if (tion == nullptr) {
+    return;
+  }
+
+  auto preset_mode = call.get_preset_mode();
+  if (!preset_mode.empty()) {
+    const auto &preset = preset_mode;
+    ESP_LOGD(TAG, "Set preset %s", preset.c_str());
+    this->parent_->api()->enable_preset(preset, tion);
+  }
+
   if (call.get_state().has_value()) {
-    state = *call.get_state();
+    const auto state = *call.get_state();
     ESP_LOGD(TAG, "Set state %s", ONOFF(state));
+    tion->set_power_state(state);
   }
 
-  int speed = this->speed;
   if (call.get_speed().has_value()) {
-    speed = *call.get_speed();
-    ESP_LOGD(TAG, "Set speed %u", speed);
+    const auto fan_speed = *call.get_speed();
+    ESP_LOGD(TAG, "Set speed %u", fan_speed);
+    tion->set_fan_speed(fan_speed);
   }
 
-  this->control_fan_state(state, speed);
+  tion->perform();
+}
+
+void TionFan::on_state_(const TionState &state) {
+  bool has_changes = false;
+  if (this->state != state.power_state) {
+    this->state = state.power_state;
+    has_changes = true;
+  }
+  if (this->speed != state.fan_speed) {
+    this->speed = state.fan_speed;
+    has_changes = true;
+  }
+  if (this->preset_mode != this->parent_->api()->get_active_preset()) {
+    this->preset_mode = this->parent_->api()->get_active_preset();
+    has_changes = true;
+  }
+
+  if (this->parent_->get_force_update() || has_changes) {
+    this->publish_state();
+  }
 }
 
 }  // namespace tion
 }  // namespace esphome
-#endif  // USE_FAN

@@ -7,7 +7,13 @@ DEFINE_TAG;
 
 using namespace dentra::tion;
 
-using TionLtBleVPortApiTest = esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi>;
+class TionLtBleVPortApiTest
+    : public esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi> {
+ public:
+  TionLtBleVPortApiTest(vport_t *vport)
+      : esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi>(vport) {}
+  bool request_dev_info() const { return this->request_dev_info_(); }
+};
 
 class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
  public:
@@ -20,6 +26,8 @@ class TionLtTest : public esphome::tion::TionLtClimate {
   TionLtTest(dentra::tion::TionLtApi *api, esphome::tion::TionVPortType vport_type)
       : esphome::tion::TionLtClimate(api, vport_type) {}
 };
+
+
 
 bool test_api_lt() {
   bool res = true;
@@ -46,22 +54,31 @@ bool test_api_lt() {
   vport.call_loop();
   res &= cloak::check_data("request_dev_info", io, "80.0C.00.3A.AD.09.40.01.00.00.00.D1.DC");
 
-  tionlt_state_t st{};
-  st.flags.power_state = true;
-  st.flags.heater_state = true;
-  st.fan_speed = 2;
-  st.counters.work_time = 0xFFFFFFFF;
-  st.counters.filter_time = 0xEEEEEEEE;
+  auto &tr = api.get_traits_();
+  tr.initialized = true;
+  tr.supports_work_time = true;
+  tr.max_fan_speed = 6;
 
-  api.write_state(st, 1);
+  TionState st{};
+
+  st.power_state = true;
+  st.heater_state = true;
+  st.fan_speed = 2;
+  st.work_time = 0xFFFFFFFF;
+  st.filter_time_left = 0xEEEEEEEE;
+
+  api.write_state(st, 1);  // сейчас сюда не пишем информацию о пресетах кнопки
   vport.call_loop();
   res &= cloak::check_data("write_state", io,
                            "00.1E.00.3A.AD."
                            "30.12."
                            "01.00.00.00."
                            "01.00.00.00."
-                           "11.00.00.00.02.C0.00.00.00.00.00.00.00.00.00."
-                           "9B.AB");
+                           "11.00.02.00.02."
+                           "C0."
+                           "14.14.14.01.03.05."  // preset data
+                           "00.00.00."
+                           "81.03");
 
   return res;
 }

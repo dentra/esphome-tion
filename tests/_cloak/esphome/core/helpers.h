@@ -205,4 +205,16 @@ template<typename T, enable_if_t<std::is_unsigned<T>::value, int> = 0> optional<
   return parse_hex<T>(str.c_str(), str.length());
 }
 
+// std::clamp from C++17
+#if __cpp_lib_clamp >= 201603
+using std::clamp;
+#else
+template<typename T, typename Compare> constexpr const T &clamp(const T &v, const T &lo, const T &hi, Compare comp) {
+  return comp(v, lo) ? lo : comp(hi, v) ? hi : v;
+}
+template<typename T> constexpr const T &clamp(const T &v, const T &lo, const T &hi) {
+  return clamp(v, lo, hi, std::less<T>{});
+}
+#endif
+
 }  // namespace esphome

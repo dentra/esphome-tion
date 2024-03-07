@@ -15,7 +15,7 @@ class Tion4sBleVPort : public TionVPortBLEComponent<Tion4sBleIO, Tion4sBleIO::fr
 
   void dump_config() override;
 
-  void set_api(dentra::tion::TionApi4s *api) {}
+  void set_api(dentra::tion_4s::Tion4sApi *api) {}
 };
 
 }  // namespace tion

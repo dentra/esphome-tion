@@ -14,6 +14,10 @@ add_definitions(
     -DTION_ENABLE_OFF_BEFORE_HEAT
     -DUSE_VPORT_BLE
     -DUSE_VPORT_UART
+    -DUSE_VPORT_JTAG
+
+    -DUSE_TION_CLIMATE
+    -DUSE_TION_FAN
 
     -DUSE_TION_AIRFLOW_COUNTER
     -DUSE_TION_BOOST_TIME
@@ -57,7 +61,8 @@ include_directories("${WORKSPACE_DIR}/lib/esphome-components")
 include_directories("${WORKSPACE_DIR}/lib/components-alias")
 include_directories("${WORKSPACE_DIR}/lib/etl/include")
 # include_directories("${WORKSPACE_DIR}/lib/gsl-lite/include")
-include_directories(SYSTEM "${ESPHOME_DATA_DIR}/libdeps/esp32-arduino/ArduinoJson/src")
+# include_directories(SYSTEM "${ESPHOME_DATA_DIR}/libdeps/esp32-arduino/ArduinoJson/src")
+include_directories(SYSTEM "${WORKSPACE_DIR}/lib/ArduinoJson/src")
 set("PIO_ESP32" $ENV{HOME}/.platformio/packages/framework-arduinoespressif32)
 include_directories(SYSTEM "${PIO_ESP32}/tools/sdk/esp32/include/esp32-camera/driver/include")
 include_directories(SYSTEM "${PIO_ESP32}/tools/sdk/esp32/include/esp32-camera/conversions/include")
