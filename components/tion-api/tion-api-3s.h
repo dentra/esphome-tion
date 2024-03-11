@@ -31,6 +31,7 @@ class Tion3sApi : public TionApiBase {
   void write_state(tion::TionStateCall *call) override {
     this->write_state(this->make_write_state_(call), ++this->request_id_);
   }
+  void reset_filter() override { this->reset_filter(this->state_); }
 
  protected:
   bool request_state_() const;

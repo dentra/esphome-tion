@@ -77,10 +77,14 @@ template<typename C> class Controller {
     return true;
   }
 
+  template<typename T> static void mark_unsupported_entity(T *entity) {
+    report_unsupported(entity);
+    entity->set_icon("mdi:help");
+    entity->set_internal(true);
+  }
+
   template<typename T> static void mark_unsupported(T *component) {
-    report_unsupported(component);
-    component->set_icon("mdi:help");
-    component->set_internal(true);
+    mark_unsupported_entity(component);
     component->mark_failed();
   }
 
@@ -248,7 +252,7 @@ struct Auto : public binary_sensor::Auto {
   static void set(TionStateCall *call, bool state) { call->set_auto_state(state); }
 };
 
-struct GatePosition {
+struct Recirculation {
   static bool is_supported(TionApiComponent *api) {
     return api->traits().supports_gate_position_change || api->traits().supports_gate_position_change_mixed;
   }
@@ -499,6 +503,16 @@ struct Presets {
 };
 
 }  // namespace select
+
+namespace button {
+
+struct ResetFilter {
+  static bool is_supported(TionApiComponent *api) { return api->traits().supports_reset_filter; }
+
+  static void press_action(TionApiComponent *api) { api->api()->reset_filter(); }
+};
+
+}  // namespace button
 
 }  // namespace property_controller
 }  // namespace tion

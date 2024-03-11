@@ -30,6 +30,7 @@ class TionO2Api : public tion::TionApiBase {
 
   void request_state() override;
   void write_state(tion::TionStateCall *call) override;
+  void reset_filter() override { this->reset_filter(this->state_); }
 
  protected:
   bool request_connect_() const;

@@ -32,6 +32,7 @@ class TionLtApi : public TionApiBase {
   void write_state(TionStateCall *call) override {
     this->write_state(this->make_write_state_(call), ++this->request_id_);
   }
+  void reset_filter() override { this->reset_filter(this->state_, ++this->request_id_); }
 
  protected:
   tion_lt::button_presets_t button_presets_{

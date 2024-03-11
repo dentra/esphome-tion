@@ -86,6 +86,7 @@ struct TionTraits {
     bool supports_antifrize : 1;
     // true means native boost support
     bool supports_boost : 1;
+    bool supports_reset_filter : 1;
   };
 
   using ErrorsDecoderPtr = std::add_pointer_t<std::string(uint32_t errors)>;
@@ -348,6 +349,7 @@ class TionApiBase : public TionApiBaseWriter {
 
   virtual void request_state() = 0;
   virtual void write_state(TionStateCall *call) = 0;
+  virtual void reset_filter() = 0;
   void enable_boost(bool state, TionStateCall *ext_call = nullptr);
   void set_boost_time(uint16_t boost_time);
 

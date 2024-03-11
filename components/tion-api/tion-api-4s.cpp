@@ -308,6 +308,7 @@ Tion4sApi::Tion4sApi() {
   this->traits_.supports_pcb_pwr_temperature = true;
   this->traits_.supports_gate_position_change = true;
   this->traits_.supports_gate_error = true;
+  this->traits_.supports_reset_filter = true;
   this->traits_.max_heater_power = TION_4S_HEATER_POWER1 / 10;
   this->traits_.max_fan_speed = 6;
   this->traits_.min_target_temperature = TION_MIN_TEMPERATURE;

@@ -129,6 +129,7 @@ TionLtApi::TionLtApi() {
   this->traits_.supports_led_state = true;
   this->traits_.supports_sound_state = true;
   this->traits_.supports_pcb_pwr_temperature = true;
+  this->traits_.supports_reset_filter = true;
   this->traits_.max_heater_power = TION_LT_HEATER_POWER / 10;
   this->traits_.max_fan_speed = 6;
   this->traits_.min_target_temperature = TION_MIN_TEMPERATURE;
