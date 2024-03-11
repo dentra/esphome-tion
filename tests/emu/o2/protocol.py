@@ -56,6 +56,8 @@ class ProtocolO2(Protocol):
                 _LOGGER.warning("  Skip: %s (%d)", buf.hex(" ").upper(), len(buf))
                 _LOGGER.warning("      : %s", buf.decode(errors="replace"))
 
+            return None
+
         if not self.transport.available:
             return None
 
@@ -67,13 +69,12 @@ class ProtocolO2(Protocol):
             return None
 
         if pkt.cmd is None:
-            skip(f"Unknown command for last {self.last_write}", pkt, True)
-            return None
+            return skip(f"Unknown command for last {self.last_write}", pkt, True)
 
         pkt.raw_update(self.transport.read(pkt.cmd.size))
         if not pkt.valid:
-            skip(f"Invalid CRC", pkt, False)
-            return None
+
+            return skip("Invalid CRC", pkt, False)
 
         if not self._has_filter(pkt):
             _LOGGER.debug("%sRX: %s", self.port_name, pkt.log_raw)

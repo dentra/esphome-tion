@@ -45,7 +45,7 @@ DISABLED_LOG = {
     # o2.CMD_STATE_GET_REQ,
     # o2.CMD_STATE_GET_RSP,
     # o2.CMD_STATE_SET_REQ,
-    o2.CMD_TIME_GET_RSP,
+    # o2.CMD_TIME_GET_RSP,
 }
 
 
@@ -180,7 +180,6 @@ def main(argv):
     setup_log(stop_event)
 
     BAUD_RATE = 115200
-    # BAUD_RATE = 460800
 
     port_rf = o2.SerialTransport("loop://?logging=info", BAUD_RATE)
     if len(argv) > 1:
