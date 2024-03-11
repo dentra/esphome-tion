@@ -4,12 +4,10 @@ from esphome.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
-    DEVICE_CLASS_HEAT,
+    DEVICE_CLASS_DAMPER,
     DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_RUNNING,
-    ENTITY_CATEGORY_CONFIG,
     ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
@@ -21,11 +19,9 @@ TionBinarySensor = tion_ns.class_(
 
 PROPERTIES = {
     "power": {
-        # CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_ICON: "mdi:power",
     },
     "heater": {
-        # CONF_DEVICE_CLASS: DEVICE_CLASS_HEAT,
         CONF_ICON: "mdi:radiator",
     },
     "sound": {
@@ -43,7 +39,7 @@ PROPERTIES = {
     },
     "gate_position": {
         CONF_DEVICE_CLASS: DEVICE_CLASS_OPENING,
-        # DEVICE_CLASS_DAMPER
+        # CONF_DEVICE_CLASS: DEVICE_CLASS_DAMPER,
     },
     "heating": {
         # CONF_DEVICE_CLASS: DEVICE_CLASS_HEAT,

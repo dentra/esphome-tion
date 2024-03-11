@@ -42,15 +42,9 @@ template<class C> class TionSelect : public select::Select, public Component, pu
     this->parent_->add_on_state_callback([this](const TionState *state) {
       if (state) {
         if constexpr (PC::checker().has_api_get()) {
-          const auto value = C::get(this->parent_);
-          if (!value.empty()) {
-            this->publish_state(value);
-          }
+          this->internal_publish_state_(C::get(this->parent_));
         } else {
-          const auto value = C::get(*state, this->traits.get_options());
-          if (!value.empty()) {
-            this->publish_state(value);
-          }
+          this->internal_publish_state_(C::get(*state, this->traits.get_options()));
         }
       } else {
         this->has_state_ = false;
@@ -59,6 +53,11 @@ template<class C> class TionSelect : public select::Select, public Component, pu
   }
 
  protected:
+  void internal_publish_state_(const std::string &st) {
+    if (this->parent_->get_force_update() || !this->has_state() || st != this->state) {
+      this->publish_state(st);
+    }
+  }
   void control(const std::string &value) override {
     if (this->is_failed()) {
       PC::report_unsupported(this);

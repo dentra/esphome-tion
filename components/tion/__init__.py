@@ -4,11 +4,13 @@ from typing import Any
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import binary_sensor as esphome_binary_sensor
-from esphome.components import button, climate
+from esphome.components import button as esphome_button
+from esphome.components import climate
 from esphome.components import number as esphome_number
-from esphome.components import select
+from esphome.components import select as esphome_select
 from esphome.components import sensor as esphome_sensor
-from esphome.components import switch, text_sensor
+from esphome.components import switch as esphome_switch
+from esphome.components import text_sensor as esphome_text_sensor
 from esphome.const import (
     CONF_ACCURACY_DECIMALS,
     CONF_DEVICE_CLASS,
@@ -87,11 +89,11 @@ UNIT_DAYS = "d"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 TionBoostTimeNumber = tion_ns.class_("TionBoostTimeNumber", esphome_number.Number)
-TionBuzzerSwitchT = tion_ns.class_("TionBuzzerSwitch", switch.Switch)
+TionBuzzerSwitchT = tion_ns.class_("TionBuzzerSwitch", esphome_switch.Switch)
 TionVPortApi = tion_ns.class_("TionVPortApi")
-TionResetFilterButtonT = tion_ns.class_("TionResetFilterButton", button.Button)
+TionResetFilterButtonT = tion_ns.class_("TionResetFilterButton", esphome_button.Button)
 TionResetFilterConfirmSwitchT = tion_ns.class_(
-    "TionResetFilterConfirmSwitch", switch.Switch
+    "TionResetFilterConfirmSwitch", esphome_switch.Switch
 )
 TionGatePosition = tion_ns.namespace("TionGatePosition")
 
@@ -149,6 +151,17 @@ CUSTOM_PRESET_SCHEMA = cv.Schema(
 )
 
 
+def declare_type(type):
+    from esphome.schema_extractors import schema_extractor
+
+    @schema_extractor("declare_type")
+    def validator(value):
+        print("@@@@@", value)
+        return type
+
+    return validator
+
+
 def tion_schema_api(
     tion_class: MockObjClass,
     tion_api_class: MockObjClass,
@@ -165,13 +178,6 @@ def tion_schema_api(
                 cv.Optional(
                     CONF_BATCH_TIMEOUT, default="200ms"
                 ): cv.positive_time_period_milliseconds,
-                # cv.Optional(CONF_BOOST_TIME, default="10min"): cv.All(
-                #     cv.positive_time_period_milliseconds,
-                #     cv.Range(
-                #         min=cv.TimePeriod(minutes=1),
-                #         max=cv.TimePeriod(minutes=60),
-                #     ),
-                # ),
                 cv.Optional(CONF_FORCE_UPDATE): cv.boolean,
                 cv.Required(CONF_PRESETS): cv.Schema(
                     {cv.string_strict: CUSTOM_PRESET_SCHEMA}
@@ -194,7 +200,7 @@ def tion_schema(
                 device_class=DEVICE_CLASS_PROBLEM,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            cv.Optional(CONF_BUZZER): switch.switch_schema(
+            cv.Optional(CONF_BUZZER): esphome_switch.switch_schema(
                 TionBuzzerSwitchT.template(tion_class),
                 icon="mdi:volume-high",
                 entity_category=ENTITY_CATEGORY_CONFIG,
@@ -207,8 +213,8 @@ def tion_schema(
                 state_class=STATE_CLASS_MEASUREMENT,
                 entity_category=ENTITY_CATEGORY_NONE,
             ),
-            cv.Optional(CONF_VERSION): text_sensor.text_sensor_schema(
-                text_sensor.TextSensor,
+            cv.Optional(CONF_VERSION): esphome_text_sensor.text_sensor_schema(
+                esphome_text_sensor.TextSensor,
                 icon="mdi:git",
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
@@ -240,7 +246,7 @@ def tion_schema(
                 icon="mdi:wrench-cog",
                 entity_category=ENTITY_CATEGORY_CONFIG,
             ),
-            cv.Optional(CONF_RESET_FILTER_CONFIRM): switch.switch_schema(
+            cv.Optional(CONF_RESET_FILTER_CONFIRM): esphome_switch.switch_schema(
                 TionResetFilterConfirmSwitchT.template(tion_class),
                 icon="mdi:wrench-check",
                 entity_category=ENTITY_CATEGORY_CONFIG,
@@ -259,7 +265,7 @@ def tion_schema(
                 state_class=STATE_CLASS_MEASUREMENT,
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
-            cv.Optional(CONF_ERRORS): text_sensor.text_sensor_schema(
+            cv.Optional(CONF_ERRORS): esphome_text_sensor.text_sensor_schema(
                 icon="mdi:alert",
                 entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
             ),
@@ -292,7 +298,7 @@ async def setup_switch(config: dict, key: str, setter, parent):
     """Setup switch"""
     if key not in config:
         return None
-    swch = await switch.new_switch(config[key], parent)
+    swch = await esphome_switch.new_switch(config[key], parent)
     cg.add(setter(swch))
     cg.add_define(f"USE_TION_{key.upper()}")
     return swch
@@ -312,7 +318,7 @@ async def setup_text_sensor(config: dict, key: str, setter):
     """Setup text sensor"""
     if key not in config:
         return None
-    sens = await text_sensor.new_text_sensor(config[key])
+    sens = await esphome_text_sensor.new_text_sensor(config[key])
     cg.add(setter(sens))
     cg.add_define(f"USE_TION_{key.upper()}")
     return sens
@@ -338,7 +344,7 @@ async def setup_select(config: dict, key: str, setter, parent, options):
         return None
     conf = config[key]
     slct = cg.new_Pvariable(conf[CONF_ID], parent)
-    await select.register_select(slct, conf, options=options)
+    await esphome_select.register_select(slct, conf, options=options)
     cg.add(setter(slct))
     cg.add_define(f"USE_TION_{key.upper()}")
     return slct
@@ -391,7 +397,6 @@ async def setup_tion_api(config: dict, component_source: str = None):
     api = cg.new_Pvariable(
         config[CONF_TION_API_ID],
         cg.TemplateArguments(
-            # cg.MockObj(prt_io_id.type, "::").frame_spec_type,
             vport.vport_find(config).type.class_("frame_spec_type"),
             config[CONF_TION_API_BASE_ID].type,
         ),
@@ -419,10 +424,10 @@ async def setup_tion_api(config: dict, component_source: str = None):
         for preset in config[CONF_PRESETS]:
             preset_name = str(preset).strip()
             if preset_name.lower() == "none":
-                _LOGGER.warning("Preset 'none' is forbidden")
+                _LOGGER.warning("Preset 'none' is reserved")
                 continue
             if preset_name.lower() in presets:
-                _LOGGER.warning("Preset '%s' already added", preset)
+                _LOGGER.warning("Preset '%s' is already exists", preset)
                 continue
             preset = config[CONF_PRESETS][preset_name]
             cg.add(
@@ -569,14 +574,16 @@ async def new_pc_component(
     return var
 
 
-# CONFIG_SCHEMA = (
-#     cv.Schema(
-#         {
-#             cv.GenerateID(): cv.declare_id(Tion4sApiComponent),
-#             cv.GenerateID(CONF_TION_API_BASE_ID): cv.declare_id(Tion4sApi),
-#             cv.GenerateID(CONF_TION_API_ID): cv.declare_id(TionVPortApi),
-#         }
-#     )
-#     .extend(vport.VPORT_CLIENT_SCHEMA)
-#     .extend(cv.polling_component_schema("60s"))
+# TionO2Api = tion_ns.class_("TionO2Api")
+# TionO2ApiComponent = tion_ns.class_(
+#     "TionO2ApiComponent", cg.Component, TionApiComponent
 # )
+# BREEZER_TYPES = {"o2": TionO2ApiComponent}
+# CONFIG_SCHEMA = tion_schema_api(TionO2ApiComponent, TionO2Api).extend(
+#     {
+#         cv.Required(CONF_TYPE): cv.one_of(*BREEZER_TYPES.keys(), lower=True),
+#     }
+# )
+
+# async def to_code(config: dict):
+#     print(config)
