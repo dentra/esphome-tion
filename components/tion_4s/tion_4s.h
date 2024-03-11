@@ -24,20 +24,6 @@ class Tion4sApiComponent : public TionApiComponentBase<Tion4sApi> {
       api->enable_native_boost_support();
     }
   }
-
-  void setup() override;
-  void dump_config() override;
-
-  void set_heartbeat_interval(uint32_t heartbeat_interval) {
-#ifdef TION_ENABLE_HEARTBEAT
-    this->heartbeat_interval_ = heartbeat_interval;
-#endif
-  }
-
- protected:
-#ifdef TION_ENABLE_HEARTBEAT
-  uint32_t heartbeat_interval_{5000};
-#endif
 };
 
 }  // namespace tion

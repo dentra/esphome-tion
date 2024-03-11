@@ -21,7 +21,14 @@ class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO, Tion4sUartIO
   explicit Tion4sUartVPort(Tion4sUartIO *io) : TionVPortUARTComponent(io) {}
 
   void dump_config() override;
-  void set_api(dentra::tion_4s::Tion4sApi *api) {}
+  void setup() override;
+
+  void set_api(dentra::tion_4s::Tion4sApi *api) { this->api_ = api; }
+  void set_heartbeat_interval(uint32_t heartbeat_interval) { this->heartbeat_interval_ = heartbeat_interval; }
+
+ protected:
+  uint32_t heartbeat_interval_{5000};
+  dentra::tion_4s::Tion4sApi *api_;
 };
 
 }  // namespace tion
