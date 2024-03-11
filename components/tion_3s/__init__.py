@@ -35,3 +35,14 @@ async def setup_tion_3s(config, compoent_reg):
     await tion.setup_select(
         config, CONF_AIR_INTAKE, var.set_air_intake, var, OPTIONS_AIR_INTAKE
     )
+
+
+Tion3sApiComponent = tion.tion_ns.class_(
+    "Tion3sApiComponent", cg.Component, tion.TionApiComponent
+)
+
+CONFIG_SCHEMA = tion.tion_schema_api(Tion3sApiComponent, Tion3sApi)
+
+
+async def to_code(config: dict):
+    await tion.setup_tion_api(config, "3s")

@@ -49,17 +49,6 @@ void Tion3sBleVPort::write(const Tion3sBleIO::frame_spec_type &frame, size_t siz
   TionVPortBLEComponent::write(frame, size);
 }
 
-// FIXME implement or remove
-// void Tion3sBleVPort::update() {
-// if (!this->io_->is_connected() || this->is_paired()) {
-//   TionBLEVPortBase::update();
-// } else {
-//   ESP_LOGW(TAG, "Pairing required. [pair_state: %d, is_connected: %s", this->pair_state_,
-//            YESNO(this->io_->is_connected()));
-//   this->io_->disconnect();
-// }
-//}
-
 void Tion3sBleVPort::pair() {
   this->pair_state_ = -1;
   if (this->io_->is_connected()) {

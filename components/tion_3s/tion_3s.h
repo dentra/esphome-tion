@@ -4,6 +4,7 @@
 
 #include "../tion-api/tion-api-3s.h"
 #include "../tion/tion_controls.h"
+#include "../tion/tion_api_component.h"
 
 namespace esphome {
 namespace tion {
@@ -21,6 +22,11 @@ template<class parent_t> class Tion3sAirIntakeSelect : public select::Select, pu
       this->parent_->control_gate_position(static_cast<TionGatePosition>(*opt));
     }
   }
+};
+
+class Tion3sApiComponent : public TionApiComponentBase<Tion3sApi> {
+ public:
+  explicit Tion3sApiComponent(Tion3sApi *api, TionVPortType vport_type) : TionApiComponentBase(api, vport_type) {}
 };
 
 }  // namespace tion
