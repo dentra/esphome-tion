@@ -1,7 +1,6 @@
 #include "esphome/core/log.h"
 
-#include "../tion_helpers.h"
-
+#include "tion_climate_helpers.h"
 #include "tion_climate.h"
 
 namespace esphome {

@@ -26,7 +26,7 @@ CONFIG_SCHEMA = (
 
 
 async def to_code(config):
-    logging.warning("%s is not supported at this moment", config[CONF_PLATFORM])
+    logging.error("tion_o2_proxy is not supported at this moment")
     return
 
     prt = await vport.vport_get_var(config)

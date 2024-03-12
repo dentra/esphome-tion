@@ -34,10 +34,10 @@ template<class protocol_type> class TionBleIO : public TionIO<protocol_type>, pu
   bool write_(const uint8_t *data, size_t size) { return this->write_ble_data(data, size); }
 };
 
-template<class io_t, class frame_spec_t>
-class TionVPortBLEComponent : public vport::VPortBLEComponent<io_t, frame_spec_t> {
+template<class io_t>
+class TionVPortBLEComponent : public vport::VPortBLEComponent<io_t, typename io_t::frame_spec_type> {
  public:
-  TionVPortBLEComponent(io_t *io) : vport::VPortBLEComponent<io_t, frame_spec_t>(io) {}
+  TionVPortBLEComponent(io_t *io) : vport::VPortBLEComponent<io_t, typename io_t::frame_spec_type>(io) {}
 
   TionVPortType get_type() const { return TionVPortType::VPORT_BLE; }
 };

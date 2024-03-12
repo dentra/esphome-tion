@@ -4,7 +4,7 @@
 #include "esphome/core/helpers.h"
 
 #include "../tion-api/tion-api.h"
-#include "tion_api_component.h"
+#include "tion_component.h"
 
 namespace esphome {
 namespace tion {

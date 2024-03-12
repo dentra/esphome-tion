@@ -6,7 +6,7 @@
 
 #include "esphome/components/climate/climate.h"
 
-#include "../tion_api_component.h"
+#include "../tion_component.h"
 
 namespace esphome {
 namespace tion {

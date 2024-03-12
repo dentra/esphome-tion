@@ -6,7 +6,7 @@
 
 #include "esphome/components/fan/fan.h"
 
-#include "../tion_api_component.h"
+#include "../tion_component.h"
 
 namespace esphome {
 namespace tion {

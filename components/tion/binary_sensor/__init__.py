@@ -4,7 +4,6 @@ from esphome.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
-    DEVICE_CLASS_DAMPER,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_RUNNING,
@@ -37,7 +36,7 @@ PROPERTIES = {
         # CONF_ICON: "mdi:air-filter",
         CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
     },
-    "gate_position": {
+    "gate": {
         CONF_DEVICE_CLASS: DEVICE_CLASS_OPENING,
         # CONF_DEVICE_CLASS: DEVICE_CLASS_DAMPER,
     },
@@ -69,7 +68,8 @@ PROPERTIES = {
     "buzzer": "sound",
     "heat": "heater",
     "light": "led",
-    "gate": "gate_position",
+    "gate_position": "gate",
+    "gate_state": "gate",
 }
 
 CONFIG_SCHEMA = pc_schema(

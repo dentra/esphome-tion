@@ -7,7 +7,7 @@
 
 #include "esphome/components/switch/switch.h"
 
-#include "../tion_api_component.h"
+#include "../tion_component.h"
 #include "../tion_properties.h"
 
 namespace esphome {

@@ -10,7 +10,7 @@
 #include "esphome/components/switch/switch.h"
 #endif
 
-#include "../tion_api_component.h"
+#include "../tion_component.h"
 #include "../tion_properties.h"
 
 namespace esphome {
@@ -42,9 +42,9 @@ template<class C> class TionButton : public button::Button, public Component, pu
   void press_action() override { C::press_action(this->parent_); }
 };
 
-class TionResetFilterButton2 : public TionButton<property_controller::button::ResetFilter> {
+class TionResetFilterButton : public TionButton<property_controller::button::ResetFilter> {
  public:
-  explicit TionResetFilterButton2(TionApiComponent *api) : TionButton(api) {}
+  explicit TionResetFilterButton(TionApiComponent *api) : TionButton(api) {}
 #ifdef USE_SWITCH
 
   void setup() override {
@@ -69,6 +69,25 @@ class TionResetFilterButton2 : public TionButton<property_controller::button::Re
   }
 #endif
 };
+
+#ifdef USE_SWITCH
+
+template<class parent_t> class TionResetFilterConfirmSwitch : public Parented<parent_t>, public switch_::Switch {
+  static_assert(std::is_base_of_v<Component, parent_t>, "parent_t is not Component");
+
+ public:
+  explicit TionResetFilterConfirmSwitch(parent_t *parent) : Parented<parent_t>(parent) {}
+  void write_state(bool state) override {
+    constexpr const char *timeout_name = "tion_reset_confirm_timeout";
+    if (state) {
+      App.scheduler.set_timeout(this->parent_, timeout_name, 10000, [this]() { this->publish_state(false); });
+    } else {
+      App.scheduler.cancel_timeout(this->parent_, timeout_name);
+    }
+    this->publish_state(state);
+  }
+};
+#endif
 
 }  // namespace tion
 }  // namespace esphome

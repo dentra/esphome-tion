@@ -204,7 +204,6 @@ bool Tion4sApi::factory_reset(const TionState &state, uint32_t request_id) const
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
-#ifdef TION_ENABLE_PRESETS
 bool Tion4sApi::set_turbo(uint16_t time, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Turbo %u", request_id, time);
   const struct {
@@ -213,7 +212,6 @@ bool Tion4sApi::set_turbo(uint16_t time, uint32_t request_id) const {
   } PACKED turbo{.time = time, .err_code = 0};
   return this->write_frame(FRAME_TYPE_TURBO_SET, turbo, request_id);
 };
-#endif
 
 #ifdef TION_ENABLE_HEARTBEAT
 bool Tion4sApi::send_heartbeat() const {

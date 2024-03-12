@@ -73,10 +73,6 @@ packages:
       {{ "" if enable_energy == "true" else "# " -}}
       - packages/tion_energy.yaml
       {%- endif %}
-      {%- if type == "3s" and port == "uart" %}
-      ## Comment to disable uart proxy support.
-      - packages/tion_3s_proxy.yaml
-      {%- endif %}
       {%- if type == "o2" and port == "uart" %}
       ## Unomment to enable uart proxy support.
       # - packages/tion_o2_proxy.yaml
@@ -94,6 +90,8 @@ packages:
       {%- if type == "3s" and port == "uart" %}
       ## Change to packages/esp32.yaml if you want to use ESP32.
       - packages/esp8266.yaml
+      ## Comment to disable uart proxy support.
+      - packages/tion_3s_proxy.yaml
       {%- endif %}
       {%- if type == "o2" and port == "uart" %}
       # Change to esp32_s2.yaml/esp32_c3.yaml/esp32_s3.yaml to use with ESP32-S2/C3/S3 chip.
@@ -153,7 +151,7 @@ wifi:
 
 # Virtual port configuration
 vport:
-  - platform: tion_{{ type }}{{ "_uart" if port == "uart" and type != "o2" else "" }}
+  - platform: tion_{{ type }}_{{port}}
     id: tion_{{ port }}_vport
     {%- if port == "ble" %}
     ble_client_id: tion_{{ port }}_client
@@ -178,147 +176,169 @@ vport:
     {%- endif %}
 
 # Main climate component configuration.
-climate:
-  - id: !extend tion_climate
-    # Required, the name of climate entity
-    name: None # use friendly_name
-    # Optional, virtual port id. Default: autodetect
-    vport_id: tion_{{ port }}_vport
-    # Optional, Temperatire of air before heater, °C (celsius).
-    outdoor_temperature:
-      name: "Outdoor Temperature"
-    {%- if type != "o2" %}
-    # Optional, Buzzer control switch.
-    buzzer:
-      name: "Buzzer"
-    {%- endif %}
-    {%- if type == "4s" %}
-    # Optional, Led control switch.
-    led:
-      name: "Led"
-    {%- endif %}
-    {%- if type not in ["3s", "o2"] %}
-    # Optional, Heater power, W (watt).
-    heater_power:
-      name: "Heater power"
-    # Optional, Total airflow counter, m³ (cubic meters).
-    #airflow_counter:
-    #  name: "Airflow counter"
-    {%- endif %}
-    {%- if type != "3s" %}
-    # Optional, Total work time counter, seconds.
-    #work_time:
-    #  name: "Work Time"
-    {%- endif %}
-    {%- if type == "3s" %}
-    # Optional, Air Intake control.
-    air_intake:
-      name: "Air Intake"
-    {%- endif %}
-    {%- if type == "4s" %}
-    # Optional, Recirculation control switch.
-    recirculation:
-      name: "Recirculation"
-    {%- endif %}
-    {%- if type == "lt" %}
-    # Optional, Gate state control binary sensor.
-    gate_state:
-      name: "Gate State"
-    {%- endif %}
-    # Optional, Current productivity, m³/h (cubic meters per hour).
-    productivity:
-      name: "Productivity"
-    # Optional, Filter time left counter, days.
-    filter_time_left:
-      name: "Filter Time Left"
-    # Optional, Filter warning state.
-    filter_warnout:
-      name: "Filter Warnout"
-    # Optional, Tion firmware version.
-    version:
-      name: "Version"
-    # Optional, Enable presets. Default: <empty> (no presets)
-    # Available configurable presets: home, away, boost, comfort, eco, sleep, activity.
-    # Defaults:
-    #   home    : { fan_speed: 2, target_temperature: 20, gate_position: auto, mode: heat }
-    #   away    : { fan_speed: 1, target_temperature: 10, gate_position: auto, mode: fan_only }
-    #   boost   : { fan_speed: 6, target_temperature: 10, gate_position: auto, mode: fan_only }
-    #   comfort : { fan_speed: 2, target_temperature: 23, gate_position: auto, mode: heat }
-    #   eco     : { fan_speed: 1, target_temperature: 16, gate_position: auto, mode: heat }
-    #   sleep   : { fan_speed: 1, target_temperature: 18, gate_position: auto, mode: heat }
-    #   activity: { fan_speed: 3, target_temperature: 18, gate_position: auto, mode: heat }
-    # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
-    # Available mode:
-    #  * off - define but disable preset
-    #  * heat - enable heater
-    #  * fan_only - fan only
-    #  * heat_cool - do not change, use current
-    # Available gate_position (this option is optional and only if supports by your breezer):
-    #  * auto - use current gate position
-    {%- if type in ["3s", "4s"] %}
-    #  * outdoor - set gate position to outdoor air intake (3S and 4S only)
-    #  * indoor - set gate position to indoor air intake (3S and 4S only)
-    {%- endif %}
-    {%- if type == "3s" %}
-    #  * mixed - set gate position to mixed air intake (3S only)
-    {%- endif %}
-    presets:
-      # enable "home" preset and override default settings
-      home: { fan_speed: 2, target_temperature: 16, gate_position: outdoor, mode: heat }
-      # enable "away" preset with default settings
-      away:
-      # enable "boost" preset with default settings
-      boost:
-      # enable "sleep" preset and override default settings
-      sleep: { fan_speed: 1, target_temperature: 18, gate_position: outdoor, mode: heat }
-    # Optional, configure boost time
-    boost_time:
-      name: "Boost Time"
-    # Optional, display remaining boost time
-    boost_time_left:
-      name: "Boost Time Left"
-    # Optional, How often query device state. Default: 60s.
-    update_interval: {{ "30s" if port == "uart" else "60s" }}
-    {%- if type != "o2" %}
-    # Optional, reset filter button
-    reset_filter:
-      name: "Reset Filter"
-    # Optional, reset filter confirmation. When off then reset_filter will not work.
-    reset_filter_confirm:
-      name: "Reset Filter Confirm"
-    {%- endif %}
-    # Optional, Informs about get state problem from breezer.
-    state_warnout:
-      name: "State Warnout"
-    # Optional, Timeout when state_warnout will be informed. Default: 3s.
-    state_timeout: 3s
-    # Optional, Timeout to combine update operations. Default: 200ms.
-    batch_timeout: 200ms
-    # Optional, Reports Tion's errors (EC) and warnings (WS).
-    errors:
-      name: "Errors"
+tion:
+  type: {{ type }}
+  id: tion_api
+  # Optional, use vport_id with mnultiple breezers.
+  vport_id: tion_{{ port }}_vport
+  # Optional, How often query device state. Default: 15s.
+  update_interval: {{ "15s" if port == "uart" else "60s" }}
+  # Optional, Timeout to combine update operations. Default: 200ms.
+  batch_timeout: 200ms
+  # Optional, Timeout to enable state problem sensor. Must be less than update_interval. Default: 3s.
+  state_timeout: {{ "3s" if port == "uart" else "5s" }}
+  # # Optional, Boost time initialized at startup. Default: 10min.
+  # boost_time: 10min
+  # Optional, Updates sensor values on any state response or only if they have been changed. Default: true.
+  force_update: false
 
-{%- if type == "3s" and port == "ble" %}
+  # Optional, Enable presets. Default: <empty> (no presets)
+  # You can define any number of presets with any name.
+  # In Home assistant climate entity presets with names home, away, boost, comfort,
+  # eco, sleep and activity are automatically translated to your native language and assign icons.
+  # Preset configuration:
+  #  name_of_your_preset:
+  #    fan_speed: 1            # remove or set to 0 to use current state
+  #    temperature: 16         # remove or set to 0 to use current state
+  #    heater: False           # remove to use current state
+  #    power: True             # remove to use current state
+{%- if type in ["3s", "4s"] %}
+  #    gate_position: outdoor  # remove to use current state, see below for available values
+  # Available gate_position:
+  #  * outdoor - set gate position to outdoor air intake (3S and 4S only)
+  #  * indoor - set gate position to indoor air intake (3S and 4S only)
+{%- endif %}
+{%- if type == "3s" %}
+  #  * mixed - set gate position to mixed air intake (3S only)
+{%- endif %}
+  # Uncoment next 4 lines to enable example presets.
+  # presets:
+  #   home: { fan_speed: 2, target_temperature: 16, heater: False }
+  #   away: { fan_speed: 1, target_temperature: 10, heater: False }
+  #   sleep: { fan_speed: 1, target_temperature: 18 }
+
+climate:
+  - platform: tion
+    name: # use friendly_name
+
+sensor:
+  # Temperatire of air before heater, °C (celsius).
+  - platform: tion
+    type: outdoor_temperature
+    name: Outdoor Temperature
+{%- if type in ["4s", "lt"] %}
+  # Optional, Heater power, W (watt).
+  - platform: tion
+    type: heater_power
+    name: Heater power
+{%- endif %}
+  # Current productivity, m³/h (cubic meters per hour).
+  - platform: tion
+    type: productivity
+    name: Productivity
+  # Filter time left counter.
+  - platform: tion
+    type: filter_time_left
+    name: Filter Time Left
+  # Boost time left sensor.
+  - platform: tion
+    type: boost_time_left
+    name: Boost Time Left
+
+switch:
+{%- if type != "o2" %}
+  # Buzzer control switch.
+  - platform: tion
+    type: sound
+    name: Buzzer
+{%- endif %}
+{%- if type == "4s" %}
+  # Led control switch.
+  - platform: tion
+    type: led
+    name: Led
+{%- endif %}
+{%- if type == "4s" %}
+  # Recirculation control switch.
+  - platform: tion
+    type: recirculation
+    name: Recirculation
+{%- endif %}
+  # Boost/Turbo switch.
+  - platform: tion
+    type: boost
+    name: Boost
+
+number:
+  # Configure boost time.
+  - platform: tion
+    type: boost_time
+    name: Boost Time
+    initial_value: 20min
+    restore_value: true
+
+select:
+{%- if type == "3s" %}
+    # Optional, Air Intake control.
+  - platform: tion
+    type: air_intake
+    name: Air Intake
+{%- endif %}
+
+binary_sensor:
+  # Informs about state receiving problem from the breezer.
+  - platform: tion
+    type: state
+    name: State Warnout
+{%- if type == "lt" %}
+  # Gate state control.
+  - platform: tion
+    type: gate
+    name: Gate State
+{%- endif %}
+  # Filter warning state.
+  - platform: tion
+    type: filter
+    name: Filter Warnout
+
+text_sensor:
+  # Tion firmware version.
+  - platform: tion
+    type: firmware_version
+    name: Version
+  # Reports Tion's errors (EC) and warnings (WS).
+  - platform: tion
+    type: errors
+    name: Errors
 
 button:
+{%- if type != "o2" %}
+  # Reset filter button.
+  - platform: tion
+    type: reset_filter
+    name: Reset Filter
+    # Reset filter confirmation. When off then reset_filter will not work.
+    confirm:
+      name: Reset Filter Confirm
+{%- endif %}
+{%- if type == "3s" and port == "ble" %}
   - platform: template
-    name: "Pair"
+    name: Pair
+    icon: mdi:bluetooth-connect
     on_press:
       lambda: id(tion_{{ port }}_vport).pair();
     entity_category: config
   ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
   # - platform: template
-  #   name: "Reset Pair"
+  #   name: Reset Pair
+  #   icon: mdi:bluetooth-off
   #   on_press:
   #     lambda: id(tion_{{ port }}_vport).reset_pair();
   #   entity_category: config
 {%- endif %}
-
 {%- if type in ["4s", "lt"] %}
-
 ## Uncomment if you plan to use reset errors/warnings functionality.
-## This feature is experimental and may partially work or no work as expected.
-#button:
+## This feature is experimental and may partially work or not to work as expected.
 #  - platform: template
 #    name: "Reset Errors"
 #    on_press:

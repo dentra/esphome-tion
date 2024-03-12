@@ -5,14 +5,12 @@ from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_ID,
-    CONF_TYPE,
     ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
 from .. import (
     CONF_TION_COMPONENT_CLASS,
-    TionResetFilterConfirmSwitchT,
+    check_type,
     get_pc_info,
     new_pc_component,
     pc_schema,
@@ -22,6 +20,10 @@ from .. import (
 
 AUTO_LOAD = ["switch"]
 
+TionResetFilterConfirmSwitchT = tion_ns.class_(
+    "TionResetFilterConfirmSwitch", switch.Switch
+)
+
 CONF_RESET_FILTER_CONFIRM = "confirm"
 
 TionButton = tion_ns.class_("TionButton", button.Button, cg.Component)
@@ -29,7 +31,7 @@ TionButton = tion_ns.class_("TionButton", button.Button, cg.Component)
 PROPERTIES = {
     "reset_filter": {
         CONF_TION_COMPONENT_CLASS: tion_ns.class_(
-            "TionResetFilterButton2", button.Button, cg.Component
+            "TionResetFilterButton", button.Button, cg.Component
         ),
         CONF_ICON: "mdi:wrench-cog",
         CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
@@ -39,15 +41,6 @@ PROPERTIES = {
     #     CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
     # },
 }
-
-
-def check_type(key, typ):
-    def validator(config):
-        if key in config and config[CONF_TYPE] != typ:
-            raise cv.Invalid(f"{key} is not valid for the type {typ}")
-        return config
-
-    return validator
 
 
 CONFIG_SCHEMA = cv.All(

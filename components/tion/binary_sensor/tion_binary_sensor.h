@@ -7,15 +7,11 @@
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
 
-#include "../tion_api_component.h"
+#include "../tion_component.h"
 #include "../tion_properties.h"
 
 namespace esphome {
 namespace tion {
-
-// template<typename> constexpr std::false_type has_is_supported(long);
-// template<typename T> constexpr auto has_is_supported(int) -> decltype(T::is_supported(nullptr), std::true_type{});
-// template<typename T> using has_is_supported = decltype(has_is_supported<T>(0));
 
 // C - PropertyController
 template<class C>

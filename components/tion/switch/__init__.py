@@ -41,7 +41,7 @@ PROPERTIES = {
     },
     "recirculation": {
         CONF_DEVICE_CLASS: DEVICE_CLASS_OPENING,
-        # CONF_ICON: "mdi:valve",
+        # CONF_ICON: "mdi:valve", # mdi:air-conditioner
     },
     "boost": {
         # CONF_TION_COMPONENT_CLASS: TionBoost,
@@ -53,16 +53,6 @@ PROPERTIES = {
     "heat": "heater",
     "light": "led",
 }
-
-
-def check_type(key, typ):
-    def validator(config):
-        if key in config and config[CONF_TYPE] != typ:
-            raise cv.Invalid(f"{key} is not valid for the type {typ}")
-        return config
-
-    return validator
-
 
 CONFIG_SCHEMA = cv.All(
     pc_schema(

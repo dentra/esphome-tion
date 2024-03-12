@@ -1,125 +1,148 @@
 #pragma once
-#include "esphome/core/defines.h"
-#include "esphome/core/component.h"
-#include "esphome/core/preferences.h"
 
-#include "esphome/components/sensor/sensor.h"
-#include "esphome/components/switch/switch.h"
-#include "esphome/components/text_sensor/text_sensor.h"
+#include <functional>
+#include <map>
+
+#include "esphome/core/defines.h"
+#include "esphome/core/log.h"
+#include "esphome/core/helpers.h"
+#include "esphome/core/component.h"
+
+#ifdef USE_BINARY_SENSOR
 #include "esphome/components/binary_sensor/binary_sensor.h"
-#include "esphome/components/number/number.h"
-#include "esphome/components/button/button.h"
+#endif
 
 #include "../tion-api/tion-api.h"
+#include "../tion-api/tion-api-o2.h"
+#include "../tion-api/tion-api-3s.h"
+#include "../tion-api/tion-api-4s.h"
+#include "../tion-api/tion-api-lt.h"
+#include "tion_vport.h"
+#include "tion_batch_call.h"
 
 namespace esphome {
 namespace tion {
-class TionComponent : public PollingComponent {
+
+class TionApiComponent : public PollingComponent {
+ protected:
+  using TionApiBase = dentra::tion::TionApiBase;
+  using TionState = dentra::tion::TionState;
+  using TionStateCall = dentra::tion::TionStateCall;
+  using TionGatePosition = dentra::tion::TionGatePosition;
+
  public:
-#ifdef USE_TION_VERSION
-  void set_version(text_sensor::TextSensor *version) { this->version_ = version; }
-#endif
-#ifdef USE_TION_BUZZER
-  void set_buzzer(switch_::Switch *buzzer) { this->buzzer_ = buzzer; }
-#endif
-#ifdef USE_TION_LED
-  void set_led(switch_::Switch *led) { this->led_ = led; }
-#endif
-#ifdef USE_TION_OUTDOOR_TEMPERATURE
-  void set_outdoor_temperature(sensor::Sensor *outdoor_temperature) {
-    this->outdoor_temperature_ = outdoor_temperature;
+  explicit TionApiComponent(TionApiBase *api) : api_(api) {
+    api->on_state_fn.set<TionApiComponent, &TionApiComponent::on_state_>(*this);
   }
-#endif
-#ifdef USE_TION_HEATER_POWER
-  void set_heater_power(sensor::Sensor *heater_power) { this->heater_power_ = heater_power; }
-#endif
-#ifdef USE_TION_AIRFLOW_COUNTER
-  void set_airflow_counter(sensor::Sensor *airflow_counter) { this->airflow_counter_ = airflow_counter; }
-#endif
-#ifdef USE_TION_PRODUCTIVITY
-  void set_productivity(sensor::Sensor *productivity) { this->productivity_ = productivity; }
-#endif
-#ifdef USE_TION_FILTER_TIME_LEFT
-  void set_filter_time_left(sensor::Sensor *filter_time_left) { this->filter_time_left_ = filter_time_left; }
-#endif
-#ifdef USE_TION_FILTER_WARNOUT
-  void set_filter_warnout(binary_sensor::BinarySensor *filter_warnout) { this->filter_warnout_ = filter_warnout; }
-#endif
 
-#ifdef USE_TION_RESET_FILTER
-  void set_reset_filter(button::Button *reset_filter) { this->reset_filter_ = reset_filter; };
-  void set_reset_filter_confirm(switch_::Switch *reset_filter_confirm) {
-    this->reset_filter_confirm_ = reset_filter_confirm;
-  };
-#endif
-#ifdef USE_TION_STATE_WARNOUT
-  void set_state_warnout(binary_sensor::BinarySensor *state_warnout) { this->state_warnout_ = state_warnout; };
-#endif
-  void set_state_timeout(uint32_t state_timeout) {
-#ifdef USE_TION_STATE_WARNOUT
-    this->state_timeout_ = state_timeout;
-#endif
-  };
+  void dump_config() override;
+  void call_setup() override;
+  float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
+
+  void update() override;
+
+  /**
+   * Add a callback for the breezer state, each time the state of the device is updated, this callback will be called.
+   * When state is not returned in configured period - a callback called with nullptr.
+   *
+   * @param callback The callback to call.
+   */
+  void add_on_state_callback(std::function<void(const TionState *)> &&callback) {
+    this->state_callback_.add(std::move(callback));
+  }
+
+  /**
+   * Add a callback for the breezer configuration, each time the configuration parameters of a device
+   * is updated (using perform() of a StateCall), this callback will be called, before any on_state callback.
+   *
+   * @param callback The callback to call.
+   */
+  // void add_on_control_callback(std::function<void(StateCall &)> &&callback);
+
+  void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; };
   void set_batch_timeout(uint32_t batch_timeout) { this->batch_timeout_ = batch_timeout; };
-#ifdef USE_TION_ERRORS
-  void set_errors(text_sensor::TextSensor *errors) { this->errors_ = errors; }
-#endif
-
-#ifdef USE_TION_WORK_TIME
-  void set_work_time(sensor::Sensor *work_time) { this->work_time_ = work_time; }
-#endif
-
-#ifdef USE_TION_RESET_FILTER
-  bool is_reset_filter_confirmed() const {
-    return this->reset_filter_confirm_ == nullptr || this->reset_filter_confirm_->state;
+  void set_force_update(bool force_update) { this->force_update_ = force_update; };
+  bool get_force_update() const { return this->force_update_; }
+  void add_preset(const std::string &name, const TionApiBase::PresetData &preset) {
+    this->api_->add_preset(name, preset);
   }
-#endif
+
+  TionStateCall *make_call();
+
+  TionApiBase *api() { return this->api_; }
+
+  bool has_state() const { return this->has_state_; }
+
+  const dentra::tion::TionTraits &traits() const { return this->api_->traits(); }
+  const dentra::tion::TionState &state() const { return this->api_->get_state(); }
+
+  void boost_enable();
+  void boost_cancel();
 
  protected:
-#ifdef USE_TION_VERSION
-  text_sensor::TextSensor *version_{};
-#endif
-#ifdef USE_TION_BUZZER
-  switch_::Switch *buzzer_{};
-#endif
-#ifdef USE_TION_LED
-  switch_::Switch *led_{};
-#endif
-#ifdef USE_TION_OUTDOOR_TEMPERATURE
-  sensor::Sensor *outdoor_temperature_{};
-#endif
-#ifdef USE_TION_HEATER_POWER
-  sensor::Sensor *heater_power_{};
-#endif
-#ifdef USE_TION_AIRFLOW_COUNTER
-  sensor::Sensor *airflow_counter_{};
-#endif
-#ifdef USE_TION_PRODUCTIVITY
-  sensor::Sensor *productivity_{};
-#endif
-#ifdef USE_TION_FILTER_TIME_LEFT
-  sensor::Sensor *filter_time_left_{};
-#endif
-#ifdef USE_TION_FILTER_WARNOUT
-  binary_sensor::BinarySensor *filter_warnout_{};
-#endif
-#ifdef USE_TION_RESET_FILTER
-  button::Button *reset_filter_{};
-  switch_::Switch *reset_filter_confirm_{};
-#endif
-#ifdef USE_TION_STATE_WARNOUT
-  binary_sensor::BinarySensor *state_warnout_{};
-  uint32_t state_timeout_{};
-#endif
-  uint32_t batch_timeout_{};
-#ifdef USE_TION_ERRORS
-  text_sensor::TextSensor *errors_{};
-#endif
-#ifdef USE_TION_WORK_TIME
-  sensor::Sensor *work_time_{};
-#endif
+  TionApiBase *api_;
+  bool has_state_{};
+  bool force_update_{};
+  BatchStateCall *batch_call_{};
 
-  void update_dev_info_(const dentra::tion::tion_dev_info_t &info);
+  uint32_t state_timeout_{};
+  uint32_t batch_timeout_{};
+
+  CallbackManager<void(const TionState *)> state_callback_{};
+  // CallbackManager<void(StateCall &)> control_callback_{};
+
+  void on_state_(const TionState &state, const uint32_t request_id);
+  void state_check_schedule_();
+  void state_check_cancel_();
+  void state_check_report_(uint32_t timeout);
+  void batch_write_();
 };
+
+// T - TionApi implementation
+template<class A> class TionApiComponentBase : public TionApiComponent {
+ public:
+  using Api = A;
+
+  explicit TionApiComponentBase(Api *api, TionVPortType /*vport_type*/) : TionApiComponent(api) {}
+
+ protected:
+  Api *typed_api() { return reinterpret_cast<Api *>(this->api_); }
+};
+
+using TionO2ApiComponent = TionApiComponentBase<dentra::tion_o2::TionO2Api>;
+using Tion3sApiComponent = TionApiComponentBase<dentra::tion::Tion3sApi>;
+
+class Tion4sApiComponent : public TionApiComponentBase<dentra::tion_4s::Tion4sApi> {
+ public:
+  explicit Tion4sApiComponent(TionApiComponentBase::Api *api, TionVPortType vport_type)
+      : TionApiComponentBase(api, vport_type) {
+    if (vport_type == TionVPortType::VPORT_BLE) {
+      api->enable_native_boost_support();
+    }
+#ifdef TION_ENABLE_SCHEDULER
+    this->typed_api()->on_time.set<Tion4sApiComponent, &Tion4sApiComponent::on_time>(*this);
+    this->typed_api()->on_timer.set<Tion4sApiComponent, &Tion4sApiComponent::on_timer>(*this);
+    this->typed_api()->on_timers_state.set<Tion4sApiComponent, &Tion4sApiComponent::on_timers_state>(*this);
+#endif
+  }
+#ifdef TION_ENABLE_SCHEDULER
+  void on_time(time_t time, uint32_t request_id);
+  void on_timer(uint8_t timer_id, const dentra::tion_4s::tion4s_timer_t &timer, uint32_t request_id);
+  void on_timers_state(const dentra::tion_4s::tion4s_timers_state_t &timers_state, uint32_t request_id);
+  void dump_timers();
+  void reset_timers();
+#endif
+};
+
+class TionLtApiComponent : public TionApiComponentBase<dentra::tion::TionLtApi> {
+ public:
+  explicit TionLtApiComponent(TionApiComponentBase::Api *api, TionVPortType vport_type)
+      : TionApiComponentBase(api, vport_type) {}
+
+  void set_button_presets(const dentra::tion_lt::button_presets_t &button_presets) {
+    this->typed_api()->set_button_presets(button_presets);
+  }
+};
+
 }  // namespace tion
 }  // namespace esphome

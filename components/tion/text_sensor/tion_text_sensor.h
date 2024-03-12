@@ -6,7 +6,7 @@
 
 #include "esphome/components/text_sensor/text_sensor.h"
 
-#include "../tion_api_component.h"
+#include "../tion_component.h"
 #include "../tion_properties.h"
 
 namespace esphome {

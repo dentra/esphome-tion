@@ -40,9 +40,9 @@ template<class protocol_t> class TionUartIO : public TionIO<protocol_t>, public 
   }
 };
 
-template<class io_t, class frame_spec_t, class component_t = Component>
-class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, frame_spec_t, component_t> {
-  using super_t = vport::VPortUARTComponent<io_t, frame_spec_t, component_t>;
+template<class io_t, class component_t = Component>
+class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, typename io_t::frame_spec_type, component_t> {
+  using super_t = vport::VPortUARTComponent<io_t, typename io_t::frame_spec_type, component_t>;
 
  public:
   explicit TionVPortUARTComponent(io_t *io) : super_t(io) {

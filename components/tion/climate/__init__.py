@@ -3,9 +3,11 @@ import esphome.config_validation as cv
 from esphome.components import climate
 from esphome.const import CONF_ICON, CONF_ID
 
-from .. import ICON_AIR_FILTER, new_pc_component, pc_schema, tion_ns
+from .. import new_pc_component, pc_schema, tion_ns
 
 TionClimate = tion_ns.class_("TionClimate2", climate.Climate, cg.Component)
+
+ICON_AIR_FILTER = "mdi:air-filter"
 
 
 def climate_climate_schema(class_: cg.MockObj):
