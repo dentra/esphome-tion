@@ -10,12 +10,12 @@ button:
     name: Dump Timers
     icon: mdi:timer-check-outline
     on_press:
-      - lambda: id(tion_climate).dump_timers();
+      - lambda: id(tion_api).dump_timers();
     entity_category: diagnostic
   # Позволяет сбросить все существующие таймеры
   - platform: template
     name: Reset Timers
     icon: mdi:timer-remove-outline
     on_press:
-      - lambda: id(tion_climate).reset_timers();
+      - lambda: id(tion_api).reset_timers();
     entity_category: diagnostic
