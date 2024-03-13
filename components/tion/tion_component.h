@@ -8,17 +8,12 @@
 #include "esphome/core/helpers.h"
 #include "esphome/core/component.h"
 
-#ifdef USE_BINARY_SENSOR
-#include "esphome/components/binary_sensor/binary_sensor.h"
-#endif
-
 #include "../tion-api/tion-api.h"
 #include "../tion-api/tion-api-o2.h"
 #include "../tion-api/tion-api-3s.h"
 #include "../tion-api/tion-api-4s.h"
 #include "../tion-api/tion-api-lt.h"
 #include "tion_vport.h"
-#include "tion_batch_call.h"
 
 namespace esphome {
 namespace tion {
@@ -30,8 +25,24 @@ class TionApiComponent : public PollingComponent {
   using TionStateCall = dentra::tion::TionStateCall;
   using TionGatePosition = dentra::tion::TionGatePosition;
 
+  class BatchStateCall : public dentra::tion::TionStateCall {
+   public:
+    explicit BatchStateCall(TionApiComponent *c) : dentra::tion::TionStateCall(c->api_), c_(c) {}
+
+    virtual ~BatchStateCall() {}
+
+    void perform() override;
+
+    uint32_t get_start_time() const { return this->start_time_; };
+
+   protected:
+    TionApiComponent *c_;
+    uint32_t start_time_{};
+    void perform_();
+  };
+
  public:
-  explicit TionApiComponent(TionApiBase *api) : api_(api) {
+  explicit TionApiComponent(TionApiBase *api) : api_(api), batch_call_(this) {
     api->on_state_fn.set<TionApiComponent, &TionApiComponent::on_state_>(*this);
   }
 
@@ -51,13 +62,17 @@ class TionApiComponent : public PollingComponent {
     this->state_callback_.add(std::move(callback));
   }
 
+#ifdef TION_ENABLE_API_CONTROL_CALLBACK
   /**
    * Add a callback for the breezer configuration, each time the configuration parameters of a device
-   * is updated (using perform() of a StateCall), this callback will be called, before any on_state callback.
+   * is updated (using perform() of a TionStateCall), this callback will be called, before any on_state callback.
    *
    * @param callback The callback to call.
    */
-  // void add_on_control_callback(std::function<void(StateCall &)> &&callback);
+  void add_on_control_callback(std::function<void(TionStateCall *)> &&callback) {
+    this->control_callback_.add(std::move(callback));
+  }
+#endif
 
   void set_state_timeout(uint32_t state_timeout) { this->state_timeout_ = state_timeout; };
   void set_batch_timeout(uint32_t batch_timeout) { this->batch_timeout_ = batch_timeout; };
@@ -76,26 +91,24 @@ class TionApiComponent : public PollingComponent {
   const dentra::tion::TionTraits &traits() const { return this->api_->traits(); }
   const dentra::tion::TionState &state() const { return this->api_->get_state(); }
 
-  void boost_enable();
-  void boost_cancel();
-
  protected:
   TionApiBase *api_;
   bool has_state_{};
   bool force_update_{};
-  BatchStateCall *batch_call_{};
+  BatchStateCall batch_call_;
 
   uint32_t state_timeout_{};
   uint32_t batch_timeout_{};
 
   CallbackManager<void(const TionState *)> state_callback_{};
-  // CallbackManager<void(StateCall &)> control_callback_{};
+#ifdef TION_ENABLE_API_CONTROL_CALLBACK
+  CallbackManager<void(TionStateCall *)> control_callback_{};
+#endif
 
   void on_state_(const TionState &state, const uint32_t request_id);
   void state_check_schedule_();
   void state_check_cancel_();
   void state_check_report_(uint32_t timeout);
-  void batch_write_();
 };
 
 // T - TionApi implementation

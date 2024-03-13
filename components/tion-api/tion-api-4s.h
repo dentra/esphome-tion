@@ -42,7 +42,8 @@ class Tion4sApi : public tion::TionApiBase {
 #endif
 
 #ifdef TION_ENABLE_SCHEDULER
-  bool request_time(uint32_t request_id = 1) const;
+  bool request_time(uint32_t request_id) const;
+  void request_time() { this->request_time(++this->request_id_); }
 
   /// Callback listener for response to request_time command request.
   on_time_type on_time{};
@@ -50,14 +51,19 @@ class Tion4sApi : public tion::TionApiBase {
 
   /// Callback listener for response to request_timer command request.
   on_timer_type on_timer{};
-  bool request_timer(uint8_t timer_id, uint32_t request_id = 1) const;
+  bool request_timer(uint8_t timer_id, uint32_t request_id) const;
+  void request_timer(uint8_t timer_id) { this->request_timer(timer_id, ++this->request_id_); }
 
   /// Request all timers.
   bool request_timers(uint32_t request_id = 1) const;
 
-  bool write_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id = 1) const;
+  bool write_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) const;
+  void write_timer(uint8_t timer_id, const tion4s_timer_t &timer) {
+    this->write_timer(timer_id, timer, ++this->request_id_);
+  }
 
-  bool request_timers_state(uint32_t request_id = 1) const;
+  bool request_timers_state(uint32_t request_id) const;
+  void request_timers_state() { this->request_timers_state(++this->request_id_); }
   /// Callback listener for response to request_timers_state command request.
   on_timers_state_type on_timers_state{};
 

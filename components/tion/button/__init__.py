@@ -30,9 +30,7 @@ TionButton = tion_ns.class_("TionButton", button.Button, cg.Component)
 
 PROPERTIES = {
     "reset_filter": {
-        CONF_TION_COMPONENT_CLASS: tion_ns.class_(
-            "TionResetFilterButton", button.Button, cg.Component
-        ),
+        CONF_TION_COMPONENT_CLASS: "TionResetFilterButton",
         CONF_ICON: "mdi:wrench-cog",
         CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
     },
@@ -69,5 +67,5 @@ async def button_new_button(config, *args):
 
 
 async def to_code(config: dict):
-    var = await new_pc_component(config, button_new_button, PROPERTIES)
+    var = await new_pc_component(config, button.new_button, PROPERTIES)
     await setup_switch(config, CONF_RESET_FILTER_CONFIRM, var.set_confirm, var)

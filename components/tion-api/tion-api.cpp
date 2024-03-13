@@ -312,7 +312,10 @@ void TionStateCall::dump() const {
   }
 }
 
-void TionStateCall::perform() { this->api_->write_state(this); }
+void TionStateCall::perform() {
+  this->api_->write_state(this);
+  this->reset();
+}
 
 void TionStateCall::reset() {
   this->fan_speed_.reset();

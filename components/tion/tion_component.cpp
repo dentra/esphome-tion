@@ -9,11 +9,31 @@ namespace tion {
 
 static const char *const TAG = "tion_api_component";
 static const char *const STATE_TIMEOUT = "state_timeout";
+static const char *const BATCH_TIMEOUT = "batch_timeout";
+
+void TionApiComponent::BatchStateCall::perform() {
+  this->start_time_ = millis();
+  if (this->c_->batch_timeout_) {
+    this->c_->set_timeout(BATCH_TIMEOUT, this->c_->batch_timeout_, [this]() { this->perform_(); });
+  } else {
+    this->perform_();
+  }
+}
+
+void TionApiComponent::BatchStateCall::perform_() {
+  ESP_LOGD(TAG, "Write out batch changes");
+#ifdef TION_ENABLE_API_CONTROL_CALLBACK
+  this->c_->control_callback_.call(this);
+#endif
+  dentra::tion::TionStateCall::perform();
+  this->start_time_ = 0;
+  this->c_->state_check_schedule_();
+}
 
 void TionApiComponent::call_setup() {
   PollingComponent::call_setup();
   if (this->state_timeout_ >= this->get_update_interval()) {
-    ESP_LOGW(TAG, "Invalid state timout: %.1f s", this->state_timeout_ / 1000.0f);
+    ESP_LOGW(TAG, "Invalid state timeout: %.1f s", this->state_timeout_ / 1000.0f);
     this->state_timeout_ = 0;
   }
   if (this->state_timeout_ == 0) {
@@ -39,11 +59,7 @@ void TionApiComponent::update() {
 
 void TionApiComponent::on_state_(const TionState &state, const uint32_t request_id) {
   this->state_check_cancel_();
-  this->defer([this]() {
-    const auto &state = this->state();
-    this->state_callback_.call(&state);
-  });
-  // this->state_callback_.call(&state);
+  this->defer([this]() { this->state_callback_.call(&this->state()); });
 }
 
 void TionApiComponent::state_check_schedule_() {
@@ -60,7 +76,7 @@ void TionApiComponent::state_check_schedule_() {
 }
 
 void TionApiComponent::state_check_report_(uint32_t timeout) {
-  ESP_LOGW(TAG, "State was not received in %.1fs", timeout / 1000.0f);
+  ESP_LOGW(TAG, "State was not received in %.1f s", timeout / 1000.0f);
   this->state_callback_.call(nullptr);
 }
 
@@ -72,20 +88,13 @@ void TionApiComponent::state_check_cancel_() {
 }
 
 dentra::tion::TionStateCall *TionApiComponent::make_call() {
-  if (this->batch_call_) {
-    ESP_LOGD(TAG, "Continue batch update for %u ms", this->batch_timeout_);
+  const auto batch_start_time = this->batch_call_.get_start_time();
+  if (batch_start_time != 0) {
+    ESP_LOGD(TAG, "Continue batch update: %u ms", millis() - batch_start_time);
   } else {
-    ESP_LOGD(TAG, "Starting batch update for %u ms", this->batch_timeout_);
-    this->batch_call_ = new BatchStateCall(this->api_, this, this->batch_timeout_, [this]() { this->batch_write_(); });
+    ESP_LOGD(TAG, "Starting batch update: %u ms", this->batch_timeout_);
   }
-  return this->batch_call_;
-}
-
-void TionApiComponent::batch_write_() {
-  BatchStateCall *batch_call = this->batch_call_;
-  this->batch_call_ = nullptr;
-  delete batch_call;
-  this->state_check_schedule_();
+  return &this->batch_call_;
 }
 
 #ifdef TION_ENABLE_SCHEDULER
@@ -129,23 +138,23 @@ void Tion4sApiComponent::on_timer(uint8_t timer_id, const dentra::tion_4s::tion4
 
 void Tion4sApiComponent::on_timers_state(const dentra::tion_4s::tion4s_timers_state_t &timers_state,
                                          uint32_t request_id) {
-  for (int i = 0; i < tion4s_timers_state_t::TIMERS_COUNT; i++) {
+  for (int i = 0; i < dentra::tion_4s::tion4s_timers_state_t::TIMERS_COUNT; i++) {
     ESP_LOGI(TAG, "Timer[%d] state %s", i, ONOFF(timers_state.timers[i].active));
   }
 }
 
 void Tion4sApiComponent::dump_timers() {
-  this->api_->request_time(++this->request_id_);
+  this->typed_api()->request_time();
   for (uint8_t timer_id = 0; timer_id < dentra::tion_4s::tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
-    this->api_->request_timer(timer_id, ++this->request_id_);
+    this->typed_api()->request_timer(timer_id);
   }
-  this->api_->request_timers_state(++this->request_id_);
+  this->typed_api()->request_timers_state();
 }
 
 void Tion4sApiComponent::reset_timers() {
   const dentra::tion_4s::tion4s_timer_t timer{};
   for (uint8_t timer_id = 0; timer_id < dentra::tion_4s::tion4s_timers_state_t::TIMERS_COUNT; timer_id++) {
-    this->api_->write_timer(timer_id, timer, ++this->request_id_);
+    this->typed_api()->write_timer(timer_id, timer);
   }
 }
 #endif  // TION_ENABLE_SCHEDULER

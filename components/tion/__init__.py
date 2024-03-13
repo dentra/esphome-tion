@@ -245,6 +245,22 @@ async def new_pc_component(
     paren = await cg.get_variable(api)
     if props and CONF_TION_COMPONENT_CLASS not in props:
         var = await ctor(config, cg.TemplateArguments(get_pc_class()), paren, **kwargs)
+    elif props and CONF_TION_COMPONENT_CLASS in props:
+        cls = props[CONF_TION_COMPONENT_CLASS]
+        # hacky inject CONF_TION_COMPONENT_CLASS into CONF_ID
+        if not isinstance(cls, cg.MockObjClass):
+            import copy
+
+            # creates same object class as base entity
+            cpy: MockObjClass = copy.deepcopy(config[CONF_ID].type)
+            cls = str(cls)
+            # additionally copy ns
+            if "::" not in cls:
+                cls = "::".join(str(cpy.base).split("::")[:-1] + [cls])
+            cpy.base = cls
+            cls = cpy
+        config[CONF_ID].type = cls
+        var = await ctor(config, paren, **kwargs)
     else:
         var = await ctor(config, paren, **kwargs)
 

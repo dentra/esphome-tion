@@ -200,7 +200,7 @@ struct GateError {
   static bool get(const TionState &state) { return state.gate_error_state; }
 };
 
-struct GatePosition {
+struct Gate {
   static const char *get_icon(TionApiComponent *api) {
     if (api->traits().supports_gate_position_change_mixed && api->state().gate_position == TionGatePosition::MIXED) {
       return "mdi:valve";
@@ -257,9 +257,9 @@ struct Recirculation {
     return api->traits().supports_gate_position_change || api->traits().supports_gate_position_change_mixed;
   }
 
-  static const char *get_icon(TionApiComponent *api) { return binary_sensor::GatePosition::get_icon(api); }
+  static const char *get_icon(TionApiComponent *api) { return binary_sensor::Gate::get_icon(api); }
 
-  static bool get(const TionState &state) { return binary_sensor::GatePosition::get(state); }
+  static bool get(const TionState &state) { return binary_sensor::Gate::get(state); }
   static void set(TionStateCall *call, bool state) { call->set_gate_state(state); }
 };
 
@@ -297,7 +297,7 @@ struct FanSpeed {
 };
 
 // struct GatePosition {
-//   static const char *get_icon(TionApiComponent *api) { return binary_sensor::GatePosition::get_icon(api); }
+//   static const char *get_icon(TionApiComponent *api) { return binary_sensor::Gate::get_icon(api); }
 //   static uint8_t get(const TionState &state) { return static_cast<uint8_t>(state.gate_position); }
 // };
 
