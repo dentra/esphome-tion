@@ -1,59 +1,18 @@
 substitutions:
   time_platform: homeassistant
-  consumption_speed_1: "15.1"
-  consumption_speed_2: "16.2"
-  consumption_speed_3: "23.3"
-  consumption_speed_4: "23.8"
-  consumption_speed_5: "25.2"
-  consumption_speed_6: "30.7"
-
-sensor:
-  - platform: template
-    id: heater_power_plus_fan
-    lambda: |-
-      float power = id(heater_power).state;
-      if (id(tion_climate).mode != climate::CLIMATE_MODE_OFF) {
-        switch (id(tion_climate).get_fan_speed()) {
-          case 1:
-            power += $consumption_speed_1;
-            break;
-          case 2:
-            power += $consumption_speed_2;
-            break;
-          case 3:
-            power += $consumption_speed_3;
-            break;
-          case 4:
-            power += $consumption_speed_4;
-            break;
-          case 5:
-            power += $consumption_speed_5;
-            break;
-          case 6:
-            power += $consumption_speed_6;
-            break;
-          default:
-            break;
-        }
-      }
-      return power * 0.001;
-    unit_of_measurement: kW
-    update_interval: never
-
-  - platform: total_daily_energy
-    name: "Daily Energy"
-    power_id: heater_power_plus_fan
-    accuracy_decimals: 2
-    entity_category: diagnostic
 
 time:
   - platform: $time_platform
     id: g_time
 
-climate:
-  - id: !extend tion_climate
-    heater_power:
-      id: heater_power
-      on_raw_value:
-        then:
-          lambda: id(heater_power_plus_fan).update();
+sensor:
+  - platform: tion
+    type: power
+    name: Power
+    id: tion_power
+
+  - platform: total_daily_energy
+    name: "Daily Energy"
+    power_id: tion_power
+    accuracy_decimals: 2
+    entity_category: diagnostic

@@ -377,6 +377,12 @@ struct FanPower {
   }
 };
 
+struct Power {
+  static float get(TionApiComponent *api, const TionState &state) {
+    return FanPower::get(api, state) + HeaterPower::get(api, state) * 0.001;
+  }
+};
+
 }  // namespace sensor
 
 namespace number {
