@@ -65,9 +65,6 @@ packages:
       ## Enable maximum target temperature to 30°C. Comment next line to disable.
       - packages/tion_temperature30c.yaml
       {%- endif %}
-      ## Uncomment to enable heat_cool mode to workaraund when using Home Assistant turn_on service.
-      {{ "" if enable_heat_cool == "true" else "# " -}}
-      - packages/tion_enable_heat_cool.yaml
       {%- if type != "3s" %}
       ## Uncomment next line to enable additional energy sensor.
       {{ "" if enable_energy == "true" else "# " -}}
@@ -80,10 +77,6 @@ packages:
       {%- if type in ["3s", "o2"] %}
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_3s_enable_antifrize.yaml
-      {%- endif %}
-      {%- if type == "3s" %}
-      ## Turn the breezer off before enable heat mode.
-      - packages/tion_3s_enable_off_before_heat.yaml
       {%- endif %}
       ## Common configuration settings. Do not comment or move or remove.
       - packages/base.yaml
@@ -187,8 +180,6 @@ tion:
   batch_timeout: 200ms
   # Optional, Timeout to enable state problem sensor. Must be less than update_interval. Default: 3s.
   state_timeout: {{ "3s" if port == "uart" else "5s" }}
-  # # Optional, Boost time initialized at startup. Default: 10min.
-  # boost_time: 10min
   # Optional, Updates sensor values on any state response or only if they have been changed. Default: true.
   force_update: false
 
@@ -217,9 +208,20 @@ tion:
   #   away: { fan_speed: 1, target_temperature: 10, heater: False }
   #   sleep: { fan_speed: 1, target_temperature: 18 }
 
+################################################################################
+#
+# Next sections set are only example configuration.
+#
+# In most cases it is enought, but if you prefer to customize please refer to
+# CONFIGURATION.md for full set of available entities and options.
+#
+################################################################################
+
 climate:
   - platform: tion
-    name: # use friendly_name
+    name: None # use friendly_name
+    # add HEAT_COOL mode to support turn_on without touching current heater mode.
+    enable_heat_cool: True
 
 sensor:
   # Temperatire of air before heater, °C (celsius).
@@ -336,11 +338,11 @@ button:
   #     lambda: id(tion_{{ port }}_vport).reset_pair();
   #   entity_category: config
 {%- endif %}
-{%- if type in ["4s", "lt"] %}
+{#%- if type in ["4s", "lt"] %}
 ## Uncomment if you plan to use reset errors/warnings functionality.
 ## This feature is experimental and may partially work or not to work as expected.
 #  - platform: template
 #    name: "Reset Errors"
 #    on_press:
 #      - lambda: id(tion_climate).reset_errors();
-{%- endif %}
+{%- endif %#}

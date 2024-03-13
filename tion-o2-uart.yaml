@@ -20,14 +20,10 @@ substitutions:
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
 
-  project_source_refresh: 1h
-  project_branch: master
-
 packages:
   tion:
-    refresh: 1h
     url: https://github.com/dentra/esphome-tion
-    ref: master # cant use substitutions here
+    ref: next # cant use substitutions here
     files:
       ## Enable additional WiFi signal sensor. Comment next line to disable.
       - packages/wifi_signal.yaml
@@ -39,12 +35,10 @@ packages:
       - packages/tion_o2_climate.yaml
       ## Enable maximum target temperature to 30°C. Comment next line to disable.
       - packages/tion_temperature30c.yaml
-      ## Uncomment to enable heat_cool mode to workaraund when using Home Assistant turn_on service.
-      # - packages/tion_enable_heat_cool.yaml
       ## Uncomment next line to enable additional energy sensor.
       # - packages/tion_energy.yaml
       ## Unomment to enable uart proxy support.
-      #- packages/tion_o2_proxy.yaml
+      # - packages/tion_o2_proxy.yaml
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_3s_enable_antifrize.yaml
       ## Common configuration settings. Do not comment or move or remove.
@@ -67,6 +61,7 @@ packages:
 #   port: !secret mqtt_port
 #   username: !secret mqtt_username
 #   password: !secret mqtt_password
+#   discovery: false # remove or set to true if you plan to use with Home Assistant
 
 # Enable Home Assistant API connection. Please do not remove to keep logs functioning.
 api:
@@ -81,76 +76,113 @@ wifi:
 
 # Virtual port configuration
 vport:
-  - platform: tion_o2
+  - platform: tion_o2_uart
     id: tion_uart_vport
     uart_id: uart_tion
     ## Optional, Interval between sending commmands. Set to 0ms to send one command per loop.
     # command_interval: 20ms
     ## Optional, Command queue size. Default: 10.
     # command_queue_size: 16
-    ## Optional, Interval between sending heartbeat commands. Default: 200ms.
-    # heartbeat_interval: 200ms
 
 # Main climate component configuration.
+tion:
+  type: o2
+  id: tion_api
+  # Optional, use vport_id with mnultiple breezers.
+  vport_id: tion_uart_vport
+  # Optional, How often query device state. Default: 15s.
+  update_interval: 15s
+  # Optional, Timeout to combine update operations. Default: 200ms.
+  batch_timeout: 200ms
+  # Optional, Timeout to enable state problem sensor. Must be less than update_interval. Default: 3s.
+  state_timeout: 3s
+  # Optional, Updates sensor values on any state response or only if they have been changed. Default: true.
+  force_update: false
+
+  # Optional, Enable presets. Default: <empty> (no presets)
+  # You can define any number of presets with any name.
+  # In Home assistant climate entity presets with names home, away, boost, comfort,
+  # eco, sleep and activity are automatically translated to your native language and assign icons.
+  # Preset configuration:
+  #  name_of_your_preset:
+  #    fan_speed: 1            # remove or set to 0 to use current state
+  #    temperature: 16         # remove or set to 0 to use current state
+  #    heater: False           # remove to use current state
+  #    power: True             # remove to use current state
+  # Uncoment next 4 lines to enable example presets.
+  # presets:
+  #   home: { fan_speed: 2, target_temperature: 16, heater: False }
+  #   away: { fan_speed: 1, target_temperature: 10, heater: False }
+  #   sleep: { fan_speed: 1, target_temperature: 18 }
+
+################################################################################
+#
+# Next sections set are only example configuration.
+#
+# In most cases it is enought, but if you prefer to customize please refer to
+# CONFIGURATION.md for full set of available entities and options.
+#
+################################################################################
+
 climate:
-  - id: !extend tion_climate
-    # Required, the name of climate entity
+  - platform: tion
     name: None # use friendly_name
-    # Optional, virtual port id. Default: autodetect
-    vport_id: tion_uart_vport
-    # Optional, Temperatire of air before heater, °C (celsius).
-    outdoor_temperature:
-      name: "Outdoor Temperature"
-    # Optional, Current productivity, m³/h (cubic meters per hour).
-    productivity:
-      name: "Productivity"
-    filter_time_left:
-      name: "Filter Time Left"
-    # Optional, Filter warning state.
-    filter_warnout:
-      name: "Filter Warnout"
-    # Optional, Tion firmware version.
-    version:
-      name: "Version"
-    # Optional, Enable presets. Default: <empty> (no presets)
-    # Available configurable presets: home, away, boost, comfort, eco, sleep, activity.
-    # Defaults:
-    #   home    : { fan_speed: 2, target_temperature: 20, gate_position: auto, mode: heat }
-    #   away    : { fan_speed: 1, target_temperature: 10, gate_position: auto, mode: fan_only }
-    #   boost   : { fan_speed: 6, target_temperature: 10, gate_position: auto, mode: fan_only }
-    #   comfort : { fan_speed: 2, target_temperature: 23, gate_position: auto, mode: heat }
-    #   eco     : { fan_speed: 1, target_temperature: 16, gate_position: auto, mode: heat }
-    #   sleep   : { fan_speed: 1, target_temperature: 18, gate_position: auto, mode: heat }
-    #   activity: { fan_speed: 3, target_temperature: 18, gate_position: auto, mode: heat }
-    # Boost is a special preset that runs for a period defined by boost_time and then switches back to the previous preset.
-    # Available mode:
-    #  * off - define but disable preset
-    #  * heat - enable heater
-    #  * fan_only - fan only
-    #  * heat_cool - do not change, use current
-    # Available gate_position (this option is optional and only if supports by your breezer):
-    #  * auto - use current gate position
-    presets:
-      # enable "home" preset and override default settings
-      home: { fan_speed: 2, target_temperature: 16, mode: heat }
-      # enable "away" preset with default settings
-      away:
-      # enable "boost" preset with default settings
-      boost:
-      # enable "sleep" preset and override default settings
-      sleep: { fan_speed: 1, target_temperature: 18, mode: heat }
-    # Optional, configure boost time
-    boost_time:
-      name: "Boost Time"
-    # Optional, display remaining boost time
-    boost_time_left:
-      name: "Boost Time Left"
-    # Optional, How often query device state. Default: 60s.
-    update_interval: 30s
-    # Optional, Informs about get state problem from breezer.
-    state_warnout:
-      name: "State Warnout"
-    # Optional, Timeout when state_warnout will be informed. Default: 3s.
-    state_timeout: 3s
-    # Optional, Timeout to combine update operations. Default: 200ms.
-    batch_timeout: 200ms
+    # add HEAT_COOL mode to support turn_on without touching current heater mode.
+    enable_heat_cool: True
+
+sensor:
+  # Temperatire of air before heater, °C (celsius).
+  - platform: tion
+    type: outdoor_temperature
+    name: Outdoor Temperature
+  # Current productivity, m³/h (cubic meters per hour).
+  - platform: tion
+    type: productivity
+    name: Productivity
+  # Filter time left counter.
+  - platform: tion
+    type: filter_time_left
+    name: Filter Time Left
+  # Boost time left sensor.
+  - platform: tion
+    type: boost_time_left
+    name: Boost Time Left
+
+switch:
+  # Boost/Turbo switch.
+  - platform: tion
+    type: boost
+    name: Boost
+
+number:
+  # Configure boost time.
+  - platform: tion
+    type: boost_time
+    name: Boost Time
+    initial_value: 20min
+    restore_value: true
+
+select:
+
+binary_sensor:
+  # Informs about state receiving problem from the breezer.
+  - platform: tion
+    type: state
+    name: State Warnout
+  # Filter warning state.
+  - platform: tion
+    type: filter
+    name: Filter Warnout
+
+text_sensor:
+  # Tion firmware version.
+  - platform: tion
+    type: firmware_version
+    name: Version
+  # Reports Tion's errors (EC) and warnings (WS).
+  - platform: tion
+    type: errors
+    name: Errors
+
+button:
+

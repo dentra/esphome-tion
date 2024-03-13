@@ -1,5 +1,4 @@
 enable_node_add_mac_suffix: false
-enable_heat_cool: false
 enable_energy: false
 enable_esp32_temperature: false
 enable_web_server: false

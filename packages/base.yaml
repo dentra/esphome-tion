@@ -1,6 +1,6 @@
 substitutions:
   # project version
-  project_version: "2024.1.3"
+  project_version: "next"
   # project branch
   project_branch: $project_version
   # project git source
@@ -27,7 +27,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version"
-  min_version: "2023.12.6"
+  min_version: "2024.2.0"
   platformio_options:
     build_flags:
       - -std=gnu++17
