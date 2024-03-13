@@ -22,7 +22,7 @@ int find_climate_preset(const std::string &preset) {
   return -1;
 }
 
-climate::ClimateTraits TionClimate2::traits() {
+climate::ClimateTraits TionClimate::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supports_current_temperature(true);
   traits.set_visual_min_temperature(this->parent_->api()->traits().min_target_temperature);
@@ -30,12 +30,12 @@ climate::ClimateTraits TionClimate2::traits() {
   traits.set_visual_temperature_step(1.0f);
   traits.set_supported_modes({
       climate::CLIMATE_MODE_OFF,
-#ifdef TION_ENABLE_CLIMATE_MODE_HEAT_COOL
-      climate::CLIMATE_MODE_HEAT_COOL,
-#endif
       climate::CLIMATE_MODE_HEAT,
       climate::CLIMATE_MODE_FAN_ONLY,
   });
+  if (this->enable_heat_cool_) {
+    traits.add_supported_mode(climate::CLIMATE_MODE_HEAT_COOL);
+  }
   for (uint8_t i = 1, max = i + this->parent_->api()->traits().max_fan_speed; i < max; i++) {
     traits.add_supported_custom_fan_mode(fan_speed_to_mode(i));
   }
@@ -51,12 +51,12 @@ climate::ClimateTraits TionClimate2::traits() {
   return traits;
 }
 
-void TionClimate2::dump_config() {
+void TionClimate::dump_config() {
   LOG_CLIMATE("", "Tion Climate", this);
   this->dump_traits_(TAG);
 }
 
-void TionClimate2::control(const climate::ClimateCall &call) {
+void TionClimate::control(const climate::ClimateCall &call) {
   auto *tion = this->parent_->make_call();
   if (tion == nullptr) {
     return;
@@ -110,7 +110,7 @@ void TionClimate2::control(const climate::ClimateCall &call) {
   tion->perform();
 }
 
-void TionClimate2::on_state_(const TionState &state) {
+void TionClimate::on_state_(const TionState &state) {
   bool has_changes = false;
 
   climate::ClimateMode mode;
@@ -171,7 +171,7 @@ void TionClimate2::on_state_(const TionState &state) {
   }
 }
 
-bool TionClimate2::set_fan_speed_(uint8_t fan_speed) {
+bool TionClimate::set_fan_speed_(uint8_t fan_speed) {
   if (fan_speed > 0 && fan_speed <= this->parent_->api()->traits().max_fan_speed) {
     if (fan_mode_to_speed(this->custom_fan_mode) != fan_speed) {
       this->custom_fan_mode = fan_speed_to_mode(fan_speed);

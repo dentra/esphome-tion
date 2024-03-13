@@ -11,11 +11,11 @@
 namespace esphome {
 namespace tion {
 
-class TionClimate2 : public climate::Climate, public Component, Parented<TionApiComponent> {
+class TionClimate : public climate::Climate, public Component, Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
 
  public:
-  explicit TionClimate2(TionApiComponent *api) : Parented(api) {}
+  explicit TionClimate(TionApiComponent *api) : Parented(api) {}
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
@@ -32,7 +32,10 @@ class TionClimate2 : public climate::Climate, public Component, Parented<TionApi
   climate::ClimateTraits traits() override;
   void control(const climate::ClimateCall &call) override;
 
+  void set_enable_heat_cool(bool enable_heat_cool) { this->enable_heat_cool_ = enable_heat_cool; }
+
  protected:
+  bool enable_heat_cool_{};
   void on_state_(const TionState &state);
   bool set_fan_speed_(uint8_t fan_speed);
 };
