@@ -64,10 +64,6 @@ template<class C> class TionSelect : public select::Select, public Component, pu
       return;
     }
     auto *call = this->parent_->make_call();
-    if (call == nullptr) {
-      ESP_LOGW(TAG, "Make call failed for %s", this->get_name().c_str());
-      return;
-    }
     if constexpr (PC::checker().has_api_state_set()) {
       C::set(this->parent_, call, value);
     } else {

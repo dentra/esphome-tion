@@ -144,8 +144,6 @@ PROPERTIES = {
     "fan": "fan_speed",
     "speed": "fan_speed",
     "indoor_temperature": "current_temperature",
-    "filter_time": "filter_time_left",
-    "boost_time": "boost_time_left",
 }
 
 CONFIG_SCHEMA = pc_schema(sensor.sensor_schema(TionSensor), PROPERTIES)

@@ -132,10 +132,6 @@ template<typename C> class Controller {
     }
     if constexpr (checker().has_state_set() || checker().has_api_state_set()) {
       auto *call = component->parent_->make_call();
-      if (call == nullptr) {
-        ESP_LOGW(TAG, "Make call failed for %s", component->get_name().c_str());
-        return;
-      }
       if constexpr (checker().has_api_state_set()) {
         C::set(component->parent_, call, state);
       } else {
@@ -501,7 +497,12 @@ struct AirIntake {
 };
 
 struct Presets {
-  static std::vector<std::string> get_options(TionApiComponent *api) { return api->api()->get_presets(); };
+  static std::vector<std::string> get_options(TionApiComponent *api) {
+    if (api->api()->has_presets()) {
+      return api->api()->get_presets();
+    }
+    return {};
+  };
   static std::string get(TionApiComponent *api) { return api->api()->get_active_preset(); }
   static void set(TionApiComponent *api, TionStateCall *call, const std::string &preset) {
     api->api()->enable_preset(preset, call);
