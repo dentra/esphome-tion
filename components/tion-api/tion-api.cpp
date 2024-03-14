@@ -493,11 +493,11 @@ void TionApiBase::enable_preset(const std::string &preset, TionStateCall *call) 
   this->enable_preset_(it->second, call);
 }
 
-std::vector<std::string> TionApiBase::get_presets() const {
-  std::vector<std::string> presets;
-  presets.push_back("none");
+std::set<std::string> TionApiBase::get_presets() const {
+  std::set<std::string> presets;
+  presets.emplace("none");
   for (auto &&preset : this->presets_) {
-    presets.push_back(preset.first);
+    presets.emplace(preset.first);
   }
   return presets;
 };

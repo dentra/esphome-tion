@@ -10,16 +10,9 @@ static const char *const TAG = "tion_fan";
 
 fan::FanTraits TionFan::get_traits() {
   auto traits = fan::FanTraits(false, true, false, this->parent_->api()->traits().max_fan_speed);
-
-  const auto presets = this->parent_->api()->get_presets();
-  if (!presets.empty()) {
-    std::set<std::string> fan_presets;
-    for (auto &&preset : presets) {
-      fan_presets.emplace(preset);
-    }
-    traits.set_supported_preset_modes(fan_presets);
+  if (this->parent_->api()->has_presets()) {
+    traits.set_supported_preset_modes(this->parent_->api()->get_presets());
   }
-
   return traits;
 }
 
@@ -27,15 +20,14 @@ void TionFan::dump_config() { LOG_FAN("", "Tion Fan", this); }
 
 void TionFan::control(const fan::FanCall &call) {
   auto *tion = this->parent_->make_call();
-  if (tion == nullptr) {
-    return;
-  }
 
-  auto preset_mode = call.get_preset_mode();
-  if (!preset_mode.empty()) {
-    const auto &preset = preset_mode;
-    ESP_LOGD(TAG, "Set preset %s", preset.c_str());
-    this->parent_->api()->enable_preset(preset, tion);
+  if (this->parent_->api()->has_presets()) {
+    auto preset_mode = call.get_preset_mode();
+    if (!preset_mode.empty()) {
+      const auto &preset = preset_mode;
+      ESP_LOGD(TAG, "Set preset %s", preset.c_str());
+      this->parent_->api()->enable_preset(preset, tion);
+    }
   }
 
   if (call.get_state().has_value()) {
@@ -63,9 +55,12 @@ void TionFan::on_state_(const TionState &state) {
     this->speed = state.fan_speed;
     has_changes = true;
   }
-  if (this->preset_mode != this->parent_->api()->get_active_preset()) {
-    this->preset_mode = this->parent_->api()->get_active_preset();
-    has_changes = true;
+
+  if (this->parent_->api()->has_presets()) {
+    if (this->preset_mode != this->parent_->api()->get_active_preset()) {
+      this->preset_mode = this->parent_->api()->get_active_preset();
+      has_changes = true;
+    }
   }
 
   if (this->parent_->get_force_update() || has_changes) {

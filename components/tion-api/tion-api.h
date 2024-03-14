@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <map>
+#include <set>
 #include <vector>
 #include <type_traits>
 
@@ -354,7 +355,8 @@ class TionApiBase : public TionApiBaseWriter {
   void set_boost_time(uint16_t boost_time);
 
   void enable_preset(const std::string &preset, TionStateCall *ext_call = nullptr);
-  std::vector<std::string> get_presets() const;
+  std::set<std::string> get_presets() const;
+  bool has_presets() const { return !this->presets_.empty(); }
   void add_preset(const std::string &name, const PresetData &data);
   const std::string &get_active_preset() const { return this->active_preset_; }
 

@@ -39,12 +39,15 @@ climate::ClimateTraits TionClimate::traits() {
   for (uint8_t i = 1, max = i + this->parent_->api()->traits().max_fan_speed; i < max; i++) {
     traits.add_supported_custom_fan_mode(fan_speed_to_mode(i));
   }
-  for (auto &&preset : this->parent_->api()->get_presets()) {
-    const auto preset_index = find_climate_preset(preset);
-    if (preset_index < 0) {
-      traits.add_supported_custom_preset(preset);
-    } else {
-      traits.add_supported_preset(static_cast<climate::ClimatePreset>(preset_index));
+
+  if (this->parent_->api()->has_presets()) {
+    for (auto &&preset : this->parent_->api()->get_presets()) {
+      const auto preset_index = find_climate_preset(preset);
+      if (preset_index < 0) {
+        traits.add_supported_custom_preset(preset);
+      } else {
+        traits.add_supported_preset(static_cast<climate::ClimatePreset>(preset_index));
+      }
     }
   }
   traits.set_supports_action(true);
@@ -58,28 +61,27 @@ void TionClimate::dump_config() {
 
 void TionClimate::control(const climate::ClimateCall &call) {
   auto *tion = this->parent_->make_call();
-  if (tion == nullptr) {
-    return;
-  }
 
+  if (this->parent_->api()->has_presets()) {
 #ifndef USE_ARDUINO
-  if (call.get_preset().has_value()) {
-    const auto preset_climate = LOG_STR_ARG(climate::climate_preset_to_string(*call.get_preset()));
-    for (auto &&preset : this->parent_->api()->get_presets()) {
-      const auto preset_upper = str_upper_case(preset);
-      if (preset_upper == preset_climate) {
-        ESP_LOGD(TAG, "Set preset %s", preset.c_str());
-        this->parent_->api()->enable_preset(preset, tion);
-        break;
+    if (call.get_preset().has_value()) {
+      const auto preset_climate = LOG_STR_ARG(climate::climate_preset_to_string(*call.get_preset()));
+      for (auto &&preset : this->parent_->api()->get_presets()) {
+        const auto preset_upper = str_upper_case(preset);
+        if (preset_upper == preset_climate) {
+          ESP_LOGD(TAG, "Set preset %s", preset.c_str());
+          this->parent_->api()->enable_preset(preset, tion);
+          break;
+        }
       }
     }
-  }
 #endif
 
-  if (call.get_custom_preset().has_value()) {
-    const auto &preset = *call.get_custom_preset();
-    ESP_LOGD(TAG, "Set custom preset %s", preset.c_str());
-    this->parent_->api()->enable_preset(preset, tion);
+    if (call.get_custom_preset().has_value()) {
+      const auto &preset = *call.get_custom_preset();
+      ESP_LOGD(TAG, "Set custom preset %s", preset.c_str());
+      this->parent_->api()->enable_preset(preset, tion);
+    }
   }
 
   if (call.get_mode().has_value()) {
@@ -149,21 +151,23 @@ void TionClimate::on_state_(const TionState &state) {
     has_changes = true;
   }
 
-  const auto active_preset = this->parent_->api()->get_active_preset();
+  if (this->parent_->api()->has_presets()) {
+    const auto active_preset = this->parent_->api()->get_active_preset();
 #ifndef USE_ARDUINO
-  const auto climate_preset = find_climate_preset(active_preset);
-  if (climate_preset >= 0) {
-    if (this->preset.value_or(-1) != climate_preset) {
-      this->preset = static_cast<climate::ClimatePreset>(climate_preset);
-      this->custom_preset.reset();
+    const auto climate_preset = find_climate_preset(active_preset);
+    if (climate_preset >= 0) {
+      if (this->preset.value_or(-1) != climate_preset) {
+        this->preset = static_cast<climate::ClimatePreset>(climate_preset);
+        this->custom_preset.reset();
+        has_changes = true;
+      }
+    } else
+#endif
+        if (this->custom_preset.value_or("") != active_preset) {
+      this->custom_preset = active_preset;
+      this->preset.reset();
       has_changes = true;
     }
-  } else
-#endif
-      if (this->custom_preset.value_or("") != active_preset) {
-    this->custom_preset = active_preset;
-    this->preset.reset();
-    has_changes = true;
   }
 
   if (this->parent_->get_force_update() || has_changes) {
