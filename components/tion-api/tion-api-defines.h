@@ -53,7 +53,7 @@
 // 3 скорость: 19.4 Вт
 // 4 скорость: 23.0 Вт
 // https://ammo1.ru/21851
-#define TION_O2_MAX_FAN_POWER0 74     // 0.73 Вт
+#define TION_O2_MAX_FAN_POWER0 73     // 0.73 Вт
 #define TION_O2_MAX_FAN_POWER1 10300  // 10.3 Вт
 #define TION_O2_MAX_FAN_POWER2 19000  // 19.0 Вт
 #define TION_O2_MAX_FAN_POWER3 19400  // 19.4 Вт

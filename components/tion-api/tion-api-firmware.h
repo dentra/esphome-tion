@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+namespace dentra {
+namespace tion {
+namespace firmware {
+
 enum {
   // Шаг 1. Запрос на подготовку бризера к обновлению.
   // Пакет пустой.
@@ -41,16 +45,14 @@ enum {
 };
 
 // Использется при ответе FRAME_TYPE_UPDATE_PREPARE_RSP.
-// NOLINTNEXTLINE(readability-identifier-naming)
-struct firmware_versions_t {
+struct FirmwareVersions {
   uint32_t device_type;
   uint16_t unknown1;  // always 0
   uint16_t hardware_version;
 };
 
 // Использется при запросе FRAME_TYPE_UPDATE_START_REQ.
-// NOLINTNEXTLINE(readability-identifier-naming)
-struct firmware_info_t {
+struct FirmwareInfo {
   // firmware_size + sizeof(this->data) + crc_size
   uint32_t size;
   // заполнено "мусором", приложение просто инкрементирует счетчик,
@@ -59,17 +61,19 @@ struct firmware_info_t {
 };
 
 // Использется при запросе FRAME_TYPE_UPDATE_CHUNK_REQ.
-// NOLINTNEXTLINE(readability-identifier-naming)
-struct firmware_chunk_t {
+struct FirmwareChunk {
   enum { SIZE = 512 };  // в приложении 1000
   uint32_t offset;
   uint8_t data[SIZE];
 };
 
 // Использется при запросе FRAME_TYPE_UPDATE_CHUNK_REQ.
-// NOLINTNEXTLINE(readability-identifier-naming)
-struct firmware_chunk_crc_t {
+struct FirmwareChunkCRC {
   enum { MARKER = 0xFFFFFFFF };
   uint32_t marker{MARKER};
   uint16_t crc;
 };
+
+}  // namespace firmware
+}  // namespace tion
+}  // namespace dentra

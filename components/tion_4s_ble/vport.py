@@ -1,5 +1,6 @@
 import esphome.codegen as cg
 from esphome.const import PLATFORM_ESP32
+
 from .. import tion, vport  # pylint: disable=relative-beyond-top-level
 
 CODEOWNERS = ["@dentra"]

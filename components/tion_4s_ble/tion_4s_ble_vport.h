@@ -11,11 +11,11 @@ using Tion4sBleIO = esphome::tion::TionBleIO<dentra::tion::TionLtBleProtocol>;
 
 class Tion4sBleVPort : public TionVPortBLEComponent<Tion4sBleIO> {
  public:
-  Tion4sBleVPort(Tion4sBleIO *io) : TionVPortBLEComponent(io) {}
+  Tion4sBleVPort(io_type *io) : TionVPortBLEComponent(io) {}
 
   void dump_config() override;
 
-  void set_api(dentra::tion_4s::Tion4sApi *api) {}
+  void set_api(void *) {}
 };
 
 }  // namespace tion

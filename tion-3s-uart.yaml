@@ -1,24 +1,26 @@
 substitutions:
-  # name of the node.
+  # Name of the node.
+  # Don't use underscores.
+  # https://esphome.io/guides/faq.html#why-shouldn-t-i-use-underscores-in-my-device-name
   node_name: tion-3s
-  # name for main climate entity and prefix for all others.
+  # Name for the main entity and prefix for all others.
   friendly_name: $node_name
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "false"
-  # board
+  # Board
   board: esp01_1m
-  # uart configuration
-  # make sure to use YOUR pins!
+  # UART configuration.
+  # Make sure to use YOUR pins!
   tx_pin: TX
   rx_pin: RX
   baud_rate: "115200"
-  # uart proxy configuration (optional)
-  # make sure to use YOUR pins!
+  # UART proxy configuration (optional).
+  # Make sure to use YOUR pins!
   proxy_tx_pin: GPIO15
   proxy_rx_pin: GPIO13
   proxy_baud_rate: "115200"
 
-  # wifi settings.
+  # WiFi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
 
@@ -33,18 +35,16 @@ packages:
       - packages/uptime.yaml
       ## Enable additional Restart button. Comment next line to disable.
       - packages/restart.yaml
-      ## Base climate definition. Do not comment or move or remove.
-      - packages/tion_3s_climate.yaml
       ## Enable maximum target temperature to 30°C. Comment next line to disable.
-      - packages/tion_temperature30c.yaml
+      #- packages/tion_temperature30c.yaml
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
-      - packages/tion_3s_enable_antifrize.yaml
+      - packages/tion_enable_antifrize.yaml
       ## Common configuration settings. Do not comment or move or remove.
       - packages/base.yaml
       ## Change to packages/esp32.yaml if you want to use ESP32.
       - packages/esp8266.yaml
-      ## Comment to disable uart proxy support.
-      - packages/tion_3s_proxy.yaml
+      ## Uncomment to enable BLE uart proxy support.
+      #- packages/tion_3s_proxy.yaml
       ## Uncomment next line to enable web server support.
       # - packages/web_server.yaml
       ## Uncomment next line to enable additional debug information.
@@ -106,7 +106,7 @@ tion:
   #    fan_speed: 1            # remove or set to 0 to use current state
   #    temperature: 16         # remove or set to 0 to use current state
   #    heater: False           # remove to use current state
-  #    power: True             # remove to use current state
+  #    power: True             #
   #    gate_position: outdoor  # remove to use current state, see below for available values
   # Available gate_position:
   #  * outdoor - set gate position to outdoor air intake (3S and 4S only)
@@ -160,6 +160,11 @@ switch:
   - platform: tion
     type: boost
     name: Boost
+    # Optional, Heater state when boost enabled. If not set current state will be used.
+    #heater: False
+    # Optional, Target heater temperature state when boost enabled.
+    #           If not set or set to 0 - current target temperture will be used.
+    #temperature: 10
 
 number:
   # Configure boost time.

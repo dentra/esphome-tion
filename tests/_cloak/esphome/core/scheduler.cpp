@@ -6,18 +6,36 @@ namespace esphome {
 
 static const char *const TAG = "scheduler";
 
+void Scheduler::test_timeout(Component *component, bool start) {
+  auto it = this->test_timeouts_.find(component);
+  if (start) {
+    if (it == this->test_timeouts_.end()) {
+      this->test_timeouts_.emplace(component, TimeoutFunc{});
+    }
+  } else {
+    if (it != this->test_timeouts_.end()) {
+      for (auto [k, v] : it->second) {
+        v();
+      }
+      this->test_timeouts_.erase(it);
+    }
+  }
+}
+
 void Scheduler::set_timeout(Component *component, const std::string &name, uint32_t timeout,
                             std::function<void()> func) {
-  if (this->test_timeout_) {
-    this->test_timeouts_.emplace(name, std::move(func));
+  auto it = this->test_timeouts_.find(component);
+  if (it != this->test_timeouts_.end()) {
+    it->second.emplace(name, std::move(func));
   } else {
     func();
   }
 }
 
 bool Scheduler::cancel_timeout(Component *component, const std::string &name) {
-  if (this->test_timeout_) {
-    return this->test_timeouts_.erase(name) != 0;
+  auto it = this->test_timeouts_.find(component);
+  if (it != this->test_timeouts_.end()) {
+    return it->second.erase(name) != 0;
   }
   return true;
 }

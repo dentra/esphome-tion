@@ -1,5 +1,8 @@
 #pragma once
 
+#include <set>
+#include <string>
+
 namespace esphome {
 namespace fan {
 
@@ -26,11 +29,14 @@ class FanTraits {
   /// Set whether this fan supports changing direction
   void set_direction(bool direction) { this->direction_ = direction; }
 
+  void set_supported_preset_modes(const std::set<std::string> &preset_modes) { this->preset_modes_ = preset_modes; }
+
  protected:
   bool oscillation_{false};
   bool speed_{false};
   bool direction_{false};
   int speed_count_{};
+  std::set<std::string> preset_modes_;
 };
 
 }  // namespace fan

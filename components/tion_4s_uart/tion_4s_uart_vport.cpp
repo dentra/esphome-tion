@@ -13,7 +13,7 @@ static const char *const TAG = "tion_4s_uart_vport";
 
 void Tion4sUartVPort::dump_config() {
   VPORT_UART_LOG("Tion 4S UART");
-  ESP_LOGCONFIG(TAG, "  Heartbeat Interval: %.1fs", this->heartbeat_interval_ / 1000.0f);
+  ESP_LOGCONFIG(TAG, "  Heartbeat Interval: %.1f s", this->heartbeat_interval_ * 0.001f);
 }
 
 void Tion4sUartVPort::setup() {

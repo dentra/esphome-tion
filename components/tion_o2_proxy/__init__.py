@@ -15,8 +15,7 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(TionO2Proxy),
-            cv.GenerateID(tion.CONF_TION_API_BASE_ID): cv.declare_id(TionO2ApiProxy),
-            cv.GenerateID(tion.CONF_TION_API_ID): cv.declare_id(tion.TionVPortApi),
+            cv.GenerateID(tion.CONF_TION_ID): cv.declare_id(tion.TionVPortApi),
         }
     )
     .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -27,17 +26,7 @@ CONFIG_SCHEMA = (
 
 async def to_code(config):
     logging.error("tion_o2_proxy is not supported at this moment")
-    return
-
-    prt = await vport.vport_get_var(config)
-    api = cg.new_Pvariable(
-        config[tion.CONF_TION_API_ID],
-        cg.TemplateArguments(
-            vport.vport_find(config).type.class_("frame_spec_type"),
-            config[tion.CONF_TION_API_BASE_ID].type,
-        ),
-        prt,
-    )
-    urt = await cg.get_variable(config[uart.CONF_UART_ID])
-    var = cg.new_Pvariable(config[CONF_ID], api, urt)
-    await cg.register_component(var, config)
+    # _, api = await tion.new_vport_api_wrapper(config, TionO2ApiProxy)
+    # urt = await cg.get_variable(config[uart.CONF_UART_ID])
+    # var = cg.new_Pvariable(config[CONF_ID], api, urt)
+    # await cg.register_component(var, config)

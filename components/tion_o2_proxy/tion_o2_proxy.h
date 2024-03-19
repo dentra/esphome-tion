@@ -3,7 +3,6 @@
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
 
-#include "../tion/tion_controls.h"
 #include "../tion/tion_vport_uart.h"
 #include "../tion-api/tion-api-o2.h"
 #include "../tion-api/tion-api-uart-o2.h"
@@ -37,6 +36,7 @@ class TionO2ApiProxy : public dentra::tion::TionApiBase {
   // not used here
   void request_state() override {}
   void write_state(dentra::tion::TionStateCall *call) override {}
+  void reset_filter() override {}
 };
 
 class TionO2Proxy : public Component {

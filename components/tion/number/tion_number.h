@@ -25,7 +25,12 @@ template<class C> class TionNumber : public number::Number, public Component, pu
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  void dump_config() override { LOG_NUMBER("", "Tion Number", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_NUMBER("", "Tion Number", this);
+  }
 
   void setup() override {
     if (std::isnan(this->traits.get_min_value())) {

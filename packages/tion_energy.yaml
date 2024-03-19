@@ -7,9 +7,8 @@ time:
 
 sensor:
   - platform: tion
-    type: power
-    name: Power
     id: tion_power
+    type: power
 
   - platform: total_daily_energy
     name: "Daily Energy"

@@ -4,38 +4,25 @@
 #include "esphome/components/vport/vport_uart.h"
 #include "../components/tion-api/tion-api-o2.h"
 #include "../components/tion-api/tion-api-uart-o2.h"
-#include "../components/tion_o2/climate/tion_o2_climate.h"
-#include "../components/tion_o2/vport/tion_o2_vport.h"
+#include "../components/tion/climate/tion_climate.h"
+#include "../components/tion_o2_uart/tion_o2_uart_vport.h"
 #include "../components/tion_o2_proxy/tion_o2_proxy.h"
-#include "../components/tion_o2/tion_o2.h"
 #include "../components/tion/tion_vport.h"
+#include "../components/tion/tion_component.h"
 
 #include "test_api.h"
 #include "utils.h"
 
 DEFINE_TAG;
 
+using esphome::tion::TionClimate;
+using esphome::tion::TionO2ApiComponent;
+using esphome::tion::TionVPortType;
+using dentra::tion_o2::TionO2Api;
+
 using TionO2UartIOTest = esphome::tion::TionO2UartIO;
-using TionO2UartVPortApiTest =
-    esphome::tion::TionVPortApi<TionO2UartIOTest::frame_spec_type, dentra::tion_o2::TionO2Api>;
+using TionO2UartVPortApiTest = esphome::tion::TionVPortApi<TionO2UartIOTest::frame_spec_type, TionO2Api>;
 using TionO2UartVPortTest = esphome::vport::VPortUARTComponent<TionO2UartIOTest, TionO2UartIOTest::frame_spec_type>;
-
-class TionO2Test : public esphome::tion::TionO2Climate {
- public:
-  TionO2Test(dentra::tion_o2::TionO2Api *api, esphome::tion::TionVPortType vport_type)
-      : esphome::tion::TionO2Climate(api, vport_type) {}
-
-  esphome::tion::TionVPortType get_vport_type() const { return this->vport_type_; }
-
-  dentra::tion::TionState &state() { return this->state_; };
-  void state_reset() { this->state_ = {}; }
-
-  // void on_state(const dentra::tion::tion3s_state_t &state, uint32_t request_id) {
-  //   this->state_ = this->state = state;
-  //   ESP_LOGD(TAG, "Received tion3s_state_t %s", hexencode_cstr(&state, sizeof(state)));
-  //   this->update_state();
-  // }
-};
 
 bool test_api_o2() {
   bool res = true;
@@ -74,7 +61,7 @@ bool test_api_o2_proxy() {
 
   // as additional input source
   TionO2UartVPortApiTest api(&vport);
-  TionO2Test comp(&api, esphome::tion::TionVPortType::VPORT_UART);
+  TionO2ApiComponent comp(&api, TionVPortType::VPORT_UART);
 
   esphome::uart::UARTComponent uart_out(out);
 
@@ -178,12 +165,12 @@ bool test_api_o2_new() {
   TionO2UartIOTest io(&uart);
   TionO2UartVPortTest vport(&io);
   TionO2UartVPortApiTest api(&vport);
-  esphome::tion::TionO2ApiComponent comp(&api, esphome::tion::TionVPortType::VPORT_UART);
+  TionO2ApiComponent comp(&api, TionVPortType::VPORT_UART);
   cloak::setup_and_loop({&vport, &comp});
   return res;
 }
 
 REGISTER_TEST(test_api_o2);
-REGISTER_TEST(test_api_o2_proxy);
+REGISTER_TEST(test_api_o2_proxy);  // does not work now
 REGISTER_TEST(test_api_o2_data);
 REGISTER_TEST(test_api_o2_new);

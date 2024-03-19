@@ -11,7 +11,7 @@
 namespace esphome {
 namespace tion {
 
-class TionFan : public fan::Fan, public Component, Parented<TionApiComponent> {
+class TionFan : public fan::Fan, public Component, public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
 
  public:

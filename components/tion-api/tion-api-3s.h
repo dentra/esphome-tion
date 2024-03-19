@@ -23,10 +23,6 @@ class Tion3sApi : public TionApiBase {
   bool reset_filter(const tion::TionState &state) const;
   bool factory_reset(const tion::TionState &state) const;
 
-#ifdef TION_ENABLE_HEARTBEAT
-  bool send_heartbeat() const { return false; }
-#endif
-
   void request_state() override;
   void write_state(tion::TionStateCall *call) override {
     this->write_state(this->make_write_state_(call), ++this->request_id_);

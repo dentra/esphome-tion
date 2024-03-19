@@ -13,11 +13,11 @@ using TionO2UartIO = TionUartIO<dentra::tion_o2::TionO2UartProtocol>;
 
 class TionO2UartVPort : public TionVPortUARTComponent<TionO2UartIO> {
  public:
-  explicit TionO2UartVPort(TionO2UartIO *io) : TionVPortUARTComponent(io) {}
+  explicit TionO2UartVPort(io_type *io) : TionVPortUARTComponent(io) {}
 
   void dump_config() override;
 
-  void set_api(dentra::tion_o2::TionO2Api *api) {}
+  void set_api(void *) {}
 };
 
 }  // namespace tion

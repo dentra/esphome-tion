@@ -32,7 +32,7 @@ const uint32_t STATUS_LED_OK = 0x0000;
 const uint32_t STATUS_LED_WARNING = 0x0100;
 const uint32_t STATUS_LED_ERROR = 0x0200;
 
-void Component::test_timeout(bool start) { App.scheduler.test_timeout(start); }
+void Component::test_timeout(bool start) { App.scheduler.test_timeout(this, start); }
 void Component::set_timeout(const std::string &name, uint32_t timeout, std::function<void()> &&f) {
   App.scheduler.set_timeout(this, name, timeout, std::move(f));
 }

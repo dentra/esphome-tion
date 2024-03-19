@@ -24,7 +24,12 @@ template<class C> class TionSelect : public select::Select, public Component, pu
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  void dump_config() override { LOG_SELECT("", "Tion Select", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_SELECT("", "Tion Select", this);
+  }
 
   void setup() override {
     const auto options = C::get_options(this->parent_);

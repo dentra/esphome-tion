@@ -33,7 +33,7 @@ void TionApiComponent::BatchStateCall::perform_() {
 void TionApiComponent::call_setup() {
   PollingComponent::call_setup();
   if (this->state_timeout_ >= this->get_update_interval()) {
-    ESP_LOGW(TAG, "Invalid state timeout: %.1f s", this->state_timeout_ / 1000.0f);
+    ESP_LOGW(TAG, "Invalid state timeout: %.1f s", this->state_timeout_ * 0.001f);
     this->state_timeout_ = 0;
   }
   if (this->state_timeout_ == 0) {
@@ -43,10 +43,10 @@ void TionApiComponent::call_setup() {
 
 void TionApiComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "%s:", this->get_component_source());
-  ESP_LOGCONFIG(TAG, "  Update interval: %.1f s", this->get_update_interval() / 1000.0f);
+  ESP_LOGCONFIG(TAG, "  Update interval: %.1f s", this->get_update_interval() * 0.001f);
   ESP_LOGCONFIG(TAG, "  Force update: %s", ONOFF(this->force_update_));
-  ESP_LOGCONFIG(TAG, "  State timeout: %.1f s", this->state_timeout_ / 1000.0f);
-  ESP_LOGCONFIG(TAG, "  Batch timeout: %.1f s", this->batch_timeout_ / 1000.0f);
+  ESP_LOGCONFIG(TAG, "  State timeout: %.1f s", this->state_timeout_ * 0.001f);
+  ESP_LOGCONFIG(TAG, "  Batch timeout: %.1f s", this->batch_timeout_ * 0.001f);
   if (this->traits().supports_antifrize) {
     ESP_LOGCONFIG(TAG, "  Antifrize: enabled");
   }
@@ -76,7 +76,7 @@ void TionApiComponent::state_check_schedule_() {
 }
 
 void TionApiComponent::state_check_report_(uint32_t timeout) {
-  ESP_LOGW(TAG, "State was not received in %.1f s", timeout / 1000.0f);
+  ESP_LOGW(TAG, "State was not received in %.1f s", timeout * 0.001f);
   this->state_callback_.call(nullptr);
 }
 

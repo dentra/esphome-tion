@@ -55,12 +55,12 @@ class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, typename i
   TionVPortType get_type() const { return TionVPortType::VPORT_UART; }
 
 #ifdef USE_TION_HALF_DUPLEX
-  void write(const frame_spec_t &frame, size_t size) override {
+  void write(const typename io_t::frame_spec_type &frame, size_t size) override {
     if (this->await_frame_) {
       auto data8 = reinterpret_cast<const uint8_t *>(&frame);
       auto datav = std::vector<uint8_t>(data8, data8 + size);
       this->defer([this, datav]() {
-        auto frame = reinterpret_cast<const frame_spec_t *>(datav.data());
+        auto frame = reinterpret_cast<const typename io_t::frame_spec_type *>(datav.data());
         if (this->await_frame_) {
           ESP_LOGW("tion_vport_uart", "prev frame was not recv, may lead to crash");
         }
@@ -78,7 +78,7 @@ class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, typename i
 
  protected:
   bool await_frame_{};
-  void on_frame_(const frame_spec_t &frame, size_t size) {
+  void on_frame_(const typename io_t::frame_spec_type &frame, size_t size) {
     arch_feed_wdt();
     yield();
     this->await_frame_ = false;

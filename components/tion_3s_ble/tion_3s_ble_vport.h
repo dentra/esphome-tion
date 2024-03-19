@@ -25,15 +25,14 @@ class Tion3sBleIO : public TionBleIO<dentra::tion::Tion3sBleProtocol> {
 
 class Tion3sBleVPort : public TionVPortBLEComponent<Tion3sBleIO> {
  public:
-  Tion3sBleVPort(Tion3sBleIO *io) : TionVPortBLEComponent(io) {
-    this->io_->set_on_ready(Tion3sBleIO::on_ready_type::create<Tion3sBleVPort, &Tion3sBleVPort::on_ready_3s_>(*this));
+  Tion3sBleVPort(io_type *io) : TionVPortBLEComponent(io) {
+    this->io_->set_on_ready(io_type::on_ready_type::create<Tion3sBleVPort, &Tion3sBleVPort::on_ready_3s_>(*this));
   }
 
   void setup() override;
   void dump_config() override;
-  // void update() override;
 
-  void write(const Tion3sBleIO::frame_spec_type &frame, size_t size) override;
+  void write(const io_type::frame_spec_type &frame, size_t size) override;
 
   void set_experimental_always_pair(bool value) { this->experimental_always_pair_ = value; }
 
@@ -53,8 +52,6 @@ class Tion3sBleVPort : public TionVPortBLEComponent<Tion3sBleIO> {
   void on_ready_3s_();
   void pair_();
 };
-
-// using Tion3sBleApi = TionVPortApi<Tion3sBleIO::frame_spec_type, dentra::tion::Tion3sApi>;
 
 }  // namespace tion
 }  // namespace esphome

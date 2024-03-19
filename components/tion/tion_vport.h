@@ -31,7 +31,7 @@ template<class protocol_type> class TionIO {
   protocol_type protocol_;
 };
 
-// api wrapper with vport support.
+// vport wrapper with api support.
 template<class frame_spec_t, class api_t> class TionVPortApi : public api_t, public vport::VPortListener<frame_spec_t> {
   static_assert(std::is_base_of_v<dentra::tion::TionApiBaseWriter, api_t>, "api_t is not TionApi");
 

@@ -1,5 +1,3 @@
-#include "../components/tion_lt/climate/tion_lt_climate.h"
-
 #include "test_api.h"
 #include "test_vport.h"
 
@@ -11,23 +9,18 @@ class TionLtBleVPortApiTest
     : public esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi> {
  public:
   TionLtBleVPortApiTest(vport_t *vport)
-      : esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi>(vport) {}
+      : esphome::tion::TionVPortApi<TionLtBleIOTest::frame_spec_type, dentra::tion::TionLtApi>(vport) {
+    this->state_.firmware_version = 0xFFFF;
+    this->set_button_presets({20, 20, 20, 01, 03, 05});
+  }
   bool request_dev_info() const { return this->request_dev_info_(); }
 };
 
-class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
- public:
-  TionLtBleVPortTest(TionLtBleIOTest *io) : esphome::tion::TionLtBleVPort(io) {}
-  // uint16_t get_state_type() const { return this->state_type_; }
-};
-
-class TionLtTest : public esphome::tion::TionLtClimate {
- public:
-  TionLtTest(dentra::tion::TionLtApi *api, esphome::tion::TionVPortType vport_type)
-      : esphome::tion::TionLtClimate(api, vport_type) {}
-};
-
-
+using TionLtBleVPortTest = esphome::tion::TionLtBleVPort;
+// class TionLtBleVPortTest : public esphome::tion::TionLtBleVPort {
+//  public:
+//   TionLtBleVPortTest(TionLtBleIOTest *io) : esphome::tion::TionLtBleVPort(io) {}
+// };
 
 bool test_api_lt() {
   bool res = true;
@@ -39,7 +32,6 @@ bool test_api_lt() {
   TionLtBleIOTest io(&client);
   TionLtBleVPortTest vport(&io);
   TionLtBleVPortApiTest api(&vport);
-  // TionLtTest comp(&api);
 
   io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
   // vport.set_persistent_connection(true);
@@ -67,7 +59,7 @@ bool test_api_lt() {
   st.work_time = 0xFFFFFFFF;
   st.filter_time_left = 0xEEEEEEEE;
 
-  api.write_state(st, 1);  // сейчас сюда не пишем информацию о пресетах кнопки
+  api.write_state(st, 1);
   vport.call_loop();
   res &= cloak::check_data("write_state", io,
                            "00.1E.00.3A.AD."
@@ -76,7 +68,7 @@ bool test_api_lt() {
                            "01.00.00.00."
                            "11.00.02.00.02."
                            "C0."
-                           "14.14.14.01.03.05."  // preset data
+                           "14.14.14.01.03.05."  // button preset data
                            "00.00.00."
                            "81.03");
 

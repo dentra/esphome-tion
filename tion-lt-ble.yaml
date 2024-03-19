@@ -1,14 +1,16 @@
 substitutions:
-  # tion mac address. setup yours.
+  # Tion mac address. setup yours.
   tion_mac_address: 00:00:00:00:00:00
-  # name of the node.
+  # Name of the node.
+  # Don't use underscores.
+  # https://esphome.io/guides/faq.html#why-shouldn-t-i-use-underscores-in-my-device-name
   node_name: tion-lite
-  # name for main climate entity and prefix for all others.
+  # Name for the main entity and prefix for all others.
   friendly_name: $node_name
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "false"
 
-  # wifi settings.
+  # WiFi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
 
@@ -25,9 +27,7 @@ packages:
       - packages/uptime.yaml
       ## Enable additional Restart button. Comment next line to disable.
       - packages/restart.yaml
-      ## Base climate definition. Do not comment or move or remove.
-      - packages/tion_lt_climate.yaml
-      ## Enable maximum target temperature to 30°C. Uncomment next line to enable.
+      ## Enable maximum target temperature to 30°C. Comment next line to disable.
       #- packages/tion_temperature30c.yaml
       ## Uncomment next line to enable additional energy sensor.
       # - packages/tion_energy.yaml
@@ -106,12 +106,16 @@ tion:
   #    fan_speed: 1            # remove or set to 0 to use current state
   #    temperature: 16         # remove or set to 0 to use current state
   #    heater: False           # remove to use current state
-  #    power: True             # remove to use current state
+  #    power: True             #
   # Uncoment next 4 lines to enable example presets.
   # presets:
   #   home: { fan_speed: 2, target_temperature: 16, heater: False }
   #   away: { fan_speed: 1, target_temperature: 10, heater: False }
   #   sleep: { fan_speed: 1, target_temperature: 18 }
+  # Optional, configure hardware button presets. Factory defaults are: 2/4/6, 10/20/25 °C
+  #button_presets:
+  #  fan_speed: [1, 3, 5]
+  #  temperature: [12, 18, 24]
 
 ################################################################################
 #
@@ -159,6 +163,11 @@ switch:
   - platform: tion
     type: boost
     name: Boost
+    # Optional, Heater state when boost enabled. If not set current state will be used.
+    #heater: False
+    # Optional, Target heater temperature state when boost enabled.
+    #           If not set or set to 0 - current target temperture will be used.
+    #temperature: 10
 
 number:
   # Configure boost time.

@@ -119,7 +119,7 @@ struct TionTraits {
   uint16_t max_fan_power[7];
 
   uint16_t get_max_heater_power() const { return this->max_heater_power * 10u; }
-  float get_max_fan_power(size_t index) const { return this->max_fan_power[index] / 100.0f; }
+  float get_max_fan_power(size_t index) const { return this->max_fan_power[index] * 0.01f; }
 };
 
 enum class TionGatePosition : uint8_t {
@@ -229,6 +229,7 @@ class TionApiBase;
 class TionStateCall {
  public:
   TionStateCall(TionApiBase *api) : api_(api) {}
+  virtual ~TionStateCall() {}
 
   void set_fan_speed(uint8_t fan_speed) { this->fan_speed_ = fan_speed; }
   void set_target_temperature(int8_t target_temperature) { this->target_temperature_ = target_temperature; }
@@ -319,6 +320,8 @@ class TionApiBase : public TionApiBaseWriter {
  public:
   TionApiBase();
 
+  constexpr static const char *PRESET_NONE = "none";
+
   struct PresetData {
     // =0 - без изменений
     int8_t target_temperature;
@@ -351,13 +354,17 @@ class TionApiBase : public TionApiBaseWriter {
   virtual void request_state() = 0;
   virtual void write_state(TionStateCall *call) = 0;
   virtual void reset_filter() = 0;
+  // Если ext_call != nullptr, вызывающая сторона отвественна за вызов perform.
   void enable_boost(bool state, TionStateCall *ext_call = nullptr);
   void set_boost_time(uint16_t boost_time);
-
+  void set_boost_heater_state(bool heater_state);
+  void set_boost_target_temperture(int8_t target_temperature);
+  // Если ext_call != nullptr, вызывающая сторона отвественна за вызов perform.
   void enable_preset(const std::string &preset, TionStateCall *ext_call = nullptr);
   std::set<std::string> get_presets() const;
   bool has_presets() const { return !this->presets_.empty(); }
   void add_preset(const std::string &name, const PresetData &data);
+  PresetData get_preset(const std::string &name) const;
   const std::string &get_active_preset() const { return this->active_preset_; }
 
  protected:
@@ -372,7 +379,7 @@ class TionApiBase : public TionApiBaseWriter {
   } boost_save_{};
 
   std::map<std::string, PresetData> presets_;
-  std::string active_preset_{"none"};
+  std::string active_preset_{PRESET_NONE};
 
   virtual void enable_native_boost_(bool state) {}
 
@@ -380,7 +387,6 @@ class TionApiBase : public TionApiBaseWriter {
   void boost_cancel_(TionStateCall *ext_call);
   void boost_save_state_(bool save_fan);
   void notify_state_(uint32_t request_id);
-  bool chack_antifrize_(const TionState &cs) const;
   void enable_preset_(const PresetData &preset, TionStateCall *ext_call);
 };
 

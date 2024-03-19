@@ -24,7 +24,12 @@ template<class C> class TionSensor : public sensor::Sensor, public Component, pu
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  void dump_config() override { LOG_SENSOR("", "Tion Sensor", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_SENSOR("", "Tion Sensor", this);
+  }
 
   void setup() override {
     if (!PC::is_supported(this)) {

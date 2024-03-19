@@ -22,10 +22,6 @@ class TionLtApi : public TionApiBase {
   bool factory_reset(const TionState &state, uint32_t request_id = 1) const;
   bool reset_errors(const TionState &state, uint32_t request_id = 1) const;
 
-#ifdef TION_ENABLE_HEARTBEAT
-  bool send_heartbeat() const { return false; }
-#endif
-
   void set_button_presets(const dentra::tion_lt::button_presets_t &button_presets);
 
   void request_state() override;

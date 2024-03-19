@@ -11,7 +11,7 @@
 namespace esphome {
 namespace tion {
 
-class TionClimate : public climate::Climate, public Component, Parented<TionApiComponent> {
+class TionClimate : public climate::Climate, public Component, public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
 
  public:

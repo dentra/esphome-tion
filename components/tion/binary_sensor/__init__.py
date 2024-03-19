@@ -70,6 +70,7 @@ PROPERTIES = {
     "light": "led",
     "gate_position": "gate",
     "gate_state": "gate",
+    "damper": "gate",
 }
 
 CONFIG_SCHEMA = pc_schema(

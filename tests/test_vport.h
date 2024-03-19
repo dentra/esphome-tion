@@ -3,11 +3,11 @@
 #include <type_traits>
 #include "etl/delegate.h"
 
-#include "../components/tion_3s/vport/tion_3s_vport.h"
-#include "../components/tion_lt/vport/tion_lt_vport.h"
-#include "../components/tion_4s/vport/tion_4s_vport.h"
-#include "../components/tion_4s_uart/tion_4s_uart.h"
-#include "../components/tion_3s_uart/tion_3s_uart.h"
+#include "../components/tion_3s_ble/tion_3s_ble_vport.h"
+#include "../components/tion_lt_ble/tion_lt_ble_vport.h"
+#include "../components/tion_4s_ble/tion_4s_ble_vport.h"
+#include "../components/tion_4s_uart/tion_4s_uart_vport.h"
+#include "../components/tion_3s_uart/tion_3s_uart_vport.h"
 
 #include "utils.h"
 

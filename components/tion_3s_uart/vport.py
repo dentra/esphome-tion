@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 from esphome.core import CORE
-from .. import vport, tion  # pylint: disable=relative-beyond-top-level
+
+from .. import tion, vport  # pylint: disable=relative-beyond-top-level
 
 AUTO_LOAD = ["vport", "tion"]
 

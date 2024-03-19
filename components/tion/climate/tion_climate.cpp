@@ -156,7 +156,7 @@ void TionClimate::on_state_(const TionState &state) {
 #ifndef USE_ARDUINO
     const auto climate_preset = find_climate_preset(active_preset);
     if (climate_preset >= 0) {
-      if (this->preset.value_or(-1) != climate_preset) {
+      if (this->preset.value_or(static_cast<climate::ClimatePreset>(-1)) != climate_preset) {
         this->preset = static_cast<climate::ClimatePreset>(climate_preset);
         this->custom_preset.reset();
         has_changes = true;

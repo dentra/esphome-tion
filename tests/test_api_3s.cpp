@@ -4,7 +4,7 @@
 #include "esphome/components/vport/vport_ble.h"
 #include "../components/tion-api/tion-api-3s.h"
 #include "../components/tion-api/tion-api-ble-3s.h"
-#include "../components/tion_3s/climate/tion_3s_climate.h"
+#include "../components/tion/tion_component.h"
 #include "../components/tion_3s_proxy/tion_3s_proxy.h"
 
 #include "test_api.h"
@@ -21,9 +21,28 @@ class Tion3sUartVPortApiTest
   Tion3sUartVPortApiTest(vport_t *vport)
       : esphome::tion::TionVPortApi<Tion3sUartIOTest::frame_spec_type, dentra::tion::Tion3sApi>(vport) {}
   bool request_dev_info() const { return false; }
+
+  dentra::tion::TionState &st() { return this->state_; }
 };
 
-using Tion3sBleVPortApiTest = esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi>;
+class Tion3sBleVPortApiTest
+    : public esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi> {
+ public:
+  Tion3sBleVPortApiTest(vport_t *vport)
+      : esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi>(vport) {
+    auto &tr = this->get_traits_();
+    tr.initialized = true;
+    tr.supports_sound_state = true;
+    tr.max_fan_speed = 6;
+  }
+
+  dentra::tion::TionState &st() { return this->state_; }
+  dentra::tion_3s::tion3s_state_t rst() {
+    dentra::tion_3s::tion3s_state_t st{};
+    return st;
+  }
+  void state_reset() { this->state_ = {}; }
+};
 
 class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
  public:
@@ -31,10 +50,10 @@ class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
   // uint16_t get_state_type() const { return this->state_type_; }
 };
 
-class Tion3sTest : public esphome::tion::Tion3sClimate {
+class Tion3sTest : public esphome::tion::Tion3sApiComponent {
  public:
   Tion3sTest(dentra::tion::Tion3sApi *api, esphome::tion::TionVPortType vport_type)
-      : esphome::tion::Tion3sClimate(api, vport_type) {
+      : esphome::tion::Tion3sApiComponent(api, vport_type) {
     // using this_t = typename std::remove_pointer_t<decltype(this)>;
     // api->on_state.template set<this_t, &this_t::on_state>(*this);
     auto &tr = api->get_traits_();
@@ -43,16 +62,7 @@ class Tion3sTest : public esphome::tion::Tion3sClimate {
     tr.max_fan_speed = 6;
   }
 
-  esphome::tion::TionVPortType get_vport_type() const { return this->vport_type_; }
-
-  dentra::tion::TionState &state() { return this->state_; };
-  void state_reset() { this->state_ = {}; }
-
-  // void on_state(const dentra::tion::tion3s_state_t &state, uint32_t request_id) {
-  //   this->state_ = this->state = state;
-  //   ESP_LOGD(TAG, "Received tion3s_state_t %s", hexencode_cstr(&state, sizeof(state)));
-  //   this->update_state();
-  // }
+  void state_reset() { ESP_LOGE(TAG, "no reset, may fail"); }
 };
 
 bool test_api_3s() {
@@ -65,49 +75,48 @@ bool test_api_3s() {
   Tion3sBleIOTest io(&client);
   Tion3sBleVPortTest vport(&io);
   Tion3sBleVPortApiTest api(&vport);
-  Tion3sTest comp(&api, vport.get_type());
 
   io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
   // vport.set_persistent_connection(true);
 
-  cloak::setup_and_loop({&vport, &comp});
+  cloak::setup_and_loop({&vport});
 
   api.request_state();
   vport.call_loop();
   res &= cloak::check_data("request_state", io, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  comp.state().firmware_version = 0xFFFF;
-  comp.state().gate_position = dentra::tion::TionGatePosition::INDOOR;
-  api.write_state(comp.state(), 0);
+  api.st().firmware_version = 0xFFFF;
+  api.st().gate_position = dentra::tion::TionGatePosition::INDOOR;
+  api.write_state(api.st(), 0);
   vport.call_loop();
   res &= cloak::check_data("write_state empty", io, "3D.02.00.00.00.00.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  api.reset_filter(comp.state());
+  api.reset_filter();
   vport.call_loop();
   res &= cloak::check_data("reset_filter", io, "3D.02.00.00.00.00.01.02.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  comp.state().fan_speed = 1;
-  comp.state().heater_state = true;
-  comp.state().power_state = true;
-  comp.state().sound_state = true;
-  comp.state().target_temperature = 23;
-  comp.state().filter_time_left = 79 * 3600 * 24;
-  // comp.state().hours = 14;
-  // comp.state().minutes = 45;
-  comp.state().gate_position = dentra::tion::TionGatePosition::OUTDOOR;
-  api.write_state(comp.state(), 0);
+  api.st().fan_speed = 1;
+  api.st().heater_state = true;
+  api.st().power_state = true;
+  api.st().sound_state = true;
+  api.st().target_temperature = 23;
+  api.st().filter_time_left = 79 * 3600 * 24;
+  // api.st().hours = 14;
+  // api.st().minutes = 45;
+  api.st().gate_position = dentra::tion::TionGatePosition::OUTDOOR;
+  api.write_state(api.st(), 0);
   vport.call_loop();
   res &= cloak::check_data("write_state params", io, "3D.02.01.17.02.0B.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  auto copy = comp.state();
-  comp.state_reset();
+  auto copy = api.st();
+  api.state_reset();
   io.test_data_push("B3.10.21.17.0B.00.00.00.00.4F.00.00.00.00.00.00.00.FF.FF.5A");
-  auto act = std::vector<uint8_t>((uint8_t *) &comp.state(), (uint8_t *) &comp.state() + sizeof(comp.state()));
+  auto act = std::vector<uint8_t>((uint8_t *) &api.st(), (uint8_t *) &api.st() + sizeof(api.st()));
   auto exp = std::vector<uint8_t>((uint8_t *) &copy, (uint8_t *) &copy + sizeof(copy));
   if (!cloak::check_data_(act, exp)) {
     res &= false;
-    copy.dump("copy", api.traits());
-    comp.state().dump("orig", api.traits());
+    // copy.dump("copy", api.traits());
+    // api.st().dump("orig", api.traits());
   }
 
   return res;
@@ -123,13 +132,12 @@ bool test_3s() {
   Tion3sBleIOTest io(&client);
   Tion3sBleVPortTest vport(&io);
   Tion3sBleVPortApiTest api(&vport);
-  Tion3sTest comp(&api, vport.get_type());
 
   vport.set_api(&api);
 
-  cloak::setup_and_loop({&vport, &comp});
+  cloak::setup_and_loop({&vport});
 
-  cloak::check_data("comp vport_type", comp.get_vport_type(), esphome::tion::TionVPortType::VPORT_BLE);
+  // cloak::check_data("comp vport_type", comp.get_vport_type(), esphome::tion::TionVPortType::VPORT_BLE);
   // cloak::check_data("vport state_type", vport.get_state_type(), 0x10B3);
 
   vport.pair();
@@ -147,14 +155,13 @@ bool test_uart_3s() {
   Tion3sUartIOTest io(&uart);
   Tion3sUartVPortTest vport(&io);
   Tion3sUartVPortApiTest api(&vport);
-  Tion3sTest comp(&api, esphome::tion::TionVPortType::VPORT_UART);
 
-  cloak::setup_and_loop({&vport, &comp});
+  cloak::setup_and_loop({&vport});
   for (int i = 0; i < 5; i++) {
     vport.call_loop();
   }
 
-  auto act = std::vector<uint8_t>((uint8_t *) &comp.state(), (uint8_t *) &comp.state() + sizeof(comp.state()));
+  auto act = std::vector<uint8_t>((uint8_t *) &api.st(), (uint8_t *) &api.st() + sizeof(api.st()));
   // FIXME transform TionState to orig 3s state
   res &= cloak::check_data_(act, state);
 
@@ -165,10 +172,10 @@ bool test_uart_3s() {
   res &= cloak::check_data("send_heartbeat call", api.send_heartbeat(), false);
   res &= cloak::check_data("request_dev_info call", api.request_dev_info(), false);
 
-  comp.state().heater_state = false;
-  printf("0x%04X\n", comp.state().filter_time_left);
+  api.st().heater_state = false;
+  printf("0x%04X\n", api.st().filter_time_left);
 
-  res &= cloak::check_data("reset_filter call", api.reset_filter(comp.state()), true);
+  res &= cloak::check_data("reset_filter call", api.reset_filter(api.st()), true);
   vport.call_loop();
   res &= cloak::check_data("reset_filter data", uart, "3D:02:01:17:02:0A:01:02:00:00:00:00:00:00:00:00:00:00:00:5A");
 

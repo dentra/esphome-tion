@@ -13,11 +13,8 @@ namespace tion {
 using Tion4sUartIO = TionUartIO<dentra::tion::Tion4sUartProtocol>;
 
 class Tion4sUartVPort : public TionVPortUARTComponent<Tion4sUartIO> {
-  using TionState = dentra::tion::TionState;
-  using TionGatePosition = dentra::tion::TionGatePosition;
-
  public:
-  explicit Tion4sUartVPort(Tion4sUartIO *io) : TionVPortUARTComponent(io) {}
+  explicit Tion4sUartVPort(io_type *io) : TionVPortUARTComponent(io) {}
 
   void dump_config() override;
   void setup() override;

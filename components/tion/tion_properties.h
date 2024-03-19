@@ -260,7 +260,11 @@ struct Recirculation {
 };
 
 struct Boost : public binary_sensor::Boost {
-  static void set(TionApiComponent *api, bool state) { api->api()->enable_boost(state, api->make_call()); }
+  static void set(TionApiComponent *api, bool state) {
+    auto call = api->make_call();
+    api->api()->enable_boost(state, call);
+    call->perform();
+  }
 };
 
 }  // namespace switch_
@@ -369,13 +373,13 @@ struct BoostTimeLeft {
 
 struct FanPower {
   static float get(TionApiComponent *api, const TionState &state) {
-    return api->traits().max_fan_power[state.power_state ? state.fan_speed : 0] / 100.0f;
+    return api->traits().max_fan_power[state.power_state ? state.fan_speed : 0] * 0.01f;
   }
 };
 
 struct Power {
   static float get(TionApiComponent *api, const TionState &state) {
-    return FanPower::get(api, state) + HeaterPower::get(api, state) * 0.001;
+    return (FanPower::get(api, state) + HeaterPower::get(api, state)) * 0.001;
   }
 };
 
@@ -423,11 +427,11 @@ struct TargetTemperature : public sensor::TargetTemperature {
 };
 
 struct BoostTime {
-  static int8_t get(TionApiComponent *api) { return api->traits().boost_time / 60; }
-  static void set(TionApiComponent *api, int8_t state) { api->api()->set_boost_time(state * 60); }
+  static uint8_t get(TionApiComponent *api) { return api->traits().boost_time / 60; }
+  static void set(TionApiComponent *api, uint8_t state) { api->api()->set_boost_time(state * 60); }
 
-  static constexpr int8_t get_min(TionApiComponent *api) { return 1; }
-  static constexpr int8_t get_max(TionApiComponent *api) { return 60; }
+  static constexpr uint8_t get_min(TionApiComponent *api) { return 1; }
+  static constexpr uint8_t get_max(TionApiComponent *api) { return 60; }
 };
 
 }  // namespace number
@@ -499,7 +503,10 @@ struct AirIntake {
 struct Presets {
   static std::vector<std::string> get_options(TionApiComponent *api) {
     if (api->api()->has_presets()) {
-      return api->api()->get_presets();
+      const auto presets = api->api()->get_presets();
+      std::vector<std::string> result(presets.size());
+      std::copy(presets.begin(), presets.end(), result.begin());
+      return result;
     }
     return {};
   };

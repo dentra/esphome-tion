@@ -3,6 +3,7 @@ from typing import Any
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome import automation
 
 # from esphome.components import binary_sensor as esphome_binary_sensor
 # from esphome.components import button as esphome_button
@@ -19,9 +20,11 @@ from esphome.const import (
     CONF_HEATER,
     CONF_ICON,
     CONF_ID,
+    CONF_ON_STATE,
     CONF_POWER,
     CONF_STATE_CLASS,
     CONF_TEMPERATURE,
+    CONF_TRIGGER_ID,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
@@ -33,29 +36,28 @@ from .. import vport  # pylint: disable=relative-beyond-top-level
 CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["etl", "tion-api"]
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_TION_API_BASE_ID = "tion_api_base_id"
-CONF_TION_API_ID = "tion_api_id"
+CONF_TION_ID = "tion_id"
 CONF_TION_COMPONENT_CLASS = "tion_component_class"
 
 CONF_PRESETS = "presets"
-CONF_PRESET_FAN_SPEED = "fan_speed"
-CONF_PRESET_TEMPERATURE = CONF_TEMPERATURE
-CONF_PRESET_GATE_POSITION = "gate_position"
+CONF_FAN_SPEED = "fan_speed"
+CONF_GATE_POSITION = "gate_position"
 CONF_BUTTON_PRESETS = "button_presets"
 
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
 CONF_BATCH_TIMEOUT = "batch_timeout"
 
-
 tion_ns = cg.esphome_ns.namespace("tion")
+dentra_tion_ns = cg.global_ns.namespace("dentra").namespace("tion")
+
 TionVPortApi = tion_ns.class_("TionVPortApi")
 TionApiComponent = tion_ns.class_("TionApiComponent", cg.Component)
 
-dentra_tion_ns = cg.global_ns.namespace("dentra").namespace("tion")
+TionStateRef = dentra_tion_ns.namespace("TionState").operator("ref").operator("const")
 TionGatePosition = dentra_tion_ns.namespace("TionGatePosition")
+
+StateTrigger = tion_ns.class_("StateTrigger", automation.Trigger.template(TionStateRef))
 
 BREEZER_TYPES = {
     "o2": tion_ns.class_("TionO2ApiComponent", TionApiComponent),
@@ -72,13 +74,13 @@ PRESET_GATE_POSITIONS = {
 }
 
 
-CUSTOM_PRESET_SCHEMA = cv.Schema(
+PRESET_SCHEMA = cv.Schema(
     {
-        cv.Optional(CONF_POWER): cv.boolean,
+        cv.Optional(CONF_POWER, default=True): cv.boolean,
         cv.Optional(CONF_HEATER): cv.boolean,
-        cv.Optional(CONF_PRESET_FAN_SPEED, default=0): cv.int_range(min=0, max=6),
-        cv.Optional(CONF_PRESET_TEMPERATURE, default=0): cv.int_range(min=-30, max=30),
-        cv.Optional(CONF_PRESET_GATE_POSITION, default="none"): cv.one_of(
+        cv.Optional(CONF_FAN_SPEED, default=0): cv.int_range(min=0, max=6),
+        cv.Optional(CONF_TEMPERATURE, default=0): cv.int_range(min=-30, max=30),
+        cv.Optional(CONF_GATE_POSITION, default="none"): cv.one_of(
             *PRESET_GATE_POSITIONS, lower=True
         ),
     }
@@ -86,10 +88,10 @@ CUSTOM_PRESET_SCHEMA = cv.Schema(
 
 BUTTON_PRESETS_SCHEMA = cv.Schema(
     {
-        cv.Required(CONF_PRESET_TEMPERATURE): cv.All(
+        cv.Required(CONF_TEMPERATURE): cv.All(
             cv.ensure_list(cv.int_range(min=1, max=25)), cv.Length(min=3, max=3)
         ),
-        cv.Required(CONF_PRESET_FAN_SPEED): cv.All(
+        cv.Required(CONF_FAN_SPEED): cv.All(
             cv.ensure_list(cv.int_range(min=1, max=6)), cv.Length(min=3, max=3)
         ),
     }
@@ -103,6 +105,32 @@ def check_type(key, typ):
         return config
 
     return validator
+
+
+CONFIG_SCHEMA = cv.All(
+    cv.ensure_list(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.declare_id(TionApiComponent),
+                cv.GenerateID(CONF_TION_ID): cv.declare_id(TionVPortApi),
+                cv.Required(CONF_TYPE): cv.one_of(*BREEZER_TYPES, lower=True),
+                cv.Optional(CONF_BUTTON_PRESETS): BUTTON_PRESETS_SCHEMA,
+                cv.Optional(CONF_STATE_TIMEOUT, default="3s"): cv.update_interval,
+                cv.Optional(
+                    CONF_BATCH_TIMEOUT, default="200ms"
+                ): cv.positive_time_period_milliseconds,
+                cv.Optional(CONF_FORCE_UPDATE): cv.boolean,
+                cv.Optional(CONF_PRESETS): cv.Schema({cv.string_strict: PRESET_SCHEMA}),
+                cv.Optional(CONF_ON_STATE): automation.validate_automation(
+                    {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(StateTrigger)}
+                ),
+            }
+        )
+        .extend(vport.VPORT_CLIENT_SCHEMA)
+        .extend(cv.polling_component_schema("15s")),
+        check_type(CONF_BUTTON_PRESETS, "lt"),
+    ),
+)
 
 
 # async def setup_binary_sensor(config: dict, key: str, setter):
@@ -182,9 +210,7 @@ async def setup_switch(config: dict, key: str, setter, parent):
 
 
 def pc_schema(schema: cv.Schema, pcfg: dict):
-    schema = schema.extend(
-        {cv.GenerateID(CONF_TION_API_ID): cv.use_id(TionApiComponent)}
-    )
+    schema = schema.extend({cv.GenerateID(CONF_TION_ID): cv.use_id(TionApiComponent)})
     if pcfg:
         schema = schema.extend(
             {cv.Required(CONF_TYPE): cv.one_of(*pcfg.keys(), lower=True)}
@@ -241,7 +267,7 @@ async def new_pc_component(
                 val = esphome_sensor.STATE_CLASSES[val]
             cg.add(getattr(var, f"set_{key}")(val))
 
-    api: ID = config[CONF_TION_API_ID]
+    api: ID = config[CONF_TION_ID]
     paren = await cg.get_variable(api)
     if props and CONF_TION_COMPONENT_CLASS not in props:
         var = await ctor(config, cg.TemplateArguments(get_pc_class()), paren, **kwargs)
@@ -281,43 +307,25 @@ async def new_pc_component(
     return var
 
 
-CONFIG_SCHEMA = cv.All(
-    cv.Schema(
-        {
-            cv.GenerateID(): cv.declare_id(TionApiComponent),
-            cv.Required(CONF_TYPE): cv.one_of(*BREEZER_TYPES, lower=True),
-            cv.Optional(CONF_BUTTON_PRESETS): BUTTON_PRESETS_SCHEMA,
-            cv.GenerateID(CONF_TION_API_ID): cv.declare_id(TionVPortApi),
-            cv.Optional(CONF_STATE_TIMEOUT, default="3s"): cv.update_interval,
-            cv.Optional(
-                CONF_BATCH_TIMEOUT, default="200ms"
-            ): cv.positive_time_period_milliseconds,
-            cv.Optional(CONF_FORCE_UPDATE): cv.boolean,
-            cv.Optional(CONF_PRESETS): cv.Schema(
-                {cv.string_strict: CUSTOM_PRESET_SCHEMA}
-            ),
-        }
-    )
-    .extend(vport.VPORT_CLIENT_SCHEMA)
-    .extend(cv.polling_component_schema("15s")),
-    check_type(CONF_BUTTON_PRESETS, "lt"),
-)
-
-
-async def _setup_tion_api(config: dict):
-    component_class: MockObjClass = BREEZER_TYPES[config[CONF_TYPE]]
-
+async def new_vport_api_wrapper(config: dict, component_class: MockObjClass):
     # get vport instance
     prt = await vport.vport_get_var(config)
     # create TionVPortApi wrapper
     api = cg.new_Pvariable(
-        config[CONF_TION_API_ID],
+        config[CONF_TION_ID],
         cg.TemplateArguments(
             vport.vport_find(config).type.class_("frame_spec_type"),
             component_class.class_("Api"),
         ),
         prt,
     )
+    return prt, api
+
+
+async def _setup_tion_api(config: dict):
+    component_class: MockObjClass = BREEZER_TYPES[config[CONF_TYPE]]
+
+    prt, api = await new_vport_api_wrapper(config, component_class)
     cg.add(prt.set_api(api))
 
     component_id: ID = config[CONF_ID]
@@ -346,10 +354,10 @@ def _setup_tion_api_presets(config: dict, var: cg.MockObj):
     for preset in config[CONF_PRESETS]:
         preset_name = str(preset).strip()
         if preset_name.lower() == "none":
-            _LOGGER.warning("Preset 'none' is reserved")
+            logging.warning("Preset 'none' is reserved")
             continue
         if preset_name.lower() in presets:
-            _LOGGER.warning("Preset '%s' is already exists", preset)
+            logging.warning("Preset '%s' is already exists", preset)
             continue
         preset = config[CONF_PRESETS][preset_name]
         cg.add(
@@ -357,7 +365,7 @@ def _setup_tion_api_presets(config: dict, var: cg.MockObj):
                 preset_name,
                 cg.StructInitializer(
                     "",
-                    ("target_temperature", preset[CONF_PRESET_TEMPERATURE]),
+                    ("target_temperature", preset[CONF_TEMPERATURE]),
                     (
                         "heater_state",
                         int(preset[CONF_HEATER]) if CONF_HEATER in preset else -1,
@@ -366,10 +374,10 @@ def _setup_tion_api_presets(config: dict, var: cg.MockObj):
                         "power_state",
                         int(preset[CONF_POWER]) if CONF_POWER in preset else -1,
                     ),
-                    ("fan_speed", preset[CONF_PRESET_FAN_SPEED]),
+                    ("fan_speed", preset[CONF_FAN_SPEED]),
                     (
                         "gate_position",
-                        PRESET_GATE_POSITIONS[preset[CONF_PRESET_GATE_POSITION]],
+                        PRESET_GATE_POSITIONS[preset[CONF_GATE_POSITION]],
                     ),
                 ),
             )
@@ -388,13 +396,21 @@ def _setup_tion_api_button_presets(config: dict, var: cg.MockObj):
             cg.StructInitializer(
                 "",
                 ("tmp", button_presets[CONF_TEMPERATURE]),
-                ("fan", button_presets[CONF_PRESET_FAN_SPEED]),
+                ("fan", button_presets[CONF_FAN_SPEED]),
             )
         )
     )
 
 
+async def _setup_tion_api_automation(config: dict, var: cg.MockObj):
+    for conf in config.get(CONF_ON_STATE, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)
+
+
 async def to_code(config: dict):
-    var = await _setup_tion_api(config)
-    _setup_tion_api_presets(config, var)
-    _setup_tion_api_button_presets(config, var)
+    for conf in config:
+        var = await _setup_tion_api(conf)
+        _setup_tion_api_presets(conf, var)
+        _setup_tion_api_button_presets(conf, var)
+        await _setup_tion_api_automation(conf, var)

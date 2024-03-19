@@ -25,7 +25,12 @@ class TionTextSensor : public text_sensor::TextSensor, public Component, public 
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  void dump_config() override { LOG_TEXT_SENSOR("", "Tion TextSensor", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_TEXT_SENSOR("", "Tion TextSensor", this);
+  }
 
   void setup() override {
     this->parent_->add_on_state_callback([this](const TionState *state) {

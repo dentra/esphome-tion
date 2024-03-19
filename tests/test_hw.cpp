@@ -251,7 +251,9 @@ bool test_hw_ble() {
   vport.call_loop();
   res &= cloak::check_data("send_heartbeat", io, "80.0C.00.3A.AD.32.39.01.00.00.00.88.08");
 
-  api.request_state();
+  api.request_state();  // request_state alsо requests dev_info first
+  vport.call_loop();
+  res &= cloak::check_data("request_dev_info", io, "80.0C.00.3A.AD.32.33.01.00.00.00.CE.A6");
   vport.call_loop();
   res &= cloak::check_data("request_state", io, "80.0C.00.3A.AD.32.32.01.00.00.00.64.F7");
 

@@ -26,7 +26,12 @@ class TionBinarySensor : public binary_sensor::BinarySensor, public Component, p
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  void dump_config() override { LOG_BINARY_SENSOR("", "Tion BinarySensor", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_BINARY_SENSOR("", "Tion BinarySensor", this);
+  }
 
   void setup() override {
     if (!PC::is_supported(this)) {

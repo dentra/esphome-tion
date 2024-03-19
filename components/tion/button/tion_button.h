@@ -29,7 +29,12 @@ template<class C> class TionButton : public button::Button, public Component, pu
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-  void dump_config() override { LOG_BUTTON("", "Tion Button", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_BUTTON("", "Tion Button", this);
+  }
 
   void setup() override {
     if (!C::is_supported(this->parent_)) {

@@ -15,18 +15,25 @@ namespace tion {
 
 // C - PropertyController
 template<class C> class TionSwitch : public switch_::Switch, public Component, public Parented<TionApiComponent> {
-  using TionState = dentra::tion::TionState;
-  using PC = property_controller::Controller<C>;
   friend class property_controller::Controller<C>;
 
   constexpr static const auto *TAG = "tion_switch";
+
+ protected:
+  using TionState = dentra::tion::TionState;
+  using PC = property_controller::Controller<C>;
 
  public:
   explicit TionSwitch(TionApiComponent *api) : Parented(api) {}
 
   float get_setup_priority() const override { return setup_priority::LATE; }
 
-    void dump_config() override { LOG_SWITCH("", "Tion Switch", this); }
+  void dump_config() override {
+    if (this->is_failed()) {
+      return;
+    }
+    LOG_SWITCH("", "Tion Switch", this);
+  }
 
   void setup() override {
     if (!PC::is_supported(this)) {

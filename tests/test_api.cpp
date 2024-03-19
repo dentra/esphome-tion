@@ -12,6 +12,7 @@ class TestTionApiBase : public dentra::tion::TionApiBase {
  public:
   void request_state() override { ESP_LOGE(TAG, "request_state is not implemented."); }
   void write_state(dentra::tion::TionStateCall *call) override { ESP_LOGE(TAG, "write_state is not implemented."); }
+  void reset_filter() override { ESP_LOGE(TAG, "reset_filter is not implemented."); }
 };
 
 class ApiTest {
