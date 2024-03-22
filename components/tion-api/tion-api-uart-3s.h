@@ -1,6 +1,5 @@
 #pragma once
 
-#include "tion-api-3s.h"
 #include "tion-api-uart.h"
 
 namespace dentra {

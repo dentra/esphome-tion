@@ -177,7 +177,7 @@ number:
     restore_value: true
 
 select:
-    # Optional, Air Intake control.
+  # Optional, Air Intake control.
   - platform: tion
     type: air_intake
     name: Air Intake
@@ -223,4 +223,3 @@ button:
   #   on_press:
   #     lambda: id(tion_ble_vport).reset_pair();
   #   entity_category: config
-

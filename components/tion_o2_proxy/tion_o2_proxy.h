@@ -26,7 +26,7 @@ class TionO2UartIO : public tion::TionUartIO<TionO2UartProtocolProxy> {
 
 class TionO2Proxy;
 
-class TionO2ApiProxy : public dentra::tion::TionApiBase {
+class TionO2ApiProxy : public dentra::tion::TionApiBase, public dentra::tion::TionApiWriter {
  public:
   void read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size);
   void set_parent(TionO2Proxy *parent) { this->parent_ = parent; }

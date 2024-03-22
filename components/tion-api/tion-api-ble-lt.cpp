@@ -44,7 +44,7 @@ const char *TionLtBleProtocol::get_ble_char_tx() const { return "98f00002-3788-8
 const char *TionLtBleProtocol::get_ble_char_rx() const { return "98f00003-3788-83ea-453e-f52244709ddb"; }
 
 bool TionLtBleProtocol::read_data(const uint8_t *data, size_t size) {
-  TION_LOGV(TAG, "Read packet: %s", hexencode(data, size).c_str());
+  TION_LOGV(TAG, "Read packet: %s", hex_cstr(data, size));
   if (data == nullptr || size == 0) {
     TION_LOGW(TAG, "Packet is empty");
     return false;
@@ -87,7 +87,7 @@ bool TionLtBleProtocol::read_data(const uint8_t *data, size_t size) {
 
 // TODO remove return type
 bool TionLtBleProtocol::read_frame_(const void *data, uint32_t size) {
-  TION_LOGV(TAG, "Read frame: %s", hexencode(data, size).c_str());
+  TION_LOGV(TAG, "Read frame: %s", hex_cstr(data, size));
   if (!this->reader) {
     TION_LOGE(TAG, "Reader is not configured");
     return false;
@@ -113,7 +113,7 @@ bool TionLtBleProtocol::read_frame_(const void *data, uint32_t size) {
 }
 
 bool TionLtBleProtocol::write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
-  TION_LOGV(TAG, "Write frame 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+  TION_LOGV(TAG, "Write frame 0x%04X: %s", frame_type, hex_cstr(frame_data, frame_data_size));
 
   uint8_t tx_buf[frame_data_size + sizeof(TionLtRawBleFrame)];
   auto *tx_frame = reinterpret_cast<TionLtRawBleFrame *>(tx_buf);
@@ -132,7 +132,7 @@ bool TionLtBleProtocol::write_frame(uint16_t frame_type, const void *frame_data,
 }
 
 bool TionLtBleProtocol::write_packet_(const void *data, uint16_t size) const {
-  TION_LOGV(TAG, "Write BLE packet: %s", hexencode(data, size).c_str());
+  TION_LOGV(TAG, "Write BLE packet: %s", hex_cstr(data, size));
 
   if (!this->writer) {
     TION_LOGE(TAG, "Writer is not configured");

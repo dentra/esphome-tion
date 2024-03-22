@@ -1,19 +1,28 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
-
-#define PACKED __attribute__((packed))
 
 #ifdef TION_ESPHOME
 #include "esphome/core/helpers.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
-#define tion_hexencode(data, size) esphome::format_hex_pretty(data, size)
-#define tion_yield() esphome::yield()
-#define tion_millis() esphome::millis()
+#endif
+
+namespace dentra {
+namespace tion {
+
+#ifdef TION_ESPHOME
+inline std::string tion_hexencode(const void *data, uint32_t size) {
+  return esphome::format_hex_pretty(static_cast<const uint8_t *>(data), size);
+}
+inline void yield() { esphome::yield(); }
+inline uint32_t millis() { return esphome::millis(); }
 using esphome::optional;
 #else
-#define tion_yield()
+#define PACKED __attribute__((packed))
+std::string tion_hexencode(const void *data, uint32_t size);
+inline void yield() {}
 #include <optional>
 using std::optional;
 #endif
@@ -23,16 +32,7 @@ using std::optional;
 #define __builtin_bswap16 __bswap_16
 #endif
 
-namespace dentra {
-namespace tion {
-
-#ifndef TION_ESPHOME
-std::string tion_hexencode(const uint8_t *data, uint32_t size);
-#endif
-
-inline std::string hexencode(const void *data, uint32_t size) {
-  return tion_hexencode(static_cast<const uint8_t *>(data), size);
-}
+#define hex_cstr(data, size) tion_hexencode(data, size).c_str()
 
 }  // namespace tion
 }  // namespace dentra

@@ -33,9 +33,11 @@ class TionClimate : public climate::Climate, public Component, public Parented<T
   void control(const climate::ClimateCall &call) override;
 
   void set_enable_heat_cool(bool enable_heat_cool) { this->enable_heat_cool_ = enable_heat_cool; }
+  void set_enable_fan_auto(bool enable_fan_auto) { this->enable_fan_auto_ = enable_fan_auto; }
 
  protected:
   bool enable_heat_cool_{};
+  bool enable_fan_auto_{};
   void on_state_(const TionState &state);
   bool set_fan_speed_(uint8_t fan_speed);
 };

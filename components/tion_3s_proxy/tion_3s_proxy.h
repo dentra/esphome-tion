@@ -13,7 +13,7 @@ namespace tion_3s_proxy {
 class Tion3sBleProxy;
 
 // This component is connected directly to tion breezer.
-class Tion3sApiProxy : public dentra::tion::TionApiBase {
+class Tion3sApiProxy : public dentra::tion::TionApiBase, public dentra::tion::TionApiWriter {
  public:
   using Api = Tion3sApiProxy;  // used in TionVPortApi wrapper
 
@@ -47,13 +47,12 @@ class Tion3sBleProxy : public Component, public tion::TionUartIO<Tion3sUartProto
   void dump_config() override;
   void loop() override { this->poll(); }
 
-
   void write_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
     this->protocol_.write_frame(frame_type, frame_data, frame_data_size);
   }
 
   uint8_t get_last_cmd() const { return this->last_cmd_; }
-  void reset_last_cmd() {this->last_cmd_ = 0;}
+  void reset_last_cmd() { this->last_cmd_ = 0; }
 
  protected:
   Tion3sApiProxy *api_;

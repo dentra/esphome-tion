@@ -5,11 +5,11 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
 
-# from esphome.components import binary_sensor as esphome_binary_sensor
-# from esphome.components import button as esphome_button
-# from esphome.components import number as esphome_number
 # from esphome.components import select as esphome_select
 # from esphome.components import text_sensor as esphome_text_sensor
+# from esphome.components import binary_sensor as esphome_binary_sensor
+# from esphome.components import button as esphome_button
+from esphome.components import number as esphome_number
 from esphome.components import sensor as esphome_sensor
 from esphome.components import switch as esphome_switch
 from esphome.const import (
@@ -42,11 +42,16 @@ CONF_TION_COMPONENT_CLASS = "tion_component_class"
 CONF_PRESETS = "presets"
 CONF_FAN_SPEED = "fan_speed"
 CONF_GATE_POSITION = "gate_position"
+CONF_AUTO = "auto"
 CONF_BUTTON_PRESETS = "button_presets"
 
 CONF_STATE_TIMEOUT = "state_timeout"
 CONF_STATE_WARNOUT = "state_warnout"
 CONF_BATCH_TIMEOUT = "batch_timeout"
+
+CONF_SETPOINT = "setpoint"
+CONF_MIN_FAN_SPEED = f"min_{CONF_FAN_SPEED}"
+CONF_MAX_FAN_SPEED = f"max_{CONF_FAN_SPEED}"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 dentra_tion_ns = cg.global_ns.namespace("dentra").namespace("tion")
@@ -83,6 +88,7 @@ PRESET_SCHEMA = cv.Schema(
         cv.Optional(CONF_GATE_POSITION, default="none"): cv.one_of(
             *PRESET_GATE_POSITIONS, lower=True
         ),
+        cv.Optional(CONF_AUTO): cv.boolean,
     }
 )
 
@@ -98,10 +104,12 @@ BUTTON_PRESETS_SCHEMA = cv.Schema(
 )
 
 
-def check_type(key, typ):
+def check_type(key, typ, required: bool = False):
     def validator(config):
         if key in config and config[CONF_TYPE] != typ:
             raise cv.Invalid(f"{key} is not valid for the type {typ}")
+        if required and config[CONF_TYPE] == typ and key not in config:
+            raise cv.Invalid(f"{key} is requred for the type {typ}")
         return config
 
     return validator
@@ -173,18 +181,18 @@ async def setup_switch(config: dict, key: str, setter, parent):
 #     return sens
 
 
-# async def setup_number(
-#     config: dict, key: str, setter, min_value: int, max_value: int, step: int
-# ):
-#     """Setup number"""
-#     if key not in config:
-#         return None
-#     numb = await esphome_number.new_number(
-#         config[key], min_value=min_value, max_value=max_value, step=step
-#     )
-#     cg.add(setter(numb))
-#     cg.add_define(f"USE_TION_{key.upper()}")
-#     return numb
+async def setup_number(
+    config: dict, key: str, setter, min_value: int, max_value: int, step: int
+):
+    """Setup number"""
+    if key not in config:
+        return None
+    numb = await esphome_number.new_number(
+        config[key], min_value=min_value, max_value=max_value, step=step
+    )
+    cg.add(setter(numb))
+    cg.add_define(f"USE_TION_{key.upper()}")
+    return numb
 
 
 # async def setup_select(config: dict, key: str, setter, parent, options):
@@ -366,19 +374,14 @@ def _setup_tion_api_presets(config: dict, var: cg.MockObj):
                 cg.StructInitializer(
                     "",
                     ("target_temperature", preset[CONF_TEMPERATURE]),
-                    (
-                        "heater_state",
-                        int(preset[CONF_HEATER]) if CONF_HEATER in preset else -1,
-                    ),
-                    (
-                        "power_state",
-                        int(preset[CONF_POWER]) if CONF_POWER in preset else -1,
-                    ),
+                    ("heater_state", int(preset.get(CONF_HEATER, -1))),
+                    ("power_state", int(preset.get(CONF_POWER, -1))),
                     ("fan_speed", preset[CONF_FAN_SPEED]),
                     (
                         "gate_position",
                         PRESET_GATE_POSITIONS[preset[CONF_GATE_POSITION]],
                     ),
+                    ("auto_state", int(preset.get(CONF_AUTO, -1))),
                 ),
             )
         )

@@ -20,7 +20,6 @@ class Tion3sUartVPortApiTest
  public:
   Tion3sUartVPortApiTest(vport_t *vport)
       : esphome::tion::TionVPortApi<Tion3sUartIOTest::frame_spec_type, dentra::tion::Tion3sApi>(vport) {}
-  bool request_dev_info() const { return false; }
 
   dentra::tion::TionState &st() { return this->state_; }
 };
@@ -29,19 +28,11 @@ class Tion3sBleVPortApiTest
     : public esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi> {
  public:
   Tion3sBleVPortApiTest(vport_t *vport)
-      : esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi>(vport) {
-    auto &tr = this->get_traits_();
-    tr.initialized = true;
-    tr.supports_sound_state = true;
-    tr.max_fan_speed = 6;
-  }
+      : esphome::tion::TionVPortApi<Tion3sBleIOTest::frame_spec_type, dentra::tion::Tion3sApi>(vport) {}
 
   dentra::tion::TionState &st() { return this->state_; }
-  dentra::tion_3s::tion3s_state_t rst() {
-    dentra::tion_3s::tion3s_state_t st{};
-    return st;
-  }
   void state_reset() { this->state_ = {}; }
+  void write_state(const dentra::tion::TionState &st) { this->write_state_(st); }
 };
 
 class Tion3sBleVPortTest : public esphome::tion::Tion3sBleVPort {
@@ -56,10 +47,6 @@ class Tion3sTest : public esphome::tion::Tion3sApiComponent {
       : esphome::tion::Tion3sApiComponent(api, vport_type) {
     // using this_t = typename std::remove_pointer_t<decltype(this)>;
     // api->on_state.template set<this_t, &this_t::on_state>(*this);
-    auto &tr = api->get_traits_();
-    tr.initialized = true;
-    tr.supports_sound_state = true;
-    tr.max_fan_speed = 6;
   }
 
   void state_reset() { ESP_LOGE(TAG, "no reset, may fail"); }
@@ -87,7 +74,7 @@ bool test_api_3s() {
 
   api.st().firmware_version = 0xFFFF;
   api.st().gate_position = dentra::tion::TionGatePosition::INDOOR;
-  api.write_state(api.st(), 0);
+  api.write_state(api.st());
   vport.call_loop();
   res &= cloak::check_data("write_state empty", io, "3D.02.00.00.00.00.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
@@ -104,7 +91,7 @@ bool test_api_3s() {
   // api.st().hours = 14;
   // api.st().minutes = 45;
   api.st().gate_position = dentra::tion::TionGatePosition::OUTDOOR;
-  api.write_state(api.st(), 0);
+  api.write_state(api.st());
   vport.call_loop();
   res &= cloak::check_data("write_state params", io, "3D.02.01.17.02.0B.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
@@ -169,13 +156,10 @@ bool test_uart_3s() {
   vport.call_loop();
   res &= cloak::check_data("request_state data", uart, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
-  res &= cloak::check_data("send_heartbeat call", api.send_heartbeat(), false);
-  res &= cloak::check_data("request_dev_info call", api.request_dev_info(), false);
-
   api.st().heater_state = false;
   printf("0x%04X\n", api.st().filter_time_left);
 
-  res &= cloak::check_data("reset_filter call", api.reset_filter(api.st()), true);
+  api.reset_filter();
   vport.call_loop();
   res &= cloak::check_data("reset_filter data", uart, "3D:02:01:17:02:0A:01:02:00:00:00:00:00:00:00:00:00:00:00:5A");
 
@@ -200,7 +184,8 @@ bool test_uart_3s_proxy() {
 
   esphome::tion::TionVPortApi<esphome::tion::Tion3sUartVPort::frame_spec_type, esphome::tion_3s_proxy::Tion3sApiProxy>
       api_proxy(&vport);
-  esphome::tion_3s_proxy::Tion3sProxy proxy(&api_proxy, &uart_out);
+
+  esphome::tion_3s_proxy::Tion3sBleProxy proxy(&api_proxy, &uart_out);
 
   cloak::setup_and_loop({&vport, &comp, &proxy});
   for (int i = 0; i < 5; i++) {

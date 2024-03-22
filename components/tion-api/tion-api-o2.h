@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "tion-api.h"
+#include "tion-api-writer.h"
 #include "tion-api-o2-internal.h"
 
 namespace dentra {
@@ -14,7 +14,7 @@ size_t get_req_frame_size(uint8_t frame_type);
 // returns response frame size including crc
 size_t get_rsp_frame_size(uint8_t frame_type);
 
-class TionO2Api : public tion::TionApiBase {
+class TionO2Api : public tion::TionApiBase, public tion::TionApiWriter {
  public:
   TionO2Api();
 
@@ -31,6 +31,9 @@ class TionO2Api : public tion::TionApiBase {
   void request_state() override;
   void write_state(tion::TionStateCall *call) override;
   void reset_filter() override { this->reset_filter(this->state_); }
+  /// отображение режима MA_CONNECTED и MA_AUTO на дисплее бризера.
+  /// для того чтобы исключить моргание, необходимо вызывать не реже чем раз в 200мс.
+  void update_work_mode();
 
  protected:
   bool request_connect_() const;

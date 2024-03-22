@@ -13,10 +13,14 @@ _LOGGER = logging.getLogger()
 
 class Emu:
     def __init__(self, name: str, exchange: Protocol, device: Device) -> None:
-        self.device = device
+        self._device = device
         self.alive = threading.Event()
         self.reader = Exchange(name, exchange, self.alive)
         self.thread: threading.Thread = None
+
+    @property
+    def device(self):
+        return self._device
 
     def __del__(self):
         self.stop()

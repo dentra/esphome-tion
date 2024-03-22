@@ -46,13 +46,7 @@ bool test_api_lt() {
   vport.call_loop();
   res &= cloak::check_data("request_dev_info", io, "80.0C.00.3A.AD.09.40.01.00.00.00.D1.DC");
 
-  auto &tr = api.get_traits_();
-  tr.initialized = true;
-  tr.supports_work_time = true;
-  tr.max_fan_speed = 6;
-
   TionState st{};
-
   st.power_state = true;
   st.heater_state = true;
   st.fan_speed = 2;

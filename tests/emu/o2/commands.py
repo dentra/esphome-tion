@@ -80,10 +80,7 @@ CMD_DEV_INFO_RSP = _CmdIdO2(0x17, "DEV_INFO_RSP", 25)
 """Command `17`"""
 
 
-class _CommandO2(Command):
-    def __init__(self, data: bytes = None) -> None:
-        super().__init__(data)
-
+class CommandO2(Command):
     def _ctl_flag(self, name: str, flags: _FlagsO2, flag: _FlagsO2) -> _FlagsO2:
         return set_flag(flags, flag, self._ctl_bool(name, get_flag(flags, flag)))
 
@@ -138,24 +135,24 @@ class ConnectCommand(Command):
 
 class DevModeFlags(_FlagsO2):
     PAIR = enum.auto()
-    """set when pair enabled"""
+    """Бит 0. Включен в моменте сопряжения."""
     USER = enum.auto()
-    """set when user click buttons on breezer"""
+    """Бит 1. Включен, если управление было физическими кнопками на бризере."""
     UNKNOWN2 = enum.auto()
-    """maby unused"""
+    """Бит 2. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN3 = enum.auto()
-    """maby unused"""
+    """Бит 3. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN4 = enum.auto()
-    """maby unused"""
+    """Бит 4. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN5 = enum.auto()
-    """maby unused"""
+    """Бит 5. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN6 = enum.auto()
-    """maby unused"""
+    """Бит 6. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN7 = enum.auto()
-    """maby unused"""
+    """Бит 7. Назаначение на данный момент неизвестно, возможно зарезервированно."""
 
 
-class DevModeCommand(_CommandO2):
+class DevModeCommand(CommandO2):
     """
     Implements commands: `03`, `13`
     """
@@ -187,24 +184,25 @@ class DevModeCommand(_CommandO2):
 
 
 class WorkModeFlags(_FlagsO2):
-    UNKNOWN0 = enum.auto()
+    PAIR_ACCEPTED = enum.auto()
+    """Бит 0. Возможно признак подтверждения, что принят режим сопряжения."""
     RF_CONNECTED = enum.auto()
-    """set when RF module connected"""
-    UNKNOWN2 = enum.auto()
-    """maby set when connecting with MA"""
+    """Бит 1. Установлен когда RF-модуль подключен.d"""
+    MA_PAIRING = enum.auto()
+    """Бит 2. Возможно устанавливаетсмя во время сопряжения с MA."""
     MA_AUTO = enum.auto()
-    """set when MA auto mode enabled"""
+    """Бит 3. Установлен когда включен режим AUTO на MA."""
     MA_CONNECTED = enum.auto()
-    """set when MA connected"""
+    """Бит 4. Установлен когда станция MA подключена."""
     UNKNOWN5 = enum.auto()
-    """maby unused"""
+    """Бит 5. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN6 = enum.auto()
-    """maby unused"""
+    """Бит 6. Назаначение на данный момент неизвестно, возможно зарезервированно."""
     UNKNOWN7 = enum.auto()
-    """maby unused"""
+    """Бит 7. Назаначение на данный момент неизвестно, возможно зарезервированно."""
 
 
-class SetWorkModeCommand(_CommandO2):
+class SetWorkModeCommand(CommandO2):
     """
     Implements commands: `04`, `55`
     """
@@ -215,15 +213,16 @@ class SetWorkModeCommand(_CommandO2):
     # 06 -> ma disconnected      | 0000 0110
     # 16 -> ma connected         | 0001 0110
     # after enabling ma pair
-    # New work mode 0x06 -> 0x02 | 0000 0110 -> 0000 0010
-    # New work mode 0x02 -> 0x03 | 0000 0010 -> 0000 0011
-    # New work mode 0x03 -> 0x07 | 0000 0011 -> 0000 0111
-    # New work mode 0x07 -> 0x03 | 0000 0111 -> 0000 0011
+    #                              7654 3210 -> 7654 3210
+    # New work mode 0x06 -> 0x02 | 0000 0110 -> 0000 0010 [MA_PAIRING|RF_CONNECTED] -> [RF_CONNECTED]
+    # New work mode 0x02 -> 0x03 | 0000 0010 -> 0000 0011  -> [PAIR_ACCEPTED|RF_CONNECTED]
+    # New work mode 0x03 -> 0x07 | 0000 0011 -> 0000 0111  -> [PAIR_ACCEPTED|RF_CONNECTED|MA_PAIRING]
+    # New work mode 0x07 -> 0x03 | 0000 0111 -> 0000 0011  -> [PAIR_ACCEPTED|RF_CONNECTED]
     # some time later
-    # New work mode 0x03 -> 0x02 | 0000 0011 -> 0000 0010
-    # New work mode 0x02 -> 0x12 | 0000 0010 -> 0001 0010
+    # New work mode 0x03 -> 0x02 | 0000 0011 -> 0000 0010 [PAIR_ACCEPTED|RF_CONNECTED] -> [RF_CONNECTED]
+    # New work mode 0x02 -> 0x12 | 0000 0010 -> 0001 0010  -> [RF_CONNECTED|MA_CONNECTED]
     # after disconnect from ma
-    # New work mode 0x12 -> 0x02 | 0001 0010 -> 0000 0010
+    # New work mode 0x12 -> 0x02 | 0001 0010 -> 0000 0010  -> [RF_CONNECTED]
     state: WorkModeFlags = WorkModeFlags(0xFF)
 
     def __init__(self, data: bytes = None):
@@ -251,7 +250,7 @@ class SetWorkModeCommand(_CommandO2):
         state = self.state
         if state == 0xFF:
             state = WorkModeFlags(0)
-        return f"work_mode={state}"
+        return f"work_mode=[{state}]"
 
 
 class DevInfoCommand(Command):
@@ -267,10 +266,17 @@ class DevInfoCommand(Command):
     ```
     """
 
-    sw_version: int = 0x130E
+    unknown0: int = 0x00000004
+    unknown4: int = 0x00000000
+    unknown8: int = 0x00000000
+    unknown12: int = 0x00000000
     hw_version: int = 0x6108
+    sw_version: int = 0x130E
+    unknown21: int = 0x1004
     heater_min: int = 0  # -20
     heater_max: int = 20  # 25
+
+    STRUCT_GET = struct.Struct("<IIIIHHHbb")
 
     def __init__(self, data: bytes = None):
         super().__init__(data)
@@ -278,21 +284,39 @@ class DevInfoCommand(Command):
         self.cmd_rsp = CMD_DEV_INFO_RSP
 
     def get(self) -> bytes:
-        return struct.pack(
-            "<IIIIHHHbb",
-            0x00000004,  # 04 00 00 00
-            0x00000000,  # 00 00 00 00
-            0x00000000,  # 00 00 00 00
-            0x00000000,  # 00 00 00 00
+        return self.STRUCT_GET.pack(
+            self.unknown0,  # 04 00 00 00
+            self.unknown4,  # 00 00 00 00
+            self.unknown8,  # 00 00 00 00
+            self.unknown12,  # 00 00 00 00
             self.hw_version,  # 08 61
             self.sw_version,  # 0E 13
-            0x1004,  # 04 10
+            self.unknown21,  # 04 10
             self.heater_min,  # EC
             self.heater_max,  # 19
         )
 
+    def upd(self, data: bytes) -> None:
+        (
+            self.unknown0,
+            self.unknown4,
+            self.unknown8,
+            self.unknown12,
+            self.hw_version,
+            self.sw_version,
+            self.unknown21,
+            self.heater_min,
+            self.heater_max,
+        ) = self.STRUCT_GET.unpack(data)
+
     def __str__(self) -> str:
-        return f"dev_info[hw={self.hw_version}, sw={self.sw_version}, hmin={self.heater_min}, hmax={self.heater_max}]"
+        return (
+            f"dev_info[hw={self.hw_version:04X}, sw={self.sw_version:04X}"
+            + f", hmin={self.heater_min}, hmax={self.heater_max}"
+            + f", unk0={self.unknown0:X}, unk4={self.unknown4:X}"
+            + f", unk8={self.unknown8:X}, unk4={self.unknown12:X}, unk21={self.unknown21:X}"
+            + "]"
+        )
 
     def mk_req(self) -> tuple[CmdId, bytes]:
         return (self.cmd_req, bytes())
@@ -339,7 +363,7 @@ class StateFlags(_FlagsO2):
     UNKNOWN7 = enum.auto()
 
 
-class StateCommand(_CommandO2):
+class StateCommand(CommandO2):
     """
     Implements commands: `01`, `11`, `02`
 
@@ -375,8 +399,8 @@ class StateCommand(_CommandO2):
 
     source: int = 1
 
-    _STRUCT_GET = struct.Struct("<BbbbBBBBBII")
-    _STRUCT_SET = struct.Struct("<Bb??B")
+    STRUCT_GET = struct.Struct("<BbbbBBBBBII")
+    STRUCT_SET = struct.Struct("<Bb??B")
 
     def __init__(self, data: bytes = None):
         super().__init__(data)
@@ -390,13 +414,13 @@ class StateCommand(_CommandO2):
         self.work_time = work_time
         self.productivity = self.PRODUCTIVITY_MAP[self.fan_speed]
         # _LOGGER.info(
-        #     "Get state: fan_speed=%d, target_temp=%d, power=%d, heat=%d",
+        #     "Get state: fan=%d, T(t)=%d, flags=%s, src=%s",
         #     self.fan_speed,
         #     self.target_temp,
-        #     self.power,
-        #     self.heat,
+        #     self.flags,
+        #     self._src,
         # )
-        return self._STRUCT_GET.pack(
+        return self.STRUCT_GET.pack(
             self.flags,
             self.outdoor_temp,
             self.current_temp,
@@ -423,12 +447,12 @@ class StateCommand(_CommandO2):
             power,
             heat,
             self.source,
-        ) = self._STRUCT_SET.unpack(data)
+        ) = self.STRUCT_SET.unpack(data)
         self.flags = set_flag(self.flags, StateFlags.HEAT, heat)
         self.flags = set_flag(self.flags, StateFlags.POWER, power)
 
         _LOGGER.info(
-            "Set state: fan=%d, T(t)=%d, flags=%s, src=%s",
+            "Set state: fan=%d, T(t)=%d, flags=[%s], src=%s",
             self.fan_speed,
             self.target_temp,
             self.flags,
@@ -437,6 +461,14 @@ class StateCommand(_CommandO2):
         return self.get()
 
     def upd(self, data: bytes) -> None:
+        if self.STRUCT_GET.size != len(data):
+            _LOGGER.warning(
+                "upd required %d bytes, got %d: %s",
+                self.STRUCT_GET.size,
+                len(data),
+                data.hex("."),
+            )
+            return
         (
             flags,
             self.outdoor_temp,
@@ -449,7 +481,7 @@ class StateCommand(_CommandO2):
             self.unknown9,
             self.work_time,
             self.filter_time,
-        ) = self._STRUCT_GET.unpack(data)
+        ) = self.STRUCT_GET.unpack(data)
         self.flags = StateFlags(flags)
 
     def fan_up(self, up: bool = True):
@@ -483,7 +515,7 @@ class StateCommand(_CommandO2):
     def mk_set(self) -> tuple[CmdId, bytes]:
         return (
             self.cmd_set,
-            self._STRUCT_SET.pack(
+            self.STRUCT_SET.pack(
                 self.fan_speed,
                 self.target_temp,
                 get_flag(self.flags, StateFlags.POWER),
@@ -508,7 +540,7 @@ class StateCommand(_CommandO2):
             + f"T(c)={self.current_temp}, "
             + f"T(o)={self.outdoor_temp}, "
             + f"T(t)={self.target_temp}, "
-            + f"flags={self.flags}, "
+            + f"flags=[{self.flags}], "
             + f"prod={self.productivity}, "
             + f"src={self._src},"
             + f"err={self.error:02X}"

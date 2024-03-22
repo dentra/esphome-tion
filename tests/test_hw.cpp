@@ -195,7 +195,7 @@ class Tion4sCompTest : public TionComponentTest<Tion4sApi> {
     api->on_heartbeat_fn.set<this_t, &this_t::on_heartbeat>(*this);
   }
   void on_state(const TionState &state, uint32_t request_id) {}
-  void on_heartbeat(tion_dev_info_t::work_mode_t work_mode) { this->api_->send_heartbeat(); }
+  void on_heartbeat(uint8_t work_mode) { this->api_->send_heartbeat(); }
 };
 
 bool test_hw_uart() {

@@ -12,7 +12,7 @@ class Device(abc.ABC):
 
     def __init__(self, commands: list[Command], disabled_log: list[str]):
         self._commands = commands
-        self._disabled_log = disabled_log
+        self._disabled_log = [] if disabled_log is None else disabled_log
         _LOGGER.info("commands: %s", self._commands)
 
     def _find(
@@ -54,6 +54,9 @@ class Device(abc.ABC):
         return None
 
     def upd(self, pkt: Packet) -> bool:
+        return self.upd_cmd(pkt) is not None
+
+    def upd_cmd(self, pkt: Packet) -> Command:
         lst: list[typing.Callable[[Command], CmdId]] = [
             # lambda c: c.cmd_req,
             lambda c: c.cmd_set,
@@ -64,9 +67,9 @@ class Device(abc.ABC):
             if res:
                 res.upd(pkt.data)
                 # _LOGGER.info("Updating %s with %s", res, pkt)
-                return True
+                return res
         _LOGGER.warning("Can't find command for %s", pkt)
-        return False
+        return None
 
     def instance(self, cls):
         for cmd in self._commands:

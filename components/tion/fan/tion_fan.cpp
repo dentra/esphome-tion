@@ -9,7 +9,7 @@ namespace tion {
 static const char *const TAG = "tion_fan";
 
 fan::FanTraits TionFan::get_traits() {
-  auto traits = fan::FanTraits(false, true, false, this->parent_->api()->traits().max_fan_speed);
+  auto traits = fan::FanTraits(false, true, false, this->parent_->traits().max_fan_speed);
   if (this->parent_->api()->has_presets()) {
     traits.set_supported_preset_modes(this->parent_->api()->get_presets());
   }

@@ -47,6 +47,8 @@ template<class C> class TionSwitch : public switch_::Switch, public Component, p
 
   bool has_state() const { return this->has_state_; }
 
+  dentra::tion::TionApiBase *api() const { return this->parent_->api(); }
+
  protected:
   bool has_state_{};
 

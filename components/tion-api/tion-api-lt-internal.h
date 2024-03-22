@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "tion-api.h"
+#include "tion-api-internal.h"
 
 namespace dentra {
 namespace tion_lt {
@@ -146,37 +146,37 @@ struct tionlt_state_set_t {
   uint8_t test_type;
 
   static tionlt_state_set_t create(const tion::TionState &state, const button_presets_t &button_presets) {
-    tionlt_state_set_t st_set{};
-
-    st_set.power_state = state.power_state;
-    st_set.sound_state = state.sound_state;
-    st_set.led_state = state.led_state;
-    st_set.heater_state = state.heater_state;
-    st_set.ma_auto = state.auto_state;
-
-    // в Tion Remote этот бить не выставляется, возможно он инвертирован
-    // st_set.comm_source = state.auto_state ? tion::CommSource::AUTO : tion::CommSource::USER;
-
-    // перепроверим, что fan_speed != 0
-    st_set.fan_speed = state.fan_speed == 0 ? 1 : state.fan_speed;
-    st_set.target_temperature = state.target_temperature;
-
-    // FIXME корректируем позицию заслонки.
-    // !!! Lite ONLY !!!
-    // Проверить, можем ли мы открыть заслонку при выключенном бризере и вообще упралять ей.
-    // В Tion Remote выставляется так:
-    // gate_pos = (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED;
-    // но с учетом того что  s Tion Remote fan_speed всегда > 0, то вообще всегда OPENED
-    st_set.gate_state = tionlt_state_t::GateState::OPENED;
-
-    // st_set.gate_state =                                        //-//
-    //     state.gate_position == tion::TionGatePosition::OPENED  //-//
-    //         ? tionlt_state_t::GateState::OPENED                //-//
-    //         : tionlt_state_t::GateState::CLOSED;               //-//
-
-    st_set.button_presets = button_presets;
-
-    return st_set;
+    return tionlt_state_set_t{
+        {
+            .power_state = state.power_state,
+            .sound_state = state.sound_state,
+            .led_state = state.led_state,
+            .ma_auto = state.auto_state,
+            .heater_state = state.heater_state,
+            // в Tion Remote этот бит не выставляется, возможно он инвертирован
+            .comm_source = {},  // state.comm_source
+            .factory_reset = {},
+            .error_reset = {},
+            .filter_reset = {},
+            .reserved = {},
+        },
+        // FIXME корректируем позицию заслонки.
+        // !!! Lite ONLY !!!
+        // Проверить, можем ли мы открыть заслонку при выключенном бризере и вообще упралять ей.
+        // В Tion Remote выставляется так:
+        // gate_pos = (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED;
+        // но с учетом того что в Tion Remote fan_speed всегда > 0, то вообще всегда OPENED
+        .gate_state = tionlt_state_t::GateState::OPENED,
+        // .gate_state = state.gate_position == tion::TionGatePosition::OPENED  //-//
+        //                   ? tionlt_state_t::GateState::OPENED                //-//
+        //                   : tionlt_state_t::GateState::CLOSED,               //-//
+        .target_temperature = state.target_temperature,
+        // перепроверим, что fan_speed != 0
+        .fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed,
+        .button_presets = button_presets,
+        .filter_time = {},
+        .test_type = {},
+    };
   }
 };
 

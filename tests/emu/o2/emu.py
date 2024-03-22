@@ -1,11 +1,12 @@
 import logging
+import time
 
 from emu.base import Transport
 
 from ..base import Emu, Exchange, Protocol, Transport
 from .commands import *
 from .device import DeviceO2
-from .packet import Packet
+from .packet import Packet, PacketO2
 from .protocol import ProtocolO2
 
 _LOGGER = logging.getLogger()
@@ -29,8 +30,6 @@ class EmuO2(Emu):
     def __init__(
         self, transport: Transport, disabled_log: list[str] = None, port_name=""
     ) -> None:
-        if not disabled_log:
-            disabled_log = []
         super().__init__(
             port_name,
             ProtocolO2(transport, port_name=port_name),
@@ -117,3 +116,41 @@ class EmuO2Proxy(_EmuO2Proxy):
         self._o2_filter.add(pkt.raw)
 
         _LOGGER.info("O2 new value: %s", pkt)
+
+
+class EmuO2Dev(EmuO2):
+    """Эмулирет клиента, подключенного непостредственно к бризеру."""
+
+    def __init__(self, o2_port: Transport, disabled_log: list[str] = None) -> None:
+        super().__init__(o2_port, disabled_log, "O2")
+
+    @property
+    def o2(self) -> Exchange:
+        return self.reader
+
+    @property
+    def device(self) -> DeviceO2:
+        return self._device
+
+    def loop(self):
+        if pkt := self.o2.read():
+            cmd = self.device.upd_cmd(pkt)
+            _LOGGER.info(str(cmd))
+
+    def request_connect(self):
+        self.o2.write(PacketO2.build_req(self.device.connect))
+
+    def request_dev_info(self):
+        self.o2.write(PacketO2.build_req(self.device.dev_info))
+
+    def request_dev_mode(self):
+        self.o2.write(PacketO2.build_req(self.device.dev_mode))
+
+    def request_state(self):
+        self.o2.write(PacketO2.build_req(self.device.state))
+
+    def write_state(self):
+        self.o2.write(PacketO2.build_set(self.device.state))
+
+    def write_work_mode(self):
+        self.o2.write(PacketO2.build_set(self.device.work_mode))

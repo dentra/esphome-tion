@@ -60,10 +60,10 @@ PROPERTIES = {
         CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
     },
-    # "auto": {
-    #     CONF_DEVICE_CLASS: DEVICE_CLASS_RUNNING,
-    #     CONF_ICON: "mdi:fan-auto",
-    # },
+    "auto": {
+        CONF_DEVICE_CLASS: DEVICE_CLASS_RUNNING,
+        CONF_ICON: "mdi:fan-auto",
+    },
     # aliases
     "buzzer": "sound",
     "heat": "heater",

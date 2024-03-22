@@ -88,7 +88,7 @@ class TionApiComponent : public PollingComponent {
 
   bool has_state() const { return this->has_state_; }
 
-  const dentra::tion::TionTraits &traits() const { return this->api_->traits(); }
+  const dentra::tion::TionTraits &traits() const { return this->api_->get_traits(); }
   const dentra::tion::TionState &state() const { return this->api_->get_state(); }
 
  protected:
@@ -122,7 +122,15 @@ template<class A> class TionApiComponentBase : public TionApiComponent {
   Api *typed_api() { return reinterpret_cast<Api *>(this->api_); }
 };
 
-using TionO2ApiComponent = TionApiComponentBase<dentra::tion_o2::TionO2Api>;
+class TionO2ApiComponent : public TionApiComponentBase<dentra::tion_o2::TionO2Api> {
+ public:
+  explicit TionO2ApiComponent(TionApiComponentBase::Api *api, TionVPortType vport_type)
+      : TionApiComponentBase(api, vport_type) {}
+  void setup() override {
+    this->set_timeout(200, [api = this->typed_api()]() { api->update_work_mode(); });
+  }
+};
+
 using Tion3sApiComponent = TionApiComponentBase<dentra::tion::Tion3sApi>;
 
 class Tion4sApiComponent : public TionApiComponentBase<dentra::tion_4s::Tion4sApi> {

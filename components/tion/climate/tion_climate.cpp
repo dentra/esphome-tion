@@ -25,8 +25,8 @@ int find_climate_preset(const std::string &preset) {
 climate::ClimateTraits TionClimate::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supports_current_temperature(true);
-  traits.set_visual_min_temperature(this->parent_->api()->traits().min_target_temperature);
-  traits.set_visual_max_temperature(this->parent_->api()->traits().max_target_temperature);
+  traits.set_visual_min_temperature(this->parent_->traits().min_target_temperature);
+  traits.set_visual_max_temperature(this->parent_->traits().max_target_temperature);
   traits.set_visual_temperature_step(1.0f);
   traits.set_supported_modes({
       climate::CLIMATE_MODE_OFF,
@@ -36,7 +36,10 @@ climate::ClimateTraits TionClimate::traits() {
   if (this->enable_heat_cool_) {
     traits.add_supported_mode(climate::CLIMATE_MODE_HEAT_COOL);
   }
-  for (uint8_t i = 1, max = i + this->parent_->api()->traits().max_fan_speed; i < max; i++) {
+  if (this->enable_fan_auto_) {
+    traits.add_supported_fan_mode(climate::CLIMATE_FAN_AUTO);
+  }
+  for (uint8_t i = 1, max = i + this->parent_->traits().max_fan_speed; i < max; i++) {
     traits.add_supported_custom_fan_mode(fan_speed_to_mode(i));
   }
 
@@ -97,8 +100,16 @@ void TionClimate::control(const climate::ClimateCall &call) {
     }
   }
 
+  if (call.get_fan_mode().has_value()) {
+    const auto fan_mode = *call.get_fan_mode();
+    if (fan_mode == climate::CLIMATE_FAN_AUTO) {
+      tion->set_auto_state(true);
+    }
+  }
+
   if (call.get_custom_fan_mode().has_value()) {
-    const auto fan_speed = fan_mode_to_speed(*call.get_custom_fan_mode());
+    const auto fan_mode = *call.get_custom_fan_mode();
+    const auto fan_speed = fan_mode_to_speed(fan_mode);
     ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
     tion->set_fan_speed(fan_speed);
   }
@@ -116,19 +127,23 @@ void TionClimate::on_state_(const TionState &state) {
   bool has_changes = false;
 
   climate::ClimateMode mode;
-  climate::ClimateAction action;
+  climate::ClimateAction action =
+      this->enable_fan_auto_ && state.auto_state && this->parent_->api()->get_auto_min_fan_speed() == 0
+          ? climate::CLIMATE_ACTION_IDLE
+          : climate::CLIMATE_ACTION_OFF;
   if (!state.power_state) {
-    mode = climate::CLIMATE_MODE_OFF;
-    action = climate::CLIMATE_ACTION_OFF;
+    if (action == climate::CLIMATE_ACTION_OFF) {
+      mode = climate::CLIMATE_MODE_OFF;
+    } else {
+      mode = state.heater_state ? climate::CLIMATE_MODE_AUTO : climate::CLIMATE_MODE_FAN_ONLY;
+    }
   } else if (state.heater_state) {
     mode = climate::CLIMATE_MODE_HEAT;
-
-    action = state.is_heating(this->parent_->api()->traits())  //-//
+    action = state.is_heating(this->parent_->traits())  //-//
                  ? climate::CLIMATE_ACTION_HEATING
                  : climate::CLIMATE_ACTION_FAN;
   } else {
     mode = climate::CLIMATE_MODE_FAN_ONLY;
-    action = climate::CLIMATE_ACTION_OFF;
   }
 
   if (this->mode != mode) {
@@ -147,7 +162,15 @@ void TionClimate::on_state_(const TionState &state) {
     this->target_temperature = state.target_temperature;
     has_changes = true;
   }
-  if (this->set_fan_speed_(state.fan_speed)) {
+
+  if (this->enable_fan_auto_ && state.auto_state) {
+    if (this->fan_mode.value_or(climate::CLIMATE_FAN_OFF) != climate::CLIMATE_FAN_AUTO) {
+      this->fan_mode = climate::CLIMATE_FAN_AUTO;
+      this->custom_fan_mode.reset();
+      has_changes = true;
+    }
+  } else if (this->set_fan_speed_(state.fan_speed)) {
+    this->fan_mode.reset();
     has_changes = true;
   }
 
@@ -176,7 +199,7 @@ void TionClimate::on_state_(const TionState &state) {
 }
 
 bool TionClimate::set_fan_speed_(uint8_t fan_speed) {
-  if (fan_speed > 0 && fan_speed <= this->parent_->api()->traits().max_fan_speed) {
+  if (fan_speed > 0 && fan_speed <= this->parent_->traits().max_fan_speed) {
     if (fan_mode_to_speed(this->custom_fan_mode) != fan_speed) {
       this->custom_fan_mode = fan_speed_to_mode(fan_speed);
       return true;
@@ -186,7 +209,7 @@ bool TionClimate::set_fan_speed_(uint8_t fan_speed) {
 
   auto ok_fan_speed = this->mode == climate::CLIMATE_MODE_OFF && fan_speed == 0;
   if (!ok_fan_speed) {
-    ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, this->parent_->api()->traits().max_fan_speed);
+    ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, this->parent_->traits().max_fan_speed);
   }
 
   return true;

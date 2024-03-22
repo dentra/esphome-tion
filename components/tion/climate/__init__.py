@@ -10,6 +10,7 @@ TionClimate = tion_ns.class_("TionClimate", climate.Climate, cg.Component)
 ICON_AIR_FILTER = "mdi:air-filter"
 
 CONF_ENABLE_HEAT_COOL = "enable_heat_cool"
+CONF_ENABLE_FAN_AUTO = "enable_fan_auto"
 
 
 def climate_climate_schema(class_: cg.MockObj):
@@ -18,6 +19,7 @@ def climate_climate_schema(class_: cg.MockObj):
             cv.GenerateID(): cv.declare_id(class_),
             cv.Optional(CONF_ICON, default=ICON_AIR_FILTER): cv.icon,
             cv.Optional(CONF_ENABLE_HEAT_COOL): cv.boolean,
+            cv.Optional(CONF_ENABLE_FAN_AUTO): cv.boolean,
         }
     )
 
@@ -35,3 +37,5 @@ async def to_code(config: dict):
     var = await new_pc_component(config, climate_new_climate, None)
     if CONF_ENABLE_HEAT_COOL in config:
         cg.add(var.set_enable_heat_cool(config[CONF_ENABLE_HEAT_COOL]))
+    if CONF_ENABLE_FAN_AUTO in config:
+        cg.add(var.set_enable_fan_auto(config[CONF_ENABLE_FAN_AUTO]))

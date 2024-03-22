@@ -23,13 +23,13 @@ template<typename C> class Controller {
     constexpr static auto TSC = static_cast<TionStateCall *>(nullptr);
 
     template<typename T>
-    auto test_is_supported(TionApiComponent *api)
-        -> std::enable_if_t<sizeof(decltype(T::is_supported(api)) *) != 0, std::true_type>;
+    auto test_is_supported(TionApiComponent *c)
+        -> std::enable_if_t<sizeof(decltype(T::is_supported(c)) *) != 0, std::true_type>;
     template<typename T> std::false_type test_is_supported(...);
 
     template<typename T>
-    auto test_api_state_set(TionApiComponent *api, TionStateCall *call)
-        -> std::enable_if_t<sizeof(decltype(T::set(api, call, 0)) *) != 0, std::true_type>;
+    auto test_api_state_set(TionApiComponent *c, TionStateCall *call)
+        -> std::enable_if_t<sizeof(decltype(T::set(c, call, 0)) *) != 0, std::true_type>;
     template<typename T> std::false_type test_api_state_set(...);
 
     template<typename T>
@@ -38,17 +38,17 @@ template<typename C> class Controller {
     template<typename T> std::false_type test_state_set(...);
 
     template<typename T>
-    auto test_api_get(TionApiComponent *api) -> std::enable_if_t<sizeof(decltype(T::get(api)) *) != 0, std::true_type>;
+    auto test_api_get(TionApiComponent *c) -> std::enable_if_t<sizeof(decltype(T::get(c)) *) != 0, std::true_type>;
     template<typename T> std::false_type test_api_get(...);
 
     template<typename T>
-    auto test_api_state_get(TionApiComponent *api)
-        -> std::enable_if_t<sizeof(decltype(T::get(api, {})) *) != 0, std::true_type>;
+    auto test_api_state_get(TionApiComponent *c)
+        -> std::enable_if_t<sizeof(decltype(T::get(c, {})) *) != 0, std::true_type>;
     template<typename T> std::false_type test_api_state_get(...);
 
     template<typename T>
-    auto test_icon_get(TionApiComponent *api)
-        -> std::enable_if_t<sizeof(decltype(T::get_icon(api)) *) != 0, std::true_type>;
+    auto test_icon_get(TionApiComponent *c)
+        -> std::enable_if_t<sizeof(decltype(T::get_icon(c)) *) != 0, std::true_type>;
     template<typename T> std::false_type test_icon_get(...);
 
    public:
@@ -149,35 +149,33 @@ template<typename C> class Controller {
 
 namespace binary_sensor {
 struct Power {
-  static const char *get_icon(TionApiComponent *api) {
-    return api->state().power_state ? "mdi:power" : "mdi:power-off";
-  }
+  static const char *get_icon(TionApiComponent *c) { return c->state().power_state ? "mdi:power" : "mdi:power-off"; }
 
   static bool get(const TionState &state) { return state.power_state; }
 };
 
 struct Heater {
-  static const char *get_icon(TionApiComponent *api) {
-    return api->state().heater_state ? "mdi:radiator" : "mdi:radiator-off";
+  static const char *get_icon(TionApiComponent *c) {
+    return c->state().heater_state ? "mdi:radiator" : "mdi:radiator-off";
   }
 
   static bool get(const TionState &state) { return state.heater_state; }
 };
 
 struct Sound {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_sound_state; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_sound_state; }
 
-  static const char *get_icon(TionApiComponent *api) {
-    return api->state().sound_state ? "mdi:volume-high" : "mdi:volume-mute";
+  static const char *get_icon(TionApiComponent *c) {
+    return c->state().sound_state ? "mdi:volume-high" : "mdi:volume-mute";
   }
 
   static bool get(const TionState &state) { return state.sound_state; }
 };
 
 struct Led {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_led_state; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_led_state; }
 
-  static const char *get_icon(TionApiComponent *api) { return api->state().led_state ? "mdi:led-on" : "mdi:led-off"; }
+  static const char *get_icon(TionApiComponent *c) { return c->state().led_state ? "mdi:led-on" : "mdi:led-off"; }
 
   static bool get(const TionState &state) { return state.led_state; }
 };
@@ -191,26 +189,26 @@ struct Filter {
 };
 
 struct GateError {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_gate_error; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_gate_error; }
 
   static bool get(const TionState &state) { return state.gate_error_state; }
 };
 
 struct Gate {
-  static const char *get_icon(TionApiComponent *api) {
-    if (api->traits().supports_gate_position_change_mixed && api->state().gate_position == TionGatePosition::MIXED) {
+  static const char *get_icon(TionApiComponent *c) {
+    if (c->traits().supports_gate_position_change_mixed && c->state().gate_position == TionGatePosition::MIXED) {
       return "mdi:valve";
     }
-    return api->state().get_gate_state() ? "mdi:valve-open" : "mdi:valve-closed";
+    return c->state().get_gate_state() ? "mdi:valve-open" : "mdi:valve-closed";
   }
 
   static bool get(const TionState &state) { return state.get_gate_state(); }
 };
 
 struct Heating {
-  static const char *get_icon(TionApiComponent *api) { return Heater::get_icon(api); }
+  static const char *get_icon(TionApiComponent *c) { return Heater::get_icon(c); }
 
-  static bool get(TionApiComponent *api, const TionState &state) { return state.is_heating(api->traits()); }
+  static bool get(TionApiComponent *c, const TionState &state) { return state.is_heating(c->traits()); }
 };
 
 struct Error {
@@ -222,14 +220,14 @@ struct Boost {
 };
 
 struct State {
-  static bool get(TionApiComponent *api) { return !api->has_state(); }
+  static bool get(TionApiComponent *c) { return !c->has_state(); }
 };
 
 }  // namespace binary_sensor
 
 namespace switch_ {
 struct Power : public binary_sensor::Power {
-  static void set(TionApiComponent *api, TionStateCall *call, bool state) { call->set_power_state(state); }
+  static void set(TionApiComponent *c, TionStateCall *call, bool state) { call->set_power_state(state); }
 };
 
 struct Heater : public binary_sensor::Heater {
@@ -249,20 +247,20 @@ struct Auto : public binary_sensor::Auto {
 };
 
 struct Recirculation {
-  static bool is_supported(TionApiComponent *api) {
-    return api->traits().supports_gate_position_change || api->traits().supports_gate_position_change_mixed;
+  static bool is_supported(TionApiComponent *c) {
+    return c->traits().supports_gate_position_change || c->traits().supports_gate_position_change_mixed;
   }
 
-  static const char *get_icon(TionApiComponent *api) { return binary_sensor::Gate::get_icon(api); }
+  static const char *get_icon(TionApiComponent *c) { return binary_sensor::Gate::get_icon(c); }
 
   static bool get(const TionState &state) { return binary_sensor::Gate::get(state); }
   static void set(TionStateCall *call, bool state) { call->set_gate_state(state); }
 };
 
 struct Boost : public binary_sensor::Boost {
-  static void set(TionApiComponent *api, bool state) {
-    auto call = api->make_call();
-    api->api()->enable_boost(state, call);
+  static void set(TionApiComponent *c, bool state) {
+    auto call = c->make_call();
+    c->api()->enable_boost(state, call);
     call->perform();
   }
 };
@@ -271,23 +269,23 @@ struct Boost : public binary_sensor::Boost {
 
 namespace sensor {
 struct FanSpeed {
-  static const char *get_icon(TionApiComponent *api) {
-    if (!api->state().power_state) {
+  static const char *get_icon(TionApiComponent *c) {
+    if (!c->state().power_state) {
       return "mdi:fan-off";
     }
-    if (api->state().boost_time_left > 0) {
+    if (c->state().boost_time_left > 0) {
       return "mdi:fan-clock";
     }
-    if (api->state().auto_state) {
+    if (c->state().auto_state) {
       return "mdi:fan-auto";
     }
-    if (api->state().fan_speed == 1) {
+    if (c->state().fan_speed == 1) {
       return "mdi:fan-speed-1";
     }
-    if (api->state().fan_speed == 2) {
+    if (c->state().fan_speed == 2) {
       return "mdi:fan-speed-2";
     }
-    if (api->state().fan_speed == 3) {
+    if (c->state().fan_speed == 3) {
       return "mdi:fan-speed-3";
     }
     return "mdi:fan";
@@ -295,11 +293,6 @@ struct FanSpeed {
 
   static uint8_t get(const TionState &state) { return state.power_state ? state.fan_speed : 0; }
 };
-
-// struct GatePosition {
-//   static const char *get_icon(TionApiComponent *api) { return binary_sensor::Gate::get_icon(api); }
-//   static uint8_t get(const TionState &state) { return static_cast<uint8_t>(state.gate_position); }
-// };
 
 struct OutdoorTemperature {
   static int8_t get(const TionState &state) { return state.outdoor_temperature; }
@@ -318,17 +311,17 @@ struct Productivity {
 };
 
 struct HeaterVar {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_heater_var; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_heater_var; }
 
   static uint8_t get(const TionState &state) { return state.heater_var; }
 };
 
 struct HeaterPower {
-  static float get(TionApiComponent *api, const TionState &state) { return state.get_heater_power(api->traits()); }
+  static float get(TionApiComponent *c, const TionState &state) { return state.get_heater_power(c->traits()); }
 };
 
 struct WorkTime {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_work_time; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_work_time; }
 
   static uint32_t get(const TionState &state) { return state.work_time; }
 };
@@ -338,31 +331,31 @@ struct FilterTimeLeft {
 };
 
 struct FanTime {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_fan_time; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_fan_time; }
 
   static uint32_t get(const TionState &state) { return state.fan_time; }
 };
 
 struct Airflow {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_airflow_counter; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_airflow_counter; }
 
   static float get(const TionState &state) { return state.airflow_m3; }
 };
 
 struct AirflowCounter {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_airflow_counter; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_airflow_counter; }
 
   static uint32_t get(const TionState &state) { return state.airflow_counter; }
 };
 
 struct PcbCtlTemperature {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_pcb_ctl_temperatire; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_pcb_ctl_temperatire; }
 
   static int8_t get(const TionState &state) { return state.pcb_ctl_temperature; }
 };
 
 struct PcbPwrTemperature {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_pcb_pwr_temperature; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_pcb_pwr_temperature; }
 
   static int8_t get(const TionState &state) { return state.pcb_pwr_temperature; }
 };
@@ -372,14 +365,14 @@ struct BoostTimeLeft {
 };
 
 struct FanPower {
-  static float get(TionApiComponent *api, const TionState &state) {
-    return api->traits().max_fan_power[state.power_state ? state.fan_speed : 0] * 0.01f;
+  static float get(TionApiComponent *c, const TionState &state) {
+    return c->traits().max_fan_power[state.power_state ? state.fan_speed : 0] * 0.01f;
   }
 };
 
 struct Power {
-  static float get(TionApiComponent *api, const TionState &state) {
-    return (FanPower::get(api, state) + HeaterPower::get(api, state)) * 0.001;
+  static float get(TionApiComponent *c, const TionState &state) {
+    return (FanPower::get(c, state) + HeaterPower::get(c, state)) * 0.001;
   }
 };
 
@@ -388,50 +381,57 @@ struct Power {
 namespace number {
 
 struct FanSpeed : public sensor::FanSpeed {
-  static void set(TionApiComponent *api, TionStateCall *call, uint8_t state) {
+  static void set(TionApiComponent *c, TionStateCall *call, uint8_t state) {
     if (state) {
-      if (state != api->state().fan_speed) {
+      if (state != c->state().fan_speed) {
         call->set_power_state(true);
         call->set_fan_speed(state);
       }
     } else {
-      if (api->state().power_state) {
+      if (c->state().power_state) {
         call->set_power_state(false);
       }
     }
   }
 
-  static constexpr uint8_t get_min(TionApiComponent *api) { return 0; }
-  static uint8_t get_max(TionApiComponent *api) { return api->traits().max_fan_speed; }
+  static constexpr uint8_t get_min(TionApiComponent *c) { return 0; }
+  static uint8_t get_max(TionApiComponent *c) { return c->traits().max_fan_speed; }
 };
 
-// struct GatePosition : public sensor::GatePosition {
-//   static void set(TionStateCall *call, uint8_t state) {
-//   call->set_gate_position(static_cast<TionGatePosition>(state)); } static uint8_t get_min(TionApiComponent *api) {
-//   return 0; } static uint8_t get_max(TionApiComponent *api) {
-//     if (api->traits().supports_gate_position_change_mixed) {
-//       return 3;
-//     }
-//     if (api->traits().supports_gate_position_change) {
-//       return 2;
-//     }
-//     return 0;
-//   }
-// };
+struct AutoMinFanSpeed {
+  static uint8_t get(TionApiComponent *c) { return c->api()->get_auto_min_fan_speed(); }
+  static void set(TionApiComponent *c, uint8_t state) { c->api()->set_auto_min_fan_speed(state); }
+  static constexpr uint8_t get_min(TionApiComponent *c) { return 0; }
+  static uint8_t get_max(TionApiComponent *c) { return c->traits().max_fan_speed - 1; }
+};
+
+struct AutoMaxFanSpeed {
+  static uint8_t get(TionApiComponent *c) { return c->api()->get_auto_max_fan_speed(); }
+  static void set(TionApiComponent *c, uint8_t state) { c->api()->set_auto_max_fan_speed(state); }
+  static constexpr uint8_t get_min(TionApiComponent *c) { return 1; }
+  static uint8_t get_max(TionApiComponent *c) { return c->traits().max_fan_speed; }
+};
+
+struct AutoSetpoint {
+  static uint16_t get(TionApiComponent *c) { return c->api()->get_auto_setpoint(); }
+  static void set(TionApiComponent *c, uint16_t state) { c->api()->set_auto_setpoint(state); }
+  static constexpr uint16_t get_min(TionApiComponent *c) { return 500; }
+  static constexpr uint16_t get_max(TionApiComponent *c) { return 1400; }
+};
 
 struct TargetTemperature : public sensor::TargetTemperature {
   static void set(TionStateCall *call, int8_t state) { call->set_target_temperature(state); }
 
-  static int8_t get_min(TionApiComponent *api) { return api->traits().min_target_temperature; }
-  static int8_t get_max(TionApiComponent *api) { return api->traits().max_target_temperature; }
+  static int8_t get_min(TionApiComponent *c) { return c->traits().min_target_temperature; }
+  static int8_t get_max(TionApiComponent *c) { return c->traits().max_target_temperature; }
 };
 
 struct BoostTime {
-  static uint8_t get(TionApiComponent *api) { return api->traits().boost_time / 60; }
-  static void set(TionApiComponent *api, uint8_t state) { api->api()->set_boost_time(state * 60); }
+  static uint8_t get(TionApiComponent *c) { return c->traits().boost_time / 60; }
+  static void set(TionApiComponent *c, uint8_t state) { c->api()->set_boost_time(state * 60); }
 
-  static constexpr uint8_t get_min(TionApiComponent *api) { return 1; }
-  static constexpr uint8_t get_max(TionApiComponent *api) { return 60; }
+  static constexpr uint8_t get_min(TionApiComponent *c) { return 1; }
+  static constexpr uint8_t get_max(TionApiComponent *c) { return 60; }
 };
 
 }  // namespace number
@@ -439,17 +439,10 @@ struct BoostTime {
 namespace text_sensor {
 
 struct Errors {
-  static std::string get(TionApiComponent *api, const TionState &state) {
-    return api->traits().errors_decoder(state.errors);
+  static std::string get(TionApiComponent *c, const TionState &state) {
+    return c->traits().errors_decoder(state.errors);
   };
 };
-
-// struct GatePosition {
-//   static const char *get_icon(TionApiComponent *api) { return binary_sensor::GatePosition::get_icon(api); }
-//   static std::string get(TionApiComponent *api, const TionState &state) {
-//     return state.get_gate_position_str(api->traits());
-//   }
-// };
 
 struct FirmwareVersion {
   static std::string get(const TionState &state) {
@@ -474,11 +467,11 @@ struct HardwareVersion {
 namespace select {
 
 struct AirIntake {
-  static std::vector<std::string> get_options(TionApiComponent *api) {
-    if (api->traits().supports_gate_position_change_mixed) {
+  static std::vector<std::string> get_options(TionApiComponent *c) {
+    if (c->traits().supports_gate_position_change_mixed) {
       return {"outdoor", "indoor", "mixed"};
     }
-    if (api->traits().supports_gate_position_change) {
+    if (c->traits().supports_gate_position_change) {
       return {"inflow", "recirculation"};
     }
     return {};
@@ -501,18 +494,18 @@ struct AirIntake {
 };
 
 struct Presets {
-  static std::vector<std::string> get_options(TionApiComponent *api) {
-    if (api->api()->has_presets()) {
-      const auto presets = api->api()->get_presets();
+  static std::vector<std::string> get_options(TionApiComponent *c) {
+    if (c->api()->has_presets()) {
+      const auto presets = c->api()->get_presets();
       std::vector<std::string> result(presets.size());
       std::copy(presets.begin(), presets.end(), result.begin());
       return result;
     }
     return {};
   };
-  static std::string get(TionApiComponent *api) { return api->api()->get_active_preset(); }
-  static void set(TionApiComponent *api, TionStateCall *call, const std::string &preset) {
-    api->api()->enable_preset(preset, call);
+  static std::string get(TionApiComponent *c) { return c->api()->get_active_preset(); }
+  static void set(TionApiComponent *c, TionStateCall *call, const std::string &preset) {
+    c->api()->enable_preset(preset, call);
   }
 };
 
@@ -521,9 +514,9 @@ struct Presets {
 namespace button {
 
 struct ResetFilter {
-  static bool is_supported(TionApiComponent *api) { return api->traits().supports_reset_filter; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_reset_filter; }
 
-  static void press_action(TionApiComponent *api) { api->api()->reset_filter(); }
+  static void press_action(TionApiComponent *c) { c->api()->reset_filter(); }
 };
 
 }  // namespace button

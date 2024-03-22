@@ -32,7 +32,7 @@ const char *Tion3sBleProtocol::get_ble_char_rx() const { return "6e400003-b5a3-f
 
 // TODO remove return type
 bool Tion3sBleProtocol::read_data(const uint8_t *data, size_t size) {
-  TION_LOGV(TAG, "Read data: %s", hexencode(data, size).c_str());
+  TION_LOGV(TAG, "Read data: %s", hex_cstr(data, size));
   if (!this->reader) {
     TION_LOGE(TAG, "Reader is not configured");
     return false;

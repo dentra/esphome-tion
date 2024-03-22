@@ -32,7 +32,7 @@ void Tion4sUartProtocol::read_uart_data(TionUartReader *io) {
     if (this->read_frame_(io) == READ_NEXT_LOOP) {
       break;
     }
-    tion_yield();
+    tion::yield();
   }
 }
 
@@ -84,16 +84,16 @@ Tion4sUartProtocol::read_frame_result_t Tion4sUartProtocol::read_frame_(TionUart
     return READ_THIS_LOOP;
   }
 
-  TION_LOGV(TAG, "RX: %s", hexencode(frame, frame->size).c_str());
+  TION_LOGV(TAG, "RX: %s", hex_cstr(frame, frame->size));
 
   auto crc = dentra::tion::crc16_ccitt_false_ffff(frame, frame->size);
   if (crc != 0) {
-    TION_LOGW(TAG, "Invalid CRC %04X for frame %s", crc, hexencode(frame, frame->size).c_str());
+    TION_LOGW(TAG, "Invalid CRC %04X for frame %s", crc, hex_cstr(frame, frame->size));
     this->reset_buf_();
     return READ_NEXT_LOOP;
   }
 
-  tion_yield();
+  tion::yield();
   auto frame_data_size = frame->size - sizeof(Tion4sRawUartFrame) + sizeof(tion_any_frame_t);
   this->reader(*reinterpret_cast<const tion_any_frame_t *>(&frame->data), frame_data_size);
   this->reset_buf_();
@@ -123,7 +123,7 @@ bool Tion4sUartProtocol::write_frame(uint16_t type, const void *data, size_t siz
   uint16_t crc = __builtin_bswap16(crc16_ccitt_false_ffff(frame, frame_size - sizeof(crc)));
   std::memcpy(&frame->data.data[size], &crc, sizeof(crc));
 
-  TION_LOGV(TAG, "TX: %s", tion::hexencode(frame_buf, frame_size).c_str());
+  TION_LOGV(TAG, "TX: %s", tion::hex_cstr(frame_buf, frame_size));
 
   return this->writer(frame_buf, frame_size);
 }

@@ -37,7 +37,7 @@ void Tion3sUartProtocol::read_uart_data(TionUartReader *io) {
     if (this->read_frame_(io) == READ_NEXT_LOOP) {
       break;
     }
-    tion_yield();
+    tion::yield();
   }
 }
 
@@ -84,7 +84,7 @@ Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUart
     return READ_THIS_LOOP;
   }
 
-  TION_LOGV(TAG, "RX: %s", hexencode(&frame->data, sizeof(frame->data)).c_str());
+  TION_LOGV(TAG, "RX: %s", hex_cstr(&frame->data, sizeof(frame->data)));
 
   if (frame->magic != FRAME_MAGIC_END) {
     TION_LOGW(TAG, "Invlid frame magic %02X", frame->magic);
@@ -92,7 +92,7 @@ Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUart
     return READ_THIS_LOOP;
   }
 
-  tion_yield();
+  tion::yield();
   this->reader(*reinterpret_cast<const tion_any_frame_t *>(&frame->data), sizeof(frame->data));
   this->reset_buf_();
 
@@ -110,7 +110,7 @@ bool Tion3sUartProtocol::write_frame(uint16_t frame_type, const void *frame_data
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }
 
-  TION_LOGV(TAG, "TX: %s", tion::hexencode(reinterpret_cast<uint8_t *>(&frame), sizeof(frame)).c_str());
+  TION_LOGV(TAG, "TX: %s", tion::hex_cstr(reinterpret_cast<uint8_t *>(&frame), sizeof(frame)));
 
   return this->writer(reinterpret_cast<uint8_t *>(&frame), sizeof(frame));
 }

@@ -12,6 +12,8 @@ namespace tion_4s {
 
 static const char *const TAG = "tion-api-4s";
 
+static const uint8_t PROD[] = {0, TION_4S_AUTO_PROD};
+
 using tion::tion_dev_info_t;
 using tion::TionGatePosition;
 using tion::TionTraits;
@@ -30,7 +32,7 @@ void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       TION_LOGW(TAG, "Incorrect heartbeat response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawHeartbeatFrame *>(frame_data);
-      TION_LOGD(TAG, "Response[] Heartbeat (%u)", frame->work_mode);
+      TION_LOGD(TAG, "Response Heartbeat (%u)", frame->work_mode);
       this->on_heartbeat_fn.call_if(frame->work_mode);
     }
     return;
@@ -72,8 +74,8 @@ void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     if (frame_data_size != sizeof(tion_dev_info_t)) {
       TION_LOGW(TAG, "Incorrect device info response data size: %zu", frame_data_size);
     } else {
-      TION_LOGD(TAG, "Response[] Device info");
-      this->on_dev_info_fn.call_if(*static_cast<const tion_dev_info_t *>(frame_data));
+      TION_LOGD(TAG, "Response Device info");
+      this->update_dev_info_(*static_cast<const tion_dev_info_t *>(frame_data));
     }
     return;
   }
@@ -147,34 +149,34 @@ void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
     if (frame_data_size != sizeof(RawTestFrame)) {
       TION_LOGW(TAG, "Incorrect test response data size: %zu", frame_data_size);
     } else {
-      TION_LOGD(TAG, "Response[] Test");
+      TION_LOGD(TAG, "Response Test");
     }
     return;
   }
 #endif
-  TION_LOGW(TAG, "Unsupported frame %04X: %s", frame_type, tion::hexencode(frame_data, frame_data_size).c_str());
+  TION_LOGW(TAG, "Unsupported frame %04X: %s", frame_type, tion::hex_cstr(frame_data, frame_data_size));
 }
 
 bool Tion4sApi::request_dev_info_() const {
-  TION_LOGD(TAG, "Request[] Device info");
+  TION_LOGD(TAG, "Request Device info");
   return this->write_frame(FRAME_TYPE_DEV_INFO_REQ);
 }
 
 bool Tion4sApi::request_state_() const {
-  TION_LOGD(TAG, "Request[] State");
+  TION_LOGD(TAG, "Request State");
   return this->write_frame(FRAME_TYPE_STATE_REQ);
 }
 
 bool Tion4sApi::request_turbo_() const {
-  TION_LOGD(TAG, "Request[] Turbo");
+  TION_LOGD(TAG, "Request Turbo");
   // TODO проверить, возможно необходимо/можно послыать request_id
   return this->write_frame(FRAME_TYPE_TURBO_REQ);
 }
 
 bool Tion4sApi::write_state(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Write state", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
@@ -183,8 +185,8 @@ bool Tion4sApi::write_state(const TionState &state, uint32_t request_id) const {
 
 bool Tion4sApi::reset_filter(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Reset filter", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
@@ -195,8 +197,8 @@ bool Tion4sApi::reset_filter(const TionState &state, uint32_t request_id) const 
 
 bool Tion4sApi::factory_reset(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Factory reset", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
@@ -215,7 +217,7 @@ bool Tion4sApi::set_turbo(uint16_t time, uint32_t request_id) const {
 
 #ifdef TION_ENABLE_HEARTBEAT
 bool Tion4sApi::send_heartbeat() const {
-  TION_LOGD(TAG, "Request[] Heartbeat");
+  TION_LOGD(TAG, "Request Heartbeat");
   return this->write_frame(FRAME_TYPE_HEARTBIT_REQ);
 }
 #endif
@@ -262,20 +264,20 @@ bool Tion4sApi::set_time(time_t time, uint32_t request_id) const {
 #endif
 #ifdef TION_ENABLE_DIAGNOSTIC
 bool Tion4sApi::request_errors() const {
-  TION_LOGD(TAG, "Request[] Errors");
+  TION_LOGD(TAG, "Request Errors");
   return this->write_frame(FRAME_TYPE_ERR_CNT_REQ);
 }
 
 bool Tion4sApi::request_test() const {
-  TION_LOGD(TAG, "Request[] Test");
+  TION_LOGD(TAG, "Request Test");
   return this->write_frame(FRAME_TYPE_TEST_REQ);
 }
 #endif
 
 bool Tion4sApi::reset_errors(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Errors reset", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
@@ -319,6 +321,8 @@ Tion4sApi::Tion4sApi() {
   this->traits_.max_fan_power[4] = TION_4S_MAX_FAN_POWER4;
   this->traits_.max_fan_power[5] = TION_4S_MAX_FAN_POWER5;
   this->traits_.max_fan_power[6] = TION_4S_MAX_FAN_POWER6;
+
+  this->traits_.auto_prod = PROD;
 }
 
 void Tion4sApi::enable_native_boost_support() { this->traits_.supports_boost = true; }
@@ -329,8 +333,6 @@ void Tion4sApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
 }
 
 void Tion4sApi::update_state_(const tion4s_state_t &state) {
-  this->traits_.initialized = true;
-
   this->state_.power_state = state.power_state;
   this->state_.heater_state = state.heater_state;
   this->state_.sound_state = state.sound_state;
@@ -349,8 +351,7 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
   this->state_.outdoor_temperature = state.outdoor_temperature;
   this->state_.current_temperature = state.current_temperature;
   this->state_.target_temperature = state.target_temperature;
-  this->state_.productivity = this->calc_productivity(state);
-
+  this->state_.productivity = state.counters.calc_productivity(this->state_);
   this->state_.heater_var = state.heater_var;
   this->state_.work_time = state.counters.work_time;
   this->state_.fan_time = state.counters.fan_time;
@@ -388,7 +389,7 @@ void Tion4sApi::update_turbo_(const tion4s_turbo_t &turbo) {
   this->state_.boost_time_left = turbo.is_active ? turbo.turbo_time : 0;
 }
 
-void Tion4sApi::enable_native_boost_(bool state) {
+void Tion4sApi::boost_enable_native_(bool state) {
   if (!this->traits_.supports_boost) {
     TION_LOGW(TAG, "Native boost is unsupported");
     return;

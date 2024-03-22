@@ -6,7 +6,8 @@
 
 #include "esphome/components/vport/vport.h"
 
-#include "../tion-api/tion-api.h"
+#include "../tion-api/tion-api-protocol.h"
+#include "../tion-api/tion-api-writer.h"
 
 namespace esphome {
 namespace tion {
@@ -33,7 +34,7 @@ template<class protocol_type> class TionIO {
 
 // vport wrapper with api support.
 template<class frame_spec_t, class api_t> class TionVPortApi : public api_t, public vport::VPortListener<frame_spec_t> {
-  static_assert(std::is_base_of_v<dentra::tion::TionApiBaseWriter, api_t>, "api_t is not TionApi");
+  static_assert(std::is_base_of_v<dentra::tion::TionApiWriter, api_t>, "api_t is not TionApiWriter");
 
  public:
   using vport_t = vport::VPort<frame_spec_t>;

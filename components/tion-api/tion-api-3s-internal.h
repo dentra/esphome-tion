@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include "tion-api.h"
+#include "tion-api-internal.h"
 
 namespace dentra {
 namespace tion_3s {
@@ -124,7 +124,7 @@ struct tion3s_state_set_t {
   // Байт 1. Целевая температура нагрева.
   int8_t target_temperature;
   // Байт 2. Состояние затворки.
-  uint8_t /*tion3s_state_t::GatePosition*/ gate_position;
+  tion3s_state_t::GatePosition gate_position;
   // Байт 3-4. Флаги.
   tion3s_state_t::Flags flags;
   // Байт 5-7. Управление фильтрами.
@@ -143,26 +143,34 @@ struct tion3s_state_set_t {
   //        0  1  2  3  4  5  6  7  8  9
   // 3D:02 01 17 02 0A.01 02.00.00 00 00 00:00:00:00:00:00:00:5A
   static tion3s_state_set_t create(const tion::TionState &state) {
-    tion3s_state_set_t st_set{};
+    return tion3s_state_set_t{
+        .fan_speed = state.fan_speed,
+        .target_temperature = state.target_temperature,
+        .gate_position = state.gate_position == tion::TionGatePosition::INDOOR       //-//
+                             ? tion3s_state_t::GATE_POSITION_INDOOR                  //-//
+                             : state.gate_position == tion::TionGatePosition::MIXED  //-//
+                                   ? tion3s_state_t::GATE_POSITION_MIXED             //-//
+                                   : tion3s_state_t::GATE_POSITION_OUTDOOR,          //-//
 
-    st_set.flags.power_state = state.power_state;
-    st_set.flags.heater_state = state.heater_state;
-    st_set.flags.sound_state = state.sound_state;
-    st_set.flags.ma_auto = state.auto_state;
-
-    st_set.fan_speed = state.fan_speed;
-    st_set.target_temperature = state.target_temperature;
-    st_set.gate_position =                                          //-//
-        state.gate_position == tion::TionGatePosition::INDOOR       //-//
-            ? tion3s_state_t::GATE_POSITION_INDOOR                  //-//
-            : state.gate_position == tion::TionGatePosition::MIXED  //-//
-                  ? tion3s_state_t::GATE_POSITION_MIXED             //-//
-                  : tion3s_state_t::GATE_POSITION_OUTDOOR;          //-//
-
-    // в tion remote всегда выставляется этот бит
-    st_set.flags.preset_state = true;
-
-    return st_set;
+        .flags =
+            {
+                .heater_state = state.heater_state,
+                .power_state = state.power_state,
+                .timer_state = {},
+                .sound_state = state.sound_state,
+                .ma_auto = state.auto_state,
+                .ma_connected = {},  // state.auto_state
+                .save = {},
+                .ma_pairing = {},
+                // в tion remote всегда выставляется этот бит
+                .preset_state = true,
+                .presets_state = {},
+                .reserved = {},
+            },
+        .filter_time = {},
+        .factory_reset = {},
+        .service_mode = {},
+    };
   }
 };
 

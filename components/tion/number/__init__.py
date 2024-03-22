@@ -1,4 +1,5 @@
-from typing import Any
+import dataclasses
+from typing import Any, Optional, Union
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
@@ -7,12 +8,8 @@ from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_INITIAL_VALUE,
-    CONF_MAX_VALUE,
-    CONF_MIN_VALUE,
     CONF_MODE,
     CONF_RESTORE_VALUE,
-    CONF_STEP,
-    CONF_UNIT_OF_MEASUREMENT,
     ENTITY_CATEGORY_CONFIG,
     UNIT_CELSIUS,
     UNIT_MINUTE,
@@ -23,36 +20,74 @@ from .. import get_pc_info, new_pc_component, pc_schema, tion_ns
 
 TionNumber = tion_ns.class_("TionNumber", number.Number, cg.Component)
 
+CONF_TRAITS = "traits"
+
+
+@dataclasses.dataclass
+class Traits:
+    step: Optional[float] = 1
+    min_value: Optional[float] = float("NaN")
+    max_value: Optional[float] = float("NaN")
+    unit_of_measurement: Optional[str] = ""
+    initial_value: Optional[float] = None
+
+    def get_initial_value(self, config: dict) -> Optional[float]:
+        value = config.get(CONF_INITIAL_VALUE, self.initial_value)
+        if not isinstance(value, cv.TimePeriod):
+            return value
+        if self.unit_of_measurement == UNIT_MINUTE:
+            return value.minutes
+        if self.unit_of_measurement == UNIT_SECOND:
+            return value.seconds
+        return value.milliseconds
+
+
 PROPERTIES = {
     "fan_speed": {
         CONF_ICON: "mdi:fan",
-        "traits": {
-            CONF_MIN_VALUE: 0,
-        },
     },
     "target_temperature": {
         CONF_ICON: "mdi:thermometer-auto",
-        "traits": {
-            CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
-        },
+        CONF_TRAITS: Traits(
+            unit_of_measurement=UNIT_CELSIUS,
+        ),
     },
     "boost_time": {
         CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
         CONF_ICON: "mdi:timer-cog",
-        "traits": {
-            CONF_MIN_VALUE: 1,
-            CONF_MAX_VALUE: 60,
-            CONF_UNIT_OF_MEASUREMENT: UNIT_MINUTE,
-            CONF_INITIAL_VALUE: 10,
-        },
+        CONF_TRAITS: Traits(
+            min_value=1,
+            max_value=60,
+            unit_of_measurement=UNIT_MINUTE,
+            initial_value=10,
+        ),
+    },
+    "auto_setpoint": {
+        CONF_ICON: "mdi:fan-auto",
+        CONF_TRAITS: Traits(
+            step=10,
+            initial_value=600,
+        ),
+    },
+    "auto_min_fan_speed": {
+        CONF_ICON: "mdi:fan-chevron-down",
+        CONF_TRAITS: Traits(
+            initial_value=1,
+        ),
+    },
+    "auto_max_fan_speed": {
+        CONF_ICON: "mdi:fan-chevron-up",
+        CONF_TRAITS: Traits(
+            initial_value=3,
+        ),
     },
     # aliases
     "fan": "fan_speed",
     "speed": "fan_speed",
     "boost": "boost_time",
+    "auto_min_speed": "auto_min_fan_speed",
+    "auto_max_speed": "auto_max_fan_speed",
 }
-
-_UNDEF = object()
 
 
 NUMBER_SCHEMA_EXT = {
@@ -69,51 +104,25 @@ CONFIG_SCHEMA = pc_schema(
 )
 
 
-def _get_value(value, uom: str) -> float:
-    if not isinstance(value, cv.TimePeriod):
-        return value
-    if uom == UNIT_MINUTE:
-        return value.minutes
-    if uom == UNIT_SECOND:
-        return value.seconds
-    return value.milliseconds
-
-
 async def to_code(config: dict):
     (_, props) = get_pc_info(config, PROPERTIES)
 
-    traits = props["traits"]
+    traits = props.get(CONF_TRAITS, Traits())
 
     var = await new_pc_component(
         config,
         number.new_number,
         PROPERTIES,
-        min_value=traits[CONF_MIN_VALUE] if CONF_MIN_VALUE in traits else float("NaN"),
-        max_value=traits[CONF_MAX_VALUE] if CONF_MAX_VALUE in traits else float("NaN"),
-        step=traits[CONF_STEP] if CONF_STEP in traits else 1,
+        min_value=traits.min_value,
+        max_value=traits.max_value,
+        step=traits.step,
     )
 
-    if CONF_UNIT_OF_MEASUREMENT in traits:
-        cg.add(var.traits.set_unit_of_measurement(traits[CONF_UNIT_OF_MEASUREMENT]))
+    if traits.unit_of_measurement:
+        cg.add(var.traits.set_unit_of_measurement(traits.unit_of_measurement))
 
     if CONF_RESTORE_VALUE in config:
         cg.add(var.set_restore_value(config[CONF_RESTORE_VALUE]))
 
-    if CONF_INITIAL_VALUE in config:
-        cg.add(
-            var.set_initial_value(
-                _get_value(
-                    config[CONF_INITIAL_VALUE],
-                    traits.get(CONF_UNIT_OF_MEASUREMENT, ""),
-                )
-            )
-        )
-    elif CONF_INITIAL_VALUE in traits:
-        cg.add(
-            var.set_initial_value(
-                _get_value(
-                    traits[CONF_INITIAL_VALUE],
-                    traits.get(CONF_UNIT_OF_MEASUREMENT, ""),
-                )
-            )
-        )
+    if initial_value := traits.get_initial_value(config):
+        cg.add(var.set_initial_value(initial_value))

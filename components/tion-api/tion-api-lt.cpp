@@ -17,6 +17,8 @@ using namespace tion_lt;
 
 static const char *const TAG = "tion-api-lt";
 
+static const uint8_t PROD[] = {0, TION_LT_AUTO_PROD};
+
 uint16_t TionLtApi::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 
 void TionLtApi::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
@@ -40,38 +42,36 @@ void TionLtApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
 
   if (frame_type == FRAME_TYPE_DEV_INFO_RSP) {
     if (frame_data_size != sizeof(tion_dev_info_t)) {
-      TION_LOGW(TAG, "Incorrect device info response data: %s", hexencode(frame_data, frame_data_size).c_str());
+      TION_LOGW(TAG, "Incorrect device info response data: %s", hex_cstr(frame_data, frame_data_size));
     } else {
-      TION_LOGD(TAG, "Response[] Device info");
-      const auto *frame = static_cast<const tion_dev_info_t *>(frame_data);
-      this->update_dev_info_(*frame);
-      this->on_dev_info_fn.call_if(*frame);
+      TION_LOGD(TAG, "Response Device info");
+      this->update_dev_info_(*static_cast<const tion_dev_info_t *>(frame_data));
     }
     return;
   }
 
   if (frame_type == FRAME_TYPE_AUTOKIV_PARAM_RSP) {
-    TION_LOGD(TAG, "auto kiv param response: %s", hexencode(frame_data, frame_data_size).c_str());
+    TION_LOGD(TAG, "auto kiv param response: %s", hex_cstr(frame_data, frame_data_size));
     return;
   }
 
-  TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hexencode(frame_data, frame_data_size).c_str());
+  TION_LOGW(TAG, "Unsupported frame type 0x%04X: %s", frame_type, hex_cstr(frame_data, frame_data_size));
 }
 
 bool TionLtApi::request_dev_info_() const {
-  TION_LOGD(TAG, "Request[] device info");
+  TION_LOGD(TAG, "Request device info");
   return this->write_frame(FRAME_TYPE_DEV_INFO_REQ);
 }
 
 bool TionLtApi::request_state_() const {
-  TION_LOGD(TAG, "Request[] state");
+  TION_LOGD(TAG, "Request state");
   return this->write_frame(FRAME_TYPE_STATE_REQ);
 }
 
 bool TionLtApi::write_state(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Write state", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
@@ -80,8 +80,8 @@ bool TionLtApi::write_state(const TionState &state, uint32_t request_id) const {
 
 bool TionLtApi::reset_filter(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Reset filter", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
@@ -92,8 +92,8 @@ bool TionLtApi::reset_filter(const TionState &state, uint32_t request_id) const 
 
 bool TionLtApi::factory_reset(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Factory reset", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
@@ -103,8 +103,8 @@ bool TionLtApi::factory_reset(const TionState &state, uint32_t request_id) const
 
 bool TionLtApi::reset_errors(const TionState &state, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Error reset", request_id);
-  if (!state.is_initialized(this->traits_)) {
-    TION_LOGW(TAG, "State is not initialized");
+  if (!state.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
@@ -142,6 +142,8 @@ TionLtApi::TionLtApi() {
   this->traits_.max_fan_power[4] = TION_LT_MAX_FAN_POWER4;
   this->traits_.max_fan_power[5] = TION_LT_MAX_FAN_POWER5;
   this->traits_.max_fan_power[6] = TION_LT_MAX_FAN_POWER6;
+
+  this->traits_.auto_prod = PROD;
 }
 
 void TionLtApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
@@ -150,8 +152,6 @@ void TionLtApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
 }
 
 void TionLtApi::update_state_(const tionlt_state_t &state) {
-  this->traits_.initialized = true;
-
   this->state_.power_state = state.power_state;
   this->state_.heater_state = state.heater_state;
   this->state_.sound_state = state.sound_state;
@@ -165,7 +165,7 @@ void TionLtApi::update_state_(const tionlt_state_t &state) {
   this->state_.outdoor_temperature = state.outdoor_temperature;
   this->state_.current_temperature = state.current_temperature;
   this->state_.target_temperature = state.target_temperature;
-  this->state_.productivity = this->calc_productivity(state);
+  this->state_.productivity = state.counters.calc_productivity(this->state_);
   this->state_.heater_var = state.heater_var;
   this->state_.work_time = state.counters.work_time;
   this->state_.fan_time = state.counters.fan_time;

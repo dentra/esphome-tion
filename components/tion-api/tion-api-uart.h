@@ -2,7 +2,7 @@
 
 #include <cstring>  // std::memset
 
-#include "tion-api.h"
+#include "tion-api-protocol.h"
 
 namespace dentra {
 namespace tion {

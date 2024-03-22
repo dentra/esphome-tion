@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include "tion-api.h"
+
+#include "tion-api-internal.h"
 
 namespace dentra {
 namespace tion_o2 {
@@ -99,25 +100,24 @@ struct tiono2_state_set_t {
   int8_t target_temperature;
   // Байт 3., 0 off, 1 on 4
   struct {
-    bool power : 8;
+    bool power_state : 8;
   };
   // Байт 4.
   struct {
-    bool heat : 8;
+    bool heater_state : 8;
   };
-  // Байт 5. Иозможно источник:  0 - auto, 1 - user
+  // Байт 5. Возможно источник:  0 - auto, 1 - user
   // большое подозрение, что это эквивалент last_com_source
   tion::CommSource comm_source;
 
   static tiono2_state_set_t create(const tion::TionState &state) {
-    tiono2_state_set_t st_set{
-        .fan_speed = state.fan_speed,
+    return tiono2_state_set_t{
+        .fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed,
         .target_temperature = state.target_temperature,
-        .power = state.power_state,
-        .heat = state.heater_state,
-        .comm_source = state.auto_state ? tion::CommSource::AUTO : tion::CommSource::USER,
+        .power_state = state.power_state,
+        .heater_state = state.heater_state,
+        .comm_source = state.comm_source,
     };
-    return st_set;
   }
 };
 
@@ -146,27 +146,32 @@ struct tiono2_dev_info_t {
 
 static_assert(sizeof(tiono2_dev_info_t) == 24, "Invalid tiono2_dev_info_t size");
 
+// Состояние девайса, получается от бризера командой FRAME_TYPE_DEV_MODE_RSP.
 struct DevModeFlags {
-  // Bit 0. set when pair enabled.
-  bool pair;
-  // Bit 1. set when user click buttons on breezer.
-  bool user;
-  // Bit 2-7. unknown bits.
+  // Бит 0. Включен в моменте сопряжения.
+  bool pair : 1;
+  // Бит 1. Включен, если управление было физическими кнопками на бризере.
+  bool user : 1;
+  // Бит 2-7. Назаначение на данный момент неизвестно, возможно зарезервированно.
   uint8_t reserved : 6;
 };
 
+// Состояние режима работы, передатеся бризеру командой FRAME_TYPE_SET_WORK_MODE_REQ.
 struct WorkModeFlags {
   // Бит 0. Возможно признак подтверждения, что принят режим сопряжения.
-  bool unknown0 : 1;
+  // включение/выключение этого флага заставляет бризер издать звук и поморгать экраном
+  bool ma_pair_accepted : 1;
   // Бит 1. Установлен когда RF-модуль подключен.
   bool rf_connected : 1;
   // Бит 2. Возможно устанавливаетсмя во время сопряжения с MA.
-  bool unknown2 : 1;
+  bool ma_pairing : 1;
   // Бит 3. Установлен когда включен режим AUTO на MA.
+  // светится соответсвующим значком на экране бризера
   bool ma_auto : 1;
   // Бит 4. Установлен когда станция MA подключена.
+  // светится соответсвующим значком на экране бризера
   bool ma_connected : 1;
-  // Бит 5,6,7. Возможно неиспользуются.
+  // Бит 5,6,7. Назаначение на данный момент неизвестно, возможно зарезервированно.
   uint8_t reserved : 3;
 };
 
