@@ -23,7 +23,7 @@ from esphome.const import (
     UNIT_WATT,
 )
 
-from .. import new_pc_component, pc_schema, tion_ns
+from .. import UNIT_DAYS, new_pc_component, pc_schema, tion_ns
 
 TionSensor = tion_ns.class_("TionSensor", sensor.Sensor, cg.Component)
 
@@ -93,6 +93,12 @@ PROPERTIES = {
         CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
         CONF_ACCURACY_DECIMALS: 0,
     },
+    "work_time_days": {
+        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
+        CONF_ACCURACY_DECIMALS: 0,
+    },
     "fan_time": {
         CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
@@ -100,10 +106,22 @@ PROPERTIES = {
         CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
         CONF_ACCURACY_DECIMALS: 0,
     },
+    "fan_time_days": {
+        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
+        CONF_ACCURACY_DECIMALS: 0,
+    },
     "filter_time_left": {
         CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
         CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
+        CONF_ACCURACY_DECIMALS: 0,
+    },
+    "filter_time_left_days": {
+        # (24 * 3600)
+        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+        CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
         CONF_ACCURACY_DECIMALS: 0,
     },
     "airflow": {
@@ -134,7 +152,6 @@ PROPERTIES = {
         CONF_ACCURACY_DECIMALS: 0,
     },
     "boost_time_left": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
         CONF_ICON: "mdi:clock-end",
         CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,

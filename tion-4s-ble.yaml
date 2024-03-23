@@ -95,7 +95,7 @@ tion:
   # Optional, Timeout to combine update operations. Default: 200ms.
   batch_timeout: 200ms
   # Optional, Timeout to enable state problem sensor. Must be less than update_interval. Default: 3s.
-  state_timeout: 5s
+  state_timeout: 90s
   # Optional, Updates sensor values on any state response or only if they have been changed. Default: true.
   force_update: false
 
@@ -149,7 +149,7 @@ sensor:
     name: Productivity
   # Filter time left counter.
   - platform: tion
-    type: filter_time_left
+    type: filter_time_left_days
     name: Filter Time Left
   # Boost time left sensor.
   - platform: tion

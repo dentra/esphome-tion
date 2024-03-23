@@ -36,6 +36,8 @@ from .. import vport  # pylint: disable=relative-beyond-top-level
 CODEOWNERS = ["@dentra"]
 AUTO_LOAD = ["etl", "tion-api"]
 
+UNIT_DAYS = "d"
+
 CONF_TION_ID = "tion_id"
 CONF_TION_COMPONENT_CLASS = "tion_component_class"
 

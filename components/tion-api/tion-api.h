@@ -141,9 +141,6 @@ class TionState {
   // Счетчик воздуха прошедшего через бризер m3.
   float airflow_m3;
 
-  uint32_t work_time_days() const { return this->work_time / (24 * 3600); }
-  uint32_t filter_time_left_d() const { return this->filter_time_left / (24 * 3600); }
-
   // Оставшееся время работы режима "турбо" в секундах или 0 если он выключен.
   uint16_t boost_time_left;
 

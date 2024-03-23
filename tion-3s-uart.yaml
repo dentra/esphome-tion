@@ -144,7 +144,7 @@ sensor:
     name: Productivity
   # Filter time left counter.
   - platform: tion
-    type: filter_time_left
+    type: filter_time_left_days
     name: Filter Time Left
   # Boost time left sensor.
   - platform: tion
@@ -175,7 +175,7 @@ number:
     restore_value: true
 
 select:
-    # Optional, Air Intake control.
+  # Optional, Air Intake control.
   - platform: tion
     type: air_intake
     name: Air Intake

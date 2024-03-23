@@ -326,14 +326,30 @@ struct WorkTime {
   static uint32_t get(const TionState &state) { return state.work_time; }
 };
 
+struct WorkTimeDays {
+  static bool is_supported(TionApiComponent *c) { return WorkTime::is_supported(c); }
+
+  static uint32_t get(const TionState &state) { return WorkTime::get(state) / (24 * 3600); }
+};
+
 struct FilterTimeLeft {
   static uint32_t get(const TionState &state) { return state.filter_time_left; }
+};
+
+struct FilterTimeLeftDays {
+  static uint32_t get(const TionState &state) { return FilterTimeLeft::get(state) / (24 * 3600); }
 };
 
 struct FanTime {
   static bool is_supported(TionApiComponent *c) { return c->traits().supports_fan_time; }
 
   static uint32_t get(const TionState &state) { return state.fan_time; }
+};
+
+struct FanTimeDays {
+  static bool is_supported(TionApiComponent *c) { return FanTime::is_supported(c); }
+
+  static uint32_t get(const TionState &state) { return FanTime::get(state) / (24 * 3600); }
 };
 
 struct Airflow {

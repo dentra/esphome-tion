@@ -24,15 +24,12 @@ PROPERTIES = {
         CONF_ICON: "mdi:radiator",
     },
     "sound": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         CONF_ICON: "mdi:volume-high",
     },
     "led": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         CONF_ICON: "mdi:led-outline",
     },
     "filter": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
         # CONF_ICON: "mdi:air-filter",
         CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
     },
