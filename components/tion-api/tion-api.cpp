@@ -173,8 +173,7 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
 
   if (call->get_auto_state().has_value()) {
     const auto auto_state = *call->get_auto_state();
-    if (!auto_state || !!this->auto_update_func_ ||
-        (this->auto_setpoint_ && this->auto_min_fan_speed_ < this->auto_max_fan_speed_)) {
+    if (!auto_state || this->auto_is_valid()) {
       if (cs.auto_state != auto_state) {
         TION_LOGD(TAG, "New auto state %s -> %s", ONOFF(cs.auto_state), ONOFF(auto_state));
       }
@@ -699,6 +698,10 @@ uint8_t TionApiBase::auto_update_(uint16_t current) {
   }
   // не нашли подходящего значения, работаем по-минимому
   return this->auto_min_fan_speed_;
+}
+
+bool TionApiBase::auto_is_valid() const {
+  return !!this->auto_update_func_ || (this->auto_setpoint_ && this->auto_min_fan_speed_ < this->auto_max_fan_speed_);
 }
 
 }  // namespace tion

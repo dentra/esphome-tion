@@ -289,6 +289,7 @@ class TionApiBase {
   void set_auto_update_func(std::function<uint8_t(uint16_t current)> &&func) {
     this->auto_update_func_ = std::move(auto_update_func_);
   }
+  bool auto_is_valid() const;
 
  protected:
   TionTraits traits_{};
