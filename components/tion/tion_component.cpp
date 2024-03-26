@@ -43,7 +43,7 @@ void TionApiComponent::call_setup() {
 
 void TionApiComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "%s:", this->get_component_source());
-  ESP_LOGCONFIG(TAG, "  Update interval: %.1f s", this->get_update_interval() * 0.001f);
+  LOG_UPDATE_INTERVAL(this);
   ESP_LOGCONFIG(TAG, "  Force update: %s", ONOFF(this->force_update_));
   ESP_LOGCONFIG(TAG, "  State timeout: %.1f s", this->state_timeout_ * 0.001f);
   ESP_LOGCONFIG(TAG, "  Batch timeout: %.1f s", this->batch_timeout_ * 0.001f);

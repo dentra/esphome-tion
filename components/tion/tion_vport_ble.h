@@ -1,4 +1,5 @@
 #pragma once
+#include "esphome/core/defines.h"
 #ifdef USE_VPORT_BLE
 
 #include "esphome/components/vport/vport_ble.h"

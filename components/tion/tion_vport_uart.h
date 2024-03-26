@@ -1,6 +1,6 @@
 #pragma once
-#ifdef USE_VPORT_UART
 #include "esphome/core/defines.h"
+#ifdef USE_VPORT_UART
 
 #ifdef USE_TION_HALF_DUPLEX
 // #pragma message("USE_TION_HALF_DUPLEX")
