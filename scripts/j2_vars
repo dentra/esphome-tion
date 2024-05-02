@@ -6,6 +6,9 @@ if [ "$1" != "" ]; then
 fi
 
 version_vport=2024.1.0
+if [ "$version_tion" == "next" ]; then
+  version_vport="master"
+fi
 
 version_esphome=($(esphome version))
 version_esphome=${version_esphome[1]}

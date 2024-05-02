@@ -16,7 +16,7 @@ substitutions:
   # add suffix for node name to have one firmware for many devices.
   node_add_mac_suffix: "true"
   # vport and additional components configuration parameters
-  vport_version: "2024.1.0"
+  vport_version: "master"
   vport_source: github://dentra/esphome-components@$vport_version
   vport_source_refresh: 1d
 
