@@ -10,70 +10,67 @@ from esphome.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
 )
 
-from .. import new_pc_component, pc_schema, tion_ns
+from .. import new_pc, cgp, tion_ns
 
 TionBinarySensor = tion_ns.class_(
     "TionBinarySensor", binary_sensor.BinarySensor, cg.Component
 )
 
-PROPERTIES = {
-    "power": {
-        CONF_ICON: "mdi:power",
-    },
-    "heater": {
-        CONF_ICON: "mdi:radiator",
-    },
-    "sound": {
-        CONF_ICON: "mdi:volume-high",
-    },
-    "led": {
-        CONF_ICON: "mdi:led-outline",
-    },
-    "filter": {
-        # CONF_ICON: "mdi:air-filter",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-    },
-    "gate": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_OPENING,
-        # CONF_DEVICE_CLASS: DEVICE_CLASS_DAMPER,
-    },
-    "heating": {
-        # CONF_DEVICE_CLASS: DEVICE_CLASS_HEAT,
-        CONF_ICON: "mdi:radiator",
-    },
-    "error": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-    },
-    "gate_error": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-    },
-    "boost": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_RUNNING,
-        CONF_ICON: "mdi:rocket-launch",
-    },
-    "state": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-    },
-    "auto": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_RUNNING,
-        CONF_ICON: "mdi:fan-auto",
-    },
-    # aliases
-    "buzzer": "sound",
-    "heat": "heater",
-    "light": "led",
-    "gate_position": "gate",
-    "gate_state": "gate",
-    "damper": "gate",
-}
-
-CONFIG_SCHEMA = pc_schema(
-    binary_sensor.binary_sensor_schema(TionBinarySensor), PROPERTIES
+PC = new_pc(
+    {
+        "power": {
+            CONF_ICON: cgp.ICON_POWER,
+        },
+        "heater": {
+            CONF_ICON: cgp.ICON_RADIATOR,
+        },
+        "sound": {
+            CONF_ICON: cgp.ICON_VOLUME_HIGH,
+        },
+        "led": {
+            CONF_ICON: cgp.ICON_LED_OUTLINE,
+        },
+        "filter": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        },
+        "gate": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_OPENING,
+        },
+        "heating": {
+            CONF_ICON: cgp.ICON_RADIATOR,
+        },
+        "error": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        },
+        "gate_error": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        },
+        "boost": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_RUNNING,
+            CONF_ICON: cgp.ICON_ROCKET_LAUNCH,
+        },
+        "state": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
+        },
+        "auto": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_RUNNING,
+            CONF_ICON: cgp.ICON_FAN_AUTO,
+        },
+        # aliases
+        "buzzer": "sound",
+        "heat": "heater",
+        "light": "led",
+        "gate_position": "gate",
+        "gate_state": "gate",
+        "damper": "gate",
+    }
 )
+
+CONFIG_SCHEMA = PC.binary_sensor_schema(TionBinarySensor)
 
 
 async def to_code(config: dict):
-    await new_pc_component(config, binary_sensor.new_binary_sensor, PROPERTIES)
+    await PC.new_binary_sensor(config)

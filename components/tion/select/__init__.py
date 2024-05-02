@@ -1,31 +1,26 @@
 import esphome.codegen as cg
 from esphome.components import select
-from esphome.const import CONF_ICON, CONF_ID
+from esphome.const import CONF_ICON
 
-from .. import new_pc_component, pc_schema, tion_ns
+from .. import new_pc, cgp, tion_ns
 
 TionSelect = tion_ns.class_("TionSelect", select.Select, cg.Component)
 
-PROPERTIES = {
-    "air_intake": {
-        CONF_ICON: "mdi:valve",
-    },
-    "presets": {
-        CONF_ICON: "mdi:tune",
-    },
-    # aliases
-    "gate_position": "air_intake",
-}
+PC = new_pc(
+    {
+        "air_intake": {
+            CONF_ICON: cgp.ICON_VALVE,
+        },
+        "presets": {
+            CONF_ICON: cgp.ICON_TUNE,
+        },
+        # aliases
+        "gate_position": "air_intake",
+    }
+)
 
-CONFIG_SCHEMA = pc_schema(select.select_schema(TionSelect), PROPERTIES)
-
-
-async def select_new_select(config, *args):
-    var = cg.new_Pvariable(config[CONF_ID], *args)
-    await select.register_select(var, config, options=[])
-    return var
+CONFIG_SCHEMA = PC.select_schema(TionSelect)
 
 
 async def to_code(config: dict):
-    # select.new_select do not pass additional args to ctor, so use own impl
-    await new_pc_component(config, select_new_select, PROPERTIES)
+    await PC.new_select(config)

@@ -23,148 +23,153 @@ from esphome.const import (
     UNIT_WATT,
 )
 
-from .. import UNIT_DAYS, new_pc_component, pc_schema, tion_ns
+from .. import new_pc, cgp, tion_ns
 
 TionSensor = tion_ns.class_("TionSensor", sensor.Sensor, cg.Component)
 
-PROPERTIES = {
-    "fan_speed": {
-        CONF_ICON: "mdi:fan",
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "outdoor_temperature": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_ICON: "mdi:thermometer",
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "current_temperature": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_ICON: "mdi:home-thermometer",
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "target_temperature": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_ICON: "mdi:thermometer-auto",
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "productivity": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_VOLUME_FLOW_RATE,
-        CONF_ICON: "mdi:weather-windy",
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CUBIC_METER_PER_HOUR,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "heater_var": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_PERCENT,
-        CONF_ICON: "mdi:flash-outline",
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "heater_power": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_WATT,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "fan_power": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_WATT,
-        CONF_ACCURACY_DECIMALS: 2,
-    },
-    "power": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_KILOWATT,
-        CONF_ACCURACY_DECIMALS: 2,
-    },
-    "work_time": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "work_time_days": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "fan_time": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "fan_time_days": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "filter_time_left": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "filter_time_left_days": {
-        # (24 * 3600)
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "airflow": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
-        CONF_ICON: "mdi:weather-windy",
-        CONF_ACCURACY_DECIMALS: 2,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CUBIC_METER,
-    },
-    "airflow_counter": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
-        CONF_ICON: "mdi:weather-windy",
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "pcb_ctl_temperature": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "pcb_pwr_temperature": {
-        CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
-        CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-        CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    "boost_time_left": {
-        CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
-        CONF_ICON: "mdi:clock-end",
-        CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
-        CONF_ACCURACY_DECIMALS: 0,
-    },
-    # aliases
-    "fan": "fan_speed",
-    "speed": "fan_speed",
-    "indoor_temperature": "current_temperature",
-}
+UNIT_DAYS = "d"
 
-CONFIG_SCHEMA = pc_schema(sensor.sensor_schema(TionSensor), PROPERTIES)
+PC = new_pc(
+    {
+        "fan_speed": {
+            CONF_ICON: cgp.ICON_FAN,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "outdoor_temperature": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_ICON: cgp.ICON_THERMOMETER,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "current_temperature": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_ICON: cgp.ICON_HOME_THERMOMETER,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "target_temperature": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_ICON: cgp.ICON_THERMOMETER_AUTO,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "productivity": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_VOLUME_FLOW_RATE,
+            CONF_ICON: cgp.ICON_WEATHER_WINDY,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CUBIC_METER_PER_HOUR,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "heater_var": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_PERCENT,
+            CONF_ICON: cgp.ICON_FLASH_OUTLINE,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "heater_power": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_WATT,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "fan_power": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_WATT,
+            CONF_ACCURACY_DECIMALS: 2,
+        },
+        "power": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_KILOWATT,
+            CONF_ACCURACY_DECIMALS: 2,
+        },
+        "work_time": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
+            CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "work_time_days": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "fan_time": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
+            CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "fan_time_days": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "filter_time_left": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "filter_time_left_days": {
+            # (24 * 3600)
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "airflow": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            CONF_ICON: cgp.ICON_WEATHER_WINDY,
+            CONF_ACCURACY_DECIMALS: 2,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CUBIC_METER,
+        },
+        "airflow_counter": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            CONF_ICON: cgp.ICON_WEATHER_WINDY,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "pcb_ctl_temperature": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "pcb_pwr_temperature": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        "boost_time_left": {
+            CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
+            CONF_ICON: cgp.ICON_CLOCK_END,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
+            CONF_ACCURACY_DECIMALS: 0,
+        },
+        # aliases
+        "fan": "fan_speed",
+        "speed": "fan_speed",
+        "indoor_temperature": "current_temperature",
+    }
+)
+
+
+CONFIG_SCHEMA = PC.sensor_schema(TionSensor)
 
 
 async def to_code(config: dict):
-    await new_pc_component(config, sensor.new_sensor, PROPERTIES)
+    await PC.new_sensor(config)
