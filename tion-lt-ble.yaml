@@ -47,9 +47,6 @@ packages:
       # - packages/debug.yaml
 
 # Uncomment to enable MQTT connecion.
-# WARNINIG: If you leave next api section for logging purpose
-#           and do not use Home Assistant, you need to uncomment
-#           reboot_timeout parameter.
 # mqtt:
 #   broker: !secret mqtt_borker
 #   port: !secret mqtt_port
@@ -57,10 +54,8 @@ packages:
 #   password: !secret mqtt_password
 #   discovery: false # remove or set to true if you plan to use with Home Assistant
 
-# Enable Home Assistant API connection. Please do not remove to keep logs functioning.
+# Enable Home Assistant API connection. Please disable if you use MQTT
 api:
-  # Uncomment next line if you do not use Home Assistant.
-  #reboot_timeout: 0s
 
 # WiFi hotspot configuration.
 # Comment next 3 lines to enable manual WiFi conviguration via access point.

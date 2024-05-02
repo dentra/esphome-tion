@@ -27,7 +27,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version"
-  min_version: "2024.3.0"
+  min_version: "2024.4.2"
   platformio_options:
     build_flags:
       - -std=gnu++17
@@ -50,7 +50,7 @@ logger:
 
 external_components:
   - source: $vport_source
-    components: [crash_info, etl, otax, vport, esp32_usb_dis]
+    components: [crash_info, etl, otax, vport, esp32_usb_dis, settings, coredump, partitions, cgp, nvs]
     refresh: $vport_source_refresh
   - source: $project_source
     refresh: $project_source_refresh
