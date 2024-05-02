@@ -12,7 +12,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.2.2&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.4.2&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
@@ -47,7 +47,7 @@ English version of this page is available via [google translate](https://github-
 * Обогрев
 * Целевая температуры нагрева
 * Скорость притока воздуха
-* Звуковое оповещение (кроме O2)
+* Звуковое оповещение (для O2 только если физически включено на бризере)
 * Световое оповещение (только для 4S и Lite)
 * Режим приток/рециркуляция (только для 4S и 3S)
 * Режим приток/рециркуляция/смешанный (только для 3S)
@@ -132,9 +132,15 @@ UART подключние различно для разных моделей б
 * Запустите сборку и прошивку вашей конфигурации
 * Добавьте появившееся устройство в Home Assistant
 
->
-> ### ВАЖНО: Первая прошивка обязательно должна быть по проводу, прошивка пустышкой esphome не считается таковой!
->
+> [!TIP]
+> MAC-адрес для работы в режиме BLE можно посмотреть в приложении Tion Remote,
+> в приложении MagicAir может отображаться другой адрес.
+
+> [!IMPORTANT]
+> Первая прошивка обязательно должна быть по проводу, прошивка пустышкой esphome не считается таковой!
+
+> [!IMPORTANT]
+> Для модели 4S, прошивка бризера обязательно должна быть не ниже 02D2, посмотреть ее можно в приложении Tion Remote.
 
 ## Использование в режиме BLE
 После [прошивки](#прошивка) и перед первым использование вам необъходимо ввести
