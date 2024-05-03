@@ -1,0 +1,92 @@
+logger:
+  logs:
+    light: INFO
+
+spi:
+  mosi_pin: GPIO40
+  clk_pin: GPIO39
+
+light:
+  - platform: status_led
+    id: statusled
+    output: statusoutput
+  - platform: spi_led_strip
+    id: statusledlight
+    num_leds: 30
+    effects:
+      - pulse:
+          name: "fast_pulse"
+          transition_length: 0.1s
+          update_interval: 0.1s
+      - pulse:
+          name: "slow_pulse"
+          update_interval: 2s
+
+globals:
+  - id: factory_reset_action
+    type: bool
+    initial_value: "false"
+
+binary_sensor:
+  - platform: gpio
+    id: g_button
+    pin:
+      number: GPIO0
+      inverted: true
+      ignore_strapping_warning: true
+    on_press:
+      - if:
+          condition:
+            - lambda: return id(factory_reset_action);
+          then:
+            - lambda: |-
+                id(factory_reset_action) = false;
+                auto call = id(statusledlight).turn_on();
+                call.set_transition_length(0);
+                call.set_rgb(0.0, 1.0, 0.0);
+                call.set_effect("slow_pulse");
+                call.perform();
+            - delay: 1s
+            - lambda: |-
+                auto call = id(statusledlight).turn_off();
+                call.set_transition_length(0);
+                call.perform();
+                global_preferences->reset();
+            - delay: 200ms
+            - lambda: |-
+                App.safe_reboot();
+
+    on_multi_click:
+      - timing:
+          - on for at least 7s
+        then:
+          - lambda: |-
+              auto call = id(statusledlight).turn_on();
+              call.set_transition_length(0);
+              call.set_rgb(1.0, 0.0, 0.0);
+              call.set_effect("fast_pulse");
+              call.perform();
+              id(factory_reset_action) = true;
+          - delay: 5s
+          - lambda: |-
+              id(factory_reset_action) = false;
+              auto call = id(statusledlight).turn_off();
+              call.set_transition_length(0);
+              call.perform();
+
+output:
+  - platform: template
+    id: statusoutput
+    type: binary
+    write_action:
+      - lambda: |-
+          if (state) {
+            auto call = id(statusledlight).turn_on();
+            call.set_transition_length(0);
+            call.set_rgb(0.0, 0.0, 1.0);
+            call.perform();
+          } else {
+            auto call = id(statusledlight).turn_off();
+            call.set_transition_length(0);
+            call.perform();
+          }
