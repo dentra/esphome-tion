@@ -31,6 +31,12 @@ Doxygen
 /components/vport
 /components/nvs
 /components/settings
-/components/vport
+/components/cgp
+/components/qingping
+/components/web_server
 /components/web_server_idf
+/components/web_menu
+/components/coredump
 /components/*_jtag/
+/components/_*
+/fw
