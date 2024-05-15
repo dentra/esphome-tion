@@ -1,14 +1,13 @@
 substitutions:
   # Tion mac address. setup yours.
   tion_mac_address: 00:00:00:00:00:00
-  # Name of the node.
-  # Don't use underscores.
+  # Name of the node. Don't use underscores!
   # https://esphome.io/guides/faq.html#why-shouldn-t-i-use-underscores-in-my-device-name
   node_name: tion-4s
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
-  # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "false"
+  # Add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "true"
 
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid
@@ -19,33 +18,39 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: next # cant use substitutions here
     files:
-      ## Enable additional WiFi signal sensor. Comment next line to disable.
+      ## You can enable or disable some of the features listed below.
+      ## The disabled feature starts with # symbol.
+      ## The indentation before uncommented package is very important!
+
+      ## Additional WiFi signal sensor.
       - packages/wifi_signal.yaml
-      ## Enable additional BLE RSSI sensor. Comment next line to disable.
+      ## Additional BLE RSSI sensor.
       - packages/rssi_signal.yaml
-      ## Enable additional Uptime sensor. Comment next line to disable.
+      ## Additional Uptime sensor.
       - packages/uptime.yaml
-      ## Enable additional Restart button. Comment next line to disable.
+      ## Additional Restart button.
       - packages/restart.yaml
-      ## Enable maximum target temperature to 30°C. Comment next line to disable.
+      ## Unlock Tion 30°C heating.
       #- packages/tion_temperature30c.yaml
-      ## Uncomment next line to enable additional energy sensor.
+      ## Additional energy sensor.
       # - packages/tion_energy.yaml
-      ## Common configuration settings. Do not comment or move or remove.
+      ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
-      ## BLE configuration settings. Do not comment or move or remove.
+      ## Change to esp32_s3.yaml/esp32_c3.yaml to use with ESP32-S3/ESP32-C3 chip.
       - packages/esp32_ble.yaml
-      ## Uncomment next line to enable persistent connection runtime control switch.
+      ## Persistent connection runtime control switch.
       # - packages/persistent.yaml
-      ## Uncomment next line to enable additional connect switch useful for debugging.
+      ## Additional connect switch useful for debugging.
       # - packages/connect.yaml
-      ## Uncomment next line to enable additional internal timers support.
+      ## Tion internal timers support.
       # - packages/tion_4s_timers.yaml
-      ## Uncomment next line to enable monitor internal ESP temperature.
-      # # - packages/esp32_temperature.yaml
-      ## Uncomment next line to enable web server support.
+      ## Internal ESP32 temperature sensor.
+      # - packages/esp32_temperature.yaml
+      ## Lilygo T-Dongle S3 internal LED and button support
+      # - packages/lilygo.yaml
+      ## Web server support.
       # - packages/web_server.yaml
-      ## Uncomment next line to enable additional debug information.
+      ## Additional debug information.
       # - packages/debug.yaml
 
 # Uncomment to enable MQTT connecion.

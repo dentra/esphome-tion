@@ -1,12 +1,9 @@
 substitutions:
-  # Name of the node.
-  # Don't use underscores.
+  # Name of the node. Don't use underscores!
   # https://esphome.io/guides/faq.html#why-shouldn-t-i-use-underscores-in-my-device-name
   node_name: tion-o2
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
-  # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "false"
   # UART configuration.
   # Make sure to use YOUR pins!
   tx_pin: TX
@@ -27,27 +24,33 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: next # cant use substitutions here
     files:
-      ## Enable additional WiFi signal sensor. Comment next line to disable.
+      ## You can enable or disable some of the features listed below.
+      ## The disabled feature starts with # symbol.
+      ## The indentation before uncommented package is very important!
+
+      ## Additional WiFi signal sensor.
       - packages/wifi_signal.yaml
-      ## Enable additional Uptime sensor. Comment next line to disable.
+      ## Additional Uptime sensor.
       - packages/uptime.yaml
-      ## Enable additional Restart button. Comment next line to disable.
+      ## Additional Restart button.
       - packages/restart.yaml
-      ## Enable maximum target temperature to 30°C. Comment next line to disable.
+      ## Unlock Tion 30°C heating.
       #- packages/tion_temperature30c.yaml
-      ## Uncomment next line to enable additional energy sensor.
+      ## Additional energy sensor.
       # - packages/tion_energy.yaml
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_enable_antifrize.yaml
-      ## Common configuration settings. Do not comment or move or remove.
+      ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
-      # Change to esp32_s2.yaml/esp32_c3.yaml/esp32_s3.yaml to use with ESP32-S2/C3/S3 chip.
+      ## Change to esp32_s3.yaml/esp32_c3.yaml/esp32_s2.yaml/esp8266.yaml to use with ESP32-S3/C3/S2/ESP8266 chip.
       - packages/esp32.yaml
-      ## Uncomment next line to enable monitor internal ESP temperature.
-      # # - packages/esp32_temperature.yaml
-      ## Uncomment next line to enable web server support.
+      ## Internal ESP32 temperature sensor.
+      # - packages/esp32_temperature.yaml
+      ## Lilygo T-Dongle S3 internal LED and button support
+      # - packages/lilygo.yaml
+      ## Web server support.
       # - packages/web_server.yaml
-      ## Uncomment next line to enable additional debug information.
+      ## Additional debug information.
       # - packages/debug.yaml
 
 # Uncomment to enable MQTT connecion.

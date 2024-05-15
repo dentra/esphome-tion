@@ -4,14 +4,15 @@ substitutions:
   # Tion mac address. setup yours.
   tion_mac_address: 00:00:00:00:00:00
   {%- endif %}
-  # Name of the node.
-  # Don't use underscores.
+  # Name of the node. Don't use underscores!
   # https://esphome.io/guides/faq.html#why-shouldn-t-i-use-underscores-in-my-device-name
   node_name: tion-{{ "lite" if type == "lt" else type }}
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
-  # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "{{ 'true' if enable_node_add_mac_suffix == 'true' else 'false' }}"
+  {%- if port == "ble" %}
+  # Add suffix for node name to have one firmware for many devices.
+  node_add_mac_suffix: "true"
+  {%- endif %}
   {%- if type == "3s" and port == "uart" %}
   # Board
   board: esp01_1m
@@ -48,68 +49,72 @@ packages:
     url: https://github.com/dentra/esphome-tion
     ref: {{ version_tion }} # cant use substitutions here
     files:
-      ## Enable additional WiFi signal sensor. Comment next line to disable.
+      ## You can enable or disable some of the features listed below.
+      ## The disabled feature starts with # symbol.
+      ## The indentation before uncommented package is very important!
+
+      ## Additional WiFi signal sensor.
       - packages/wifi_signal.yaml
       {%- if port == "ble" %}
-      ## Enable additional BLE RSSI sensor. Comment next line to disable.
+      ## Additional BLE RSSI sensor.
       - packages/rssi_signal.yaml
       {%- endif %}
-      ## Enable additional Uptime sensor. Comment next line to disable.
+      ## Additional Uptime sensor.
       - packages/uptime.yaml
-      ## Enable additional Restart button. Comment next line to disable.
+      ## Additional Restart button.
       - packages/restart.yaml
-      ## Enable maximum target temperature to 30°C. Comment next line to disable.
+      ## Unlock Tion 30°C heating.
       #- packages/tion_temperature30c.yaml
       {%- if type != "3s" %}
-      ## Uncomment next line to enable additional energy sensor.
+      ## Additional energy sensor.
       {{ "" if enable_energy == "true" else "# " -}}
       - packages/tion_energy.yaml
       {%- endif -%}
       {#%- if type == "o2" and port == "uart" %}
-      ## Unomment to enable uart proxy support.
+      ## UART proxy support.
       # - packages/tion_o2_proxy.yaml
       {%- endif %#}
       {%- if type in ["3s", "o2"] %}
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_enable_antifrize.yaml
       {%- endif %}
-      ## Common configuration settings. Do not comment or move or remove.
+      ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
       {%- if type == "3s" and port == "uart" %}
-      ## Change to packages/esp32.yaml if you want to use ESP32.
+      ## Change to esp32.yaml/esp32_s3.yaml/esp32_c3.yaml/esp32_s2.yaml to use with ESP32/ESP32-S3/C3/S2 chip.
       - packages/esp8266.yaml
-      ## Uncomment to enable BLE uart proxy support.
+      ## Proxy internal Tion BLE module.
       #- packages/tion_3s_proxy.yaml
       {%- endif %}
       {%- if type == "o2" and port == "uart" %}
-      # Change to esp32_s2.yaml/esp32_c3.yaml/esp32_s3.yaml to use with ESP32-S2/C3/S3 chip.
+      ## Change to esp32_s3.yaml/esp32_c3.yaml/esp32_s2.yaml/esp8266.yaml to use with ESP32-S3/C3/S2/ESP8266 chip.
       - packages/esp32.yaml
       {%- endif %}
       {%- if type == "4s" and port == "uart" %}
-      # Change to esp32_s2.yaml/esp32_c3.yaml to use with ESP32-S2/ESP32-C3 chip or change to esp32.yaml to use with ESP32 chip.
+      ## Change to esp32.yaml/esp32_s2.yaml/esp32_c3.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
       - packages/esp32_s3.yaml
       {%- endif %}
       {%- if port == "ble" %}
-      ## BLE configuration settings. Do not comment or move or remove.
+      ## Change to esp32_s3.yaml/esp32_c3.yaml to use with ESP32-S3/ESP32-C3 chip.
       - packages/esp32_ble.yaml
-      ## Uncomment next line to enable persistent connection runtime control switch.
+      ## Persistent connection runtime control switch.
       # - packages/persistent.yaml
-      ## Uncomment next line to enable additional connect switch useful for debugging.
+      ## Additional connect switch useful for debugging.
       # - packages/connect.yaml
       {%- endif %}
       {%- if type == "4s" %}
-      ## Uncomment next line to enable additional internal timers support.
+      ## Tion internal timers support.
       # - packages/tion_4s_timers.yaml
       {%- endif %}
-      {%- if type != "3s" or port != "uart" %}
-      ## Uncomment next line to enable monitor internal ESP temperature.
+      ## Internal ESP32 temperature sensor.
       {{ "" if enable_esp32_temperature == "true" else "# " -}}
-      # - packages/esp32_temperature.yaml
-      {%- endif %}
-      ## Uncomment next line to enable web server support.
+      - packages/esp32_temperature.yaml
+      ## Lilygo T-Dongle S3 internal LED and button support
+      # - packages/lilygo.yaml
+      ## Web server support.
       {{ "" if enable_web_server == "true" else "# " -}}
       - packages/web_server.yaml
-      ## Uncomment next line to enable additional debug information.
+      ## Additional debug information.
       # - packages/debug.yaml
     {%- if (packages_refresh|length) > 0 %}
     refresh: {{ packages_refresh }}
