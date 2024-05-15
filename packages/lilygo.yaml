@@ -7,9 +7,6 @@ spi:
   clk_pin: GPIO39
 
 light:
-  - platform: status_led
-    id: statusled
-    output: statusoutput
   - platform: spi_led_strip
     id: statusledlight
     num_leds: 30
@@ -42,14 +39,12 @@ binary_sensor:
             - lambda: |-
                 id(factory_reset_action) = false;
                 auto call = id(statusledlight).turn_on();
-                call.set_transition_length(0);
                 call.set_rgb(0.0, 1.0, 0.0);
                 call.set_effect("slow_pulse");
                 call.perform();
             - delay: 1s
             - lambda: |-
                 auto call = id(statusledlight).turn_off();
-                call.set_transition_length(0);
                 call.perform();
                 global_preferences->reset();
             - delay: 200ms
@@ -62,8 +57,7 @@ binary_sensor:
         then:
           - lambda: |-
               auto call = id(statusledlight).turn_on();
-              call.set_transition_length(0);
-              call.set_rgb(1.0, 0.0, 0.0);
+              call.set_rgb(1.0, 0.6, 0.0);
               call.set_effect("fast_pulse");
               call.perform();
               id(factory_reset_action) = true;
@@ -71,22 +65,48 @@ binary_sensor:
           - lambda: |-
               id(factory_reset_action) = false;
               auto call = id(statusledlight).turn_off();
-              call.set_transition_length(0);
               call.perform();
 
 output:
-  - platform: template
-    id: statusoutput
-    type: binary
-    write_action:
-      - lambda: |-
-          if (state) {
+  - platform: gpio
+    pin:
+      number: GPIO38
+      inverted: true
+    id: output_lcd_backlight
+
+esphome:
+  on_boot:
+    - lambda: id(output_lcd_backlight).turn_off();
+  on_loop:
+    - lambda: |-
+        static uint32_t app_state = 0;
+
+        if (id(factory_reset_action)) {
+          app_state = 0;
+          return;
+        }
+
+        if (app_state == App.get_app_state()) {
+          return;
+        }
+        app_state = App.get_app_state();
+
+        if (app_state & STATUS_LED_ERROR) {
             auto call = id(statusledlight).turn_on();
-            call.set_transition_length(0);
+            call.set_rgb(1.0, 0.0, 0.0);
+            call.set_effect("slow_pulse");
+            call.perform();
+            return;
+        }
+
+        if (app_state & STATUS_LED_WARNING) {
+            auto call = id(statusledlight).turn_on();
             call.set_rgb(0.0, 0.0, 1.0);
+            call.set_effect("slow_pulse");
             call.perform();
-          } else {
-            auto call = id(statusledlight).turn_off();
-            call.set_transition_length(0);
-            call.perform();
-          }
+            return;
+        }
+
+        auto call = id(statusledlight).turn_off();
+        call.perform();
+

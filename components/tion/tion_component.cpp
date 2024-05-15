@@ -36,10 +36,11 @@ void TionApiComponent::call_setup() {
     ESP_LOGW(TAG, "Invalid state timeout: %.1f s", this->state_timeout_ * 0.001f);
     this->state_timeout_ = 0;
   }
-  if (this->state_timeout_ == 0) {
-    this->has_state_ = true;
-  }
 }
+
+// обработка и обновление App.app_state_ происходит только для компонентов
+// переопределяющих loop или call_loop (см. application.cpp:148)
+void TionApiComponent::call_loop() { PollingComponent::call_loop(); }
 
 void TionApiComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "%s:", this->get_component_source());
@@ -58,33 +59,24 @@ void TionApiComponent::update() {
 }
 
 void TionApiComponent::on_state_(const TionState &state, const uint32_t request_id) {
-  this->state_check_cancel_();
+  // clear error reporting
+  this->status_clear_error();
+  this->cancel_timeout(STATE_TIMEOUT);
+  // notify state
   this->defer([this]() { this->state_callback_.call(&this->state()); });
 }
 
 void TionApiComponent::state_check_schedule_() {
-  if (this->state_timeout_ > 0) {
-    this->set_timeout(STATE_TIMEOUT, this->state_timeout_, [this]() {
-      this->has_state_ = false;
-      this->state_check_report_(this->state_timeout_);
-    });
-  } else if (!this->has_state_) {
-    this->state_check_report_(this->get_update_interval());
-  } else {
-    this->has_state_ = false;
-  }
-}
-
-void TionApiComponent::state_check_report_(uint32_t timeout) {
-  ESP_LOGW(TAG, "State was not received in %.1f s", timeout * 0.001f);
-  this->state_callback_.call(nullptr);
-}
-
-void TionApiComponent::state_check_cancel_() {
-  this->has_state_ = true;
-  if (this->state_timeout_ > 0) {
-    this->cancel_timeout(STATE_TIMEOUT);
-  }
+  this->set_timeout(STATE_TIMEOUT, this->state_timeout_, [this]() {
+    // error reporting
+    if (this->get_component_state() & STATUS_LED_ERROR) {
+      ESP_LOGW(TAG, "State was not received in %.1f s", this->state_timeout_ * 0.001f);
+    } else {
+      this->status_set_error(str_sprintf("State was not received in %.1f s", this->state_timeout_ * 0.001f).c_str());
+    }
+    // notify subscribers
+    this->state_callback_.call(nullptr);
+  });
 }
 
 dentra::tion::TionStateCall *TionApiComponent::make_call() {

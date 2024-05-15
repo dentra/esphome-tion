@@ -48,6 +48,7 @@ class TionApiComponent : public PollingComponent {
 
   void dump_config() override;
   void call_setup() override;
+  void call_loop() override;
   float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
 
   void update() override;
@@ -86,14 +87,13 @@ class TionApiComponent : public PollingComponent {
 
   TionApiBase *api() { return this->api_; }
 
-  bool has_state() const { return this->has_state_; }
+  bool has_state() const { return this->status_has_error(); }
 
   const dentra::tion::TionTraits &traits() const { return this->api_->get_traits(); }
   const dentra::tion::TionState &state() const { return this->api_->get_state(); }
 
  protected:
   TionApiBase *api_;
-  bool has_state_{};
   bool force_update_{};
   BatchStateCall batch_call_;
 
@@ -107,8 +107,6 @@ class TionApiComponent : public PollingComponent {
 
   void on_state_(const TionState &state, const uint32_t request_id);
   void state_check_schedule_();
-  void state_check_cancel_();
-  void state_check_report_(uint32_t timeout);
 };
 
 // T - TionApi implementation
