@@ -45,6 +45,7 @@ class NVSHandle {
   }
   esp_err_t erase_item(const char *key) { return nvs_erase_key(this->h_, key); }
   esp_err_t commit() { return nvs_commit(this->h_); }
+  esp_err_t erase_all() { return nvs_erase_all(this->h_); }
 
  protected:
   nvs_handle_t h_;

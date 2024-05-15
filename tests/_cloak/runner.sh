@@ -39,7 +39,9 @@ cmake -B $BLD -S $(dirname $0) -DCMAKE_BUILD_TYPE=$TYP \
   -DEX_TEST_INCLUDES="$EX_TEST_INCLUDES" \
   -DEX_TEST_SOURCES="$EX_TEST_SOURCES" \
   -DEX_TEST_FILTER="$SRCS_FILTER" \
-  -DEX_TEST_SOURCES_ESPHOME="$EX_TEST_SOURCES_ESPHOME" && \
+  -DEX_TEST_SOURCES_ESPHOME="$EX_TEST_SOURCES_ESPHOME" \
+  -DCMAKE_OSX_SYSROOT=$(xcode-select -p)/SDKs/MacOSX.sdk \
+  && \
 cmake --build $BLD --target $TGT --config $TYP $ARGS || exit $?
 
 if [ $TGT == "clean" ]; then

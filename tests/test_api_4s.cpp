@@ -29,7 +29,6 @@ class Tion4sBleVPortApiTest : public esphome::tion::TionVPortApi<Tion4sBleIOTest
  public:
   Tion4sBleVPortApiTest(vport_t *vport)
       : esphome::tion::TionVPortApi<Tion4sBleIOTest::frame_spec_type, Tion4sApi>(vport) {
-    this->traits_.initialized = true;
     this->state_.firmware_version = 0xFFFF;
     this->state_.fan_speed = 1;
     this->state_.work_time = 0xFFFF;
@@ -42,7 +41,6 @@ class Tion4sUartVPortApiTest : public Tion4sUartVPortApiTestBase {
   Tion4sUartVPortApiTest(Tion4sUartVPort *vport) : Tion4sUartVPortApiTestBase(vport) {
     this->set_writer(
         Tion4sApi::writer_type::create<Tion4sUartVPortApiTest, &Tion4sUartVPortApiTest::test_write_>(*this));
-    this->traits_.initialized = true;
     // this->traits_.max_fan_speed = 6;
     this->state_.firmware_version = 0xFFFF;
     this->state_.fan_speed = 1;

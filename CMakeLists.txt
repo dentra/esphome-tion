@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(esphome-tion)
 idf_build_set_property(CXX_COMPILE_OPTIONS "-std=gnu++2a" APPEND)
@@ -12,6 +13,7 @@ add_definitions(
     -DUSE_VPORT_BLE
     -DUSE_VPORT_UART
     -DUSE_VPORT_JTAG
+    -DUSE_QINGPING_EXPLORER
 
     -DESPHOME_LOG_LEVEL=ESPHOME_LOG_LEVEL_VERY_VERBOSE
     -DUSE_ESP32

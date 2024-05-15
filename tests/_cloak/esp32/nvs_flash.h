@@ -43,6 +43,7 @@ esp_err_t nvs_commit(nvs_handle_t handle);
 esp_err_t nvs_close(nvs_handle_t handle);
 
 esp_err_t nvs_erase_key(nvs_handle_t c_handle, const char *key);
+esp_err_t nvs_erase_all(nvs_handle_t c_handle);
 
 esp_err_t nvs_get_i8(nvs_handle_t c_handle, const char *key, int8_t *out_value);
 esp_err_t nvs_get_u8(nvs_handle_t c_handle, const char *key, uint8_t *out_value);
