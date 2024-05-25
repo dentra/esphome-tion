@@ -87,7 +87,7 @@ class TionApiComponent : public PollingComponent {
 
   TionApiBase *api() { return this->api_; }
 
-  bool has_state() const { return this->status_has_error(); }
+  bool has_state() const { return !this->status_has_error(); }
 
   const dentra::tion::TionTraits &traits() const { return this->api_->get_traits(); }
   const dentra::tion::TionState &state() const { return this->api_->get_state(); }
