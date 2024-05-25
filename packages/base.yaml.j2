@@ -13,8 +13,6 @@ substitutions:
   node_name: $project_id
   # name for main entity and prefix for all others.
   friendly_name: $node_name
-  # add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "false"
   # vport and additional components configuration parameters
   vport_version: "{{ version_vport }}"
   vport_source: github://dentra/esphome-components@$vport_version
@@ -23,7 +21,7 @@ substitutions:
 esphome:
   name: $node_name
   friendly_name: $friendly_name
-  name_add_mac_suffix: $node_add_mac_suffix
+  comment: Tion breezer control
   project:
     name: "dentra.$project_id"
     version: "$project_version"
