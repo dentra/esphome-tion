@@ -82,9 +82,9 @@ void TionApiComponent::state_check_schedule_() {
 dentra::tion::TionStateCall *TionApiComponent::make_call() {
   const auto batch_start_time = this->batch_call_.get_start_time();
   if (batch_start_time != 0) {
-    ESP_LOGD(TAG, "Continue batch update: %u ms", millis() - batch_start_time);
+    ESP_LOGD(TAG, "Continue batch update: %" PRIu32 " ms", millis() - batch_start_time);
   } else {
-    ESP_LOGD(TAG, "Starting batch update: %u ms", this->batch_timeout_);
+    ESP_LOGD(TAG, "Starting batch update: %" PRIu32 " ms", this->batch_timeout_);
   }
   return &this->batch_call_;
 }

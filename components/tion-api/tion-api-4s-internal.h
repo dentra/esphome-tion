@@ -207,30 +207,25 @@ struct tion4s_state_set_t {
   uint16_t filter_time;
 
   static tion4s_state_set_t create(const tion::TionState &state) {
-    return tion4s_state_set_t{
-        {
-            .power_state = state.power_state,
-            .sound_state = state.sound_state,
-            .led_state = state.led_state,
-            .heater_mode = state.heater_state                          //-//
-                               ? tion4s_state_t::HEATER_MODE_HEATING   //-//
-                               : tion4s_state_t::HEATER_MODE_FANONLY,  //-//
-            .comm_source = state.comm_source,
-            .factory_reset = {},
-            .error_reset = {},
-            .filter_reset = {},
-            .ma_connected = {},  // state.auto_state
-            .ma_auto = state.auto_state,
-            .reserved = {},
-        },
-        .gate_position = state.gate_position != tion::TionGatePosition::OUTDOOR  //-//
-                             ? tion4s_state_t::GATE_POSITION_INDOOR              //-//
-                             : tion4s_state_t::GATE_POSITION_OUTDOOR,            //-//
-        .target_temperature = state.target_temperature,
+    tion4s_state_set_t st_set{};
 
-        .fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed,
-        .filter_time = {},  // state.counters.filter_time
-    };
+    st_set.power_state = state.power_state;
+    st_set.sound_state = state.sound_state;
+    st_set.led_state = state.led_state;
+    st_set.heater_mode = state.heater_state                          //-//
+                             ? tion4s_state_t::HEATER_MODE_HEATING   //-//
+                             : tion4s_state_t::HEATER_MODE_FANONLY;  //-//
+    st_set.comm_source = state.comm_source;
+    st_set.ma_auto = state.auto_state;
+
+    st_set.gate_position = state.gate_position != tion::TionGatePosition::OUTDOOR  //-//
+                               ? tion4s_state_t::GATE_POSITION_INDOOR              //-//
+                               : tion4s_state_t::GATE_POSITION_OUTDOOR;            //-//
+    st_set.target_temperature = state.target_temperature;
+
+    st_set.fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed;
+    // st_set.filter_time = state.counters.filter_time
+    return st_set;
   }
 };
 

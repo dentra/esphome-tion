@@ -287,7 +287,7 @@ class TionApiBase {
   uint8_t get_auto_min_fan_speed() const { return this->auto_min_fan_speed_; }
   uint8_t get_auto_max_fan_speed() const { return this->auto_max_fan_speed_; }
   void set_auto_update_func(std::function<uint8_t(uint16_t current)> &&func) {
-    this->auto_update_func_ = std::move(auto_update_func_);
+    this->auto_update_func_ = std::move(func);
   }
   bool auto_is_valid() const;
 

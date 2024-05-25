@@ -466,7 +466,7 @@ void TionApiBase::enable_boost(bool state, TionStateCall *call) {
 
 void TionApiBase::boost_enable_(TionStateCall *call) {
   if (this->state_.boost_time_left > 0) {
-    TION_LOGW(TAG, "Boost is already in progress, time left %" PRIu32 " s", this->state_.boost_time_left);
+    TION_LOGW(TAG, "Boost is already in progress, time left %u s", this->state_.boost_time_left);
     return;
   }
 
@@ -487,7 +487,7 @@ void TionApiBase::boost_enable_(TionStateCall *call) {
   }
 
   this->boost_save_state_();
-  TION_LOGD(TAG, "Schedule boost for %" PRIu32 " s", boost_time);
+  TION_LOGD(TAG, "Schedule boost for %d s", boost_time);
   this->state_.boost_time_left = boost_time;
 
   call->set_auto_state(false);
