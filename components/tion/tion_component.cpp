@@ -59,6 +59,7 @@ void TionApiComponent::update() {
 }
 
 void TionApiComponent::on_state_(const TionState &state, const uint32_t request_id) {
+  ESP_LOGV(TAG, "State received %" PRIu32, request_id);
   // clear error reporting
   this->status_clear_error();
   this->cancel_timeout(STATE_TIMEOUT);
@@ -69,7 +70,7 @@ void TionApiComponent::on_state_(const TionState &state, const uint32_t request_
 void TionApiComponent::state_check_schedule_() {
   this->set_timeout(STATE_TIMEOUT, this->state_timeout_, [this]() {
     // error reporting
-    if (this->get_component_state() & STATUS_LED_ERROR) {
+    if (this->status_has_error()) {
       ESP_LOGW(TAG, "State was not received in %.1f s", this->state_timeout_ * 0.001f);
     } else {
       this->status_set_error(str_sprintf("State was not received in %.1f s", this->state_timeout_ * 0.001f).c_str());
