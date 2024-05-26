@@ -90,14 +90,8 @@ void TionClimate::control(const climate::ClimateCall &call) {
   if (call.get_mode().has_value()) {
     const auto mode = *call.get_mode();
     ESP_LOGD(TAG, "Set mode %s", LOG_STR_ARG(climate::climate_mode_to_string(mode)));
-    if (mode == climate::CLIMATE_MODE_OFF) {
-      tion->set_power_state(false);
-    } else if (mode == climate::CLIMATE_MODE_HEAT_COOL) {
-      tion->set_power_state(true);
-    } else {
-      tion->set_power_state(true);
-      tion->set_heater_state(mode == climate::CLIMATE_MODE_HEAT);
-    }
+    tion->set_power_state(mode != climate::CLIMATE_MODE_OFF);
+    tion->set_heater_state(mode == climate::CLIMATE_MODE_HEAT);
   }
 
   if (call.get_fan_mode().has_value()) {
@@ -127,16 +121,12 @@ void TionClimate::on_state_(const TionState &state) {
   bool has_changes = false;
 
   climate::ClimateMode mode;
-  climate::ClimateAction action =
-      this->enable_fan_auto_ && state.auto_state && this->parent_->api()->get_auto_min_fan_speed() == 0
-          ? climate::CLIMATE_ACTION_IDLE
-          : climate::CLIMATE_ACTION_OFF;
+  climate::ClimateAction action;
   if (!state.power_state) {
-    if (action == climate::CLIMATE_ACTION_OFF) {
-      mode = climate::CLIMATE_MODE_OFF;
-    } else {
-      mode = state.heater_state ? climate::CLIMATE_MODE_AUTO : climate::CLIMATE_MODE_FAN_ONLY;
-    }
+    mode = climate::CLIMATE_MODE_OFF;
+    action = this->enable_fan_auto_ && state.auto_state && this->parent_->api()->get_auto_min_fan_speed() == 0
+                 ? climate::CLIMATE_ACTION_IDLE
+                 : climate::CLIMATE_ACTION_OFF;
   } else if (state.heater_state) {
     mode = climate::CLIMATE_MODE_HEAT;
     action = state.is_heating(this->parent_->traits())  //-//
@@ -144,6 +134,7 @@ void TionClimate::on_state_(const TionState &state) {
                  : climate::CLIMATE_ACTION_FAN;
   } else {
     mode = climate::CLIMATE_MODE_FAN_ONLY;
+    action = climate::CLIMATE_ACTION_FAN;
   }
 
   if (this->mode != mode) {
