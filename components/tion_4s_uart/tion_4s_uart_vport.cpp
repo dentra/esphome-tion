@@ -1,7 +1,11 @@
 #include "esphome/core/log.h"
 #include "esphome/core/defines.h"
 #ifdef USE_OTA
+#if (ESPHOME_VERSION_CODE < VERSION_CODE(2024, 6, 0))
 #include "esphome/components/ota/ota_component.h"
+#else
+#include "esphome/components/ota/ota_backend.h"
+#endif
 #endif
 
 #include "tion_4s_uart_vport.h"
@@ -26,8 +30,13 @@ void Tion4sUartVPort::setup() {
   this->set_interval(this->heartbeat_interval_, [this]() { this->api_->send_heartbeat(); });
 
 #ifdef USE_OTA
+#if (ESPHOME_VERSION_CODE < VERSION_CODE(2024, 6, 0))
+  auto *global_ota_callback = ota::global_ota_component;
+#else
+  auto *global_ota_callback = ota::get_global_ota_callback();
+#endif
   // additionally send heartbeat when OTA starts and before ESP restart.
-  ota::global_ota_component->add_on_state_callback([this](ota::OTAState state, float, uint8_t) {
+  global_ota_callback->add_on_state_callback([this](ota::OTAState state, float, uint8_t) {
     if (state != ota::OTAState::OTA_IN_PROGRESS) {
       this->api_->send_heartbeat();
     }
