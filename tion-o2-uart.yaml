@@ -9,11 +9,6 @@ substitutions:
   tx_pin: TX
   rx_pin: RX
   baud_rate: "115200"
-  # UART proxy configuration (optional).
-  # Make sure to use YOUR pins!
-  proxy_tx_pin: GPIO15
-  proxy_rx_pin: GPIO13
-  proxy_baud_rate: "115200"
 
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid

@@ -1,30 +1,16 @@
 substitutions:
   board: esp32-c3-devkitm-1
 
+packages:
+  tion.esp32_ble: !include esp32_ble.yaml
+
 esphome:
   platformio_options:
     board_build.flash_mode: dio
-
-esp32:
-  board: $board
-  framework:
-    type: esp-idf
 
 esp32_ble:
   enable_on_boot: false
 
 wifi:
-  power_save_mode: light
   on_connect:
     - ble.enable
-
-esp32_ble_tracker:
-
-ble_client:
-  mac_address: $tion_mac_address
-  id: tion_ble_client
-
-ota:
-  on_begin:
-    then:
-      lambda: id(tion_ble_client).set_enabled(false);

@@ -4,8 +4,6 @@ substitutions:
   node_name: tion-3s
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
-  # Board
-  board: esp01_1m
   # UART configuration.
   # Make sure to use YOUR pins!
   tx_pin: TX
@@ -15,7 +13,6 @@ substitutions:
   # Make sure to use YOUR pins!
   proxy_tx_pin: GPIO15
   proxy_rx_pin: GPIO13
-  proxy_baud_rate: "115200"
 
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid

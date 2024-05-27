@@ -6,8 +6,6 @@ substitutions:
   node_name: tion-lite
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
-  # Add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "true"
 
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid

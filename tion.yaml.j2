@@ -9,25 +9,19 @@ substitutions:
   node_name: tion-{{ "lite" if type == "lt" else type }}
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
-  {%- if port == "ble" %}
-  # Add suffix for node name to have one firmware for many devices.
-  node_add_mac_suffix: "true"
-  {%- endif %}
-  {%- if type == "3s" and port == "uart" %}
-  # Board
-  board: esp01_1m
-  {%- endif %}
+
   {%- if type in ["3s", "o2"] and port == "uart" %}
   # UART configuration.
   # Make sure to use YOUR pins!
   tx_pin: TX
   rx_pin: RX
   baud_rate: "115200"
+    {%- if type in ["3s"] %}
   # UART proxy configuration (optional).
   # Make sure to use YOUR pins!
   proxy_tx_pin: GPIO15
   proxy_rx_pin: GPIO13
-  proxy_baud_rate: "115200"
+    {%- endif %}
   {%- endif %}
 
   # WiFi settings.
