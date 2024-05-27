@@ -217,6 +217,7 @@ struct tion4s_state_set_t {
                              : tion4s_state_t::HEATER_MODE_FANONLY;  //-//
     st_set.comm_source = state.comm_source;
     st_set.ma_auto = state.auto_state;
+    st_set.ma_connected = state.auto_state;
 
     st_set.gate_position = state.gate_position != tion::TionGatePosition::OUTDOOR  //-//
                                ? tion4s_state_t::GATE_POSITION_INDOOR              //-//

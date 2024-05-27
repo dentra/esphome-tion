@@ -159,7 +159,7 @@ struct tion3s_state_set_t {
                 .timer_state = {},
                 .sound_state = state.sound_state,
                 .ma_auto = state.auto_state,
-                .ma_connected = {},  // state.auto_state
+                .ma_connected = state.auto_state,
                 .save = {},
                 .ma_pairing = {},
                 // в tion remote всегда выставляется этот бит
