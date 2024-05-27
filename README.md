@@ -12,7 +12,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.4.2&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.5.2&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
@@ -40,7 +40,7 @@ English version of this page is available via [google translate](https://github-
  - Tion 4S (BLE/UART)
  - Tion Lite (BLE)
  - Tion 3S (BLE/UART)
- - Tion O2/O2 Max (UART) (бризер должен иметь возможность подключения RF-модуля, наличие самого модуля не обязательно)
+ - Tion O2 Mac (UART) (бризер должен иметь возможность подключения RF-модуля, наличие самого модуля не обязательно)
 
 Интеграция позволяет управлять следующими функциями:
 * Включение/Выключение
