@@ -253,8 +253,8 @@ struct Recirculation {
 
   static const char *get_icon(TionApiComponent *c) { return binary_sensor::Gate::get_icon(c); }
 
-  static bool get(const TionState &state) { return binary_sensor::Gate::get(state); }
-  static void set(TionStateCall *call, bool state) { call->set_gate_state(state); }
+  static bool get(const TionState &state) { return !binary_sensor::Gate::get(state); }
+  static void set(TionStateCall *call, bool state) { call->set_gate_state(!state); }
 };
 
 struct Boost : public binary_sensor::Boost {
