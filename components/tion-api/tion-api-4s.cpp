@@ -338,7 +338,7 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
   this->state_.sound_state = state.sound_state;
   this->state_.led_state = state.led_state;
   this->state_.comm_source = state.comm_source;
-  this->state_.auto_state = state.ma_auto;
+  this->state_.auto_state = state.ma_connected;
   this->state_.filter_state = state.filter_state;
   this->state_.gate_error_state = state.errors & tion4s_state_t::GATE_ERROR_BIT;
   this->state_.gate_position =                                           //-//
@@ -381,6 +381,7 @@ void Tion4sApi::dump_state_(const tion4s_state_t &state) const {
   TION_LOGV(TAG, "heater_mode : %u", state.heater_mode);
   TION_LOGV(TAG, "heater_state: %s", ONOFF(state.heater_state));
   TION_LOGV(TAG, "active_timer: %s", ONOFF(state.active_timer));
+  TION_LOGV(TAG, "ma_auto     : %s", ONOFF(state.ma_auto));
   TION_LOGV(TAG, "ma_connected: %s", ONOFF(state.ma_connected));
   TION_LOGV(TAG, "reserved    : %02X", state.reserved);
 }

@@ -178,7 +178,7 @@ void Tion3sApi::update_state_(const tion_3s::tion3s_state_t &state) {
   this->state_.sound_state = state.flags.sound_state;
   // this->state_.led_state = state.led_state;
   // this->state_.comm_source = state.comm_source;
-  this->state_.auto_state = state.flags.ma_auto;
+  this->state_.auto_state = state.flags.ma_connected;
   this->state_.filter_state = state.filter_time <= 30;
   // this->state_.gate_error_state = state.errors & tion4s_state_t::GATE_ERROR_BIT;
   this->state_.gate_position =                                                  //-//
@@ -222,6 +222,7 @@ void Tion3sApi::dump_state_(const tion_3s::tion3s_state_t &state) const {
   TION_LOGV(TAG, "timer_state : %s", ONOFF(state.flags.timer_state));
   TION_LOGV(TAG, "preset_state: %s", ONOFF(state.flags.preset_state));
   TION_LOGV(TAG, "save        : %s", ONOFF(state.flags.save));
+  TION_LOGV(TAG, "ma_auto     : %s", ONOFF(state.flags.ma_auto));
   TION_LOGV(TAG, "ma_connected: %s", ONOFF(state.flags.ma_connected));
   TION_LOGV(TAG, "ma_pairing  : %s", ONOFF(state.flags.ma_pairing));
   TION_LOGV(TAG, "reserved    : 0x%02X", state.flags.reserved);
