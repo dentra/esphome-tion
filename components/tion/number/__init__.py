@@ -63,6 +63,7 @@ PC = new_pc(
             ),
         },
         "auto_setpoint": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
             CONF_ICON: cgp.ICON_FAN_AUTO,
             CONF_TRAITS: Traits(
                 step=10,
@@ -70,12 +71,14 @@ PC = new_pc(
             ),
         },
         "auto_min_fan_speed": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
             CONF_ICON: cgp.ICON_FAN_CHEVRON_DOWN,
             CONF_TRAITS: Traits(
                 initial_value=1,
             ),
         },
         "auto_max_fan_speed": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
             CONF_ICON: cgp.ICON_FAN_CHEVRON_UP,
             CONF_TRAITS: Traits(
                 initial_value=3,

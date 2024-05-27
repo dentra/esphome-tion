@@ -46,6 +46,7 @@ PC = new_pc(
             CONF_ICON: cgp.ICON_LED_OUTLINE,
         },
         "recirculation": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
             CONF_ICON: cgp.ICON_VALVE,
         },
         "boost": {
@@ -107,9 +108,7 @@ async def _setup_auto(config: dict, var):
     cgp.setup_value(config, CONF_MIN_FAN_SPEED, var.set_min_fan_speed)
     cgp.setup_value(config, CONF_MAX_FAN_SPEED, var.set_max_fan_speed)
 
-    cgp.setup_values(
-        config, [CONF_AUTO_KP, CONF_AUTO_TI, CONF_AUTO_DB], var.set_data
-    )
+    cgp.setup_values(config, [CONF_AUTO_KP, CONF_AUTO_TI, CONF_AUTO_DB], var.set_data)
 
     await cgp.setup_lambda(
         config,
