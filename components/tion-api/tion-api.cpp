@@ -701,7 +701,8 @@ uint8_t TionApiBase::auto_update_(uint16_t current) {
 }
 
 bool TionApiBase::auto_is_valid() const {
-  return !!this->auto_update_func_ || (this->auto_setpoint_ && this->auto_min_fan_speed_ < this->auto_max_fan_speed_);
+  return !!this->auto_update_func_ ||
+         (this->auto_setpoint_ > 400 && this->auto_min_fan_speed_ < this->auto_max_fan_speed_);
 }
 
 }  // namespace tion
