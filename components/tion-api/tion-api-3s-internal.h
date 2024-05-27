@@ -69,6 +69,7 @@ struct tion3s_state_t {
     // Байт 2, бит 7.
     bool ma_pairing : 1;
     // Байт 3, бит 0. Возможно это comm_source т.к. в Tion Remote всегда ставиться в 1.
+    // В Tion Remote для get_state это presets_state
     bool preset_state : 1;
     // Байт 3, бит 1.
     bool presets_state : 1;

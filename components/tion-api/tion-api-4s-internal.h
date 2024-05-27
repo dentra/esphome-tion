@@ -93,6 +93,8 @@ struct tion4s_state_t {
     // Байт 1, бит 4.
     bool active_timer : 1;
     // зарезервированно.
+    // на каждый запрос состояния изменется таким образом:
+    // 0 -> 2 -> 4 -> 6 -> 0 -> 1 -> 3 -> 5 -> 7 -> 1 -> 2 -> 4 и т.д.
     uint8_t reserved : 3;
   };
   // Байт 2. settings: gate position (0 - inflow, 1 - recirculation).
