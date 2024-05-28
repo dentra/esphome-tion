@@ -345,7 +345,7 @@ void Tion4sApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
 
 void Tion4sApi::update_state_(const tion4s_state_t &state) {
   this->state_.power_state = state.power_state;
-  this->state_.heater_state = state.heater_state;
+  this->state_.heater_state = state.heater_mode == tion4s_state_t::HEATER_MODE_HEATING;
   this->state_.sound_state = state.sound_state;
   this->state_.led_state = state.led_state;
   this->state_.comm_source = state.comm_source;
@@ -391,6 +391,7 @@ void Tion4sApi::dump_state_(const tion4s_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
   TION_DUMP(TAG, "heater_mode : %u", state.heater_mode);
   TION_DUMP(TAG, "heater_state: %s", ONOFF(state.heater_state));
+  TION_DUMP(TAG, "heater_prsnt: %u", state.heater_present);
   TION_DUMP(TAG, "active_timer: %s", ONOFF(state.active_timer));
   TION_DUMP(TAG, "ma_auto     : %s", ONOFF(state.ma_auto));
   TION_DUMP(TAG, "ma_connected: %s", ONOFF(state.ma_connected));
