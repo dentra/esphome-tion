@@ -64,9 +64,9 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
   TION_DUMP(TAG, "heater      : %s", ONOFF(this->heater_state));
   TION_DUMP(TAG, "filter_warn : %s", ONOFF(this->filter_state));
   TION_DUMP(TAG, "fan_speed   : %d", this->fan_speed);
-  TION_DUMP(TAG, "target_T    : %d °C", this->target_temperature);
-  TION_DUMP(TAG, "outdoor_T   : %d °C", this->outdoor_temperature);
-  TION_DUMP(TAG, "current_T   : %d °C", this->current_temperature);
+  TION_DUMP(TAG, "target_temp : %d °C", this->target_temperature);
+  TION_DUMP(TAG, "outdoor_temp: %d °C", this->outdoor_temperature);
+  TION_DUMP(TAG, "current_temp: %d °C", this->current_temperature);
   TION_DUMP(TAG, "gate_pos    : %s", this->get_gate_position_str(traits));
 
   if (traits.supports_sound_state) {
@@ -86,6 +86,8 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
   if (traits.supports_heater_var) {
     TION_DUMP(TAG, "heater_var  : %u %%", this->heater_var);
   }
+
+  TION_DUMP(TAG, "productivity : %u m³", this->productivity);
 
   TION_DUMP(TAG, "filter_time : %" PRIu32 " s", this->filter_time_left);
   if (traits.supports_work_time) {
@@ -113,7 +115,7 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
     TION_DUMP(TAG, "hardware_ver: %04X", this->hardware_version);
   }
 
-  TION_DUMP(TAG, "errors      : %08" PRIX32, this->errors);
+  TION_DUMP(TAG, "errors      : 0x%08" PRIX32, this->errors);
 }
 
 float TionState::get_heater_power(const TionTraits &traits) const {

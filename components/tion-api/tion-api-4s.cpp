@@ -383,7 +383,7 @@ void Tion4sApi::dump_state_(const tion4s_state_t &state) const {
   TION_LOGV(TAG, "active_timer: %s", ONOFF(state.active_timer));
   TION_LOGV(TAG, "ma_auto     : %s", ONOFF(state.ma_auto));
   TION_LOGV(TAG, "ma_connected: %s", ONOFF(state.ma_connected));
-  TION_LOGV(TAG, "reserved    : %02X", state.reserved);
+  TION_LOGV(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
 }
 
 void Tion4sApi::update_turbo_(const tion4s_turbo_t &turbo) {

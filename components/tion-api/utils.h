@@ -34,5 +34,7 @@ using std::optional;
 
 #define hex_cstr(data, size) tion_hexencode(data, size).c_str()
 
+const char *get_flag_bits(uint8_t flags);
+
 }  // namespace tion
 }  // namespace dentra

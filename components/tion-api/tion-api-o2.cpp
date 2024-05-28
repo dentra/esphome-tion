@@ -57,16 +57,6 @@
 12. GOTO 7
 */
 
-namespace {
-const char *get_flag_bits(uint8_t flags) {
-  static char flags_bits[CHAR_BIT + 1]{};
-  for (int i = 0; i < CHAR_BIT; i++) {
-    flags_bits[(CHAR_BIT - 1) - i] = ((flags >> i) & 1) + '0';
-  }
-  return flags_bits;
-}
-}  // namespace
-
 namespace dentra {
 namespace tion_o2 {
 
@@ -157,7 +147,7 @@ void TionO2Api::read_frame(uint16_t frame_type, const void *frame_data, size_t f
       };
     } PACKED;
     auto *frame = static_cast<const RawDevModeFrame *>(frame_data);
-    TION_LOGD(TAG, "Response Dev mode: %s", get_flag_bits(frame->data));
+    TION_LOGD(TAG, "Response Dev mode: %s", tion::get_flag_bits(frame->data));
     this->update_dev_mode_(frame->dev_mode);
     return;
   }
@@ -349,10 +339,8 @@ void TionO2Api::update_state_(const tiono2_state_t &state) {
 
 void TionO2Api::dump_state_(const tiono2_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
-  TION_LOGV(TAG, "productivity: %d", state.productivity);
-
   // dump values useful for future research
-  TION_LOGD(TAG, "flags: %s", get_flag_bits(state.flags));
+  TION_LOGV(TAG, "flags       : 0x%02X (%s)", state.flags, tion::get_flag_bits(state.flags));
   if (state.unknown7 != 0x04) {
     TION_LOGW(TAG, "Please report unknown7=%02X", state.unknown7);
   }

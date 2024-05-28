@@ -43,5 +43,13 @@ std::string tion_hexencode(const void *data, uint32_t size) { return hex(data, s
 
 #endif
 
+const char *get_flag_bits(uint8_t flags) {
+  static char flags_bits[CHAR_BIT + 1]{};
+  for (int i = 0; i < CHAR_BIT; i++) {
+    flags_bits[(CHAR_BIT - 1) - i] = ((flags >> i) & 1) + '0';
+  }
+  return flags_bits;
+}
+
 }  // namespace tion
 }  // namespace dentra

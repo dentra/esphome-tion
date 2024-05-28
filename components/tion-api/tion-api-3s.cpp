@@ -215,19 +215,18 @@ void Tion3sApi::update_state_(const tion_3s::tion3s_state_t &state) {
 
 void Tion3sApi::dump_state_(const tion_3s::tion3s_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
-  TION_LOGV(TAG, "filter_days : %u", state.filter_days);
-  TION_LOGV(TAG, "productivity: %u", state.productivity);
-  TION_LOGV(TAG, "current_T1  : %d", state.current_temperature1);
-  TION_LOGV(TAG, "current_T2  : %d", state.current_temperature2);
+  TION_LOGV(TAG, "filter_days : %u d", state.filter_days);
+  TION_LOGV(TAG, "current_T1  : %d °C", state.current_temperature1);
+  TION_LOGV(TAG, "current_T2  : %d °C", state.current_temperature2);
   TION_LOGV(TAG, "timer_state : %s", ONOFF(state.flags.timer_state));
   TION_LOGV(TAG, "preset_state: %s", ONOFF(state.flags.preset_state));
   TION_LOGV(TAG, "save        : %s", ONOFF(state.flags.save));
   TION_LOGV(TAG, "ma_auto     : %s", ONOFF(state.flags.ma_auto));
   TION_LOGV(TAG, "ma_connected: %s", ONOFF(state.flags.ma_connected));
   TION_LOGV(TAG, "ma_pairing  : %s", ONOFF(state.flags.ma_pairing));
-  TION_LOGV(TAG, "reserved    : 0x%02X", state.flags.reserved);
-  TION_LOGV(TAG, "hours       : %u", state.hours);
-  TION_LOGV(TAG, "minutes     : %u", state.minutes);
+  TION_LOGV(TAG, "hours       : %u h", state.hours);
+  TION_LOGV(TAG, "minutes     : %u min", state.minutes);
+  TION_LOGV(TAG, "reserved    : 0x%02X (%s)", state.flags.reserved, tion::get_flag_bits(state.flags.reserved));
 }
 
 }  // namespace tion
