@@ -25,3 +25,4 @@ logger:
     wifi_esp32: INFO
     esp32.preferences: INFO
     mqtt: INFO
+    spi_led_strip: INFO
