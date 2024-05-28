@@ -378,12 +378,12 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
 
 void Tion4sApi::dump_state_(const tion4s_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
-  TION_LOGV(TAG, "heater_mode : %u", state.heater_mode);
-  TION_LOGV(TAG, "heater_state: %s", ONOFF(state.heater_state));
-  TION_LOGV(TAG, "active_timer: %s", ONOFF(state.active_timer));
-  TION_LOGV(TAG, "ma_auto     : %s", ONOFF(state.ma_auto));
-  TION_LOGV(TAG, "ma_connected: %s", ONOFF(state.ma_connected));
-  TION_LOGV(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
+  TION_DUMP(TAG, "heater_mode : %u", state.heater_mode);
+  TION_DUMP(TAG, "heater_state: %s", ONOFF(state.heater_state));
+  TION_DUMP(TAG, "active_timer: %s", ONOFF(state.active_timer));
+  TION_DUMP(TAG, "ma_auto     : %s", ONOFF(state.ma_auto));
+  TION_DUMP(TAG, "ma_connected: %s", ONOFF(state.ma_connected));
+  TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
 }
 
 void Tion4sApi::update_turbo_(const tion4s_turbo_t &turbo) {

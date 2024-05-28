@@ -340,7 +340,7 @@ void TionO2Api::update_state_(const tiono2_state_t &state) {
 void TionO2Api::dump_state_(const tiono2_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
   // dump values useful for future research
-  TION_LOGV(TAG, "flags       : 0x%02X (%s)", state.flags, tion::get_flag_bits(state.flags));
+  TION_DUMP(TAG, "flags       : 0x%02X (%s)", state.flags, tion::get_flag_bits(state.flags));
   if (state.unknown7 != 0x04) {
     TION_LOGW(TAG, "Please report unknown7=%02X", state.unknown7);
   }

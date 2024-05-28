@@ -109,3 +109,7 @@ void tion_log_printf_(int level, const char *tag, int line, const char *format, 
 }  // namespace dentra
 
 #endif  // TION_ESPHOME
+
+#ifndef TION_DUMP
+#define TION_DUMP TION_LOGV
+#endif

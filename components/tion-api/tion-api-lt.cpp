@@ -188,19 +188,19 @@ void TionLtApi::update_state_(const tionlt_state_t &state) {
 void TionLtApi::dump_state_(const tionlt_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
 
-  TION_LOGV(TAG, "gate_state  : %u", state.gate_state);
-  TION_LOGV(TAG, "heater_prsnt: %s", ONOFF(state.heater_present));
-  TION_LOGV(TAG, "heater_var  : %u", state.heater_var);
-  TION_LOGV(TAG, "kiv_present : %s", ONOFF(state.kiv_present));
-  TION_LOGV(TAG, "kiv_active  : %s", ONOFF(state.kiv_active));
-  TION_LOGV(TAG, "btn_presets : %d/%d/%d, %d/%d/%d °C",                //-//
+  TION_DUMP(TAG, "gate_state  : %u", state.gate_state);
+  TION_DUMP(TAG, "heater_prsnt: %s", ONOFF(state.heater_present));
+  TION_DUMP(TAG, "heater_var  : %u", state.heater_var);
+  TION_DUMP(TAG, "kiv_present : %s", ONOFF(state.kiv_present));
+  TION_DUMP(TAG, "kiv_active  : %s", ONOFF(state.kiv_active));
+  TION_DUMP(TAG, "btn_presets : %d/%d/%d, %d/%d/%d °C",                //-//
             state.button_presets.fan[0], state.button_presets.fan[1],  //-//
             state.button_presets.fan[2], state.button_presets.tmp[0],  //-//
             state.button_presets.tmp[1], state.button_presets.tmp[2]);
-  TION_LOGV(TAG, "errors_cnt  : %s",
+  TION_DUMP(TAG, "errors_cnt  : %s",
             format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors_cnt), sizeof(state.errors_cnt)).c_str());
-  TION_LOGV(TAG, "test_type   : 0x%02X (%s)", state.test_type, tion::get_flag_bits(state.test_type));
-  TION_LOGV(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
+  TION_DUMP(TAG, "test_type   : 0x%02X (%s)", state.test_type, tion::get_flag_bits(state.test_type));
+  TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
 }
 
 void TionLtApi::set_button_presets(const dentra::tion_lt::button_presets_t &button_presets) {

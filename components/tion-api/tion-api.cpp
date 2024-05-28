@@ -8,10 +8,6 @@
 #include "tion-api.h"
 #include "tion-api-defines.h"
 
-#ifndef TION_DUMP
-#define TION_DUMP TION_LOGV
-#endif
-
 namespace dentra {
 namespace tion {
 
