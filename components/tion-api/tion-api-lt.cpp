@@ -75,6 +75,18 @@ bool TionLtApi::write_state(const TionState &state, uint32_t request_id) const {
     return false;
   }
   auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
+  TION_DUMP(TAG, "power: %s", ONOFF(st_set.power_state));
+  TION_DUMP(TAG, "sound: %s", ONOFF(st_set.sound_state));
+  TION_DUMP(TAG, "led  : %s", ONOFF(st_set.led_state));
+  TION_DUMP(TAG, "auto : %s", ONOFF(st_set.ma_auto));
+  TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_state));
+  TION_DUMP(TAG, "gate : %s", st_set.gate_state == tionlt_state_t::GateState::OPENED ? "opened" : "closed");
+  TION_DUMP(TAG, "temp : %u", st_set.target_temperature);
+  TION_DUMP(TAG, "fan  : %u", st_set.fan_speed);
+  TION_DUMP(TAG, "btn_p: %d/%d/%d, %d/%d/%d °C",                         //-//
+            st_set.button_presets.fan[0], st_set.button_presets.fan[1],  //-//
+            st_set.button_presets.fan[2], st_set.button_presets.tmp[0],  //-//
+            st_set.button_presets.tmp[1], st_set.button_presets.tmp[2]);
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 

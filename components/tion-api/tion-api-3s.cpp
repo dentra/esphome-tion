@@ -101,6 +101,20 @@ bool Tion3sApi::write_state_(const tion::TionState &state) const {
     return false;
   }
   auto st_set = tion3s_state_set_t::create(state);
+  TION_DUMP(TAG, "fan   : %u", st_set.fan_speed);
+  TION_DUMP(TAG, "temp  : %u", st_set.target_temperature);
+  TION_DUMP(TAG, "gate  : %s",
+            st_set.gate_position == tion3s_state_t::GATE_POSITION_INDOOR    ? "indoor"
+            : st_set.gate_position == tion3s_state_t::GATE_POSITION_OUTDOOR ? "outdoor"
+            : st_set.gate_position == tion3s_state_t::GATE_POSITION_MIXED   ? "mixed"
+                                                                            : "unknown");
+  TION_DUMP(TAG, "heat  : %s", ONOFF(st_set.flags.heater_state));
+  TION_DUMP(TAG, "power : %s", ONOFF(st_set.flags.power_state));
+  TION_DUMP(TAG, "sound : %s", ONOFF(st_set.flags.sound_state));
+  TION_DUMP(TAG, "auto  : %s", ONOFF(st_set.flags.ma_auto));
+  TION_DUMP(TAG, "ma    : %s", ONOFF(st_set.flags.ma_connected));
+  TION_DUMP(TAG, "preset: %s", ONOFF(st_set.flags.preset_state));
+
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), st_set);
 }
 

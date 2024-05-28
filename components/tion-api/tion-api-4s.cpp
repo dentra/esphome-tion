@@ -180,6 +180,17 @@ bool Tion4sApi::write_state(const TionState &state, uint32_t request_id) const {
     return false;
   }
   auto st_set = tion4s_state_set_t::create(state);
+  TION_DUMP(TAG, "power: %s", ONOFF(st_set.power_state));
+  TION_DUMP(TAG, "sound: %s", ONOFF(st_set.sound_state));
+  TION_DUMP(TAG, "led  : %s", ONOFF(st_set.led_state));
+  TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_mode != tion4s_state_t::HEATER_MODE_FANONLY));
+  TION_DUMP(TAG, "comm : %s", st_set.comm_source == dentra::tion::CommSource::AUTO ? "auto" : "user");
+  TION_DUMP(TAG, "auto : %s", ONOFF(st_set.ma_auto));
+  TION_DUMP(TAG, "ma   : %s", ONOFF(st_set.ma_connected));
+  TION_DUMP(TAG, "gate : %s",
+            st_set.gate_position == tion4s_state_t::GATE_POSITION_OUTDOOR ? "inflow" : "recirculation");
+  TION_DUMP(TAG, "temp : %u", st_set.target_temperature);
+  TION_DUMP(TAG, "fan  : %u", st_set.fan_speed);
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
 }
 
