@@ -87,7 +87,7 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
     TION_DUMP(TAG, "heater_var  : %u %%", this->heater_var);
   }
 
-  TION_DUMP(TAG, "productivity : %u m³", this->productivity);
+  TION_DUMP(TAG, "productivity: %u m³", this->productivity);
 
   TION_DUMP(TAG, "filter_time : %" PRIu32 " s", this->filter_time_left);
   if (traits.supports_work_time) {
@@ -97,8 +97,7 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
     TION_DUMP(TAG, "fan_time    : %" PRIu32 " s", this->fan_time);
   }
   if (traits.supports_airflow_counter) {
-    TION_DUMP(TAG, "airflow_cnt : %" PRIu32, this->airflow_counter);
-    TION_DUMP(TAG, "airflow_m3  : %.3f m³", this->airflow_m3);
+    TION_DUMP(TAG, "airflow_    : %.3f m³ (%" PRIu32 ")", this->airflow_m3, this->airflow_counter);
   }
 
   if (traits.supports_pcb_pwr_temperature) {
