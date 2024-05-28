@@ -93,7 +93,7 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
     TION_DUMP(TAG, "fan_time    : %" PRIu32 " s", this->fan_time);
   }
   if (traits.supports_airflow_counter) {
-    TION_DUMP(TAG, "airflow_    : %.3f m³ (%" PRIu32 ")", this->airflow_m3, this->airflow_counter);
+    TION_DUMP(TAG, "airflow     : %.3f m³ (%" PRIu32 ")", this->airflow_m3, this->airflow_counter);
   }
 
   if (traits.supports_pcb_pwr_temperature) {
