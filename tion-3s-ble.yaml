@@ -184,11 +184,11 @@ binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
     type: state
-    name: State Warnout
+    name: State Warning
   # Filter warning state.
   - platform: tion
     type: filter
-    name: Filter Warnout
+    name: Filter Worn Out
 
 text_sensor:
   # Tion firmware version.
