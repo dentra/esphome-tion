@@ -184,7 +184,7 @@ bool Tion4sApi::write_state(const TionState &state, uint32_t request_id) const {
   TION_DUMP(TAG, "sound: %s", ONOFF(st_set.sound_state));
   TION_DUMP(TAG, "led  : %s", ONOFF(st_set.led_state));
   TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_mode != tion4s_state_t::HEATER_MODE_FANONLY));
-  TION_DUMP(TAG, "comm : %s", st_set.comm_source == dentra::tion::CommSource::AUTO ? "auto" : "user");
+  TION_DUMP(TAG, "comm : %s", st_set.comm_source == tion::CommSource::AUTO ? "AUTO" : "USER");
   TION_DUMP(TAG, "auto : %s", ONOFF(st_set.ma_auto));
   TION_DUMP(TAG, "ma   : %s", ONOFF(st_set.ma_connected));
   TION_DUMP(TAG, "gate : %s",
@@ -389,7 +389,11 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
 
 void Tion4sApi::dump_state_(const tion4s_state_t &state) const {
   this->state_.dump(TAG, this->traits_);
-  TION_DUMP(TAG, "heater_mode : %u", state.heater_mode);
+  TION_DUMP(TAG, "heater_mode : %s (%u)",
+            state.heater_mode == tion4s_state_t::HEATER_MODE_HEATING   ? "heating"
+            : state.heater_mode == tion4s_state_t::HEATER_MODE_FANONLY ? "fanonly"
+                                                                       : "unknown",
+            state.heater_mode);
   TION_DUMP(TAG, "heater_state: %s", ONOFF(state.heater_state));
   TION_DUMP(TAG, "heater_prsnt: %u", state.heater_present);
   TION_DUMP(TAG, "active_timer: %s", ONOFF(state.active_timer));

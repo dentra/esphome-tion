@@ -234,7 +234,7 @@ void TionO2Api::write_state(TionStateCall *call) {
   TION_DUMP(TAG, "temp : %u", st_set.target_temperature);
   TION_DUMP(TAG, "power: %s", ONOFF(st_set.power_state));
   TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_state));
-  TION_DUMP(TAG, "comm : %s", st_set.comm_source == dentra::tion::CommSource::AUTO ? "auto" : "user");
+  TION_DUMP(TAG, "comm : %s", st_set.comm_source == tion::CommSource::AUTO ? "AUTO" : "USER");
   this->write_frame(FRAME_TYPE_STATE_SET_REQ, st_set);
 
   if (!st.auto_state && st.sound_state) {
