@@ -90,8 +90,14 @@ void TionClimate::control(const climate::ClimateCall &call) {
   if (call.get_mode().has_value()) {
     const auto mode = *call.get_mode();
     ESP_LOGD(TAG, "Set mode %s", LOG_STR_ARG(climate::climate_mode_to_string(mode)));
-    tion->set_power_state(mode != climate::CLIMATE_MODE_OFF);
-    tion->set_heater_state(mode == climate::CLIMATE_MODE_HEAT);
+    if (mode == climate::CLIMATE_MODE_OFF) {
+      tion->set_power_state(false);
+    } else {
+      tion->set_power_state(true);
+      if (mode != climate::CLIMATE_MODE_HEAT_COOL) {
+        tion->set_heater_state(mode == climate::CLIMATE_MODE_HEAT);
+      }
+    }
   }
 
   if (call.get_fan_mode().has_value()) {
