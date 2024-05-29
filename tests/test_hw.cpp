@@ -239,8 +239,11 @@ bool test_hw_ble() {
   Tion4sBleVPortApiTest api(&vport);
   Tion4sCompTest comp(&api);
 
-  io.node_state = esp32_ble_tracker::ClientState::ESTABLISHED;
   cloak::setup_and_loop({&vport});
+
+  vport.set_persistent_connection(true);
+  client.enabled = true;
+  io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
 
   io.test_data_push(cloak::from_hex("80 0D00 3AAD 3139 01000000 00 184B"));
   vport.call_loop();

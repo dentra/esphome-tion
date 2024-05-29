@@ -4,6 +4,11 @@ if [ $USER != "vscode" ]; then
   WORKSPACE_DIR=$(realpath $(dirname $BASH_SOURCE)/..)
 fi
 
+if [[ -z "${VIRTUAL_ENV}" ]]; then
+  echo "activate venv"
+  source $WORKSPACE_DIR/.venv/bin/activate
+fi
+
 export BUILD_DIR="$WORKSPACE_DIR/.build"
 
 ESPHOME_LIB_DIR="$BUILD_DIR/esphome/include"
@@ -34,7 +39,7 @@ SRCS_ESPHOME=(
   # $LIB_COMPO_VPORT_DIR
 )
 
-SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump|settings|_?web_server|web_console|web_menu)/.+\\.cpp$"
+SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump|settings|_?web_server|web_[_a-z]+)/.+\\.cpp$"
 
 
 INCS=(

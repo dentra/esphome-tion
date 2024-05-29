@@ -63,8 +63,9 @@ bool test_api_3s() {
   Tion3sBleVPortTest vport(&io);
   Tion3sBleVPortApiTest api(&vport);
 
+  vport.set_persistent_connection(true);
+  client.enabled = true;
   io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
-  // vport.set_persistent_connection(true);
 
   cloak::setup_and_loop({&vport});
 
@@ -73,14 +74,15 @@ bool test_api_3s() {
   res &= cloak::check_data("request_state", io, "3D.01.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   api.st().firmware_version = 0xFFFF;
+  api.st().fan_speed = 1;
   api.st().gate_position = dentra::tion::TionGatePosition::INDOOR;
   api.write_state(api.st());
   vport.call_loop();
-  res &= cloak::check_data("write_state empty", io, "3D.02.00.00.00.00.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
+  res &= cloak::check_data("write_state empty", io, "3D.02.01.00.00.00.01.00.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   api.reset_filter();
   vport.call_loop();
-  res &= cloak::check_data("reset_filter", io, "3D.02.00.00.00.00.01.02.00.00.00.00.00.00.00.00.00.00.00.5A");
+  res &= cloak::check_data("reset_filter", io, "3D.02.01.00.00.00.01.02.00.00.00.00.00.00.00.00.00.00.00.5A");
 
   api.st().fan_speed = 1;
   api.st().heater_state = true;
@@ -133,6 +135,26 @@ bool test_3s() {
   return res;
 }
 
+std::vector<uint8_t> api_to_3s(const dentra::tion::TionState &st) {
+  dentra::tion_3s::tion3s_state_t res{};
+  res.fan_speed = st.fan_speed;
+  res.gate_position = st.gate_position == dentra::tion::TionGatePosition::OUTDOOR
+                          ? dentra::tion_3s::tion3s_state_t::GATE_POSITION_OUTDOOR
+                      : st.gate_position == dentra::tion::TionGatePosition::INDOOR
+                          ? dentra::tion_3s::tion3s_state_t::GATE_POSITION_INDOOR
+                          : dentra::tion_3s::tion3s_state_t::GATE_POSITION_MIXED;
+  res.target_temperature = st.target_temperature;
+  res.flags.heater_state = st.heater_state;
+  res.flags.power_state = st.power_state;
+  res.flags.sound_state = st.sound_state;
+  res.flags.ma_auto = st.auto_state;
+  res.flags.ma_connected = st.auto_state;
+  res.outdoor_temperature = st.outdoor_temperature;
+  res.filter_time = st.filter_time_left / (3600 * 24);
+  res.firmware_version = st.firmware_version;
+  return std::vector<uint8_t>((uint8_t *) &res, (uint8_t *) &res + sizeof(res));
+}
+
 bool test_uart_3s() {
   bool res = true;
 
@@ -148,8 +170,10 @@ bool test_uart_3s() {
     vport.call_loop();
   }
 
-  auto act = std::vector<uint8_t>((uint8_t *) &api.st(), (uint8_t *) &api.st() + sizeof(api.st()));
-  // FIXME transform TionState to orig 3s state
+  auto act = api_to_3s(api.st());
+  // часы/минуты не поддерживаются, поэтому просто скопируем их
+  act[0x9] = 0x0e;
+  act[0xa] = 0x2d;
   res &= cloak::check_data_(act, state);
 
   api.request_state();

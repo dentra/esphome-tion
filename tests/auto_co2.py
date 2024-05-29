@@ -3,7 +3,9 @@
 Source article:
   https://www.sciencedirect.com/science/article/pii/S0378778823009477
 """
+
 from dataclasses import dataclass
+# 08.00.00.00.1D.00.00.0A.02.00.00
 
 
 class PIController:
@@ -16,136 +18,126 @@ class PIController:
         Voamax: float = float("NaN"),
     ) -> None:
         # proportional gain [L/s.ppm-CO2]
-        self.Kp_ = Kp
+        self.kp = Kp
         # integral gain [min]
-        self.Ti_ = Ti
+        self.ti = Ti
         # dead band [ppm]
         self.db_ = db
         # minimum outdoor airflow rate [L/s]
-        self.Voamin_ = Voamin
+        self.v_oa_min = Voamin
         # maximum outdoor airflow rate [L/s]
-        self.Voamax_ = Voamax
+        self.v_oa_max = Voamax
 
-        self.dt0_ = 0.0
-        self.Ib0_ = 0.0
-        self.now_ = 0
-        self.IeMax = False
+        self._ib = 0.0
+        self._dt0 = 0
+        self._now = 0
 
     @property
     def now(self) -> int:
         # must return current time millis
-        return self.now_
+        return self._now
 
     @now.setter
     def now(self, now: int) -> None:
-        self.now_ = now
+        self._now = now
+
+    # time step [s]
+    def _dt_s(self):
+        now = self.now
+        res = now - self._dt0 if self._dt0 != 0 else 0
+        self._dt0 = now
+        return res
 
     # Cset - CO2 setpoint [ppm]
     # Cval - CO2 concentration [ppm]
-    def update1(self, Cset: int, Cval: int) -> float:
-        now = self.now  # current time in millis
-        # time step [s]
-        dt = 0 if self.dt0_ == 0 else (now - self.dt0_) / 1000
-        self.dt0_ = now
-
+    def update1(self, setpoint: int, current: int) -> float:
         # 7: error from setpoint [ppm]
-        e: int = Cset - Cval
+        e: int = setpoint - current
 
         # 8: error from setpoint, including dead band [ppm]
-        Edb: float
-        if Cval < Cset - self.db_:
-            Edb = e - self.db_
-        elif Cval > Cset + self.db_:
-            Edb = e + self.db_
+        e_db: float
+        if current < setpoint - self.db_:
+            e_db = e - self.db_
+        elif current > setpoint + self.db_:
+            e_db = e + self.db_
         else:
-            Edb = 0
-
-        Edb = e
+            e_db = 0
 
         # 9: integral error [min.ppm-CO2]
-        Ie: float = self.Ib0_ + (dt / 60) * Edb
+        ie: float = self._ib + (self._dt_s() / 60) * e_db
 
         def box(k, val):
-            return -k * (Edb + val)
+            return -k * (e_db + val)
 
         # 10: candidate outdoor airflow rate [L/s]
-        Voac: float = box(self.Kp_, Ie / self.Ti_)
+        v_oa_c: float = box(self.kp, ie / self.ti)
 
         self.IeMax = False
         Ibv = "="
         # 11: integral error with anti-integral windup [min.ppm-CO2]
-        Ib: float = Ie
-        if Voac < self.Voamin_:
-            Ib = box(self.Ti_, self.Voamin_ / self.Kp_)
+        ib: float
+        if v_oa_c < self.v_oa_min:
+            ib = box(self.ti, self.v_oa_min / self.kp)
             Ibv = "<"
-        elif Voac > self.Voamax_:
-            Ib = box(self.Ti_, self.Voamax_ / self.Kp_)
+        elif v_oa_c > self.v_oa_max:
+            ib = box(self.ti, self.v_oa_max / self.kp)
             Ibv = ">"
             # self.IeMax = True
         else:
-            Ib = Ie
+            ib = ie
             Ibv = "?"
-        self.Ib0_ = Ib
+        self._ib = ib
 
         # 12: outdoor airflow rate [L/s]
-        Voa: float = box(self.Kp_, Ib / self.Ti_)
+        v_oa: float = box(self.kp, ib / self.ti)
 
         print(
             # f"dt={dt}," +
-            f"now={int(now/1000/60):3}, "
-            + f"e={e:4}, Edb={int(Edb):4},"
-            + f" sp={Cset}, ppm={Cval:3}, Voac={Voac:8.02f},"
+            # f"now={int(now/1000/60):3}, "
+            +f"e={e:4}, Edb={int(e_db):4},"
+            + f" sp={setpoint}, ppm={current:3}, Voac={v_oa_c:8.02f},"
             # + f" Voamin={Voamin_:.2f}, Voamax={Voamax_:.2f},"
             # + f" Doac={Dat.cdoa(Voac):d}, cspd={Dat.cspd(Voac):d},"
-            + f" I={Ie:8.2f},"
-            + f" Ib={Ib:8.2f} {Ibv},"
-            + f" Voa={Voa:5.2f},"
-            + f" Doa={Dat.cdoa(Voa):3},"
-            + f" spd={Dat.cspd(Voa)}"
+            + f" I={ie:8.2f},"
+            + f" Ib={ib:8.2f} {Ibv},"
+            + f" Voa={v_oa:5.2f},"
+            + f" Doa={Dat.cdoa(v_oa):3},"
+            + f" spd={Dat.cspd(v_oa)}"
         )
 
-        return Voa
+        return v_oa
 
-    def update2(self, Cset: int, Cval: int) -> float:
-        now = self.now  # current time in millis
-        # time step [s]
-        dt = 0 if self.dt0_ == 0 else (now - self.dt0_) / 1000
-        self.dt0_ = now
+    def update2(self, setpoint: int, current: int) -> float:
+        error = setpoint - current
+        kp = self.kp
+        ki = self.ti / 60 / 1000
+        dt = self._dt_s() * 1000
 
-        # 7: error from setpoint [ppm]
-        e: int = Cset - Cval
+        proportional_term = kp * error
+        new_integral = error * dt * ki
 
-        error_ = e
-        kp_ = self.Kp_
-        ki_ = self.Ti_ / 60 * 0.001
-        dt_ = dt
+        accumulated_integral = self._ib + new_integral
+        self._ib = accumulated_integral
 
-        proportional_term_ = kp_ * error_
-        new_integral = error_ * dt_ * ki_
+        integral_term = accumulated_integral
 
-        accumulated_integral_ = self.Ib0_
-        accumulated_integral_ += new_integral
-        self.Ib0_ = accumulated_integral_
+        derivative_term = 0
 
-        integral_term_ = accumulated_integral_
+        output = proportional_term + integral_term + derivative_term
 
-        derivative_term_ = 0
-
-        output = proportional_term_ + integral_term_ + derivative_term_
-
-        Edb = e
-        Ie = integral_term_
-        Voac = output
-        Voa = Voac
+        e_db = error
+        ie = integral_term
+        v_oa_c = output
+        v_oa = v_oa_c
 
         print(
             # f"dt={dt}," +
-            f"now={int(now/1000/60):3}, "
-            + f"e={e:4}, Edb={int(Edb):4},"
-            + f" sp={Cset}, ppm={Cval:3}, Voac={Voac:8.02f},"
+            # f"now={int(now/1000/60):3}, "
+            +f"e={error:4}, Edb={int(e_db):4},"
+            + f" sp={setpoint}, ppm={current:3}, Voac={v_oa_c:8.02f},"
             # + f" Voamin={Voamin_:.2f}, Voamax={Voamax_:.2f},"
             # + f" Doac={Dat.cdoa(Voac):d}, cspd={Dat.cspd(Voac):d},"
-            + f" I={Ie:8.2f},"
+            + f" I={ie:8.2f},"
             # + f" Ib={Ib:8.2f} {Ibv},"
             # + f" Voa={Voa:5.2f},"
             # + f" Doa={Dat.cdoa(Voa):3},"
@@ -154,8 +146,8 @@ class PIController:
 
         return output
 
-    def update(self, Cset: int, Cval: int) -> float:
-        return self.update2(Cset, Cval)
+    def update(self, setpoint: int, current: int) -> float:
+        return self.update2(setpoint, current)
 
 
 pa4s = [0, 30, 45, 60, 75, 90, 120]

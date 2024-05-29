@@ -33,8 +33,9 @@ bool test_api_lt() {
   TionLtBleVPortTest vport(&io);
   TionLtBleVPortApiTest api(&vport);
 
+  vport.set_persistent_connection(true);
+  client.enabled = true;
   io.node_state = esphome::esp32_ble_tracker::ClientState::ESTABLISHED;
-  // vport.set_persistent_connection(true);
 
   cloak::setup_and_loop({&vport});
 
