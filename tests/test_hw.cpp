@@ -22,7 +22,6 @@ DEFINE_TAG;
 
 using namespace esphome;
 
-using dentra::tion_4s::tion4s_state_set_t;
 using dentra::tion_4s::tion4s_state_t;
 using dentra::tion::TionGatePosition;
 using dentra::tion::tion_dev_info_t;

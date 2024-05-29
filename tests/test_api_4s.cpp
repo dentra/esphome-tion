@@ -12,7 +12,7 @@ DEFINE_TAG;
 
 using namespace esphome;
 
-using dentra::tion_4s::tion4s_state_set_t;
+using dentra::tion_4s::tion4s_state_set_req_t;
 using dentra::tion_4s::tion4s_state_t;
 using dentra::tion::TionGatePosition;
 using dentra::tion::TionTraits;
@@ -51,13 +51,8 @@ class Tion4sUartVPortApiTest : public Tion4sUartVPortApiTestBase {
 
  protected:
   bool test_write_(uint16_t type, const void *data, size_t size) {
-    struct req_t {
-      uint32_t request_id;
-      tion4s_state_set_t data;
-    } __attribute__((__packed__));
-
-    if (type == dentra::tion_4s::FRAME_TYPE_STATE_SET && size == sizeof(req_t)) {
-      const auto *req = static_cast<const req_t *>(data);
+    if (type == dentra::tion_4s::FRAME_TYPE_STATE_SET && size == sizeof(tion4s_state_set_req_t)) {
+      const auto *req = static_cast<const tion4s_state_set_req_t *>(data);
 
       this->state_.power_state = req->data.power_state;
       this->state_.heater_state = req->data.heater_mode == tion4s_state_t::HEATER_MODE_HEATING;

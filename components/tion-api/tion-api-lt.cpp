@@ -12,7 +12,7 @@ namespace tion {
 using tion::TionTraits;
 using tion::TionState;
 using tion_lt::tionlt_state_t;
-using tion_lt::tionlt_state_set_t;
+using tion_lt::tionlt_state_set_req_t;
 using namespace tion_lt;
 
 static const char *const TAG = "tion-api-lt";
@@ -74,20 +74,21 @@ bool TionLtApi::write_state(const TionState &state, uint32_t request_id) const {
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
-  TION_DUMP(TAG, "power: %s", ONOFF(st_set.power_state));
-  TION_DUMP(TAG, "sound: %s", ONOFF(st_set.sound_state));
-  TION_DUMP(TAG, "led  : %s", ONOFF(st_set.led_state));
-  TION_DUMP(TAG, "auto : %s", ONOFF(st_set.ma_auto));
-  TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_state));
-  TION_DUMP(TAG, "gate : %s", st_set.gate_state == tionlt_state_t::GateState::OPENED ? "opened" : "closed");
-  TION_DUMP(TAG, "temp : %u", st_set.target_temperature);
-  TION_DUMP(TAG, "fan  : %u", st_set.fan_speed);
-  TION_DUMP(TAG, "btn_p: %d/%d/%d, %d/%d/%d °C",                         //-//
-            st_set.button_presets.fan[0], st_set.button_presets.fan[1],  //-//
-            st_set.button_presets.fan[2], st_set.button_presets.tmp[0],  //-//
-            st_set.button_presets.tmp[1], st_set.button_presets.tmp[2]);
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
+  TION_DUMP(TAG, "req  : %" PRIu32, st_set.request_id);
+  TION_DUMP(TAG, "power: %s", ONOFF(st_set.data.power_state));
+  TION_DUMP(TAG, "sound: %s", ONOFF(st_set.data.sound_state));
+  TION_DUMP(TAG, "led  : %s", ONOFF(st_set.data.led_state));
+  TION_DUMP(TAG, "auto : %s", ONOFF(st_set.data.ma_auto));
+  TION_DUMP(TAG, "heat : %s", ONOFF(st_set.data.heater_state));
+  TION_DUMP(TAG, "gate : %s", st_set.data.gate_state == tionlt_state_t::GateState::OPENED ? "opened" : "closed");
+  TION_DUMP(TAG, "temp : %u", st_set.data.target_temperature);
+  TION_DUMP(TAG, "fan  : %u", st_set.data.fan_speed);
+  TION_DUMP(TAG, "btn_p: %d/%d/%d, %d/%d/%d °C",                                   //-//
+            st_set.data.button_presets.fan[0], st_set.data.button_presets.fan[1],  //-//
+            st_set.data.button_presets.fan[2], st_set.data.button_presets.tmp[0],  //-//
+            st_set.data.button_presets.tmp[1], st_set.data.button_presets.tmp[2]);
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
 }
 
 bool TionLtApi::reset_filter(const TionState &state, uint32_t request_id) const {
@@ -96,10 +97,10 @@ bool TionLtApi::reset_filter(const TionState &state, uint32_t request_id) const 
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
-  st_set.filter_reset = true;
-  st_set.filter_time = 181;
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
+  st_set.data.filter_reset = true;
+  st_set.data.filter_time = 181;
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
 }
 
 bool TionLtApi::factory_reset(const TionState &state, uint32_t request_id) const {
@@ -108,9 +109,9 @@ bool TionLtApi::factory_reset(const TionState &state, uint32_t request_id) const
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
-  st_set.factory_reset = true;
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
+  st_set.data.factory_reset = true;
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
 }
 
 bool TionLtApi::reset_errors(const TionState &state, uint32_t request_id) const {
@@ -119,9 +120,9 @@ bool TionLtApi::reset_errors(const TionState &state, uint32_t request_id) const 
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tionlt_state_set_t::create(state, this->button_presets_);
-  st_set.error_reset = true;
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
+  st_set.data.error_reset = true;
+  return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
 }
 
 void TionLtApi::request_state() {

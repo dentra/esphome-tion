@@ -173,8 +173,8 @@ struct tion4s_timer_t {
 
 // структура для изменения состояния
 // NOLINTNEXTLINE(readability-identifier-naming)
-struct tion4s_state_set_t {
-  // Байт 0-1.
+struct _tion4s_state_set_t {
+  // Байт 0. Флаги изменения состояния.
   struct {
     // Байт 0, бит 0. состояние (power state)
     bool power_state : 1;
@@ -192,11 +192,20 @@ struct tion4s_state_set_t {
     bool error_reset : 1;
     // Байт 0, бит 7.
     bool filter_reset : 1;
-    // Байт 1, бит 0.
-    bool ma_connected : 1;
-    // Байт 1, бит 1.
-    bool ma_auto : 1;
-    uint8_t reserved : 6;
+  };
+  // Байт 1. Флаги коммуникации.
+  union {
+    struct {
+      bool ma_connected : 8;
+    };
+    struct {
+      // Байт 1, бит 0.
+      bool ma_connected : 1;
+      // Байт 1, бит 1.
+      bool ma_auto : 1;
+      // Байт 1, бит 2-7.
+      uint8_t reserved : 6;
+    } ext_flags;
   };
   // Байт 2.
   tion4s_state_t::GatePosition gate_position;
@@ -207,29 +216,28 @@ struct tion4s_state_set_t {
   // Байт 5-6. filter time in days
   // TODO синхронизировал с tion remote. работало с uint32_t, посмотреть в прошивке.
   uint16_t filter_time;
+  _tion4s_state_set_t() = delete;
+  _tion4s_state_set_t(const tion::TionState &state)
+      : power_state(state.power_state),
+        sound_state(state.sound_state),
+        led_state(state.led_state),
+        heater_mode(state.heater_state ? tion4s_state_t::HEATER_MODE_HEATING : tion4s_state_t::HEATER_MODE_FANONLY),
+        comm_source(state.comm_source),
+        factory_reset(false),
+        error_reset(false),
+        filter_reset(false),
+        ma_connected(state.auto_state),
+        gate_position(state.gate_position != tion::TionGatePosition::OUTDOOR ? tion4s_state_t::GATE_POSITION_INDOOR
+                                                                             : tion4s_state_t::GATE_POSITION_OUTDOOR),
+        target_temperature(state.target_temperature),
+        fan_speed(state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed),
+        filter_time(0) {}
+};
 
-  static tion4s_state_set_t create(const tion::TionState &state) {
-    tion4s_state_set_t st_set{};
-
-    st_set.power_state = state.power_state;
-    st_set.sound_state = state.sound_state;
-    st_set.led_state = state.led_state;
-    st_set.heater_mode = state.heater_state                          //-//
-                             ? tion4s_state_t::HEATER_MODE_HEATING   //-//
-                             : tion4s_state_t::HEATER_MODE_FANONLY;  //-//
-    st_set.comm_source = state.comm_source;
-    st_set.ma_auto = state.auto_state;
-    st_set.ma_connected = state.auto_state;
-
-    st_set.gate_position = state.gate_position != tion::TionGatePosition::OUTDOOR  //-//
-                               ? tion4s_state_t::GATE_POSITION_INDOOR              //-//
-                               : tion4s_state_t::GATE_POSITION_OUTDOOR;            //-//
-    st_set.target_temperature = state.target_temperature;
-
-    st_set.fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed;
-    // st_set.filter_time = state.counters.filter_time
-    return st_set;
-  }
+struct tion4s_state_set_req_t {
+  uint32_t request_id;
+  _tion4s_state_set_t data;
+  tion4s_state_set_req_t(const tion::TionState &state, uint32_t req_id) : request_id(req_id), data(state){};
 };
 
 #ifdef TION_ENABLE_SCHEDULER

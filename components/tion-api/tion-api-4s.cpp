@@ -179,19 +179,19 @@ bool Tion4sApi::write_state(const TionState &state, uint32_t request_id) const {
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tion4s_state_set_t::create(state);
-  TION_DUMP(TAG, "power: %s", ONOFF(st_set.power_state));
-  TION_DUMP(TAG, "sound: %s", ONOFF(st_set.sound_state));
-  TION_DUMP(TAG, "led  : %s", ONOFF(st_set.led_state));
-  TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_mode != tion4s_state_t::HEATER_MODE_FANONLY));
-  TION_DUMP(TAG, "comm : %s", st_set.comm_source == tion::CommSource::AUTO ? "AUTO" : "USER");
-  TION_DUMP(TAG, "auto : %s", ONOFF(st_set.ma_auto));
-  TION_DUMP(TAG, "ma   : %s", ONOFF(st_set.ma_connected));
+  tion4s_state_set_req_t req(state, request_id);
+  TION_DUMP(TAG, "req  : %" PRIu32, req.request_id);
+  TION_DUMP(TAG, "power: %s", ONOFF(req.data.power_state));
+  TION_DUMP(TAG, "sound: %s", ONOFF(req.data.sound_state));
+  TION_DUMP(TAG, "led  : %s", ONOFF(req.data.led_state));
+  TION_DUMP(TAG, "heat : %s", ONOFF(req.data.heater_mode != tion4s_state_t::HEATER_MODE_FANONLY));
+  TION_DUMP(TAG, "comm : %s", req.data.comm_source == tion::CommSource::AUTO ? "AUTO" : "USER");
+  TION_DUMP(TAG, "auto : %s", ONOFF(req.data.ma_connected));
   TION_DUMP(TAG, "gate : %s",
-            st_set.gate_position == tion4s_state_t::GATE_POSITION_OUTDOOR ? "inflow" : "recirculation");
-  TION_DUMP(TAG, "temp : %u", st_set.target_temperature);
-  TION_DUMP(TAG, "fan  : %u", st_set.fan_speed);
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+            req.data.gate_position == tion4s_state_t::GATE_POSITION_OUTDOOR ? "inflow" : "recirculation");
+  TION_DUMP(TAG, "temp : %u", req.data.target_temperature);
+  TION_DUMP(TAG, "fan  : %u", req.data.fan_speed);
+  return this->write_frame(FRAME_TYPE_STATE_SET, req);
 }
 
 bool Tion4sApi::reset_filter(const TionState &state, uint32_t request_id) const {
@@ -200,10 +200,10 @@ bool Tion4sApi::reset_filter(const TionState &state, uint32_t request_id) const 
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tion4s_state_set_t::create(state);
-  st_set.filter_reset = true;
-  st_set.filter_time = 0;
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tion4s_state_set_req_t req(state, request_id);
+  req.data.filter_reset = true;
+  req.data.filter_time = 0;
+  return this->write_frame(FRAME_TYPE_STATE_SET, req);
 }
 
 bool Tion4sApi::factory_reset(const TionState &state, uint32_t request_id) const {
@@ -212,18 +212,19 @@ bool Tion4sApi::factory_reset(const TionState &state, uint32_t request_id) const
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tion4s_state_set_t::create(state);
-  st_set.factory_reset = true;
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tion4s_state_set_req_t req(state, request_id);
+  req.data.factory_reset = true;
+  return this->write_frame(FRAME_TYPE_STATE_SET, req);
 }
 
 bool Tion4sApi::set_turbo(uint16_t time, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Turbo %u", request_id, time);
   const struct {
+    uint32_t request_id;
     uint16_t time;
     uint8_t err_code;
-  } PACKED turbo{.time = time, .err_code = 0};
-  return this->write_frame(FRAME_TYPE_TURBO_SET, turbo, request_id);
+  } PACKED req{.request_id = request_id, .time = time, .err_code = 0};
+  return this->write_frame(FRAME_TYPE_TURBO_SET, req);
 };
 
 #ifdef TION_ENABLE_HEARTBEAT
@@ -236,15 +237,19 @@ bool Tion4sApi::send_heartbeat() const {
 #ifdef TION_ENABLE_SCHEDULER
 bool Tion4sApi::request_time(uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Time", request_id);
-  return this->write_frame(FRAME_TYPE_TIME_REQ, request_id);
+  const struct {
+    uint32_t request_id;
+  } PACKED req{.request_id = request_id};
+  return this->write_frame(FRAME_TYPE_TIME_REQ, req);
 }
 
 bool Tion4sApi::request_timer(uint8_t timer_id, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Timer %u", request_id, timer_id);
   const struct {
+    uint32_t request_id;
     uint8_t timer_id;
-  } PACKED timer{.timer_id = timer_id};
-  return this->write_frame(FRAME_TYPE_TIMER_REQ, timer, request_id);
+  } PACKED req{.request_id = request_id, .timer_id = timer_id};
+  return this->write_frame(FRAME_TYPE_TIMER_REQ, req);
 }
 
 bool Tion4sApi::request_timers(uint32_t request_id) const {
@@ -256,21 +261,28 @@ bool Tion4sApi::request_timers(uint32_t request_id) const {
 }
 
 bool Tion4sApi::write_timer(uint8_t timer_id, const tion4s_timer_t &timer, uint32_t request_id) const {
-  const struct RawTimerSet {
+  const struct {
+    uint32_t request_id;
     uint8_t timer_id;
     tion4s_timer_t timer;
-  } PACKED set{.timer_id = timer_id, .timer = timer};
-  return this->write_frame(FRAME_TYPE_TIMER_SET, set, request_id);
+  } PACKED req{.request_id = request_id, .timer_id = timer_id, .timer = timer};
+  return this->write_frame(FRAME_TYPE_TIMER_SET, req);
 }
 
 bool Tion4sApi::request_timers_state(const uint32_t request_id) const {
-  return this->write_frame(FRAME_TYPE_TIMERS_STATE_REQ, request_id);
+  const struct {
+    uint32_t request_id;
+  } PACKED req{.request_id = request_id};
+  return this->write_frame(FRAME_TYPE_TIMERS_STATE_REQ, req);
 }
 
 bool Tion4sApi::set_time(time_t time, uint32_t request_id) const {
-  const tion4s_time_t tm{.unix_time = time};
-  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, tm.unix_time);
-  return this->write_frame(FRAME_TYPE_TIME_SET, tm, request_id);
+  const struct {
+    uint32_t request_id;
+    tion4s_time_t data;
+  } PACKED req{.request_id = request_id, .data{.unix_time = time}};
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, req.data.unix_time);
+  return this->write_frame(FRAME_TYPE_TIME_SET, req);
 }
 #endif
 #ifdef TION_ENABLE_DIAGNOSTIC
@@ -291,9 +303,9 @@ bool Tion4sApi::reset_errors(const TionState &state, uint32_t request_id) const 
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tion4s_state_set_t::create(state);
-  st_set.error_reset = true;
-  return this->write_frame(FRAME_TYPE_STATE_SET, st_set, request_id);
+  tion4s_state_set_req_t req(state, request_id);
+  req.data.error_reset = true;
+  return this->write_frame(FRAME_TYPE_STATE_SET, req);
 }
 
 void Tion4sApi::request_state() {

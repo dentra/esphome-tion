@@ -110,15 +110,13 @@ struct tiono2_state_set_t {
   // большое подозрение, что это эквивалент last_com_source
   tion::CommSource comm_source;
 
-  static tiono2_state_set_t create(const tion::TionState &state) {
-    return tiono2_state_set_t{
-        .fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed,
-        .target_temperature = state.target_temperature,
-        .power_state = state.power_state,
-        .heater_state = state.heater_state,
-        .comm_source = state.comm_source,
-    };
-  }
+  tiono2_state_set_t() = delete;
+  tiono2_state_set_t(const tion::TionState &state)
+      : fan_speed(state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed),
+        target_temperature(state.target_temperature),
+        power_state(state.power_state),
+        heater_state(state.heater_state),
+        comm_source(state.comm_source) {}
 };
 
 static_assert(sizeof(tiono2_state_set_t) == 5, "Invalid tiono2_state_set_t size");

@@ -110,7 +110,7 @@ struct tionlt_state_t {
 
 // used to change state of device
 // NOLINTNEXTLINE(readability-identifier-naming)
-struct tionlt_state_set_t {
+struct _tionlt_state_set_t {
   struct {
     // Байт 0, бит 0
     bool power_state : 1;
@@ -145,33 +145,41 @@ struct tionlt_state_set_t {
   uint16_t filter_time;
   uint8_t test_type;
 
-  static tionlt_state_set_t create(const tion::TionState &state, const button_presets_t &button_presets) {
-    tionlt_state_set_t st_set{};
+  _tionlt_state_set_t() = delete;
+  _tionlt_state_set_t(const tion::TionState &state, const button_presets_t &btn_presets)
+      : power_state(state.power_state),
+        sound_state(state.sound_state),
+        led_state(state.led_state),
+        ma_auto(state.auto_state),
+        heater_state(state.heater_state),
+        // в Tion Remote этот бит не выставляется, возможно он инвертирован
+        comm_source(tion::CommSource::AUTO),
+        factory_reset(false),
+        error_reset(false),
+        filter_reset(false),
+        reserved(0),
+        // FIXME корректируем позицию заслонки.
+        // !!! Lite ONLY !!!
+        // Проверить, можем ли мы открыть заслонку при выключенном бризере и вообще упралять ей.
+        // В Tion Remote выставляется так:
+        // gate_pos = (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED;
+        // но с учетом того что в Tion Remote fan_speed всегда > 0, то вообще всегда OPENED
+        gate_state(tionlt_state_t::GateState::OPENED),
+        // gate_state(state.gate_position == tion::TionGatePosition::OPENED ? tionlt_state_t::GateState::OPENED :
+        // tionlt_state_t::GateState::CLOSED),
+        target_temperature(state.target_temperature),
+        // перепроверим, что fan_speed != 0
+        fan_speed(state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed),
+        button_presets(btn_presets),
+        filter_time(0),
+        test_type(0) {}
+};
 
-    st_set.power_state = state.power_state;
-    st_set.sound_state = state.sound_state;
-    st_set.led_state = state.led_state;
-    st_set.ma_auto = state.auto_state;
-    st_set.heater_state = state.heater_state;
-    // в Tion Remote этот бит не выставляется, возможно он инвертирован
-    // st_set.comm_source = {},  // state.comm_source
-    // FIXME корректируем позицию заслонки.
-    // !!! Lite ONLY !!!
-    // Проверить, можем ли мы открыть заслонку при выключенном бризере и вообще упралять ей.
-    // В Tion Remote выставляется так:
-    // gate_pos = (fan_speed > 0 || target_temperature > 0) ? OPENED : CLOSED;
-    // но с учетом того что в Tion Remote fan_speed всегда > 0, то вообще всегда OPENED
-    st_set.gate_state = tionlt_state_t::GateState::OPENED;
-    // .gate_state = state.gate_position == tion::TionGatePosition::OPENED  //-//
-    //                   ? tionlt_state_t::GateState::OPENED                //-//
-    //                   : tionlt_state_t::GateState::CLOSED,               //-//
-    st_set.target_temperature = state.target_temperature;
-    // перепроверим, что fan_speed != 0
-    st_set.fan_speed = state.fan_speed == 0 ? static_cast<uint8_t>(1) : state.fan_speed;
-    st_set.button_presets = button_presets;
-
-    return st_set;
-  }
+struct tionlt_state_set_req_t {
+  uint32_t request_id;
+  _tionlt_state_set_t data;
+  tionlt_state_set_req_t(const tion::TionState &state, const button_presets_t &button_presets, uint32_t req_id)
+      : request_id(req_id), data(state, button_presets) {}
 };
 
 #pragma pack(pop)

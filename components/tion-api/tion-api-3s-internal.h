@@ -141,38 +141,35 @@ struct tion3s_state_set_t {
   uint8_t service_mode;
   // uint8_t reserved[7];
 
+  tion3s_state_set_t() = delete;
   //        0  1  2  3  4  5  6  7  8  9
   // 3D:02 01 17 02 0A.01 02.00.00 00 00 00:00:00:00:00:00:00:5A
-  static tion3s_state_set_t create(const tion::TionState &state) {
-    return tion3s_state_set_t{
-        .fan_speed = state.fan_speed,
-        .target_temperature = state.target_temperature,
-        .gate_position = state.gate_position == tion::TionGatePosition::INDOOR       //-//
-                             ? tion3s_state_t::GATE_POSITION_INDOOR                  //-//
-                             : state.gate_position == tion::TionGatePosition::MIXED  //-//
-                                   ? tion3s_state_t::GATE_POSITION_MIXED             //-//
-                                   : tion3s_state_t::GATE_POSITION_OUTDOOR,          //-//
-
-        .flags =
-            {
-                .heater_state = state.heater_state,
-                .power_state = state.power_state,
-                .timer_state = {},
-                .sound_state = state.sound_state,
-                .ma_auto = state.auto_state,
-                .ma_connected = state.auto_state,
-                .save = {},
-                .ma_pairing = {},
-                // в tion remote всегда выставляется этот бит
-                .preset_state = true,
-                .presets_state = {},
-                .reserved = {},
-            },
-        .filter_time = {},
-        .factory_reset = {},
-        .service_mode = {},
-    };
-  }
+  tion3s_state_set_t(const tion::TionState &state)
+      : fan_speed(state.fan_speed),
+        target_temperature(state.target_temperature),
+        gate_position(state.gate_position == tion::TionGatePosition::INDOOR       //-//
+                          ? tion3s_state_t::GATE_POSITION_INDOOR                  //-//
+                          : state.gate_position == tion::TionGatePosition::MIXED  //-//
+                                ? tion3s_state_t::GATE_POSITION_MIXED             //-//
+                                : tion3s_state_t::GATE_POSITION_OUTDOOR           //-//
+                      ),
+        flags({
+            .heater_state = state.heater_state,
+            .power_state = state.power_state,
+            .timer_state = {},
+            .sound_state = state.sound_state,
+            .ma_auto = state.auto_state,
+            .ma_connected = state.auto_state,
+            .save = {},
+            .ma_pairing = {},
+            // в tion remote всегда выставляется этот бит
+            .preset_state = true,
+            .presets_state = {},
+            .reserved = {},
+        }),
+        filter_time({}),
+        factory_reset(false),
+        service_mode(false) {}
 };
 
 #pragma pack(pop)

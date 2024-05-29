@@ -100,7 +100,7 @@ bool Tion3sApi::write_state_(const tion::TionState &state) const {
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tion3s_state_set_t::create(state);
+  tion3s_state_set_t st_set(state);
   TION_DUMP(TAG, "fan   : %u", st_set.fan_speed);
   TION_DUMP(TAG, "temp  : %u", st_set.target_temperature);
   TION_DUMP(TAG, "gate  : %s",
@@ -139,7 +139,7 @@ bool Tion3sApi::reset_filter_(const tion::TionState &state) const {
   // 3D:01:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
   // 3D:04:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:5A
 
-  auto st_set = tion3s_state_set_t::create(state);
+  tion3s_state_set_t st_set(state);
   st_set.filter_time.reset = true;
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), st_set);
 }
@@ -155,7 +155,7 @@ bool Tion3sApi::factory_reset_(const tion::TionState &state) const {
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  auto st_set = tion3s_state_set_t::create(state);
+  tion3s_state_set_t st_set(state);
   st_set.factory_reset = true;
   return this->write_frame(FRAME_TYPE_REQ(FRAME_TYPE_STATE_SET), st_set);
 }

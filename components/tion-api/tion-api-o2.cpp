@@ -229,13 +229,13 @@ void TionO2Api::write_state(TionStateCall *call) {
     });
   }
 
-  auto st_set = tiono2_state_set_t::create(st);
-  TION_DUMP(TAG, "fan  : %u", st_set.fan_speed);
-  TION_DUMP(TAG, "temp : %u", st_set.target_temperature);
-  TION_DUMP(TAG, "power: %s", ONOFF(st_set.power_state));
-  TION_DUMP(TAG, "heat : %s", ONOFF(st_set.heater_state));
-  TION_DUMP(TAG, "comm : %s", st_set.comm_source == tion::CommSource::AUTO ? "AUTO" : "USER");
-  this->write_frame(FRAME_TYPE_STATE_SET_REQ, st_set);
+  tiono2_state_set_t req(st);
+  TION_DUMP(TAG, "fan  : %u", req.fan_speed);
+  TION_DUMP(TAG, "temp : %u", req.target_temperature);
+  TION_DUMP(TAG, "power: %s", ONOFF(req.power_state));
+  TION_DUMP(TAG, "heat : %s", ONOFF(req.heater_state));
+  TION_DUMP(TAG, "comm : %s", req.comm_source == tion::CommSource::AUTO ? "AUTO" : "USER");
+  this->write_frame(FRAME_TYPE_STATE_SET_REQ, req);
 
   if (!st.auto_state && st.sound_state) {
     this->update_work_mode();
