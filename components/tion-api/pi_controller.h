@@ -51,13 +51,15 @@ class PIController {
   /// last time used in dt_() calculation.
   uint32_t last_time_{};
 
-  /// time step [s].
-  float dt_() {
-      const auto now = tion::millis();
-  const float dt = this->last_time_ == 0 ? 0.0f : (now - this->last_time_) * 0.001f;
-  this->last_time_ = now;
-  return dt;
+  /// time step [ms].
+  uint32_t dt_ms_() {
+    const uint32_t now = tion::millis();
+    const uint32_t res = this->last_time_ == 0 ? 0 : now - this->last_time_;
+    this->last_time_ = now;
+    return res;
   }
+  /// time step [s].
+  float dt_s_() { return this->dt_ms_() * 0.001f; }
 };
 
 }  // namespace auto_co2

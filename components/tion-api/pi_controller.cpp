@@ -31,7 +31,7 @@ float PIController::update(int setpoint, int current) {
                                           : 0;
 
   // 9: integral error [min.ppm-CO2]
-  const float i = this->ib_ + (this->dt_() / 60.0f) * e_db;
+  const float i = this->ib_ + (this->dt_s_() / 60.0f) * e_db;
 
   // 10: candidate outdoor airflow rate [L/s]
   const float v_oa_c = -this->kp_ * (e_db + (i / this->ti_));

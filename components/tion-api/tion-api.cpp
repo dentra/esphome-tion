@@ -677,20 +677,23 @@ bool TionApiBase::update_auto(uint16_t current, TionStateCall *call) {
 }
 
 uint8_t TionApiBase::auto_update_(uint16_t current) {
-  float rate = this->auto_pi_.update(this->auto_setpoint_, current);
-  // приводим m^3/h в скорость вентиляции
-  for (auto i = this->traits_.max_fan_speed; i > 0; i--) {
-    if (this->traits_.auto_prod[i - 1] > rate) {
-      // отсечем нижний предел
-      if (i < this->auto_min_fan_speed_) {
-        return this->auto_min_fan_speed_;
+  int rate = this->auto_pi_.update(this->auto_setpoint_, current);
+  if (rate > 0) {
+    // приводим m^3/h в скорость вентиляции
+    for (auto i = this->traits_.max_fan_speed; i > 0; i--) {
+      int test = this->traits_.auto_prod[i - 1];
+      if (rate > test) {
+        // отсечем нижний предел
+        if (i < this->auto_min_fan_speed_) {
+          return this->auto_min_fan_speed_;
+        }
+        // отсечем верхний предел
+        if (i > this->auto_max_fan_speed_) {
+          return this->auto_max_fan_speed_;
+        }
+        // gotcha
+        return i;
       }
-      // отсечем верхний предел
-      if (i > this->auto_max_fan_speed_) {
-        return this->auto_max_fan_speed_;
-      }
-      // gotcha
-      return i;
     }
   }
   // не нашли подходящего значения, работаем по-минимому
