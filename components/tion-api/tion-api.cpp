@@ -651,18 +651,14 @@ void TionApiBase::set_auto_max_fan_speed(uint8_t max_fan_speed) {
 }
 
 void TionApiBase::auto_update_fan_speed_() {
-  if (this->auto_min_fan_speed_ == 0) {
-    this->auto_pi_.set_min(-this->traits_.auto_prod[1]);
-  } else {
-    this->auto_pi_.set_min(this->traits_.auto_prod[this->auto_min_fan_speed_ - 1]);
-  }
+  this->auto_pi_.set_min(this->traits_.auto_prod[this->auto_min_fan_speed_]);
   this->auto_pi_.set_max(this->traits_.auto_prod[this->auto_max_fan_speed_]);
   this->auto_pi_.reset();
-
   this->on_state_fn.call_if(this->state_, 0);
 }
 
 bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
+  TION_LOGV(TAG, "Auto update to %u", current);
   if (current == 0) {
     if (!this->auto_update_func_) {
       this->auto_pi_.reset();
@@ -698,12 +694,14 @@ bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
   if (this->state_.boost_time_left > 0) {
     return false;
   }
+  TION_LOGV(TAG, "Auto new fan speed %u", fan_speed);
   call->set_fan_speed(fan_speed);
   return true;
 }
 
 uint8_t TionApiBase::auto_pi_update_(uint16_t current) {
   int rate = this->auto_pi_.update(this->auto_setpoint_, current);
+  TION_LOGV(TAG, "Auto PI rate: %d", rate);
   if (rate > 0) {
     // приводим m^3/h в скорость вентиляции
     for (auto i = this->traits_.max_fan_speed; i > 0; i--) {
