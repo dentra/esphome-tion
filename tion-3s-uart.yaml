@@ -80,6 +80,7 @@ vport:
     # command_queue_size: 16
 
 # Main climate component configuration.
+# See detailed description and additional parameters at CONFIGURATION.md
 tion:
   type: 3s
   id: tion_api
@@ -91,7 +92,7 @@ tion:
   batch_timeout: 200ms
   # Optional, Timeout to enable state problem sensor. Must be less than update_interval. Default: 3s.
   state_timeout: 3s
-  # Optional, Updates sensor values on any state response or only if they have been changed. Default: true.
+  # Optional, Updates sensor values on any state response or only if they have been changed. Default: false.
   force_update: false
 
   # Optional, Enable presets. Default: <empty> (no presets)
