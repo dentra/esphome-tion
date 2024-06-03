@@ -30,7 +30,10 @@ class PIController {
   void set_max(float max) { this->v_oa_min_ = max; }
 
   /// @brief Resets integral error.
-  void reset() { this->ib_ = 0; }
+  void reset() {
+    this->ib_ = 0;
+    this->last_time_ = 0;
+  }
   /// @brief Resets Kp, Ti, db without touching min and max
   void reset(float kp, float ti, int db);
   void reset(float kp, float ti, int db, float min, float max);

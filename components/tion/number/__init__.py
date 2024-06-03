@@ -3,13 +3,16 @@ from typing import Optional
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import esphome.final_validate as fv
 from esphome.components import number
 from esphome.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_ID,
     CONF_INITIAL_VALUE,
     CONF_MODE,
     CONF_RESTORE_VALUE,
+    CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     ENTITY_CATEGORY_CONFIG,
     UNIT_CELSIUS,
@@ -17,7 +20,7 @@ from esphome.const import (
     UNIT_SECOND,
 )
 
-from .. import cgp, new_pc, tion_ns
+from .. import CONF_AUTO, CONF_TION_ID, cgp, new_pc, tion_ns
 
 TionNumber = tion_ns.class_("TionNumber", number.Number, cg.Component)
 
@@ -67,7 +70,7 @@ PC = new_pc(
             CONF_ICON: cgp.ICON_FAN_AUTO,
             CONF_TRAITS: Traits(
                 step=10,
-                initial_value=600,
+                initial_value=700,
             ),
         },
         "auto_min_fan_speed": {
@@ -106,6 +109,37 @@ CONFIG_SCHEMA = PC.number_schema(
         cv.Optional(CONF_RESTORE_VALUE): cv.boolean,
     },
 )
+
+
+def _final_validate_auto(config):
+    tion: dict = None
+    for comp in fv.full_config.get()["tion"]:
+        if comp[CONF_ID] == config[CONF_TION_ID]:
+            tion = comp
+            break
+    if tion is None:
+        raise cv.Invalid("Failed find parent tion component")
+
+    if CONF_AUTO not in tion:
+        return config
+
+    tion_auto = tion[CONF_AUTO]
+
+    def check_type(typ: str):
+        tion_type = typ.replace("auto_", "")
+        if tion_type in tion_auto:
+            raise cv.Invalid(
+                f"Conflict with tion[{tion[CONF_ID].id}].auto[{tion_type}]"
+            )
+
+    for typ in ["auto_setpoint", "auto_min_fan_speed", "auto_max_fan_speed"]:
+        if config[CONF_TYPE] == typ:
+            check_type(typ)
+
+    return config
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate_auto
 
 
 async def to_code(config: dict):

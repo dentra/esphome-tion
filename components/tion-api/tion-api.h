@@ -278,8 +278,8 @@ class TionApiBase {
   const std::string &get_active_preset() const { return this->active_preset_; }
   /// Вызывающая сторона отвественна за вызов perform.
   /// @return true если были изменения и требуются выполнить perform
-  bool update_auto(uint16_t current, TionStateCall *call);
-  void set_auto_data(float kp, float ti, int db);
+  bool auto_update(uint16_t current, TionStateCall *call);
+  void set_auto_pi_data(float kp, float ti, int db);
   void set_auto_setpoint(uint16_t setpoint) { this->auto_setpoint_ = setpoint; }
   void set_auto_min_fan_speed(uint8_t min_fan_speed);
   void set_auto_max_fan_speed(uint8_t max_fan_speed);
@@ -318,7 +318,7 @@ class TionApiBase {
   void boost_save_state_();
   void preset_enable_(const PresetData &preset, TionStateCall *call);
   void auto_update_fan_speed_();
-  uint8_t auto_update_(uint16_t current);
+  uint8_t auto_pi_update_(uint16_t current);
 };
 
 }  // namespace tion

@@ -3,12 +3,16 @@ from typing import Any
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import esphome.cpp_generator as cpp
 import esphome.final_validate as fv
-from esphome import automation
+from esphome import automation, core
+from esphome.components import sensor as esphome_sensor
 from esphome.const import (
+    CONF_CO2,
     CONF_FORCE_UPDATE,
     CONF_HEATER,
     CONF_ID,
+    CONF_LAMBDA,
     CONF_ON_STATE,
     CONF_POWER,
     CONF_TEMPERATURE,
@@ -38,6 +42,10 @@ CONF_BATCH_TIMEOUT = "batch_timeout"
 CONF_SETPOINT = "setpoint"
 CONF_MIN_FAN_SPEED = f"min_{CONF_FAN_SPEED}"
 CONF_MAX_FAN_SPEED = f"max_{CONF_FAN_SPEED}"
+CONF_PI_CONTROLLER = "pi_controller"
+CONF_KP = "kp"
+CONF_TI = "ti"
+CONF_DB = "db"
 
 tion_ns = cg.esphome_ns.namespace("tion")
 dentra_tion_ns = cg.global_ns.namespace("dentra").namespace("tion")
@@ -89,6 +97,21 @@ BUTTON_PRESETS_SCHEMA = cv.Schema(
     }
 )
 
+AUTO_SCHEMA = cv.Schema(
+    {
+        cv.Required(CONF_CO2): cv.use_id(esphome_sensor.Sensor),
+        cv.Optional(CONF_SETPOINT): cv.int_range(500, 1400),
+        cv.Inclusive(CONF_MIN_FAN_SPEED, "auto_fan_speed"): cv.int_range(0, 5),
+        cv.Inclusive(CONF_MAX_FAN_SPEED, "auto_fan_speed"): cv.int_range(1, 6),
+        cv.Exclusive(CONF_PI_CONTROLLER, "auto_mode"): {
+            cv.Required(CONF_KP): cv.float_range(min=0.001),
+            cv.Optional(CONF_TI, default=8): cv.float_range(min=0.001),
+            cv.Optional(CONF_DB, default=50): cv.int_range(-100, 100),
+        },
+        cv.Exclusive(CONF_LAMBDA, "auto_mode"): cv.returning_lambda,
+    }
+)
+
 
 def check_type(key, typ, required: bool = False):
     return cgp.validate_type(key, typ, required)
@@ -109,6 +132,7 @@ CONFIG_SCHEMA = cv.All(
                 cv.Optional(CONF_FORCE_UPDATE): cv.boolean,
                 cv.Optional(CONF_PRESETS): cv.Schema({cv.string_strict: PRESET_SCHEMA}),
                 cv.Optional(CONF_ON_STATE): cgp.automation_schema(StateTrigger),
+                cv.Optional(CONF_AUTO): AUTO_SCHEMA,
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
@@ -123,7 +147,6 @@ def pc_schema(
     pc_cfg: dict,
     value_validators: dict[str, Any] = None,
 ):
-
     return cgp.pc_schema(
         CONF_TION_ID, TionApiComponent, schema, pc_cfg, value_validators
     )
@@ -291,12 +314,50 @@ def _setup_tion_api_button_presets(config: dict, var: cg.MockObj):
     )
 
 
+async def _setup_auto(config: dict, var):
+    api = var.Papi()
+
+    code = f"""
+auto *call = {var}->make_call();
+if ({api}->auto_update(x, call)) {{
+  call->perform();
+}}
+"""
+
+    lam = await cg.process_lambda(
+        value=core.Lambda(code.strip()), parameters=[(cg.float_, "x")], capture=""
+    )
+
+    cg.add(cg.MockObj(config[CONF_CO2].id, "->").add_on_state_callback(lam))
+
+    cgp.setup_value(config, CONF_SETPOINT, api.set_auto_setpoint)
+    cgp.setup_value(config, CONF_MIN_FAN_SPEED, api.set_auto_min_fan_speed)
+    cgp.setup_value(config, CONF_MAX_FAN_SPEED, api.set_auto_max_fan_speed)
+
+    if CONF_PI_CONTROLLER in config:
+        cgp.setup_values(
+            config[CONF_PI_CONTROLLER],
+            [CONF_KP, CONF_TI, CONF_DB],
+            api.set_auto_pi_data,
+        )
+
+    await cgp.setup_lambda(
+        config,
+        CONF_LAMBDA,
+        api.set_auto_update_func,
+        parameters=[(cg.uint16, "x")],
+        return_type=cg.uint8,
+    )
+
+
 async def to_code(config: dict):
     for conf in config:
         var = await _setup_tion_api(conf)
         _setup_tion_api_presets(conf, var)
         _setup_tion_api_button_presets(conf, var)
         await cgp.setup_automation(conf, CONF_ON_STATE, var, (TionStateRef, "x"))
+        if CONF_AUTO in conf:
+            await _setup_auto(conf[CONF_AUTO], var)
 
 
 def new_pc(pc_cfg: dict[str, str | dict[str, Any]]):

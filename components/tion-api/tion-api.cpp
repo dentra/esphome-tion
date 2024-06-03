@@ -173,8 +173,8 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
     if (!auto_state || this->auto_is_valid()) {
       if (cs.auto_state != auto_state) {
         TION_LOGD(TAG, "New auto state %s -> %s", ONOFF(cs.auto_state), ONOFF(auto_state));
+        ns.auto_state = auto_state;
       }
-      ns.auto_state = auto_state;
     } else {
       TION_LOGW(TAG, "Auto is not configured properly.");
     }
@@ -195,10 +195,8 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
       }
     } else if (fan_speed > this->traits_.max_fan_speed) {
       TION_LOGW(TAG, "Disallowed fan speed: %u", fan_speed);
-    } else {
-      if (cs.fan_speed != fan_speed) {
-        TION_LOGD(TAG, "New fan speed %u -> %u", cs.fan_speed, fan_speed);
-      }
+    } else if (cs.fan_speed != fan_speed) {
+      TION_LOGD(TAG, "New fan speed %u -> %u", cs.fan_speed, fan_speed);
       ns.fan_speed = fan_speed;
     }
   }
@@ -213,24 +211,24 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
         // возможно необходимо исследовать тему CommSource и применять их совместно
         ns.auto_state = false;
       }
+      ns.power_state = power_state;
     }
-    ns.power_state = power_state;
   }
 
   if (call->get_heater_state().has_value()) {
     const auto heater_state = *call->get_heater_state();
     if (cs.heater_state != heater_state) {
       TION_LOGD(TAG, "New heater state %s -> %s", ONOFF(cs.heater_state), ONOFF(heater_state));
+      ns.heater_state = heater_state;
     }
-    ns.heater_state = heater_state;
   }
 
   if (call->get_target_temperature().has_value()) {
     const auto target_temperature = *call->get_target_temperature();
     if (cs.target_temperature != target_temperature) {
       TION_LOGD(TAG, "New target temperature %d -> %d", cs.target_temperature, target_temperature);
+      ns.target_temperature = target_temperature;
     }
-    ns.target_temperature = *call->get_target_temperature();
   }
 
   if (this->traits_.supports_sound_state) {
@@ -238,8 +236,8 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
       const auto sound_state = *call->get_sound_state();
       if (cs.sound_state != sound_state) {
         TION_LOGD(TAG, "New sound state %s -> %s", ONOFF(cs.sound_state), ONOFF(sound_state));
+        ns.sound_state = sound_state;
       }
-      ns.sound_state = *call->get_sound_state();
     }
   }
 
@@ -248,8 +246,8 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
       const auto led_state = *call->get_led_state();
       if (cs.led_state != led_state) {
         TION_LOGD(TAG, "New led state %s -> %s", ONOFF(cs.led_state), ONOFF(led_state));
+        ns.led_state = led_state;
       }
-      ns.led_state = *call->get_led_state();
     }
   }
 
@@ -265,7 +263,8 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
             TION_LOGW(TAG, "Indoor gate position disallow heater");
             ns.heater_state = false;
           }
-        } break;
+          break;
+        }
         case TionGatePosition::MIXED: {
           if (!this->traits_.supports_gate_position_change_mixed) {
             gate_position = cs.gate_position;
@@ -279,8 +278,8 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
       if (cs.gate_position != gate_position) {
         TION_LOGD(TAG, "New gate position %u -> %u", static_cast<uint8_t>(cs.gate_position),
                   static_cast<uint8_t>(gate_position));
+        ns.gate_position = gate_position;
       }
-      ns.gate_position = gate_position;
     }
   }
 
@@ -323,6 +322,9 @@ void TionStateCall::dump() const {
 }
 
 void TionStateCall::perform() {
+  if (this->auto_state_.value_or(false)) {
+    this->api_->auto_update(0, nullptr);
+  }
   this->api_->write_state(this);
   this->reset();
 }
@@ -487,7 +489,6 @@ void TionApiBase::boost_enable_(TionStateCall *call) {
   TION_LOGD(TAG, "Schedule boost for %d s", boost_time);
   this->state_.boost_time_left = boost_time;
 
-  call->set_auto_state(false);
   call->set_power_state(true);
   call->set_fan_speed(this->traits_.max_fan_speed);
   call->set_gate_position(TionGatePosition::OUTDOOR);
@@ -506,7 +507,6 @@ void TionApiBase::boost_save_state_() {
   this->boost_save_.fan_speed = this->state_.fan_speed;
   this->boost_save_.target_temperature = this->state_.target_temperature;
   this->boost_save_.gate_position = this->state_.gate_position;
-  this->boost_save_.auto_state = this->state_.auto_state;
 }
 
 void TionApiBase::boost_cancel_(TionStateCall *call) {
@@ -609,7 +609,7 @@ void TionApiBase::add_preset(const std::string &name, const PresetData &data) {
   this->presets_.insert_or_assign(name, data);
 }
 
-void TionApiBase::set_auto_data(float kp, float ti, int db) {
+void TionApiBase::set_auto_pi_data(float kp, float ti, int db) {
   if (kp > 0 && ti > 0) {
     this->auto_pi_.reset(kp, ti, db);
   } else {
@@ -662,21 +662,47 @@ void TionApiBase::auto_update_fan_speed_() {
   this->on_state_fn.call_if(this->state_, 0);
 }
 
-bool TionApiBase::update_auto(uint16_t current, TionStateCall *call) {
+bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
+  if (current == 0) {
+    if (!this->auto_update_func_) {
+      this->auto_pi_.reset();
+    }
+    return false;
+  }
+
+  if (!this->state_.auto_state) {
+    return false;
+  }
+
   if (call == nullptr) {
     INVALID_STATE_CALL();
     return false;
   }
-  uint8_t fan_speed = this->auto_update_func_ ? this->auto_update_func_(current) : this->auto_update_(current);
+
+  uint8_t fan_speed = this->state_.fan_speed;
+
+  if (this->auto_update_func_) {
+    fan_speed = this->auto_update_func_(current);
+    if (fan_speed < this->auto_min_fan_speed_) {
+      fan_speed = this->auto_min_fan_speed_;
+
+    } else if (fan_speed > this->auto_max_fan_speed_) {
+      fan_speed = this->auto_max_fan_speed_;
+    }
+  } else {
+    fan_speed = this->auto_pi_update_(current);
+  }
   if (fan_speed == this->state_.fan_speed) {
     return false;
   }
-  call->set_auto_state(true);
+  if (this->state_.boost_time_left > 0) {
+    return false;
+  }
   call->set_fan_speed(fan_speed);
   return true;
 }
 
-uint8_t TionApiBase::auto_update_(uint16_t current) {
+uint8_t TionApiBase::auto_pi_update_(uint16_t current) {
   int rate = this->auto_pi_.update(this->auto_setpoint_, current);
   if (rate > 0) {
     // приводим m^3/h в скорость вентиляции
