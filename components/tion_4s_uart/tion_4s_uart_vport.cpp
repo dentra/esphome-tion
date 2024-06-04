@@ -35,13 +35,29 @@ void Tion4sUartVPort::setup() {
 #else
   auto *global_ota_callback = ota::get_global_ota_callback();
 #endif
-  // additionally send heartbeat when OTA starts and before ESP restart.
+  // дополнительно пинганем бризер при OTA обновлении
   global_ota_callback->add_on_state_callback([this](ota::OTAState state, float, uint8_t) {
-    if (state != ota::OTAState::OTA_IN_PROGRESS) {
+    static uint32_t tm{};
+    if (state == ota::OTAState::OTA_STARTED) {
+      // при старте
+      tm = millis();
       this->api_->send_heartbeat();
+    } else {
+      uint32_t ct = millis();
+      if (ct - tm > this->heartbeat_interval_) {
+        // раз в heartbeat_interval
+        this->api_->send_heartbeat();
+        tm = ct;
+      }
     }
   });
 #endif
+}
+
+void Tion4sUartVPort::on_shutdown() {
+  // дополнительно пинганем бризер перед перезагрузкой
+  this->api_->send_heartbeat();
+  delay(20);  // дадим немного времени чтобы принять ответ
 }
 
 }  // namespace tion
