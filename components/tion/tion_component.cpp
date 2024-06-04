@@ -59,7 +59,7 @@ void TionApiComponent::update() {
 }
 
 void TionApiComponent::on_state_(const TionState &state, const uint32_t request_id) {
-  ESP_LOGV(TAG, "State received %" PRIu32, request_id);
+  ESP_LOGV(TAG, "State received, request_id: %" PRIu32, request_id);
   // clear error reporting
   this->status_clear_error();
   this->cancel_timeout(STATE_TIMEOUT);
