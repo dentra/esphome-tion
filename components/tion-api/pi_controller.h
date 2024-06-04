@@ -27,7 +27,7 @@ class PIController {
   float update(int setpoint, int current);
 
   void set_min(float min) { this->v_oa_min_ = min; }
-  void set_max(float max) { this->v_oa_min_ = max; }
+  void set_max(float max) { this->v_oa_max_ = max; }
 
   /// @brief Resets integral error.
   void reset() {

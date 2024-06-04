@@ -1,8 +1,11 @@
+#include "log.h"
 #include "pi_controller.h"
 
 namespace dentra {
 namespace tion {
 namespace auto_co2 {
+
+static const char *const TAG = "pi_controller";
 
 void PIController::reset(float kp, float ti, int db) {
   this->kp_ = kp;
