@@ -346,9 +346,10 @@ TionApiBase::TionApiBase() : auto_pi_(TION_AUTO_KP, TION_AUTO_TI, TION_AUTO_DB) 
 
 void TionApiBase::notify_state_(uint32_t request_id) {
   TionStateCall *call = nullptr;
+
   if (this->state_.boost_time_left > 0) {
-    // если изменили скорость вентиляции, выключили бризер или включили автоматический режим
-    if (this->state_.fan_speed != this->traits_.max_fan_speed || !this->state_.power_state || this->state_.auto_state) {
+    // если изменили скорость вентиляции или выключили бризер
+    if (this->state_.fan_speed != this->traits_.max_fan_speed || !this->state_.power_state) {
       TION_LOGD(TAG, "Boost canceled by user action");
       // пересохраняем изменившиеся данные, для восстановления
       this->boost_save_state_();
@@ -357,6 +358,7 @@ void TionApiBase::notify_state_(uint32_t request_id) {
       }
       this->boost_cancel_(call);
     } else {
+      // только если натив буст не поддерживается
       if (!this->traits_.supports_boost) {
         const auto boost_work_time = this->state_.work_time - this->boost_save_.start_time;
         if (boost_work_time < this->traits_.boost_time) {
