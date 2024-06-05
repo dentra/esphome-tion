@@ -17,6 +17,7 @@ from esphome.const import (
     ENTITY_CATEGORY_CONFIG,
     UNIT_CELSIUS,
     UNIT_MINUTE,
+    UNIT_PARTS_PER_MILLION,
     UNIT_SECOND,
 )
 
@@ -67,6 +68,7 @@ PC = new_pc(
         },
         "auto_setpoint": {
             CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
+            CONF_UNIT_OF_MEASUREMENT: UNIT_PARTS_PER_MILLION,
             CONF_ICON: cgp.ICON_FAN_AUTO,
             CONF_TRAITS: Traits(
                 step=10,
