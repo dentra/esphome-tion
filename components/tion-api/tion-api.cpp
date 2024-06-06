@@ -198,6 +198,10 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
     } else if (cs.fan_speed != fan_speed) {
       TION_LOGD(TAG, "New fan speed %u -> %u", cs.fan_speed, fan_speed);
       ns.fan_speed = fan_speed;
+      if (call->get_auto_state().value_or(false)) {
+        // если ручное переключение скорости, то выключаем авто-режим
+        ns.auto_state = false;
+      }
     }
   }
 
@@ -205,13 +209,13 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
     const auto power_state = *call->get_power_state();
     if (cs.power_state != power_state) {
       TION_LOGD(TAG, "New power state %s -> %s", ONOFF(cs.power_state), ONOFF(power_state));
+      ns.power_state = power_state;
       // если выключаем в авто-режиме и это не делает не авто-режим, то отключаем авто-режим
       if (!power_state && !call->get_auto_state().value_or(false)) {
         // TODO восстановить авто-режим при включении
         // возможно необходимо исследовать тему CommSource и применять их совместно
         ns.auto_state = false;
       }
-      ns.power_state = power_state;
     }
   }
 
@@ -323,6 +327,7 @@ void TionStateCall::dump() const {
 
 void TionStateCall::perform() {
   if (this->auto_state_.value_or(false)) {
+    // сделаем сброс накопленых ошибок
     this->api_->auto_update(0, nullptr);
   }
   this->api_->write_state(this);
@@ -655,12 +660,12 @@ void TionApiBase::set_auto_max_fan_speed(uint8_t max_fan_speed) {
 void TionApiBase::auto_update_fan_speed_() {
   this->auto_pi_.set_min(this->traits_.auto_prod[this->auto_min_fan_speed_]);
   this->auto_pi_.set_max(this->traits_.auto_prod[this->auto_max_fan_speed_]);
-  this->auto_pi_.reset();
   this->on_state_fn.call_if(this->state_, 0);
 }
 
 bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
   TION_LOGV(TAG, "Auto update to %u", current);
+  // спец обработка для сброса
   if (current == 0) {
     if (!this->auto_update_func_) {
       this->auto_pi_.reset();
@@ -697,6 +702,8 @@ bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
     return false;
   }
   TION_LOGV(TAG, "Auto new fan speed %u", fan_speed);
+  // для понимания, что переключение было из авто-режима, всегда вытавляем авто
+  call->set_auto_state(true);
   call->set_fan_speed(fan_speed);
   return true;
 }

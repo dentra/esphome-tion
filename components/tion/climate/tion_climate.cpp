@@ -113,9 +113,6 @@ void TionClimate::control(const climate::ClimateCall &call) {
     const auto fan_speed = fan_mode_to_speed(fan_mode);
     ESP_LOGD(TAG, "Set fan speed %u", fan_speed);
     tion->set_fan_speed(fan_speed);
-    if (this->enable_fan_auto_) {
-      tion->set_auto_state(false);
-    }
   }
 
   if (call.get_target_temperature().has_value()) {
