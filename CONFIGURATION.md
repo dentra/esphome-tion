@@ -68,21 +68,42 @@ presets:
 - `min_fan_speed`, _uint_: минимальная скорость вентиляции. Несовместим с [number[type=auto_min_fan_speed]](#тип-auto_min_fan_speed), детали там же.
 - `max_fan_speed`, _uint_: максимальная скорость вентиляции. Несовместим с [number[type=auto_max_fan_speed]](#тип-auto_max_fan_speed), детали там же.
 - `pi_controller`, _object_: объект с параметрами PI-контроллера:
-  - **`kp`**, _float_: пропорцииональный коэффициент. В качестве значения начните с 0.2736.
+  - `kp`, _float_: пропорцииональный коэффициент. По-умолчанию: 0.2736.
   - `ti`, _float_: время интегрирования (в минутах). По-умолчанию: 8.
-  - `db`, int: зона нечувствительности. По-умолчанию: 50.
+  - `db`, _int_: зона нечувствительности. По-умолчанию: 50.
 - `lambda`, _[automation]_: автоматизация обрабатывающая значение CO2.
   Переменная `x` будет содержать текущее значение датчика CO2, вернуть необходимо скорость вентиляции. Скорость вентиляции будет применена относительно параметров `min_fan_speed` и `max_fan_speed` или их значений установленых с помощью `number`.
   Несовместим с `pi_controller`.
 
-Пример использования:
+Примеры использования:
 
 ```yaml
-lambda: |-
-  if (x > 900) return 4;
-  if (x > 800) return 3;
-  if (x > 700) return 2;
-  return 1;
+tion:
+ ...
+  auto:
+    co2: my_co2_sensor
+    lambda: |-
+      if (x > 900) return 4;
+      if (x > 800) return 3;
+      if (x > 700) return 2;
+      return 1;
+```
+
+```yaml
+tion:
+ ...
+  auto:
+    co2: my_co2_sensor
+    pi_controller:
+```
+
+```yaml
+tion:
+ ...
+  auto:
+    co2: my_co2_sensor
+    pi_controller:
+      kp: 0.2736
 ```
 
 > [!IMPORTANT]

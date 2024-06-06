@@ -103,11 +103,14 @@ AUTO_SCHEMA = cv.Schema(
         cv.Optional(CONF_SETPOINT): cv.int_range(500, 1400),
         cv.Inclusive(CONF_MIN_FAN_SPEED, "auto_fan_speed"): cv.int_range(0, 5),
         cv.Inclusive(CONF_MAX_FAN_SPEED, "auto_fan_speed"): cv.int_range(1, 6),
-        cv.Exclusive(CONF_PI_CONTROLLER, "auto_mode"): {
-            cv.Required(CONF_KP): cv.float_range(min=0.001),
-            cv.Optional(CONF_TI, default=8): cv.float_range(min=0.001),
-            cv.Optional(CONF_DB, default=50): cv.int_range(-100, 100),
-        },
+        cv.Exclusive(CONF_PI_CONTROLLER, "auto_mode"): cv.Any(
+            {
+                cv.Optional(CONF_KP, default=0.2736): cv.float_range(min=0.001),
+                cv.Optional(CONF_TI, default=8): cv.float_range(min=0.001),
+                cv.Optional(CONF_DB, default=20): cv.int_range(-100, 100),
+            },
+            None,
+        ),
         cv.Exclusive(CONF_LAMBDA, "auto_mode"): cv.returning_lambda,
     }
 )
@@ -336,7 +339,7 @@ if ({api}->auto_update(x, call)) {{
 
     if CONF_PI_CONTROLLER in config:
         cgp.setup_values(
-            config[CONF_PI_CONTROLLER],
+            config[CONF_PI_CONTROLLER] or {},
             [CONF_KP, CONF_TI, CONF_DB],
             api.set_auto_pi_data,
         )
