@@ -32,6 +32,8 @@ template<class C> class TionSensor : public sensor::Sensor, public Component, pu
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
     if (!PC::is_supported(this)) {
       return;
     }

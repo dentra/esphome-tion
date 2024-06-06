@@ -34,6 +34,7 @@ class TionBinarySensor : public binary_sensor::BinarySensor, public Component, p
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
     if (!PC::is_supported(this)) {
       return;
     }

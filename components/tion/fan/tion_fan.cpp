@@ -8,6 +8,16 @@ namespace tion {
 
 static const char *const TAG = "tion_fan";
 
+void TionFan::setup() {
+  ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
+  this->parent_->add_on_state_callback([this](const TionState *state) {
+    if (state) {
+      this->on_state_(*state);
+    }
+  });
+}
+
 fan::FanTraits TionFan::get_traits() {
   auto traits = fan::FanTraits(false, true, false, this->parent_->traits().max_fan_speed);
   if (this->parent_->api()->has_presets()) {

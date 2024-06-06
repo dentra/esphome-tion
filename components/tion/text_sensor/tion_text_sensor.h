@@ -33,6 +33,8 @@ class TionTextSensor : public text_sensor::TextSensor, public Component, public 
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
     this->parent_->add_on_state_callback([this](const TionState *state) {
       if (!PC::publish_state(this, state)) {
         this->has_state_ = false;

@@ -34,6 +34,8 @@ template<class C> class TionButton : public button::Button, public Component, pu
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
     if (!C::is_supported(this->parent_)) {
       PC::mark_unsupported(this);
       return;

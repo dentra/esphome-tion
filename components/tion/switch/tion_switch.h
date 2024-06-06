@@ -36,6 +36,8 @@ template<class C> class TionSwitch : public switch_::Switch, public Component, p
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
     if (!PC::is_supported(this)) {
       return;
     }

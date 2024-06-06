@@ -18,16 +18,8 @@ class TionFan : public fan::Fan, public Component, public Parented<TionApiCompon
   explicit TionFan(TionApiComponent *api) : Parented(api) {}
 
   float get_setup_priority() const override { return setup_priority::LATE; }
-
   void dump_config() override;
-
-  void setup() override {
-    this->parent_->add_on_state_callback([this](const TionState *state) {
-      if (state) {
-        this->on_state_(*state);
-      }
-    });
-  }
+  void setup() override;
 
   fan::FanTraits get_traits() override;
 

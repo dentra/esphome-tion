@@ -32,6 +32,8 @@ template<class C> class TionSelect : public select::Select, public Component, pu
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
     const auto options = C::get_options(this->parent_);
     if (options.size() != this->traits.get_options().size()) {
       this->traits.set_options(options);
@@ -40,7 +42,7 @@ template<class C> class TionSelect : public select::Select, public Component, pu
       PC::mark_unsupported(this);
       return;
     }
-    ESP_LOGD(TAG, "Setup options for %s: ", this->get_name().c_str());
+    ESP_LOGD(TAG, "Available options are:");
     for (auto &&opt : options) {
       ESP_LOGD(TAG, "  '%s'", opt.c_str());
     }

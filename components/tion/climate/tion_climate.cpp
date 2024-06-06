@@ -22,6 +22,16 @@ int find_climate_preset(const std::string &preset) {
   return -1;
 }
 
+void TionClimate::setup() {
+  ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
+  this->parent_->add_on_state_callback([this](const TionState *state) {
+    if (state) {
+      this->on_state_(*state);
+    }
+  });
+}
+
 climate::ClimateTraits TionClimate::traits() {
   auto traits = climate::ClimateTraits();
   traits.set_supports_current_temperature(true);
