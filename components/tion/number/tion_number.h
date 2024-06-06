@@ -33,6 +33,8 @@ template<class C> class TionNumber : public number::Number, public Component, pu
   }
 
   void setup() override {
+    ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
+
     if (std::isnan(this->traits.get_min_value())) {
       this->traits.set_min_value(C::get_min(this->parent_));
     }
@@ -50,7 +52,7 @@ template<class C> class TionNumber : public number::Number, public Component, pu
         this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
         float value;
         if (this->pref_.load(&value)) {
-          ESP_LOGD(TAG, "Restored %s: %f", this->get_name().c_str(), value);
+          ESP_LOGI(TAG, "Restored %s: %f", this->get_name().c_str(), value);
           this->control(value);
         }
       }
@@ -78,6 +80,9 @@ template<class C> class TionNumber : public number::Number, public Component, pu
   void control(float value) override {
     if (!std::isnan(value)) {
       PC::control(this, value);
+      if (this->restore_value_) {
+        this->pref_.save(&value);
+      }
     }
   }
 };
