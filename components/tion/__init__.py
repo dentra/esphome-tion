@@ -221,9 +221,9 @@ async def pc_new_component(
     await cg.register_component(var, config)
 
     if pc_typ:
-        cg.add(var.set_component_source(f"tion_{ctyp}_{pc_typ}"))
+        cg.add(var.set_component_source(f"tion.{ctyp}[type={pc_typ}]"))
     else:
-        cg.add(var.set_component_source(f"tion_{ctyp}"))
+        cg.add(var.set_component_source(f"tion.{ctyp}"))
 
     return var
 
@@ -254,7 +254,7 @@ async def _setup_tion_api(config: dict):
     var = cg.new_Pvariable(config[CONF_ID], api, prt.get_type())
     await cg.register_component(var, config)
 
-    cg.add(var.set_component_source(f"tion_{config[CONF_TYPE]}"))
+    cg.add(var.set_component_source(f"tion[type={config[CONF_TYPE]}]"))
 
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")
     cg.add_build_flag("-DTION_ESPHOME")
