@@ -25,7 +25,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version"
-  min_version: "2024.5.4"
+  min_version: "2024.5.5"
   platformio_options:
     build_flags:
       - -std=gnu++17
@@ -44,7 +44,6 @@ ota:
 logger:
   logs:
     esp-idf: INFO
-    component: ERROR
 
 external_components:
   - source: $vport_source
