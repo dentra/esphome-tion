@@ -1,6 +1,7 @@
 logger:
   logs:
     light: INFO
+    spi_led_strip: INFO
 
 spi:
   mosi_pin: GPIO40
