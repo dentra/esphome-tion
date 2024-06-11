@@ -6,8 +6,8 @@ substitutions:
   friendly_name: $node_name
   # UART configuration.
   # Make sure to use YOUR pins!
-  tx_pin: TX
-  rx_pin: RX
+  tx_pin: GPIO19
+  rx_pin: GPIO20
   baud_rate: "115200"
 
   # WiFi settings.
@@ -37,8 +37,8 @@ packages:
       - packages/tion_enable_antifrize.yaml
       ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
-      ## Change to esp32_s3.yaml/esp32_c3.yaml/esp32_s2.yaml/esp8266.yaml to use with ESP32-S3/C3/S2/ESP8266 chip.
-      - packages/esp32.yaml
+      ## Change to esp32.yaml/esp32_s2.yaml/esp32_c3.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
+      - packages/esp32_s3.yaml
       ## Internal ESP32 temperature sensor.
       # - packages/esp32_temperature.yaml
       ## Lilygo T-Dongle S3 internal LED and button support

@@ -10,18 +10,23 @@ substitutions:
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
 
-  {%- if type in ["3s", "o2"] and port == "uart" %}
+  {%- if type == "3s" and port == "uart" %}
   # UART configuration.
   # Make sure to use YOUR pins!
   tx_pin: TX
   rx_pin: RX
   baud_rate: "115200"
-    {%- if type in ["3s"] %}
   # UART proxy configuration (optional).
   # Make sure to use YOUR pins!
   proxy_tx_pin: GPIO15
   proxy_rx_pin: GPIO13
-    {%- endif %}
+  {%- endif %}
+  {%- if type == "o2" and port == "uart" %}
+  # UART configuration.
+  # Make sure to use YOUR pins!
+  tx_pin: GPIO19
+  rx_pin: GPIO20
+  baud_rate: "115200"
   {%- endif %}
 
   # WiFi settings.
@@ -80,11 +85,7 @@ packages:
       ## Proxy internal Tion BLE module.
       #- packages/tion_3s_proxy.yaml
       {%- endif %}
-      {%- if type == "o2" and port == "uart" %}
-      ## Change to esp32_s3.yaml/esp32_c3.yaml/esp32_s2.yaml/esp8266.yaml to use with ESP32-S3/C3/S2/ESP8266 chip.
-      - packages/esp32.yaml
-      {%- endif %}
-      {%- if type == "4s" and port == "uart" %}
+      {%- if type in ["4s", "o2"] and port == "uart" %}
       ## Change to esp32.yaml/esp32_s2.yaml/esp32_c3.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
       - packages/esp32_s3.yaml
       {%- endif %}
