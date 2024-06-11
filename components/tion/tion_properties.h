@@ -93,7 +93,7 @@ template<typename C> class Controller {
   }
 
   template<typename T> static bool publish_state(T *component, const TionState *state) {
-    // данные об изменении иконки не бнволяются в рантайме
+    // на данный момент (EH-2024.5/HA-2024.6), данные об изменении иконки не обновляются в рантайме
     // if constexpr (checker().has_icon_get()) {
     //   component->set_icon(C::get_icon(component->get_parent()));
     // }
@@ -333,10 +333,14 @@ struct WorkTimeDays {
 };
 
 struct FilterTimeLeft {
+  static const char *get_icon(TionApiComponent *c) {
+    return binary_sensor::Filter::get(c->state()) ? "mdi:filter-remove" : "mdi:filter-check";
+  }
   static uint32_t get(const TionState &state) { return state.filter_time_left; }
 };
 
 struct FilterTimeLeftDays {
+  static const char *get_icon(TionApiComponent *c) { return FilterTimeLeft::get_icon(c); }
   static uint32_t get(const TionState &state) { return FilterTimeLeft::get(state) / (24 * 3600); }
 };
 

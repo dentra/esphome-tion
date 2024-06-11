@@ -23,7 +23,7 @@ from esphome.const import (
     UNIT_WATT,
 )
 
-from .. import new_pc, cgp, tion_ns
+from .. import cgp, new_pc, tion_ns
 
 TionSensor = tion_ns.class_("TionSensor", sensor.Sensor, cg.Component)
 
@@ -117,6 +117,7 @@ PC = new_pc(
         },
         "filter_time_left": {
             CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_ICON: "mdi:filter",
             CONF_DEVICE_CLASS: DEVICE_CLASS_DURATION,
             CONF_UNIT_OF_MEASUREMENT: UNIT_SECOND,
             CONF_ACCURACY_DECIMALS: 0,
@@ -124,6 +125,7 @@ PC = new_pc(
         "filter_time_left_days": {
             # (24 * 3600)
             CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_DIAGNOSTIC,
+            CONF_ICON: "mdi:filter",
             CONF_UNIT_OF_MEASUREMENT: UNIT_DAYS,
             CONF_ACCURACY_DECIMALS: 0,
         },
