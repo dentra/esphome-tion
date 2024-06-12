@@ -184,10 +184,10 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
 
   if (call->get_fan_speed().has_value()) {
     const auto fan_speed = *call->get_fan_speed();
-    // do not allow to set fan speed to 0
+    // не разрешаем скорость 0, вместо этого выключаем бризер
     if (fan_speed == 0) {
       if (call->get_power_state().value_or(cs.power_state)) {
-        // залогироем только для не авто-режима
+        // залогируем только для не авто-режима
         if (!call->get_auto_state().value_or(false)) {
           TION_LOGW(TAG, "Zero fan speed lead to power off");
         }
@@ -198,7 +198,7 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
     } else if (cs.fan_speed != fan_speed) {
       TION_LOGD(TAG, "New fan speed %u -> %u", cs.fan_speed, fan_speed);
       ns.fan_speed = fan_speed;
-      if (call->get_auto_state().value_or(false)) {
+      if (!call->get_auto_state().value_or(false)) {
         // если ручное переключение скорости, то выключаем авто-режим
         ns.auto_state = false;
       }
@@ -505,6 +505,8 @@ void TionApiBase::boost_enable_(TionStateCall *call) {
   if (this->traits_.boost_target_temperature != 0) {
     call->set_target_temperature(this->traits_.boost_target_temperature);
   }
+  // дополнительно оставим авто-режим в текущем положении
+  call->set_auto_state(this->state_.auto_state);
 }
 
 void TionApiBase::boost_save_state_() {
@@ -514,6 +516,7 @@ void TionApiBase::boost_save_state_() {
   this->boost_save_.fan_speed = this->state_.fan_speed;
   this->boost_save_.target_temperature = this->state_.target_temperature;
   this->boost_save_.gate_position = this->state_.gate_position;
+  this->boost_save_.auto_state = this->state_.auto_state;
 }
 
 void TionApiBase::boost_cancel_(TionStateCall *call) {
