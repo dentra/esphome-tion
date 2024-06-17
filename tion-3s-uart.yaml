@@ -4,6 +4,8 @@ substitutions:
   node_name: tion-3s
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
+  # Change to sntp if you plan to use MQTT and tion_energy package.
+  time_platform: homeassistant
   # UART configuration.
   # Make sure to use YOUR pins!
   tx_pin: TX
@@ -182,7 +184,7 @@ binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
     type: state
-    name: State Warning
+    name: State Problem
   # Filter warning state.
   - platform: tion
     type: filter

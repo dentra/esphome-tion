@@ -4,6 +4,8 @@ substitutions:
   node_name: tion-o2
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
+  # Change to sntp if you plan to use MQTT and tion_energy package.
+  time_platform: homeassistant
   # UART configuration.
   # Make sure to use YOUR pins!
   tx_pin: GPIO19
@@ -32,6 +34,7 @@ packages:
       ## Unlock Tion 30°C heating.
       #- packages/tion_temperature30c.yaml
       ## Additional energy sensor.
+      ## !!! Be sure to change substitutions.time_platform to "sntp" if you use it with MQTT.
       # - packages/tion_energy.yaml
       ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
       - packages/tion_enable_antifrize.yaml
@@ -165,7 +168,7 @@ binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
     type: state
-    name: State Warning
+    name: State Problem
   # Filter warning state.
   - platform: tion
     type: filter

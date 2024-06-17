@@ -4,6 +4,8 @@ substitutions:
   node_name: tion-4s
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
+  # Change to sntp if you plan to use MQTT and tion_energy package.
+  time_platform: homeassistant
 
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid
@@ -27,6 +29,7 @@ packages:
       ## Unlock Tion 30°C heating.
       #- packages/tion_temperature30c.yaml
       ## Additional energy sensor.
+      ## !!! Be sure to change substitutions.time_platform to "sntp" if you use it with MQTT.
       # - packages/tion_energy.yaml
       ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
@@ -182,7 +185,7 @@ binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
     type: state
-    name: State Warning
+    name: State Problem
   # Filter warning state.
   - platform: tion
     type: filter

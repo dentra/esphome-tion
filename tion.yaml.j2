@@ -9,6 +9,8 @@ substitutions:
   node_name: tion-{{ "lite" if type == "lt" else type }}
   # Name for the main entity and prefix for all others.
   friendly_name: $node_name
+  # Change to sntp if you plan to use MQTT and tion_energy package.
+  time_platform: homeassistant
 
   {%- if type == "3s" and port == "uart" %}
   # UART configuration.
@@ -66,6 +68,7 @@ packages:
       #- packages/tion_temperature30c.yaml
       {%- if type != "3s" %}
       ## Additional energy sensor.
+      ## !!! Be sure to change substitutions.time_platform to "sntp" if you use it with MQTT.
       {{ "" if enable_energy == "true" else "# " -}}
       - packages/tion_energy.yaml
       {%- endif -%}
@@ -293,7 +296,7 @@ binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
     type: state
-    name: State Warning
+    name: State Problem
 {%- if type == "lt" %}
   # Gate state control.
   - platform: tion
