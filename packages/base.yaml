@@ -25,7 +25,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version"
-  min_version: "2024.5.5"
+  min_version: "2024.6.1"
   platformio_options:
     build_flags:
       - -std=gnu++17
@@ -41,6 +41,9 @@ wifi:
 captive_portal:
 
 ota:
+  - id: esphome_ota
+    platform: esphome
+
 logger:
   logs:
     esp-idf: INFO

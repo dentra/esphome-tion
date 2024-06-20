@@ -21,7 +21,9 @@ ble_client:
     id: tion_ble_client
 
 ota:
-  on_begin:
-    then:
-      lambda: |-
-        id(tion_ble_client).set_enabled(false);
+  - id: !extend esphome_ota
+    platform: esphome
+    on_begin:
+      then:
+        lambda: |-
+          id(tion_ble_client).set_enabled(false);
