@@ -10,14 +10,17 @@ if [ "$1" != "" ]; then
   types=($*)
 fi
 
+prefix="configs/tion-"
+suffix="-dev.yaml"
+
 for br in "${types[@]}" ; do
   pushd $prj_path >/dev/null
-  esphome config tion-$br-dev.yaml >/dev/null
+  esphome config "${prefix}${br}${suffix}" >/dev/null
   res=$?
   popd >/dev/null
   if [ "$res" != "0" ]; then
     pushd $prj_path >/dev/null
-    esphome config tion-$br-dev.yaml
+    esphome config "${prefix}${br}${suffix}"
     popd >/dev/null
     exit $res
   fi
@@ -25,7 +28,7 @@ done
 
 for br in "${types[@]}" ; do
   pushd $prj_path >/dev/null
-  esphome compile tion-$br-dev.yaml
+  esphome compile "${prefix}${br}${suffix}"
   res=$?
   popd >/dev/null
   if [ "$res" != "0" ]; then
