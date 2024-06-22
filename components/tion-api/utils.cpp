@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <string>
+#include <climits>  // CHAR_BIT
 
 #include "utils.h"
 
