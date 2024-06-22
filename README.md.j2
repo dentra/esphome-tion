@@ -139,9 +139,9 @@ UART подключние различно для разных моделей б
 ## Прошивка
 
 Вы можете загрузить и использовать примеры конфигурации для
-[Tion 4S BLE](tion-4s-ble.yaml), [Tion 4S UART](tion-4s-uart.yaml),
-[Tion Lite BLE](tion-lt-ble.yaml), [Tion 3S BLE](tion-3s-ble.yaml),
-[Tion 3S UART](tion-3s-uart.yaml) и [Tion O2 UART](tion-o2-uart.yaml)
+[Tion 4S BLE](configs/tion-4s-ble.yaml), [Tion 4S UART](configs/tion-4s-uart.yaml),
+[Tion Lite BLE](configs/tion-lt-ble.yaml), [Tion 3S BLE](configs/tion-3s-ble.yaml),
+[Tion 3S UART](configs/tion-3s-uart.yaml) и [Tion O2 UART](configs/tion-o2-uart.yaml)
 все файлы с подробным описанием (на английском).
 В примерах базовой сущностью выступает компонет Climate,
 вы можете изменить его на Fan или даже обычный Switch и Number в качестве

@@ -20,9 +20,9 @@ Doxygen
 /.clang_complete
 /.gcc-flags.json
 /.temp-clang-tidy.cpp
-/*-dev.yaml
-/*-gen.yaml
-/*-bin.yaml
+/configs/*-dev.yaml
+/configs/*-gen.yaml
+/configs/*-bin.yaml
 /*.log
 /sdkconfig
 
@@ -37,6 +37,7 @@ Doxygen
 /components/web_server_idf
 /components/web_menu
 /components/coredump
+/components/esp32_usb_dis
 /components/*_jtag/
 /components/_*
 /fw
