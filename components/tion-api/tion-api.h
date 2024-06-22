@@ -266,6 +266,7 @@ class TionApiBase {
 
   // Вызывающая сторона отвественна за вызов perform..
   void enable_boost(bool state, TionStateCall *call);
+  void enable_boost(uint16_t boost_time, TionStateCall *call);
   void set_boost_time(uint16_t boost_time);
   void set_boost_heater_state(bool heater_state);
   void set_boost_target_temperture(int8_t target_temperature);
@@ -313,7 +314,7 @@ class TionApiBase {
 
   void notify_state_(uint32_t request_id);
   virtual void boost_enable_native_(bool state) {}
-  void boost_enable_(TionStateCall *call);
+  void boost_enable_(uint16_t boost_time, TionStateCall *call);
   void boost_cancel_(TionStateCall *call);
   void boost_save_state_();
   void preset_enable_(const PresetData &preset, TionStateCall *call);

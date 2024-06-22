@@ -463,14 +463,33 @@ void TionApiBase::enable_boost(bool state, TionStateCall *call) {
   }
 
   TION_LOGD(TAG, "Switching boost to %s", ONOFF(state));
-  if (state) {
-    this->boost_enable_(call);
+  if (this->traits_.supports_boost) {
+    this->boost_enable_native_(state);
+    return;
+  }
+
+  this->enable_boost(this->traits_.boost_time, call);
+}
+
+void TionApiBase::enable_boost(uint16_t boost_time, TionStateCall *call) {
+  if (call == nullptr) {
+    INVALID_STATE_CALL();
+    return;
+  }
+
+  if (!this->state_.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized.");
+    return;
+  }
+
+  if (boost_time > 0) {
+    this->boost_enable_(boost_time, call);
   } else {
     this->boost_cancel_(call);
   }
 }
 
-void TionApiBase::boost_enable_(TionStateCall *call) {
+void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
   if (this->state_.boost_time_left > 0) {
     TION_LOGW(TAG, "Boost is already in progress, time left %u s", this->state_.boost_time_left);
     return;
@@ -481,14 +500,8 @@ void TionApiBase::boost_enable_(TionStateCall *call) {
     return;
   }
 
-  const int boost_time = this->traits_.boost_time;
   if (boost_time == 0) {
     TION_LOGW(TAG, "Boost time is not configured");
-    return;
-  }
-
-  if (this->traits_.supports_boost) {
-    this->boost_enable_native_(true);
     return;
   }
 
@@ -524,12 +537,6 @@ void TionApiBase::boost_cancel_(TionStateCall *call) {
     return;
   }
   TION_LOGD(TAG, "Boost finished");
-
-  if (this->traits_.supports_boost) {
-    this->boost_enable_native_(false);
-    return;
-  }
-
   this->state_.boost_time_left = 0;
   this->preset_enable_(this->boost_save_, call);
 }

@@ -39,33 +39,31 @@ void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 #endif
   if (frame_type == FRAME_TYPE_STATE_RSP) {
-    struct RawStateFrame {
-      uint32_t request_id;
-      tion4s_state_t state;
-    } PACKED;
+    using RawStateFrame = tion4s_raw_frame_t<tion4s_state_t>;
     if (frame_data_size != sizeof(RawStateFrame)) {
       TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawStateFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] %s", frame->request_id, frame->request_id == 1 ? "State" : "Write State");
-      this->update_state_(frame->state);
+      this->update_state_(frame->data);
       this->notify_state_(frame->request_id);
     }
     return;
   }
 
   if (frame_type == FRAME_TYPE_TURBO_RSP) {
-    struct RawTurboFrame {
-      uint32_t request_id;
-      tion4s_turbo_t turbo;
-    } PACKED;
+    using RawTurboFrame = tion4s_raw_frame_t<tion4s_turbo_t>;
+    // struct RawTurboFrame {
+    //   uint32_t request_id;
+    //   tion4s_turbo_t data;
+    // } PACKED;
     if (frame_data_size != sizeof(RawTurboFrame)) {
       TION_LOGW(TAG, "Incorrect turbo response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawTurboFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Turbo", frame->request_id);
-      this->update_turbo_(frame->turbo);
-      this->on_turbo.call_if(frame->turbo, frame->request_id);
+      this->update_turbo_(frame->data);
+      this->on_turbo.call_if(frame->data, frame->request_id);
     }
     return;
   }
@@ -81,57 +79,61 @@ void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   }
 #ifdef TION_ENABLE_SCHEDULER
   if (frame_type == FRAME_TYPE_TIME_RSP) {
-    struct RawTimeFrame {
-      uint32_t request_id;
-      tion4s_time_t time;
-    } PACKED;
+    using RawTimeFrame = tion4s_raw_frame_t<tion4s_time_t>;
+    // struct RawTimeFrame {
+    //   uint32_t request_id;
+    //   tion4s_time_t data;
+    // } PACKED;
     if (frame_data_size != sizeof(RawTimeFrame)) {
       TION_LOGW(TAG, "Incorrect time response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawTimeFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Time", frame->request_id);
-      this->on_time.call_if(frame->time.unix_time, frame->request_id);
+      this->on_time.call_if(frame->data.unix_time, frame->request_id);
     }
     return;
   }
 
   if (frame_type == FRAME_TYPE_TIMER_RSP) {
-    struct RawTimerFrame {
-      uint32_t request_id;
-      uint8_t timer_id;
-      tion4s_timer_t timer;
-    } PACKED;
+    using RawTimerFrame = tion4s_raw_frame_t<tion4s_timer_rsp_t>;
+    // struct RawTimerFrame {
+    //   uint32_t request_id;
+    //   uint8_t timer_id;
+    //   tion4s_timer_t timer;
+    // } PACKED;
     if (frame_data_size != sizeof(RawTimerFrame)) {
       TION_LOGW(TAG, "Incorrect timer response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawTimerFrame *>(frame_data);
-      TION_LOGD(TAG, "Response[%" PRIu32 "] Timer %u", frame->request_id, frame->timer_id);
-      this->on_timer.call_if(frame->timer_id, frame->timer, frame->request_id);
+      TION_LOGD(TAG, "Response[%" PRIu32 "] Timer %u", frame->request_id, frame->data.timer_id);
+      this->on_timer.call_if(frame->data.timer_id, frame->data.timer, frame->request_id);
     }
     return;
   }
 
   if (frame_type == FRAME_TYPE_TIMERS_STATE_RSP) {
-    struct RawTimersStateFrame {
-      uint32_t request_id;
-      tion4s_timers_state_t timers_state;
-    } PACKED;
+    using RawTimersStateFrame = tion4s_raw_frame_t<tion4s_timers_state_t>;
+    // struct RawTimersStateFrame {
+    //   uint32_t request_id;
+    //   tion4s_timers_state_t data;
+    // } PACKED;
     if (frame_data_size != sizeof(RawTimersStateFrame)) {
       TION_LOGW(TAG, "Incorrect timers state response data size: %zu", frame_data_size);
     } else {
       auto *frame = static_cast<const RawTimersStateFrame *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] Timers state", frame->request_id);
-      this->on_timers_state.call_if(frame->timers_state, frame->request_id);
+      this->on_timers_state.call_if(frame->data, frame->request_id);
     }
     return;
   }
 #endif
 #ifdef TION_ENABLE_DIAGNOSTIC
   if (frame_type == FRAME_TYPE_ERR_CNT_RSP) {
-    struct RawErrorFrame {
-      uint32_t request_id;
-      tion4s_errors_t errors;
-    } PACKED;
+    using RawErrorFrame = tion4s_raw_frame_t<tion4s_errors_t>;
+    // struct RawErrorFrame {
+    //   uint32_t request_id;
+    //   tion4s_errors_t data;
+    // } PACKED;
     if (frame_data_size != sizeof(RawErrorFrame)) {
       TION_LOGW(TAG, "Incorrect error response data size: %zu", frame_data_size);
     } else {
@@ -179,7 +181,7 @@ bool Tion4sApi::write_state(const TionState &state, uint32_t request_id) const {
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  tion4s_state_set_req_t req(state, request_id);
+  tion4s_raw_state_set_req_t req(request_id, state);
   TION_DUMP(TAG, "req  : %" PRIu32, req.request_id);
   TION_DUMP(TAG, "power: %s", ONOFF(req.data.power_state));
   TION_DUMP(TAG, "sound: %s", ONOFF(req.data.sound_state));
@@ -200,7 +202,7 @@ bool Tion4sApi::reset_filter(const TionState &state, uint32_t request_id) const 
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  tion4s_state_set_req_t req(state, request_id);
+  tion4s_raw_state_set_req_t req(request_id, state);
   req.data.filter_reset = true;
   req.data.filter_time = 0;
   return this->write_frame(FRAME_TYPE_STATE_SET, req);
@@ -212,18 +214,14 @@ bool Tion4sApi::factory_reset(const TionState &state, uint32_t request_id) const
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  tion4s_state_set_req_t req(state, request_id);
+  tion4s_raw_state_set_req_t req(request_id, state);
   req.data.factory_reset = true;
   return this->write_frame(FRAME_TYPE_STATE_SET, req);
 }
 
 bool Tion4sApi::set_turbo(uint16_t time, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Turbo %u", request_id, time);
-  const struct {
-    uint32_t request_id;
-    uint16_t time;
-    uint8_t err_code;
-  } PACKED req{.request_id = request_id, .time = time, .err_code = 0};
+  const tion4s_raw_frame_t<tion4s_turbo_set_t> req{.request_id = request_id, .data = {.time = time, .err_code = 0}};
   return this->write_frame(FRAME_TYPE_TURBO_SET, req);
 };
 
@@ -245,10 +243,7 @@ bool Tion4sApi::request_time(uint32_t request_id) const {
 
 bool Tion4sApi::request_timer(uint8_t timer_id, uint32_t request_id) const {
   TION_LOGD(TAG, "Request[%" PRIu32 "] Timer %u", request_id, timer_id);
-  const struct {
-    uint32_t request_id;
-    uint8_t timer_id;
-  } PACKED req{.request_id = request_id, .timer_id = timer_id};
+  const tion4s_raw_frame_t<tion4s_timer_req_t> req{.request_id = request_id, .data = {.timer_id = timer_id}};
   return this->write_frame(FRAME_TYPE_TIMER_REQ, req);
 }
 
@@ -277,10 +272,7 @@ bool Tion4sApi::request_timers_state(const uint32_t request_id) const {
 }
 
 bool Tion4sApi::set_time(time_t time, uint32_t request_id) const {
-  const struct {
-    uint32_t request_id;
-    tion4s_time_t data;
-  } PACKED req{.request_id = request_id, .data{.unix_time = time}};
+  const tion4s_raw_frame_t<tion4s_time_t> req{.request_id = request_id, .data = {.unix_time = time}};
   TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, req.data.unix_time);
   return this->write_frame(FRAME_TYPE_TIME_SET, req);
 }
@@ -303,7 +295,7 @@ bool Tion4sApi::reset_errors(const TionState &state, uint32_t request_id) const 
     TION_LOGW(TAG, "State was not initialized");
     return false;
   }
-  tion4s_state_set_req_t req(state, request_id);
+  tion4s_raw_state_set_req_t req(request_id, state);
   req.data.error_reset = true;
   return this->write_frame(FRAME_TYPE_STATE_SET, req);
 }

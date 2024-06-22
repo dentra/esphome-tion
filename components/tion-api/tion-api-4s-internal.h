@@ -8,10 +8,14 @@ namespace dentra {
 namespace tion_4s {
 
 enum {
-  FRAME_TYPE_STATE_SET = 0x3230,  // no save req
+  // запрос на изменение без сохранения состояния
+  FRAME_TYPE_STATE_SET = 0x3230,
+  // ответ на запрос состояния или запрос на изменеия
   FRAME_TYPE_STATE_RSP = 0x3231,
+  // запрос состояния
   FRAME_TYPE_STATE_REQ = 0x3232,
-  FRAME_TYPE_STATE_SAV = 0x3234,  // save req
+  // запрос на изменение с сохранением состояния, например при изменение параметров звуковых или световых оповещений
+  FRAME_TYPE_STATE_SAV = 0x3234,
 
   FRAME_TYPE_DEV_INFO_REQ = 0x3332,
   FRAME_TYPE_DEV_INFO_RSP = 0x3331,
@@ -132,7 +136,6 @@ struct tion4s_turbo_t {
   uint8_t err_code;
 };
 
-#ifdef TION_ENABLE_SCHEDULER
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_timers_state_t {
   enum { TIMERS_COUNT = 12u };
@@ -169,11 +172,10 @@ struct tion4s_timer_t {
   uint8_t fan_state;
   uint8_t device_mode;
 };
-#endif
 
 // структура для изменения состояния
 // NOLINTNEXTLINE(readability-identifier-naming)
-struct _tion4s_state_set_t {
+struct tion4s_state_set_t {
   // Байт 0. Флаги изменения состояния.
   struct {
     // Байт 0, бит 0. состояние (power state)
@@ -216,8 +218,8 @@ struct _tion4s_state_set_t {
   // Байт 5-6. filter time in days
   // TODO синхронизировал с tion remote. работало с uint32_t, посмотреть в прошивке.
   uint16_t filter_time;
-  _tion4s_state_set_t() = delete;
-  _tion4s_state_set_t(const tion::TionState &state)
+  tion4s_state_set_t() = delete;
+  tion4s_state_set_t(const tion::TionState &state)
       : power_state(state.power_state),
         sound_state(state.sound_state),
         led_state(state.led_state),
@@ -234,25 +236,42 @@ struct _tion4s_state_set_t {
         filter_time(0) {}
 };
 
-struct tion4s_state_set_req_t {
+template<class T> struct tion4s_raw_frame_t {
   uint32_t request_id;
-  _tion4s_state_set_t data;
-  tion4s_state_set_req_t(const tion::TionState &state, uint32_t req_id) : request_id(req_id), data(state){};
+  T data;
 };
 
-#ifdef TION_ENABLE_SCHEDULER
+struct tion4s_raw_state_set_req_t : tion4s_raw_frame_t<tion4s_state_set_t> {
+  tion4s_raw_state_set_req_t(uint32_t request_id, const tion::TionState &state)
+      : tion4s_raw_frame_t{request_id, state} {}
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+struct tion4s_timer_req_t {
+  uint8_t timer_id;
+};
+
+// NOLINTNEXTLINE(readability-identifier-naming)
+struct tion4s_timer_rsp_t {
+  uint8_t timer_id;
+  tion4s_timer_t timer;
+};
+
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_time_t {
   int64_t unix_time;
 };
-#endif
-#ifdef TION_ENABLE_DIAGNOSTIC
+
+struct tion4s_turbo_set_t {
+  uint16_t time;
+  uint8_t err_code;
+};
+
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_errors_t {
   enum { ERROR_TYPES_COUNT = 32u };
   uint8_t er[ERROR_TYPES_COUNT];
 };
-#endif
 
 #pragma pack(pop)
 
