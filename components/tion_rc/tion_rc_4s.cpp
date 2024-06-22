@@ -11,6 +11,10 @@ namespace tion_rc {
 
 static const char *const TAG = "tion_rc_4s";
 
+#ifndef TION_RC_4S_DUMP
+#define TION_RC_4S_DUMP ESP_LOGV
+#endif
+
 using namespace dentra::tion;
 using namespace dentra::tion_4s;
 
@@ -74,7 +78,7 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
       using tion4s_raw_state_t = tion4s_raw_frame_t<tion4s_state_t>;
       ESP_LOGV(TAG, "State GET %s", format_hex_pretty(data, size).c_str());
       const auto *get = reinterpret_cast<const tion4s_raw_state_t *>(data);
-      ESP_LOGD(TAG, "GET[%u]", get->request_id);
+      TION_RC_4S_DUMP(TAG, "GET[%u]", get->request_id);
       this->state_req_id_ = get->request_id;
       this->api_->request_state();
       break;
@@ -97,14 +101,14 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
 
       const bool heat = set->data.heater_mode == dentra::tion_4s::tion4s_state_t::HEATER_MODE_HEATING;
 
-      ESP_LOGD(TAG, "SET[%u]", set->request_id);
-      ESP_LOGD(TAG, "  fan : %u", set->data.fan_speed);
-      ESP_LOGD(TAG, "  temp: %d", set->data.target_temperature);
-      ESP_LOGD(TAG, "  flow: %u", static_cast<uint8_t>(gate));
-      ESP_LOGD(TAG, "  heat: %s", ONOFF(heat));
-      ESP_LOGD(TAG, "  pwr : %s", ONOFF(set->data.power_state));
-      ESP_LOGD(TAG, "  snd : %s", ONOFF(set->data.sound_state));
-      ESP_LOGD(TAG, "  led : %s", ONOFF(set->data.led_state));
+      TION_RC_4S_DUMP(TAG, "SET[%u]", set->request_id);
+      TION_RC_4S_DUMP(TAG, "  fan : %u", set->data.fan_speed);
+      TION_RC_4S_DUMP(TAG, "  temp: %d", set->data.target_temperature);
+      TION_RC_4S_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(gate));
+      TION_RC_4S_DUMP(TAG, "  heat: %s", ONOFF(heat));
+      TION_RC_4S_DUMP(TAG, "  pwr : %s", ONOFF(set->data.power_state));
+      TION_RC_4S_DUMP(TAG, "  snd : %s", ONOFF(set->data.sound_state));
+      TION_RC_4S_DUMP(TAG, "  led : %s", ONOFF(set->data.led_state));
 
       TionStateCall call(this->api_);
 
@@ -226,13 +230,13 @@ void Tion4sRC::on_state(const TionState &st) {
   state.data.max_fan_speed = this->api_->get_traits().max_fan_speed;
   state.data.heater_var = st.heater_var;
 
-  ESP_LOGD(TAG, "RSP[%u]", state.request_id);
-  ESP_LOGD(TAG, "  fan : %u", st.fan_speed);
-  ESP_LOGD(TAG, "  temp: %d", st.target_temperature);
-  ESP_LOGD(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));
-  ESP_LOGD(TAG, "  heat: %s", ONOFF(st.heater_state));
-  ESP_LOGD(TAG, "  pwr : %s", ONOFF(st.power_state));
-  ESP_LOGD(TAG, "  snd : %s", ONOFF(st.sound_state));
+  TION_RC_4S_DUMP(TAG, "RSP[%u]", state.request_id);
+  TION_RC_4S_DUMP(TAG, "  fan : %u", st.fan_speed);
+  TION_RC_4S_DUMP(TAG, "  temp: %d", st.target_temperature);
+  TION_RC_4S_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));
+  TION_RC_4S_DUMP(TAG, "  heat: %s", ONOFF(st.heater_state));
+  TION_RC_4S_DUMP(TAG, "  pwr : %s", ONOFF(st.power_state));
+  TION_RC_4S_DUMP(TAG, "  snd : %s", ONOFF(st.sound_state));
 
   this->pr_.write_frame(FRAME_TYPE_STATE_RSP, &state, sizeof(state));
   this->state_req_id_ = 0;

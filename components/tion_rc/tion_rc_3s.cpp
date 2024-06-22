@@ -11,6 +11,10 @@ namespace tion_rc {
 
 static const char *const TAG = "tion_rc_3s";
 
+#ifndef TION_RC_3S_DUMP
+#define TION_RC_3S_DUMP ESP_LOGV
+#endif
+
 using namespace dentra::tion;
 using namespace dentra::tion_3s;
 
@@ -47,13 +51,13 @@ void Tion3sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
                           ? TionGatePosition::MIXED
                           : TionGatePosition::OUTDOOR;
 
-      ESP_LOGD(TAG, "SET");
-      ESP_LOGD(TAG, "  fan : %u", set->fan_speed);
-      ESP_LOGD(TAG, "  temp: %d", set->target_temperature);
-      ESP_LOGD(TAG, "  flow: %u", static_cast<uint8_t>(gate));
-      ESP_LOGD(TAG, "  heat: %s", ONOFF(set->flags.heater_state));
-      ESP_LOGD(TAG, "  pwr : %s", ONOFF(set->flags.power_state));
-      ESP_LOGD(TAG, "  snd : %s", ONOFF(set->flags.sound_state));
+      TION_RC_3S_DUMP(TAG, "SET");
+      TION_RC_3S_DUMP(TAG, "  fan : %u", set->fan_speed);
+      TION_RC_3S_DUMP(TAG, "  temp: %d", set->target_temperature);
+      TION_RC_3S_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(gate));
+      TION_RC_3S_DUMP(TAG, "  heat: %s", ONOFF(set->flags.heater_state));
+      TION_RC_3S_DUMP(TAG, "  pwr : %s", ONOFF(set->flags.power_state));
+      TION_RC_3S_DUMP(TAG, "  snd : %s", ONOFF(set->flags.sound_state));
 
       dentra::tion::TionStateCall call(this->api_);
 
@@ -103,13 +107,13 @@ void Tion3sRC::on_state(const TionState &st) {
   state.firmware_version = st.firmware_version;
   state.productivity = st.productivity;
 
-  ESP_LOGD(TAG, "RSP");
-  ESP_LOGD(TAG, "  fan : %u", st.fan_speed);
-  ESP_LOGD(TAG, "  temp: %d", st.target_temperature);
-  ESP_LOGD(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));
-  ESP_LOGD(TAG, "  heat: %s", ONOFF(st.heater_state));
-  ESP_LOGD(TAG, "  pwr : %s", ONOFF(st.power_state));
-  ESP_LOGD(TAG, "  snd : %s", ONOFF(st.sound_state));
+  TION_RC_3S_DUMP(TAG, "RSP");
+  TION_RC_3S_DUMP(TAG, "  fan : %u", st.fan_speed);
+  TION_RC_3S_DUMP(TAG, "  temp: %d", st.target_temperature);
+  TION_RC_3S_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));
+  TION_RC_3S_DUMP(TAG, "  heat: %s", ONOFF(st.heater_state));
+  TION_RC_3S_DUMP(TAG, "  pwr : %s", ONOFF(st.power_state));
+  TION_RC_3S_DUMP(TAG, "  snd : %s", ONOFF(st.sound_state));
 
   this->pr_.write_frame(FRAME_TYPE_RSP(FRAME_TYPE_STATE_GET), &state, sizeof(state));
 
