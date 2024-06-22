@@ -155,21 +155,24 @@ class Gen:
             self.upd()
 
 
-def run_test(setpoint, pi: list[tuple[str, PIController]], data: list[tuple[int, int]]):
+def run_test(
+    setpoint,
+    min_spd,
+    max_spd,
+    pi: list[tuple[str, PIController]],
+    data: list[tuple[int, int]],
+):
     pa4s = [0, 30, 45, 60, 75, 90, 120]
     paLt = [0, 20, 30, 40, 50, 60, 80]
     pa3s = [0, 15, 30, 50, 60, 75, 100]
     paO2 = [0, 35, 60, 75, 120]
     pa = pa4s
 
-    Voa_min = pa[0]
-    Voa_max = pa[6]
-
-    print(f"Voamin={Voa_min:.2f}, Voamax={Voa_max:.2f}")
+    print(f"Voamin={pa[min_spd]:.2f}, Voamax={pa[max_spd]:.2f}")
 
     for k, c in pi:
-        c.v_oa_min = Voa_min
-        c.v_oa_max = Voa_max
+        c.v_oa_min = pa[min_spd]
+        c.v_oa_max = pa[max_spd]
         print(f"{k}: kp={c.kp}")
 
     g = Gen(setpoint=setpoint, t_step=ONE_MINUTE_MS, pi=pi)

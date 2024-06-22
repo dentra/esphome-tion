@@ -117,4 +117,10 @@ size_t parse_hex(const char *str, size_t length, uint8_t *data, size_t count) {
   return chars;
 }
 
+uint32_t _millis{};
+
+uint32_t millis() { return _millis; }
+
+void test_set_millis(uint32_t millis) { _millis = millis; }
+
 }  // namespace esphome
