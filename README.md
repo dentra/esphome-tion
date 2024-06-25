@@ -12,7 +12,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.6.1&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.6.2&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
@@ -100,14 +100,17 @@ UART подключние различно для разных моделей б
 Рекомендуется приобрести стик [Lilygo T-Dongle S3](https://github.com/Xinyuan-LilyGO/T-Dongle-S3),
 проще всего это сделать на Aliexpress. Или собрать самостоятельно на базе ESP32.
 
-> [!IMPORTANT] Для работы режима UART, прошивка бризера обязательно должна быть не ниже `02D2`,
+> [!IMPORTANT]
+> Для работы режима UART, прошивка бризера обязательно должна быть не ниже `02D2`,
 > ниже работать не будет (основная на которой сейчас все проверяю `02E0`).
 
-> [!IMPORTANT] Собрка и работа компонента на ESP8266 возможна, но стабильность не
+> [!IMPORTANT]
+> Собрка и работа компонента на ESP8266 возможна, но стабильность не
 > гарантируется, так же, в этом направлении, не будет оказана никакая поддержка,
 > используйте только ESP32!
 
-> [!IMPORTANT] При работе в UART-режиме, бризер требует опроса не реже одного раза в 8-10 сек,
+> [!IMPORTANT]
+> При работе в UART-режиме, бризер требует опроса не реже одного раза в 8-10 сек,
 > в противном случае тион отключает питание на интеграционном порту. OTA-обновление,
 > в зависимости от удаленности от роутера и зашумленности эфира, может занимать более
 > продолжительное время, в связи с этим иногда обновление может не завершится или стик
@@ -132,7 +135,8 @@ UART подключние различно для разных моделей б
 разъема типа XH2.54 4pin male к ESP (распиновку см. [здесь](https://github.com/dentra/esphome-tion/issues/4#issuecomment-1910494611))
 или можно приобрести готовый переходник для подключения стика [Lilygo T-Dongle S3](https://github.com/Xinyuan-LilyGO/T-Dongle-S3)
 у меня (доступность утоняйте).
-> [!IMPORTANT] Собрка и работа компонента на ESP8266 возможна, но стабильность не
+> [!IMPORTANT]
+> Собрка и работа компонента на ESP8266 возможна, но стабильность не
 > гарантируется, так же, в этом направлении, не будет оказана никакая поддержка,
 > используйте только ESP32!
 
