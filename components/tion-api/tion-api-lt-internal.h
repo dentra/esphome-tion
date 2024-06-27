@@ -108,6 +108,11 @@ struct tionlt_state_t {
   }
 };
 
+struct tionlt_state_get_req_t {
+  uint32_t request_id;
+  tionlt_state_t state;
+};
+
 // used to change state of device
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct _tionlt_state_set_t {

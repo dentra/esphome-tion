@@ -25,14 +25,10 @@ void TionLtApi::read_frame(uint16_t frame_type, const void *frame_data, size_t f
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
   if (frame_type == FRAME_TYPE_STATE_RSP) {
     // NOLINTNEXTLINE(readability-identifier-naming)
-    struct state_frame_t {
-      uint32_t request_id;
-      tionlt_state_t state;
-    } PACKED;
-    if (frame_data_size != sizeof(state_frame_t)) {
+    if (frame_data_size != sizeof(tionlt_state_get_req_t)) {
       TION_LOGW(TAG, "Incorrect state response data size: %zu", frame_data_size);
     } else {
-      const auto *frame = static_cast<const state_frame_t *>(frame_data);
+      const auto *frame = static_cast<const tionlt_state_get_req_t *>(frame_data);
       TION_LOGD(TAG, "Response[%" PRIu32 "] State", frame->request_id);
       this->update_state_(frame->state);
       this->notify_state_(frame->request_id);
