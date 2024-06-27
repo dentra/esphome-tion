@@ -330,8 +330,22 @@ void TionStateCall::perform() {
     // сделаем сброс накопленых ошибок
     this->api_->auto_update(0, nullptr);
   }
-  this->api_->write_state(this);
-  this->reset();
+  if (this->has_changes()) {
+    this->api_->write_state(this);
+    this->reset();
+  }
+}
+
+bool TionStateCall::has_changes() const {
+  return this->fan_speed_.has_value()              //-//
+         || this->power_state_.has_value()         //-//
+         || this->heater_state_.has_value()        //-//
+         || this->target_temperature_.has_value()  //-//
+         || this->sound_state_.has_value()         //-//
+         || this->led_state_.has_value()           //-//
+         || this->gate_position_.has_value()       //-//
+         || this->auto_state_.has_value()          //-//
+      ;
 }
 
 void TionStateCall::reset() {

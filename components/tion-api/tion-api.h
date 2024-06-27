@@ -201,6 +201,7 @@ class TionStateCall {
 
   virtual void perform();
 
+  bool has_changes() const;
   void reset();
 
   void dump() const;
