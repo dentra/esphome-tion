@@ -12,7 +12,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.6.2&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.6.4&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
@@ -263,6 +263,7 @@ broker, port и т.д. установите согласно настройка�
 * Возможность прошивки готового образа
 * Автоматическое обновление
 * ~~Управление через штатный пульт~~
+* Возможность работы бризера в режиме KIV
 
 
 ## Решение проблем и поддержка новых функций
