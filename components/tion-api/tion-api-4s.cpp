@@ -403,6 +403,7 @@ void Tion4sApi::dump_state_(const tion4s_state_t &state) const {
   TION_DUMP(TAG, "active_timer: %s", ONOFF(state.active_timer));
   TION_DUMP(TAG, "ma_auto     : %s", ONOFF(state.ma_auto));
   TION_DUMP(TAG, "ma_connected: %s", ONOFF(state.ma_connected));
+  TION_DUMP(TAG, "airflow_cnt : %" PRIu32, state.counters.airflow_counter);
   TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
 }
 

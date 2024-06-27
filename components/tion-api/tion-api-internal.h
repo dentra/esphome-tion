@@ -31,7 +31,8 @@ struct tion_dev_info_t {
 };
 
 // NOLINTNEXTLINE(readability-identifier-naming)
-template<size_t AK> struct tion_state_counters_t {
+template<size_t _AK> struct tion_state_counters_t {
+  constexpr static size_t AK = _AK;
   // Motor time counter in seconds. power_up_time
   uint32_t work_time;
   // Electronics time count in seconds.
@@ -49,7 +50,7 @@ template<size_t AK> struct tion_state_counters_t {
   uint32_t work_time_days() const { return this->work_time / (24 * 3600); }
   // Calculate airflow in m3/h.
   float airflow_mult(float counter) const { return counter * this->airflow_k(); }
-  constexpr float airflow_k() const { return AK; }
+  constexpr float airflow_k() const { return _AK; }
 
   uint8_t calc_productivity(uint32_t prev_fan_time, uint32_t prev_airflow_counter) const {
     if (prev_fan_time == 0) {

@@ -50,6 +50,9 @@ enum {
 };
 
 #pragma pack(push, 1)
+
+using tion_4s_state_counters_t = tion::tion_state_counters_t<15>;
+
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_state_t {
   enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 29, GATE_ERROR_BIT = 1 << 0 };
@@ -116,7 +119,7 @@ struct tion4s_state_t {
   // Байт 8. sensor: pwr pcb temperature.
   int8_t pcb_pwr_temperature;
   // Байт 9-24. 9-12 - work_time, 13-16 - fan_time, 17-20 - filter_time, 21-24 - airflow_counter
-  tion::tion_state_counters_t<15> counters;
+  tion_4s_state_counters_t counters;
   // Байт 25-28. Ошибки и/или предупредждения.
   uint32_t errors;
   // fan speed limit.

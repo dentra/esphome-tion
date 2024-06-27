@@ -202,6 +202,7 @@ void TionLtApi::dump_state_(const tionlt_state_t &state) const {
   TION_DUMP(TAG, "heater_var  : %u", state.heater_var);
   TION_DUMP(TAG, "kiv_present : %s", ONOFF(state.kiv_present));
   TION_DUMP(TAG, "kiv_active  : %s", ONOFF(state.kiv_active));
+  TION_DUMP(TAG, "airflow_cnt : %" PRIu32, state.counters.airflow_counter);
   TION_DUMP(TAG, "btn_presets : %d/%d/%d, %d/%d/%d °C",                //-//
             state.button_presets.fan[0], state.button_presets.fan[1],  //-//
             state.button_presets.fan[2], state.button_presets.tmp[0],  //-//

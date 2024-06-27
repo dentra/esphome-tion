@@ -28,6 +28,8 @@ enum {
 
 #pragma pack(push, 1)
 
+using tion_lt_state_counters_t = tion::tion_state_counters_t<10>;
+
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct button_presets_t {
   enum { PRESET_NUMBER = 3 };
@@ -86,7 +88,7 @@ struct tionlt_state_t {
   // Байт 7. Внутренняя температура платы.
   int8_t pcb_temperature;
   // Байт 8-23. 8-11 - work_time, 12-15 - fan_time, 16-19 - filter_time, 20-23 - airflow_counter
-  tion::tion_state_counters_t<10> counters;
+  tion_lt_state_counters_t counters;
   // Байт 24-27.
   uint32_t errors;
   // Байт 28-47.
