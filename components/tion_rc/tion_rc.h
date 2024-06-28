@@ -11,6 +11,10 @@
 
 #include "../tion/tion_component.h"
 
+#ifndef TION_RC_DUMP
+#define TION_RC_DUMP ESP_LOGV
+#endif
+
 namespace esphome {
 namespace tion_rc {
 

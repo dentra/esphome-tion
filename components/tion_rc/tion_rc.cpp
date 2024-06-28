@@ -17,7 +17,7 @@ static const char *const TAG = "tion_rc";
 
 TionRC::TionRC(tion::TionApiComponent *tion, TionRCControl *control) : control_(control) {
   this->control_->set_writer([this](const uint8_t *data, size_t size) {
-    ESP_LOGV(TAG, "TX RC: %s", format_hex_pretty(data, size).c_str());
+    TION_RC_DUMP(TAG, "TX RC: %s", format_hex_pretty(data, size).c_str());
     if (this->char_notify_) {
       this->char_notify_->set_value(data, size);
       this->char_notify_->notify();
@@ -39,15 +39,19 @@ void TionRC::setup_service_() {
   global_ble_server->create_service(service_uuid, true);
   this->service_ = global_ble_server->get_service(service_uuid);
 
+  // смена порядка создания сервиса ведет к тому, что паблишится корявый notify-дескриптор
+
   this->char_notify_ =
       this->service_->create_characteristic(this->control_->get_ble_char_rx(), BLECharacteristic::PROPERTY_NOTIFY);
   this->char_notify_->add_descriptor(new BLE2902());  // add notify descriptor
 
   auto *char_rx =
       this->service_->create_characteristic(this->control_->get_ble_char_tx(), BLECharacteristic::PROPERTY_WRITE);
+  // не очень понятно почему не применяется в конструкторе, поэтому попробуем так
+  char_rx->set_write_no_response_property(true);
   char_rx->on_write([this](const std::vector<uint8_t> &data) {
     if (!data.empty()) {
-      ESP_LOGV(TAG, "RX RC: %s", format_hex_pretty(data).c_str());
+      TION_RC_DUMP(TAG, "RX RC: %s", format_hex_pretty(data).c_str());
       this->control_->pr_read_data(data.data(), data.size());
     }
   });
@@ -58,6 +62,23 @@ void TionRC::setup_service_() {
 void TionRC::adv(bool pair) {
   this->control_->adv(pair);
 
+  // Для 4S scan response содержит следующую информацию:
+  // Bluetooth HCI Event - LE Meta
+  //     Event Code: LE Meta (0x3e)
+  //     Parameter Total Length: 30
+  //     Sub Event: LE Advertising Report (0x02)
+  //     Num Reports: 1
+  //     Event Type: Scan Response (0x04)
+  //     Peer Address Type: Random Device Address (0x01)
+  //     BD_ADDR: xx:xx:xx:xx:xx:xx (xx:xx:xx:xx:xx:xx)
+  //     Data Length: 18
+  //     Advertising Data
+  //         128-bit Service Class UUIDs
+  //             Length: 17
+  //             Type: 128-bit Service Class UUIDs (0x07)
+  //             Custom UUID: 98f00001-3788-83ea-453e-f52244709ddb (Unknown)
+  //     RSSI: -56 dBm
+
   const auto uuid128bit = this->service_->get_uuid().as_128bit();
   esp_bt_uuid_t uuid = uuid128bit.get_uuid();
 
@@ -66,6 +87,22 @@ void TionRC::adv(bool pair) {
   adv_scan_rsp_data.service_uuid_len = uuid.len;
   adv_scan_rsp_data.p_service_uuid = uuid.uuid.uuid128;
   esp_ble_gap_config_adv_data(&adv_scan_rsp_data);
+
+  // esp_ble_adv_params_t adv_prams{
+  //     .adv_int_min = 0x20,
+  //     .adv_int_max = 0x40,
+  //     .adv_type = ADV_TYPE_IND,
+  //     .own_addr_type = BLE_ADDR_TYPE_RANDOM,
+  //     .peer_addr = {},
+  //     .peer_addr_type = BLE_ADDR_TYPE_PUBLIC,
+  //     .channel_map = ADV_CHNL_ALL,
+  //     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+  // };
+  // esp_bd_addr_t mac;
+  // esp_read_mac(mac, ESP_MAC_BT);
+  // esp_ble_gap_set_rand_addr(mac);
+  // esp_ble_gap_config_local_privacy(true);
+  // esp_ble_gap_start_advertising(&adv_prams);
 
   ESP_LOGD(TAG, "Advertising sent. pair=%s", ONOFF(pair));
 }

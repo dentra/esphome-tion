@@ -11,10 +11,6 @@ namespace tion_rc {
 
 static const char *const TAG = "tion_rc_4s";
 
-#ifndef TION_RC_4S_DUMP
-#define TION_RC_4S_DUMP ESP_LOGV
-#endif
-
 using namespace dentra::tion;
 using namespace dentra::tion_4s;
 
@@ -37,11 +33,42 @@ template<typename T, size_t V> struct BleAdvField {
 } PACKED;
 
 void Tion4sRC::adv(bool pair) {
+  // Для 4S advertising содержит следующую информацию:
+  // Bluetooth HCI Event - LE Meta
+  //     Event Code: LE Meta (0x3e)
+  //     Parameter Total Length: 42
+  //     Sub Event: LE Advertising Report (0x02)
+  //     Num Reports: 1
+  //     Event Type: Connectable Undirected Advertising (0x00)
+  //     Peer Address Type: Random Device Address (0x01)
+  //     BD_ADDR: 11:22:33:44:55:66 (11:22:33:44:55:66)
+  //     Data Length: 30
+  //     Advertising Data
+  //         Flags
+  //             Length: 2
+  //             Type: Flags (0x01)
+  //             000. .... = Reserved: 0x0
+  //             ...0 .... = Simultaneous LE and BR/EDR to Same Device Capable (Host): false (0x0)
+  //             .... 0... = Simultaneous LE and BR/EDR to Same Device Capable (Controller): false (0x0)
+  //             .... .1.. = BR/EDR Not Supported: true (0x1)
+  //             .... ..1. = LE General Discoverable Mode: true (0x1)
+  //             .... ...0 = LE Limited Discoverable Mode: false (0x0)
+  //         Manufacturer Specific
+  //             Length: 14
+  //             Type: Manufacturer Specific (0xff)
+  //             Company ID: For use in internal and interoperability tests (0xffff)
+  //             Data: 6655443322110380000001
+  //         Device Name: Breezer 4S
+  //             Length: 11
+  //             Type: Device Name (0x09)
+  //             Device Name: Breezer 4S
+  //     RSSI: -56 dBm
+
   esp_ble_gap_set_device_name(BLE_SERVICE_NAME);
 
   struct TionAdvManuData {
-    uint16_t vnd_id;
-    uint8_t mac[ESP_BD_ADDR_LEN];
+    uint16_t company_id;
+    esp_bd_addr_t mac;
     tion_dev_info_t::device_type_t type;
     struct {
       bool pair : 8;
@@ -58,15 +85,24 @@ void Tion4sRC::adv(bool pair) {
     BleAdvField<TionAdvManuData, ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE> manu;
     BleAdvField<char[sizeof(BLE_SERVICE_NAME) - 1], ESP_BLE_AD_TYPE_NAME_CMPL> name;
   } PACKED raw_adv_data{
-      .flags{ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT},
+      .flags{ESP_BLE_ADV_FLAG_BREDR_NOT_SPT},
       .manu{TionAdvManuData{
-          .vnd_id = 0xFFFF,
+          .company_id = 0xFFFF,
           .mac = {},
           .type = tion_dev_info_t::device_type_t::BR4S,
           .pair = pair,
       }},
       .name{BLE_SERVICE_NAME},
   };
+  if (pair) {
+    raw_adv_data.flags.data |= ESP_BLE_ADV_FLAG_GEN_DISC;
+  }
+  // пульт не проверяет адрес в "рекламе"
+  // esp_bd_addr_t mac;
+  // esp_read_mac(mac, ESP_MAC_BT);
+  // for (int i = 0; i < sizeof(esp_bd_addr_t); i++) {
+  //   raw_adv_data.manu.data.mac[i] = mac[(sizeof(esp_bd_addr_t) - 1) - i];
+  // }
 
   static_assert(sizeof(raw_adv_data) == 30);
   esp_ble_gap_config_adv_data_raw(reinterpret_cast<uint8_t *>(&raw_adv_data), sizeof(raw_adv_data));
@@ -75,11 +111,11 @@ void Tion4sRC::adv(bool pair) {
 void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
   switch (type) {
     case FRAME_TYPE_STATE_REQ: {
-      using tion4s_raw_state_t = tion4s_raw_frame_t<tion4s_state_t>;
+      using tion4s_raw_state_t = tion4s_state_t;
       ESP_LOGV(TAG, "State GET %s", format_hex_pretty(data, size).c_str());
       const auto *get = reinterpret_cast<const tion4s_raw_state_t *>(data);
-      TION_RC_4S_DUMP(TAG, "GET[%u]", get->request_id);
-      this->state_req_id_ = get->request_id;
+      TION_RC_DUMP(TAG, "STATE_GET[]");
+      this->state_req_id_ = 1;
       this->api_->request_state();
       break;
     }
@@ -101,14 +137,14 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
 
       const bool heat = set->data.heater_mode == dentra::tion_4s::tion4s_state_t::HEATER_MODE_HEATING;
 
-      TION_RC_4S_DUMP(TAG, "SET[%u]", set->request_id);
-      TION_RC_4S_DUMP(TAG, "  fan : %u", set->data.fan_speed);
-      TION_RC_4S_DUMP(TAG, "  temp: %d", set->data.target_temperature);
-      TION_RC_4S_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(gate));
-      TION_RC_4S_DUMP(TAG, "  heat: %s", ONOFF(heat));
-      TION_RC_4S_DUMP(TAG, "  pwr : %s", ONOFF(set->data.power_state));
-      TION_RC_4S_DUMP(TAG, "  snd : %s", ONOFF(set->data.sound_state));
-      TION_RC_4S_DUMP(TAG, "  led : %s", ONOFF(set->data.led_state));
+      TION_RC_DUMP(TAG, "STATE_SET[%" PRIu32 "]", set->request_id);
+      TION_RC_DUMP(TAG, "  fan : %u", set->data.fan_speed);
+      TION_RC_DUMP(TAG, "  temp: %d", set->data.target_temperature);
+      TION_RC_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(gate));
+      TION_RC_DUMP(TAG, "  heat: %s", ONOFF(heat));
+      TION_RC_DUMP(TAG, "  pwr : %s", ONOFF(set->data.power_state));
+      TION_RC_DUMP(TAG, "  snd : %s", ONOFF(set->data.sound_state));
+      TION_RC_DUMP(TAG, "  led : %s", ONOFF(set->data.led_state));
 
       TionStateCall call(this->api_);
 
@@ -131,6 +167,7 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
     }
 
     case FRAME_TYPE_DEV_INFO_REQ: {
+      TION_RC_DUMP(TAG, "DEV_INFO[]");
       const tion_dev_info_t dev_info{
           .work_mode = tion_dev_info_t::NORMAL,
           .device_type = tion_dev_info_t::BR4S,
@@ -144,8 +181,10 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
 
     case FRAME_TYPE_TURBO_REQ: {
       using tion4s_raw_turbo_rsp_t = tion4s_raw_frame_t<tion4s_turbo_t>;
+      const uint32_t request_id = *reinterpret_cast<const uint32_t *>(data);
+      TION_RC_DUMP(TAG, "TURBO_GET[%" PRIu32 "]", request_id);
       const tion4s_raw_turbo_rsp_t rsp{
-          .request_id = *reinterpret_cast<const uint32_t *>(data),
+          .request_id = request_id,
           .data =
               {
                   .is_active = this->api_->get_state().boost_time_left > 0,
@@ -163,6 +202,8 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
 
       const auto *set = reinterpret_cast<const tion4s_raw_turbo_req_t *>(data);
 
+      TION_RC_DUMP(TAG, "TURBO_SET[%" PRIu32 "]", set->request_id);
+
       TionStateCall call(this->api_);
       this->api_->enable_boost(set->data.time, &call);
       call.perform();
@@ -177,6 +218,7 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
     case FRAME_TYPE_TIME_REQ: {
       using tion4s_raw_time_rsp_t = tion4s_raw_frame_t<tion4s_time_t>;
       const uint32_t request_id = size == sizeof(uint32_t) ? *reinterpret_cast<const uint32_t *>(data) : 0UL;
+      TION_RC_DUMP(TAG, "TIME_GET[%" PRIu32 "]", request_id);
       const tion4s_raw_time_rsp_t rsp{.request_id = request_id, .data = {.unix_time = 0}};
       this->pr_.write_frame(FRAME_TYPE_TIME_RSP, &rsp, sizeof(rsp));
       break;
@@ -186,6 +228,7 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
       using tion4s_raw_timer_state_req_t = tion4s_raw_frame_t<tion4s_timer_req_t>;
       using tion4s_raw_timer_state_rsp_t = tion4s_raw_frame_t<tion4s_timer_rsp_t>;
       const auto *req = reinterpret_cast<const tion4s_raw_timer_state_req_t *>(data);
+      TION_RC_DUMP(TAG, "TIMER_GET[%" PRIu32 "]: timer_id=%u", req->request_id, req->data.timer_id);
       const tion4s_raw_timer_state_rsp_t rsp{
           .request_id = req->request_id,
           .data =
@@ -230,13 +273,13 @@ void Tion4sRC::on_state(const TionState &st) {
   state.data.max_fan_speed = this->api_->get_traits().max_fan_speed;
   state.data.heater_var = st.heater_var;
 
-  TION_RC_4S_DUMP(TAG, "RSP[%u]", state.request_id);
-  TION_RC_4S_DUMP(TAG, "  fan : %u", st.fan_speed);
-  TION_RC_4S_DUMP(TAG, "  temp: %d", st.target_temperature);
-  TION_RC_4S_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));
-  TION_RC_4S_DUMP(TAG, "  heat: %s", ONOFF(st.heater_state));
-  TION_RC_4S_DUMP(TAG, "  pwr : %s", ONOFF(st.power_state));
-  TION_RC_4S_DUMP(TAG, "  snd : %s", ONOFF(st.sound_state));
+  TION_RC_DUMP(TAG, "RSP[%u]", state.request_id);
+  TION_RC_DUMP(TAG, "  fan : %u", st.fan_speed);
+  TION_RC_DUMP(TAG, "  temp: %d", st.target_temperature);
+  TION_RC_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));
+  TION_RC_DUMP(TAG, "  heat: %s", ONOFF(st.heater_state));
+  TION_RC_DUMP(TAG, "  pwr : %s", ONOFF(st.power_state));
+  TION_RC_DUMP(TAG, "  snd : %s", ONOFF(st.sound_state));
 
   this->pr_.write_frame(FRAME_TYPE_STATE_RSP, &state, sizeof(state));
   this->state_req_id_ = 0;
