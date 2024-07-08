@@ -6,6 +6,11 @@
 
 #include "tion_rc_4s.h"
 
+#ifdef TION_UPDATE_EMU
+#include "../tion-api/tion-api-firmware.h"
+#include "../tion-api/crc.h"
+#endif
+
 namespace esphome {
 namespace tion_rc {
 
@@ -13,6 +18,9 @@ static const char *const TAG = "tion_rc_4s";
 
 using namespace dentra::tion;
 using namespace dentra::tion_4s;
+#ifdef TION_UPDATE_EMU
+using namespace dentra::tion::firmware;
+#endif
 
 #define BLE_SERVICE_NAME "Breezer 4S"
 
@@ -169,10 +177,19 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
     case FRAME_TYPE_DEV_INFO_REQ: {
       TION_RC_DUMP(TAG, "DEV_INFO[]");
       const tion_dev_info_t dev_info{
+#ifdef TION_UPDATE_EMU
+          .work_mode = this->is_update_ ? tion_dev_info_t::UPDATE : tion_dev_info_t::NORMAL,
+#else
           .work_mode = tion_dev_info_t::NORMAL,
+#endif
           .device_type = tion_dev_info_t::BR4S,
+#ifdef TION_UPDATE_EMU
+          .firmware_version = TION_UPDATE_EMU,
+          .hardware_version = 1,
+#else
           .firmware_version = this->api_->get_state().firmware_version,
           .hardware_version = this->api_->get_state().hardware_version,
+#endif
           .reserved = {},
       };
       this->pr_.write_frame(FRAME_TYPE_DEV_INFO_RSP, &dev_info, sizeof(dev_info));
@@ -240,6 +257,130 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
       this->pr_.write_frame(FRAME_TYPE_TIMER_RSP, &rsp, sizeof(rsp));
       break;
     }
+
+#ifdef TION_UPDATE_EMU
+    case FRAME_TYPE_UPDATE_PREPARE_REQ: {
+      ESP_LOGI(TAG, "Entering update mode");
+
+      const FirmwareVersions rsp{
+          .device_type = tion_dev_info_t::BR4S,
+          .unknown1 = 0,
+          .hardware_version = TION_UPDATE_EMU,
+      };
+
+      this->is_update_ = true;
+      this->fw_size_ = 0;
+      this->fw_load_ = 0;
+      this->fw_crc_ = 0xFFFF;
+
+      this->pr_.write_frame(FRAME_TYPE_UPDATE_PREPARE_RSP, &rsp, sizeof(rsp));
+      break;
+    }
+    case FRAME_TYPE_UPDATE_START_REQ: {
+      if (!this->is_update_) {
+        ESP_LOGW(TAG, "Not in update mode");
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+        break;
+      }
+
+      // TODO доп проверка что структура данных верна, перенести в хидер
+      static_assert(sizeof(FirmwareInfo) == 132);
+
+      if (size != sizeof(FirmwareInfo)) {
+        ESP_LOGW(TAG, "Invalid update start");
+        this->is_update_ = false;
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+        break;
+      }
+      const auto *req = reinterpret_cast<const FirmwareInfo *>(data);
+      ESP_LOGI(TAG, "Starting update of %" PRIu32 " bytes", req->size);
+
+      this->fw_size_ = req->size - sizeof(FirmwareInfo::data);
+      this->pr_.write_frame(FRAME_TYPE_UPDATE_START_RSP, nullptr, 0);
+      break;
+    }
+    case FRAME_TYPE_UPDATE_CHUNK_REQ: {
+      if (!this->is_update_) {
+        ESP_LOGW(TAG, "Not in update mode");
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+        break;
+      }
+      if (this->fw_size_ == 0) {
+        ESP_LOGW(TAG, "Invalid update chunk");
+        this->is_update_ = false;
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+        break;
+      }
+      const auto *req = reinterpret_cast<const FirmwareChunk *>(data);
+      const auto chunk_size = size - (sizeof(FirmwareChunk) - sizeof(FirmwareChunk::data));
+
+      if (req->offset == FirmwareChunkCRC::MARKER) {
+        if (chunk_size != sizeof(FirmwareChunkCRC::crc)) {
+          ESP_LOGW(TAG, "Invalid update final chunk size: %" PRIu32, chunk_size);
+          this->is_update_ = false;
+          this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+          break;
+        }
+        ESP_LOGI(TAG, "Got final chunk at %" PRIu32, req->offset);
+        this->fw_crc_ = crc16_ccitt_false(this->fw_crc_, req->data, chunk_size);
+        if (this->fw_crc_ != 0) {
+          ESP_LOGW(TAG, "CRC failed");
+          this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+          break;
+        }
+      } else {
+        if (this->fw_load_ != req->offset) {
+          ESP_LOGW(TAG, "Invalid update chunk offset: expected=%" PRIu32 ", actual=%" PRIu32, this->fw_load_,
+                   req->offset);
+          this->is_update_ = false;
+          this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+          break;
+        }
+
+        ESP_LOGI(TAG, "Got chunk at %" PRIu32, req->offset);
+        this->fw_load_ += chunk_size;
+        if (this->fw_load_ > this->fw_size_) {
+          ESP_LOGW(TAG, "Invalid update chunk size: %" PRIu32, chunk_size);
+          this->is_update_ = false;
+          this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+          break;
+        }
+
+        this->fw_crc_ = crc16_ccitt_false(this->fw_crc_, req->data, chunk_size);
+      }
+
+      this->pr_.write_frame(FRAME_TYPE_UPDATE_CHUNK_RSP, nullptr, 0);
+      break;
+    }
+
+    case FRAME_TYPE_UPDATE_FINISH_REQ: {
+      if (!this->is_update_) {
+        ESP_LOGW(TAG, "Not in update mode");
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+        break;
+      }
+
+      this->is_update_ = false;
+
+      if (size != sizeof(FirmwareInfo)) {
+        ESP_LOGW(TAG, "Invalid update finish");
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+        break;
+      }
+
+      const auto *req = reinterpret_cast<const FirmwareInfo *>(data);
+      ESP_LOGI(TAG, "Finishing update: %" PRIu32, req->size);
+
+      const auto fw_size = req->size - sizeof(FirmwareInfo::data);
+      if (fw_size != this->fw_size_) {
+        ESP_LOGW(TAG, "Invalid chek size: %" PRIu32, fw_size);
+        this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
+      }
+
+      this->pr_.write_frame(FRAME_TYPE_UPDATE_FINISH_RSP, nullptr, 0);
+      break;
+    }
+#endif
 
     default:
       ESP_LOGW(TAG, "Unknown packet type %04X: %s", type, format_hex_pretty(data, size).c_str());
