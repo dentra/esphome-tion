@@ -1,0 +1,15 @@
+{
+  "name": "ESPHome Tion",
+  "version": "{{ version_tion }}",
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "ota": {
+        "md5": "{{ ota_md5 }}",
+        "path": "https://github.com/dentra/esphome-tion/releases/download/{{ version_tion }}/{{ fw_name }}.ota.bin",
+        "release_url": "https://github.com/dentra/esphome-tion/releases/tag/{{ version_tion }}",
+        "summary": "Новая версия {{ version_tion }}\n\nПоддержка дальнейшего развития проекта:\nhttps://www.tinkoff.ru/cf/3dZPaLYDBAI или https://boosty.to/dentra"
+      }
+    }
+  ]
+}

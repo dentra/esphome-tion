@@ -1,0 +1,136 @@
+#!/bin/bash
+
+do_dev=n
+do_compile=y
+do_sync=y
+do_clean=n
+types="lt-ble 4s-ble 4s-uart 3s-ble 3s-uart o2-uart"
+connections="mqtt api"
+
+prj_path=$(dirname $0)/..
+
+if [ "$1" == "" ]; then
+    echo "no version defined"
+    echo "use $0 <version> [options]"
+    echo "  -d do_dev,      default: $do_dev"
+    echo "  -c do_compile,  default: $do_compile"
+    echo "  -s do_sync,     default: $do_sync"
+    echo "  -l do_clean,    default: $do_clean"
+    echo "  -t types,       default: $types"
+    echo "  -n connections, default: $connections"
+    exit 1
+fi
+
+. $prj_path/scripts/j2_vars
+
+shift
+
+while getopts d:c:s:l:t:n: flag
+do
+    case "${flag}" in
+        d) do_dev=${OPTARG};;
+        c) do_compile=${OPTARG};;
+        s) do_sync=${OPTARG};;
+        l) do_clean=${OPTARG};;
+        t) types=(${OPTARG});;
+        n) connections=(${OPTARG});;
+    esac
+done
+
+function info  { echo -e "\033[32m[info] $*\033[39m"; }
+function warn  { echo -e "\033[33m[warn] $*\033[39m"; }
+function error { echo -e "\033[31m[error] $*\033[39m"; exit 1; }
+
+if [ "$do_clean" == "y" ]; then
+  do_compile=y
+fi
+
+echo "version: $version_tion"
+echo "     do_dev: $do_dev"
+echo " do_compile: $do_compile"
+echo "    do_sync: $do_sync"
+echo "   do_clean: $do_clean"
+echo "      types: $types"
+echo "connections: $connections"
+
+build_path=$prj_path/.build/fota
+fota_path=$build_path/$version_tion
+
+mkdir -p "$fota_path"
+
+ESPHOME_DATA_DIR_SRC=$ESPHOME_DATA_DIR
+
+if [ "$do_sync" == "y" ]; then
+  info "Preparing cache sync"
+  for br_conn in "${connections[@]}" ; do
+    export ESPHOME_DATA_DIR=$build_path/build/$br_conn
+    mkdir -p $ESPHOME_DATA_DIR
+
+    cache_dirs=(external_components idf_components packages)
+    for cache_dir in "${cache_dirs[@]}" ; do
+      cache_dir="$ESPHOME_DATA_DIR_SRC/$cache_dir"
+      if [ -d "$cache_dir" ]; then
+        echo "Syncing cache $cache_dir"
+        rsync -r "$cache_dir" $ESPHOME_DATA_DIR
+      fi
+    done
+  done
+fi
+
+types=($types)
+connections=($connections)
+
+for br in "${types[@]}" ; do
+  parts=(${br//-/ })
+
+  br_type=${parts[0]}
+  br_port=${parts[1]}
+
+  for br_conn in "${connections[@]}" ; do
+
+    config=fw/tion-$br_type-$br_port
+    if [ "$br_conn" != "api" ]; then
+      config="$config-$br_conn"
+    fi
+    if [ "$do_dev" == "y" ]; then
+      config=$config-dev
+    fi
+    config=$config.yaml
+    info "Using config $config"
+
+    if [ ! -f $config ]; then
+      warn "Configuration does not exists"
+      continue
+    fi
+
+    node_name=$(cat $config | yq ".substitutions.node_name" -r)
+    manifest=$fota_path/tion-$br_type-$br_port-$br_conn.json
+
+    # use different folders for api and mqtt cache
+    export ESPHOME_DATA_DIR=$build_path/build/$br_conn
+
+    bin_path=$ESPHOME_DATA_DIR/build/$node_name/.pioenvs/$node_name
+    fw_name=tion-$br_type-$br_port-$br_conn
+
+    if [ "$do_clean" == "y" ]; then
+      info "Clean $node_name"
+      esphome clean $config || exit $?
+    fi
+
+    if [ "$do_compile" == "y" ]; then
+      info "Compiling $node_name"
+      esphome compile $config || exit $?
+    fi
+
+    ota_bin=$fota_path/$fw_name.ota.bin
+    factory_bin=$fota_path/$fw_name.factory.bin
+
+    info "Copying $node_name binaries"
+    cp "$bin_path/firmware.ota.bin" "$ota_bin"
+    cp "$bin_path/firmware.factory.bin" "$factory_bin"
+
+    info "Generating $node_name manifest"
+    jinja2 $j2_vars -D fw_name=$fw_name -D ota_md5=$(md5 -q "$ota_bin") -o "$manifest" "$prj_path/scripts/fota.json.j2"
+
+  done
+done
