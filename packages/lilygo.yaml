@@ -1,3 +1,6 @@
+esp32:
+  flash_size: 16MB
+
 logger:
   logs:
     light: INFO
