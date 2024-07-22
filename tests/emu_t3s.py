@@ -3,19 +3,19 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # import time
-import sys
-import logging
-from typing import Callable
+import abc
 
 # from urllib import request
 # import yaml
-
 import binascii
-import abc
-import struct
-import signal
-import time
 import datetime
+import logging
+import signal
+import struct
+import sys
+import time
+from typing import Callable
+
 import serial
 
 _LOGGER = logging.getLogger()
@@ -202,7 +202,7 @@ class DongleEmu(Dongle):
     def __init__(self, url: str):
         super().__init__()
         self._device = Tion4s(self)
-        self._ser = serial.serial_for_url(url, baudrate=9600)
+        self._ser = serial.serial_for_url(url, baudrate=115200)
         self._ser.flushInput()
         self._ser.flushOutput()
         self._running = False

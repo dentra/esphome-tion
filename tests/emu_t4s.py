@@ -169,7 +169,9 @@ class Tion4s(Device):
         self.state_rsp(self.state.unpack(buf))
 
     def dev_info_rsp(self) -> None:
-        data = struct.pack("<BHHHH", 0x01, 0x8003, 0, 0x02D2, 0x01) + b"\x00" * 16
+        version = 0x02D2
+        # version = 0x03CD
+        data = struct.pack("<BHHHH", 0x01, 0x8003, 0, version, 0x01) + b"\x00" * 16
         self._write_cmd(self.CMD_DEV_INFO_RSP, data)
 
     def dev_info_req(self, buf: bytes) -> None:

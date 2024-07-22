@@ -1,7 +1,27 @@
 import abc
+import enum
 import logging
 
 _LOGGER = logging.getLogger()
+
+
+class Flags(enum.IntFlag):
+    def __str__(self) -> str:
+        value = repr(self)
+        value = value[len(type(self).__name__) + 2 : value.index(":")]
+        return value
+
+
+def set_flag(flags: Flags, flag: Flags, value: bool) -> Flags:
+    if value:
+        flags |= flag
+    else:
+        flags &= ~(flag)
+    return flags
+
+
+def get_flag(flags: Flags, flag: Flags) -> bool:
+    return flags & flag != 0
 
 
 class CmdId:

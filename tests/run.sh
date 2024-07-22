@@ -39,7 +39,7 @@ SRCS_ESPHOME=(
   # $LIB_COMPO_VPORT_DIR
 )
 
-SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump|settings|tion_3s_rc|_?web_server|web_[_a-z]+|esp32_[_a-z]+)/.+\\.cpp$"
+SRCS_FILTER=".*/(esp32_usb_dis|logger|wifi|coredump|settings|tion_rc|_?web_server|web_[_a-z]+|esp32_[_a-z]+)/.+\\.cpp$"
 
 
 INCS=(
