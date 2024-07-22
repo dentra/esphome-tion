@@ -2,8 +2,17 @@
 {% set path_prefix = releases_path + "/download/" + version_tion -%}
 {% set donate_url = "https://www.tinkoff.ru/cf/3dZPaLYDBAI" -%}
 {% set boosty_url = "https://boosty.to/dentra" -%}
+{% set TION_FAMILY = {"4s": "4S", "3s": "3S", "lt": "Lite", "o2": "O2 Mac"} -%}
+{% set CHIP_FAMILY = {
+    "ESP32"  : "ESP32",
+    "ESP32S2": "ESP32-S2",
+    "ESP32S3": "ESP32-S3",
+    "ESP32C3": "ESP32-C3",
+    "ESP32C6": "ESP32-C6",
+    "ESP8266": "ESP8266",
+   } -%}
 {
-  "name": "ESPHome Tion",
+  "name": "Tion {{ TION_FAMILY[build.br_type] }} {{ build.br_port | upper }} [{{ build.br_conn | upper }}]",
   "version": "{{ version_tion }}",
   {% if has_factory -%}
   "home_assistant_domain": "esphome",
@@ -12,7 +21,7 @@
   {% endif -%}
   "builds": [
     {
-      "chipFamily": "{{ build.chip_family }}",
+      "chipFamily": "{{ CHIP_FAMILY[build.variant] }}",
       {% if has_factory -%}
       "parts": {
         "path": "{{ path_prefix }}/{{ build.fw_name }}.factory.bin",
@@ -21,7 +30,7 @@
       {% endif -%}
       "ota": {
         "path": "{{ path_prefix }}/{{ build.fw_name }}.ota.bin",
-        "md5": "{{ build.ota_md5 }}",
+        "md5": "{{ build.fota_ota_md5 }}",
         "release_url": "{{ releases_path }}/tag/{{ version_tion }}",
         "summary": "Новая версия {{ version_tion }}\n\nПоддержка дальнейшего развития проекта:\n{{ donate_url }} или {{ boosty_url }}"
       }

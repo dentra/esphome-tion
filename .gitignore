@@ -36,8 +36,11 @@ Doxygen
 /components/web_server
 /components/web_server_idf
 /components/web_menu
+/components/web_console
+/components/web_p_base
 /components/coredump
 /components/esp32_usb_dis
 /components/*_jtag/
+/components/setup
 /components/_*
 /fw
