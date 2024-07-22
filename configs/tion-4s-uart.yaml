@@ -58,7 +58,7 @@ packages:
 api:
 
 # WiFi hotspot configuration.
-# Comment next 3 lines to enable manual WiFi conviguration via access point.
+# Comment next 3 lines to enable manual WiFi configuration via access point.
 wifi:
   ssid: $wifi_ssid
   password: $wifi_password
