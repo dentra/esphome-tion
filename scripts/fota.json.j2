@@ -1,22 +1,29 @@
+{% set releases_path = "https://github.com/dentra/esphome-tion/releases" -%}
+{% set path_prefix = releases_path + "/download/" + version_tion -%}
+{% set donate_url = "https://www.tinkoff.ru/cf/3dZPaLYDBAI" -%}
+{% set boosty_url = "https://boosty.to/dentra" -%}
 {
   "name": "ESPHome Tion",
   "version": "{{ version_tion }}",
+  {% if has_factory -%}
+  "home_assistant_domain": "esphome",
+  "funding_url": "{{ donate_url }}",
+  "new_install_prompt_erase": true,
+  {% endif -%}
   "builds": [
     {
-      "chipFamily": "{{ chip_family }}",
-      {% if factory_md5 -%}
-      "factory": {
-        "md5": "{{ factory_md5 }}",
-        "path": "https://github.com/dentra/esphome-tion/releases/download/{{ version_tion }}/{{ fw_name }}.factory.bin",
-        "release_url": "https://github.com/dentra/esphome-tion/releases/tag/{{ version_tion }}",
-        "summary": "Новая версия {{ version_tion }}\n\nПоддержка дальнейшего развития проекта:\nhttps://www.tinkoff.ru/cf/3dZPaLYDBAI или https://boosty.to/dentra"
+      "chipFamily": "{{ build.chip_family }}",
+      {% if has_factory -%}
+      "parts": {
+        "path": "{{ path_prefix }}/{{ build.fw_name }}.factory.bin",
+        "offset": 0
       },
       {% endif -%}
       "ota": {
-        "md5": "{{ ota_md5 }}",
-        "path": "https://github.com/dentra/esphome-tion/releases/download/{{ version_tion }}/{{ fw_name }}.ota.bin",
-        "release_url": "https://github.com/dentra/esphome-tion/releases/tag/{{ version_tion }}",
-        "summary": "Новая версия {{ version_tion }}\n\nПоддержка дальнейшего развития проекта:\nhttps://www.tinkoff.ru/cf/3dZPaLYDBAI или https://boosty.to/dentra"
+        "path": "{{ path_prefix }}/{{ build.fw_name }}.ota.bin",
+        "md5": "{{ build.ota_md5 }}",
+        "release_url": "{{ releases_path }}/tag/{{ version_tion }}",
+        "summary": "Новая версия {{ version_tion }}\n\nПоддержка дальнейшего развития проекта:\n{{ donate_url }} или {{ boosty_url }}"
       }
     }
   ]

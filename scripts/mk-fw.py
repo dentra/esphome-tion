@@ -203,6 +203,7 @@ class Build:
         self.fw_name = fw_name
         self.chip_family = CHIP_FAMILY[CORE.config[CORE.target_platform][CONF_VARIANT]]
         self.build_path = CORE.relative_pioenvs_path(CORE.name)
+        self.fota_path = None
 
     @staticmethod
     def md5(fname: str):
@@ -218,6 +219,20 @@ class Build:
 
     def __str__(self) -> str:
         return f"Build[fw_name={self.fw_name}, chip_family={self.chip_family}, build_path={self.build_path}]"
+
+    @property
+    def ota_bin(self):
+        assert self.fota_path
+        return f"{self.fota_path}/{self.fw_name}.ota.bin"
+
+    @property
+    def ota_md5(self):
+        return self.md5(self.ota_bin)
+
+    @property
+    def factory_bin(self):
+        assert self.fota_path
+        return f"{self.fota_path}/{self.fw_name}.factory.bin"
 
 
 def process(
@@ -270,24 +285,23 @@ def make_manifest(
 
     for build in builds:
         debug(build)
-        manifest = f"{fota_path}/{build.fw_name}.json"
+        build.fota_path = fota_path
 
-        ota_bin = f"{fota_path}/{build.fw_name}.ota.bin"
-        factory_bin = f"{fota_path}/{build.fw_name}.factory.bin"
+        manifest = f"{fota_path}/{build.fw_name}.json"
 
         trace(f"fota_path  : {fota_path}")
         trace(f"manifest   : {manifest}")
-        trace(f"ota_bin    : {ota_bin}")
+        trace(f"ota_bin    : {build.ota_bin}")
         if do_factory:
-            trace(f"factory_bin: {factory_bin}")
+            trace(f"factory_bin: {build.factory_bin}")
 
         info("Copying binaries")
         os.makedirs(fota_path, exist_ok=True)
         for src, dst in [
-            ("firmware.ota.bin", ota_bin),
-            ("firmware.factory.bin", factory_bin) if do_factory else (None, None),
+            ("firmware.ota.bin", build.ota_bin),
+            ("firmware.factory.bin", build.factory_bin if do_factory else None),
         ]:
-            if src and dst:
+            if dst:
                 shutil.copy(f"{build.build_path}/{src}", dst)
 
         info(f"Generating manifest {manifest}")
@@ -298,11 +312,7 @@ def make_manifest(
             j2tpl = j2env.get_template(FOTA_JSON)
             out.write(
                 j2tpl.render(
-                    version_tion=version_tion,
-                    fw_name=build.fw_name,
-                    ota_md5=build.md5(ota_bin),
-                    factory_md5=build.md5(factory_bin) if do_factory else None,
-                    chip_family=build.chip_family,
+                    version_tion=version_tion, build=build, has_factory=do_factory
                 )
             )
 
