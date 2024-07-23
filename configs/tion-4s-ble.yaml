@@ -1,5 +1,5 @@
 substitutions:
-  # Tion mac address. setup yours.
+  # Tion mac address. Setup yours.
   tion_mac_address: 00:00:00:00:00:00
   # Name of the node. Don't use underscores!
   # https://esphome.io/guides/faq.html#why-shouldn-t-i-use-underscores-in-my-device-name
@@ -12,6 +12,8 @@ substitutions:
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
+  # WiFi Access Point passsword.
+  wifi_ap_password: tion-0123-4s
 
 packages:
   tion:
@@ -66,10 +68,15 @@ packages:
 api:
 
 # WiFi hotspot configuration.
-# Comment next 3 lines to enable manual WiFi configuration via access point.
 wifi:
+  # Comment next 2 lines to enable manual WiFi configuration via access point.
   ssid: $wifi_ssid
   password: $wifi_password
+  # Comment next 2 lines to set access point without password.
+  ap:
+    password: $wifi_ap_password
+  # To completely remove access point remove previous two lines and uncomment next one.
+  #ap: !remove
 
 # Virtual port configuration
 vport:
