@@ -1,0 +1,16 @@
+substitutions:
+  board: lolin_s2_mini
+  tx_pin: GPIO20
+  rx_pin: GPIO19
+
+packages:
+  tion.esp32_uart: !include esp32_uart.yaml
+
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+
+logger:
+  # Switch USB from CDC
+  hardware_uart: UART0
+

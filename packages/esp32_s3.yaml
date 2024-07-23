@@ -1,13 +1,3 @@
-substitutions:
-  board: esp32-s3-devkitc-1
-  tx_pin: GPIO20
-  rx_pin: GPIO19
-
+# this package is deprecated, plase use esp32_s3_uart.yaml
 packages:
-  tion.esp32_uart: !include esp32.yaml
-
-esphome:
-  platformio_options:
-    board_build.flash_mode: dio
-
-esp32_usb_dis:
+  tion.esp32_s3_uart: !include esp32_s3_uart.yaml

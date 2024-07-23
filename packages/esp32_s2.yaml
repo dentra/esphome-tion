@@ -1,16 +1,3 @@
-substitutions:
-  board: lolin_s2_mini
-  tx_pin: GPIO20
-  rx_pin: GPIO19
-
+# this package is deprecated, plase use esp32_s2_uart.yaml
 packages:
-  tion.esp32_uart: !include esp32.yaml
-
-esphome:
-  platformio_options:
-    board_build.flash_mode: dio
-
-logger:
-  # Switch USB from CDC
-  hardware_uart: UART0
-
+  tion.esp32_s2_uart: !include esp32_s2_uart.yaml

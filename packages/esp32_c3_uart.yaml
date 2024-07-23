@@ -1,0 +1,13 @@
+substitutions:
+  board: esp32-c3-devkitm-1
+  tx_pin: GPIO20
+  rx_pin: GPIO19
+
+packages:
+  tion.esp32_uart: !include esp32_uart.yaml
+
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32_usb_dis:

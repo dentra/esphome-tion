@@ -1,0 +1,27 @@
+substitutions:
+  board: esp32dev
+  tx_pin: TX
+  rx_pin: RX
+  baud_rate: "9600"
+
+esp32:
+  board: $board
+  framework:
+    type: esp-idf
+    # eshhome 2023.12.x, version: 4.4.5 platform_version: 5.4.0
+    # esphome 2024.5.x, version: 4.4.7, platform_version: 5.4.0
+    # esp-idf 5.2.1,  version: 5.2.1, platform_version: 6.7.0
+    version: 4.4.7 # pin esp-idf
+
+wifi:
+  power_save_mode: none
+
+logger:
+  # Make sure logging is not using the serial port
+  baud_rate: 0
+
+uart:
+  - id: tion_uart
+    tx_pin: $tx_pin
+    rx_pin: $rx_pin
+    baud_rate: $baud_rate
