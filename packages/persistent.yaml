@@ -1,5 +1,6 @@
 switch:
   - platform: template
+    id: tion_persistent
     name: Persistent
     lambda: return id(tion_ble_vport).is_persistent_connection();
     turn_on_action:

@@ -1,3 +1,4 @@
 sensor:
   - platform: wifi_signal
+    id: tion_wifi_signal
     name: "WiFi Signal"

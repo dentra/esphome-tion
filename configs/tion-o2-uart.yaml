@@ -42,8 +42,8 @@ packages:
       - packages/tion_enable_antifrize.yaml
       ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
-      ## Change to esp32.yaml/esp32_s2.yaml/esp32_c3.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
-      - packages/esp32_s3.yaml
+      ## Change to esp32_uart.yaml/esp32_s2_uart.yaml/esp32_c3_uart.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
+      - packages/esp32_s3_uart.yaml
       ## Internal ESP32 temperature sensor.
       # - packages/esp32_temperature.yaml
       ## Lilygo T-Dongle S3 internal LED and button support
@@ -79,7 +79,7 @@ wifi:
 vport:
   - platform: tion_o2_uart
     id: tion_uart_vport
-    uart_id: uart_tion
+    uart_id: tion_uart
     ## Optional, Interval between sending commmands. Set to 0ms to send one command per loop.
     # command_interval: 20ms
     ## Optional, Command queue size. Default: 10.
@@ -128,6 +128,7 @@ tion:
 
 climate:
   - platform: tion
+    id: tion_climate
     name: None # use friendly_name
     # add HEAT_COOL mode to support turn_on without touching current heater mode.
     enable_heat_cool: True
@@ -135,24 +136,29 @@ climate:
 sensor:
   # Temperatire of air before heater, °C (celsius).
   - platform: tion
+    id: tion_outdoor_temperature
     type: outdoor_temperature
     name: Outdoor Temperature
   # Current productivity, m³/h (cubic meters per hour).
   - platform: tion
+    id: tion_productivity
     type: productivity
     name: Productivity
   # Filter time left counter.
   - platform: tion
+    id: tion_filter_time_left_days
     type: filter_time_left_days
     name: Filter Time Left
   # Boost time left sensor.
   - platform: tion
+    id: tion_boost_time_left
     type: boost_time_left
     name: Boost Time Left
 
 switch:
   # Boost/Turbo switch.
   - platform: tion
+    id: tion_boost
     type: boost
     name: Boost
     # Optional, Heater state when boost enabled. If not set current state will be used.
@@ -164,6 +170,7 @@ switch:
 number:
   # Configure boost time.
   - platform: tion
+    id: tion_boost_time
     type: boost_time
     name: Boost Time
     initial_value: 20min
@@ -174,20 +181,24 @@ select:
 binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
+    id: tion_state_problem
     type: state
     name: State Problem
   # Filter warning state.
   - platform: tion
+    id: tion_filter_worn_out
     type: filter
     name: Filter Worn Out
 
 text_sensor:
   # Tion firmware version.
   - platform: tion
+    id: tion_firmware_version
     type: firmware_version
     name: Version
   # Reports Tion's errors (EC) and warnings (WS).
   - platform: tion
+    id: tion_errors
     type: errors
     name: Errors
 

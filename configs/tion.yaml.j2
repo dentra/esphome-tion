@@ -1,7 +1,7 @@
 {%- if (port|length) == 0 or (type|length) == 0 %}{{ ("port or type not defined")|raise}}{% endif -%}
 substitutions:
   {%- if port == "ble" %}
-  # Tion mac address. setup yours.
+  # Tion mac address. Setup yours.
   tion_mac_address: 00:00:00:00:00:00
   {%- endif %}
   # Name of the node. Don't use underscores!
@@ -34,6 +34,8 @@ substitutions:
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
+  # WiFi Access Point passsword.
+  wifi_ap_password: tion-0123-{{ type }}
 
   {%- if (project_source|length) > 0 %}
   project_source: {{ project_source }}
@@ -84,13 +86,13 @@ packages:
       - packages/base.yaml
       {%- if type == "3s" and port == "uart" %}
       ## Change to esp32.yaml/esp32_s3.yaml/esp32_c3.yaml/esp32_s2.yaml to use with ESP32/ESP32-S3/C3/S2 chip.
-      - packages/esp8266.yaml
+      - packages/esp8266_uart.yaml
       ## Proxy internal Tion BLE module.
       #- packages/tion_3s_proxy.yaml
       {%- endif %}
       {%- if type in ["4s", "o2"] and port == "uart" %}
-      ## Change to esp32.yaml/esp32_s2.yaml/esp32_c3.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
-      - packages/esp32_s3.yaml
+      ## Change to esp32_uart.yaml/esp32_s2_uart.yaml/esp32_c3_uart.yaml to use with ESP32/ESP32-S2/ESP32-C3 chip.
+      - packages/esp32_s3_uart.yaml
       {%- endif %}
       {%- if port == "ble" %}
         {%- if type == "4s" %}
@@ -135,10 +137,15 @@ packages:
 api:
 
 # WiFi hotspot configuration.
-# Comment next 3 lines to enable manual WiFi configuration via access point.
 wifi:
+  # Comment next 2 lines to enable manual WiFi configuration via access point.
   ssid: $wifi_ssid
   password: $wifi_password
+  # Comment next 2 lines to set access point without password.
+  ap:
+    password: $wifi_ap_password
+  # To completely remove access point remove previous two lines and uncomment next one.
+  #ap: !remove
 
 # Virtual port configuration
 vport:
@@ -151,7 +158,7 @@ vport:
     ## Optional, Allow to disable other BLE device scanning when breezer is already connected. Default: false.
     # disable_scan: false
     {%- else %}
-    uart_id: uart_tion
+    uart_id: tion_uart
     {%- endif %}
     {%- if type == "3s" and port == "ble" %}
     ## Optional, Send a pair command after every connect (experimental feature)
@@ -224,6 +231,7 @@ tion:
 
 climate:
   - platform: tion
+    id: tion_climate
     name: None # use friendly_name
     # add HEAT_COOL mode to support turn_on without touching current heater mode.
     enable_heat_cool: True
@@ -231,24 +239,29 @@ climate:
 sensor:
   # Temperatire of air before heater, °C (celsius).
   - platform: tion
+    id: tion_outdoor_temperature
     type: outdoor_temperature
     name: Outdoor Temperature
 {%- if type in ["4s", "lt"] %}
   # Optional, Heater power, W (watt).
   - platform: tion
+    id: tion_heater_power
     type: heater_power
     name: Heater power
 {%- endif %}
   # Current productivity, m³/h (cubic meters per hour).
   - platform: tion
+    id: tion_productivity
     type: productivity
     name: Productivity
   # Filter time left counter.
   - platform: tion
+    id: tion_filter_time_left_days
     type: filter_time_left_days
     name: Filter Time Left
   # Boost time left sensor.
   - platform: tion
+    id: tion_boost_time_left
     type: boost_time_left
     name: Boost Time Left
 
@@ -256,23 +269,27 @@ switch:
 {%- if type != "o2" %}
   # Buzzer control switch.
   - platform: tion
+    id: tion_buzzer
     type: sound
     name: Buzzer
 {%- endif %}
 {%- if type == "4s" %}
   # Led control switch.
   - platform: tion
+    id: tion_led
     type: led
     name: Led
 {%- endif %}
 {%- if type == "4s" %}
   # Recirculation control switch.
   - platform: tion
+    id: tion_recirculation
     type: recirculation
     name: Recirculation
 {%- endif %}
   # Boost/Turbo switch.
   - platform: tion
+    id: tion_boost
     type: boost
     name: Boost
     # Optional, Heater state when boost enabled. If not set current state will be used.
@@ -284,6 +301,7 @@ switch:
 number:
   # Configure boost time.
   - platform: tion
+    id: tion_boost_time
     type: boost_time
     name: Boost Time
     initial_value: 20min
@@ -293,6 +311,7 @@ select:
 {%- if type == "3s" %}
   # Optional, Air Intake control.
   - platform: tion
+    id: tion_air_intake
     type: air_intake
     name: Air Intake
 {%- endif %}
@@ -300,26 +319,31 @@ select:
 binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
+    id: tion_state_problem
     type: state
     name: State Problem
 {%- if type == "lt" %}
   # Gate state control.
   - platform: tion
+    id: tion_gate_state
     type: gate
     name: Gate State
 {%- endif %}
   # Filter warning state.
   - platform: tion
+    id: tion_filter_worn_out
     type: filter
     name: Filter Worn Out
 
 text_sensor:
   # Tion firmware version.
   - platform: tion
+    id: tion_firmware_version
     type: firmware_version
     name: Version
   # Reports Tion's errors (EC) and warnings (WS).
   - platform: tion
+    id: tion_errors
     type: errors
     name: Errors
 
@@ -327,6 +351,7 @@ button:
 {%- if type != "o2" %}
   # Reset filter button.
   - platform: tion
+    id: tion_reset_filter
     type: reset_filter
     name: Reset Filter
     # Reset filter confirmation. When off then reset_filter will not work.
@@ -335,6 +360,7 @@ button:
 {%- endif %}
 {%- if type == "3s" and port == "ble" %}
   - platform: template
+    id: tion_pair
     name: Pair
     icon: mdi:bluetooth-connect
     on_press:
@@ -342,6 +368,7 @@ button:
     entity_category: config
   ## Uncomment next 5 lines to enable switch for enable reset pair functionality.
   # - platform: template
+  #   id: tion_reset_pair
   #   name: Reset Pair
   #   icon: mdi:bluetooth-off
   #   on_press:
@@ -352,6 +379,7 @@ button:
 ## Uncomment if you plan to use reset errors/warnings functionality.
 ## This feature is experimental and may partially work or not to work as expected.
 #  - platform: template
+#    id: tion_reset_errors
 #    name: "Reset Errors"
 #    on_press:
 #      - lambda: id(tion_climate).reset_errors();

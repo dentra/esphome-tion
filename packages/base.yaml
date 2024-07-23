@@ -25,7 +25,7 @@ esphome:
   project:
     name: "dentra.$project_id"
     version: "$project_version"
-  min_version: "2024.6.2"
+  min_version: "2024.6.6"
   platformio_options:
     build_flags:
       - -std=gnu++17

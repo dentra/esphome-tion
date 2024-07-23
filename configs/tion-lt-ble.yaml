@@ -137,6 +137,7 @@ tion:
 
 climate:
   - platform: tion
+    id: tion_climate
     name: None # use friendly_name
     # add HEAT_COOL mode to support turn_on without touching current heater mode.
     enable_heat_cool: True
@@ -144,32 +145,39 @@ climate:
 sensor:
   # Temperatire of air before heater, °C (celsius).
   - platform: tion
+    id: tion_outdoor_temperature
     type: outdoor_temperature
     name: Outdoor Temperature
   # Optional, Heater power, W (watt).
   - platform: tion
+    id: tion_heater_power
     type: heater_power
     name: Heater power
   # Current productivity, m³/h (cubic meters per hour).
   - platform: tion
+    id: tion_productivity
     type: productivity
     name: Productivity
   # Filter time left counter.
   - platform: tion
+    id: tion_filter_time_left_days
     type: filter_time_left_days
     name: Filter Time Left
   # Boost time left sensor.
   - platform: tion
+    id: tion_boost_time_left
     type: boost_time_left
     name: Boost Time Left
 
 switch:
   # Buzzer control switch.
   - platform: tion
+    id: tion_buzzer
     type: sound
     name: Buzzer
   # Boost/Turbo switch.
   - platform: tion
+    id: tion_boost
     type: boost
     name: Boost
     # Optional, Heater state when boost enabled. If not set current state will be used.
@@ -181,6 +189,7 @@ switch:
 number:
   # Configure boost time.
   - platform: tion
+    id: tion_boost_time
     type: boost_time
     name: Boost Time
     initial_value: 20min
@@ -191,30 +200,36 @@ select:
 binary_sensor:
   # Informs about state receiving problem from the breezer.
   - platform: tion
+    id: tion_state_problem
     type: state
     name: State Problem
   # Gate state control.
   - platform: tion
+    id: tion_gate_state
     type: gate
     name: Gate State
   # Filter warning state.
   - platform: tion
+    id: tion_filter_worn_out
     type: filter
     name: Filter Worn Out
 
 text_sensor:
   # Tion firmware version.
   - platform: tion
+    id: tion_firmware_version
     type: firmware_version
     name: Version
   # Reports Tion's errors (EC) and warnings (WS).
   - platform: tion
+    id: tion_errors
     type: errors
     name: Errors
 
 button:
   # Reset filter button.
   - platform: tion
+    id: tion_reset_filter
     type: reset_filter
     name: Reset Filter
     # Reset filter confirmation. When off then reset_filter will not work.

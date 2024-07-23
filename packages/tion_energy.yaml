@@ -11,6 +11,7 @@ sensor:
     type: power
 
   - platform: total_daily_energy
+    id: tion_daily_energy
     name: "Daily Energy"
     power_id: tion_power
     accuracy_decimals: 2

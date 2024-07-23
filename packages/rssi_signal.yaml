@@ -1,5 +1,6 @@
 sensor:
   - platform: ble_rssi
+    id: tion_ble_rssi
     mac_address: $tion_mac_address
     name: "RSSI"
     filters:

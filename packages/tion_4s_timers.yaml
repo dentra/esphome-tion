@@ -7,6 +7,7 @@ esphome:
 button:
   # Позволяет получить в логе информацию о всех существующих таймерах
   - platform: template
+    id: tion_dump_timers
     name: Dump Timers
     icon: mdi:timer-check-outline
     on_press:
@@ -14,6 +15,7 @@ button:
     entity_category: diagnostic
   # Позволяет сбросить все существующие таймеры
   - platform: template
+    id: tion_reset_timers
     name: Reset Timers
     icon: mdi:timer-remove-outline
     on_press:

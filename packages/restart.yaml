@@ -1,4 +1,5 @@
 button:
   - platform: restart
+    id: tion_restart
     name: Restart
     entity_category: diagnostic

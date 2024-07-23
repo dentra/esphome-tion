@@ -1,5 +1,6 @@
 switch:
   - platform: ble_client
+    id: tion_ble_connect
     ble_client_id: tion_ble_client
     name: Connect
     entity_category: diagnostic
