@@ -23,13 +23,24 @@ template<class C> class TionNumber : public number::Number, public Component, pu
  public:
   explicit TionNumber(TionApiComponent *api) : Parented(api) {}
 
-  float get_setup_priority() const override { return setup_priority::LATE; }
+  float get_setup_priority() const override {
+    // сетап должен быть раньше mqtt, в противном случаее не успеют вытащиться значения traits
+    return setup_priority::AFTER_WIFI;
+  }
 
   void dump_config() override {
     if (this->is_failed()) {
       return;
     }
     LOG_NUMBER("", "Tion Number", this);
+    ESP_LOGCONFIG(TAG, "  Min: %f", this->traits.get_min_value());
+    ESP_LOGCONFIG(TAG, "  Max: %f", this->traits.get_max_value());
+    ESP_LOGCONFIG(TAG, "  Step: %f", this->traits.get_step());
+    ESP_LOGCONFIG(TAG, "  Mode: %s",
+                  this->traits.get_mode() == number::NumberMode::NUMBER_MODE_AUTO     ? "auto"
+                  : this->traits.get_mode() == number::NumberMode::NUMBER_MODE_BOX    ? "box"
+                  : this->traits.get_mode() == number::NumberMode::NUMBER_MODE_SLIDER ? "slider"
+                                                                                      : "unknown");
   }
 
   void setup() override {

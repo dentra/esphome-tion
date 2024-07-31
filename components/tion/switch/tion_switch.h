@@ -26,7 +26,7 @@ template<class C> class TionSwitch : public switch_::Switch, public Component, p
  public:
   explicit TionSwitch(TionApiComponent *api) : Parented(api) {}
 
-  float get_setup_priority() const override { return setup_priority::LATE; }
+  float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
 
   void dump_config() override {
     if (this->is_failed()) {

@@ -17,7 +17,7 @@ class TionFan : public fan::Fan, public Component, public Parented<TionApiCompon
  public:
   explicit TionFan(TionApiComponent *api) : Parented(api) {}
 
-  float get_setup_priority() const override { return setup_priority::LATE; }
+  float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
   void dump_config() override;
   void setup() override;
 

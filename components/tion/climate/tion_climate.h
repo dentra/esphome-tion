@@ -17,7 +17,7 @@ class TionClimate : public climate::Climate, public Component, public Parented<T
  public:
   explicit TionClimate(TionApiComponent *api) : Parented(api) {}
 
-  float get_setup_priority() const override { return setup_priority::LATE; }
+  float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
   void dump_config() override;
   void setup() override;
 
