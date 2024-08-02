@@ -34,6 +34,7 @@ PC = new_pc(
         "fan_speed": {
             CONF_ICON: cgp.ICON_FAN,
             CONF_ACCURACY_DECIMALS: 0,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "outdoor_temperature": {
             CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
