@@ -348,6 +348,8 @@ void Tion4sApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
 }
 
 void Tion4sApi::update_state_(const tion4s_state_t &state) {
+  this->state_.initialized = true;
+
   this->state_.power_state = state.power_state;
   this->state_.heater_state = state.heater_mode == tion4s_state_t::HEATER_MODE_HEATING;
   this->state_.sound_state = state.sound_state;

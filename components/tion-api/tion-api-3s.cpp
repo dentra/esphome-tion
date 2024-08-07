@@ -187,6 +187,8 @@ Tion3sApi::Tion3sApi() {
 }
 
 void Tion3sApi::update_state_(const tion_3s::tion3s_state_t &state) {
+  this->state_.initialized = true;
+
   this->state_.power_state = state.flags.power_state;
   this->state_.heater_state = state.flags.heater_state;
   this->state_.sound_state = state.flags.sound_state;

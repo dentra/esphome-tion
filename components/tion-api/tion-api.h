@@ -105,7 +105,7 @@ class TionState {
   };
 
   struct {
-    bool reserved : 1;
+    bool initialized : 1;
     // Скорость вентиляции.
     // 4s, 3s, lt: [1-6]
     // o2: [1-4]
@@ -165,7 +165,7 @@ class TionState {
   bool is_heating(const TionTraits &traits) const;
 
   // backward compatibility methods
-  bool is_initialized() const { return this->fan_speed > 0; }
+  bool is_initialized() const { return this->initialized || this->fan_speed > 0; }
   const char *get_gate_position_str(const TionTraits &traits) const;
   void dump(const char *tag, const TionTraits &traits) const;
 };

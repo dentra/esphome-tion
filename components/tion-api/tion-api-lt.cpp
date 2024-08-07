@@ -161,6 +161,8 @@ void TionLtApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
 }
 
 void TionLtApi::update_state_(const tionlt_state_t &state) {
+    this->state_.initialized = true;
+
   this->state_.power_state = state.power_state;
   this->state_.heater_state = state.heater_state;
   this->state_.sound_state = state.sound_state;
