@@ -124,9 +124,9 @@ tion:
   #  * indoor - set gate position to indoor air intake (3S and 4S only)
   # Uncoment next 4 lines to enable example presets.
   # presets:
-  #   home: { fan_speed: 2, target_temperature: 16, heater: False }
-  #   away: { fan_speed: 1, target_temperature: 10, heater: False }
-  #   sleep: { fan_speed: 1, target_temperature: 18 }
+  #   home:  { fan_speed: 2, temperature: 16, heater: False }
+  #   away:  { fan_speed: 1, temperature: 10, heater: False }
+  #   sleep: { fan_speed: 1, temperature: 18 }
 
 ################################################################################
 #
