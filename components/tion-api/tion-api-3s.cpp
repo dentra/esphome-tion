@@ -12,16 +12,50 @@ namespace tion_3s {
 
 using tion::TionTraits;
 
+static const char *const ERRORS[] = {
+    // EC01
+    "Температура воздуха на входе в устройство выше максимально допустимой",
+    // EC02
+    "Температура воздуха на входе в устройство ниже минимально допустимой",
+    // EC03
+    "Температура воздуха на выходе из устройства выше максимально допустимой",
+    // EC04
+    "Нагреватель не обеспечивает подогрев воздуха до 0 °C",
+    // EC05
+    "Заслонка не перешла ни в одно из крайних положений",
+    // EC06
+    "Переохлаждение платы управления",
+    // EC07
+    "Неисправность в цепи одного из датчиков температуры выходящего воздуха",
+    // EC08
+    "Неисправность в цепи датчика температуры входящего воздуха",
+    // EC09
+    "Неисправность в цепи одного из датчиков температуры выходящего воздуха",
+    // EC10
+    "Неисправность в цепи датчика температуры входящего воздуха",
+    // EC11
+    "Нарушение связи между платой силовой и платой управления",
+    // EC12
+    "Блок заслонки из режима \"Рециркуляция\" не перешел в режим \"Приток\"",
+    // EC13
+    "Блок заслонки из режима \"Приток\" не перешел в режим \"Рециркуляция\"",
+    // EC14
+    "Переохлаждение платы силовой",
+    // EC15
+    "Перегрев платы силовой",
+    // EC17 ???? бризер мигает красным, на команду set при power=ON всегда возвращает fan_speed=0, gate=indoor
+};
+
 std::string tion3s_state_t::decode_errors(uint32_t errors) {
   if (errors == 0) {
     return {};
   }
-  // Отвалился походу датчик температуры :( кнопка красным мигает
-  // EC10 пишет ошибку
+
   return "EC" + std::to_string(errors);
 }
 
 }  // namespace tion_3s
+
 namespace tion {
 
 using namespace tion_3s;
@@ -243,6 +277,14 @@ void Tion3sApi::dump_state_(const tion_3s::tion3s_state_t &state) const {
   TION_DUMP(TAG, "hours       : %u h", state.hours);
   TION_DUMP(TAG, "minutes     : %u min", state.minutes);
   TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.flags.reserved, tion::get_flag_bits(state.flags.reserved));
+
+  if (state.last_error > 0) {
+    if (state.last_error < 15) {
+      TION_LOGE(TAG, "%s", tion_3s::ERRORS[state.last_error - 1]);
+    } else {
+      TION_LOGE(TAG, "Неизвестная ошибка EC %" PRIu32, state.last_error);
+    }
+  }
 }
 
 }  // namespace tion
