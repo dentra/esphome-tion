@@ -45,9 +45,9 @@
 
 ```yaml
 presets:
-  home: { fan_speed: 2, target_temperature: 16, heater: False }
-  away: { fan_speed: 1, target_temperature: 10, heater: False }
-  sleep: { fan_speed: 1, target_temperature: 18 }
+  home: { fan_speed: 2, temperature: 16, heater: False }
+  away: { fan_speed: 1, temperature: 10, heater: False }
+  sleep: { fan_speed: 1, temperature: 18 }
   "много людей": { fan_speed: 5 }
 ```
 
