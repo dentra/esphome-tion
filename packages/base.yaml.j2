@@ -62,6 +62,7 @@ external_components:
       - cgp
       - nvs
       - setup
+      - dtu
     refresh: $vport_source_refresh
   - source: $project_source
     refresh: $project_source_refresh
@@ -71,9 +72,7 @@ setup:
   lambda: |-
     if (App.is_name_add_mac_suffix_enabled()) {
       auto topic_prefix = str_sanitize(App.get_name());
-      if (p_mqtt->get_topic_prefix() != topic_prefix) {
-        p_mqtt->set_topic_prefix(topic_prefix);
-      }
+      p_mqtt->set_topic_prefix(topic_prefix);
       if (p_mqtt->is_log_message_enabled()) {
         auto log_topic = topic_prefix + "/debug";
         p_mqtt->set_log_message_template(mqtt::MQTTMessage{
