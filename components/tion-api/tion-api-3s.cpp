@@ -12,7 +12,9 @@ namespace tion_3s {
 
 using tion::TionTraits;
 
-static const char *const ERRORS[] = {
+#define ERRORS_COUNT 17
+
+static const char *const ERRORS[ERRORS_COUNT] = {
     // EC01
     "Температура воздуха на входе в устройство выше максимально допустимой",
     // EC02
@@ -43,12 +45,11 @@ static const char *const ERRORS[] = {
     "Переохлаждение платы силовой",
     // EC15
     "Перегрев платы силовой",
-    // EC16 ??? нет данных
-    "Неизвестная ошибка EC 16",
-    // EC17 ???? бризер мигает красным, на команду set при power=ON всегда возвращает fan_speed=0, gate=indoor
-    // В СП сказали, что EC17 - это замыкание датчика наружной температуры, но вроде как, по их словам, на работу это
-    // влиять не должно.
-    "Предположительно: Замыкание датчика наружной температуры"};
+    // EC16
+    "Обрыв в цепи питания датчика выходного (верхнего) датчика температуры",
+    // EC17
+    "Замыкание в цепи датчика выходного (верхнего) датчика температуры",
+};
 
 std::string tion3s_state_t::decode_errors(uint32_t errors) {
   if (errors == 0) {
@@ -283,10 +284,10 @@ void Tion3sApi::dump_state_(const tion_3s::tion3s_state_t &state) const {
   TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.flags.reserved, tion::get_flag_bits(state.flags.reserved));
 
   if (state.last_error > 0) {
-    if (state.last_error < 15) {
+    if (state.last_error < ERRORS_COUNT) {
       TION_LOGE(TAG, "%s", tion_3s::ERRORS[state.last_error - 1]);
     } else {
-      TION_LOGE(TAG, "Неизвестная ошибка EC %" PRIu32, state.last_error);
+      TION_LOGE(TAG, "Неизвестная ошибка EC %u", state.last_error);
     }
   }
 }
