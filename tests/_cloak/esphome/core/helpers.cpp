@@ -78,6 +78,11 @@ bool str_equals_case_insensitive(const std::string &a, const std::string &b) {
   return strcasecmp(a.c_str(), b.c_str()) == 0;
 }
 
+bool str_startswith(const std::string &str, const std::string &start) { return str.rfind(start, 0) == 0; }
+bool str_endswith(const std::string &str, const std::string &end) {
+  return str.rfind(end) == (str.size() - end.size());
+}
+
 int8_t step_to_accuracy_decimals(float step) {
   // use printf %g to find number of digits based on temperature step
   std::string str = str_sprintf("%.5g", step);
@@ -122,5 +127,10 @@ uint32_t _millis{};
 uint32_t millis() { return _millis; }
 
 void test_set_millis(uint32_t millis) { _millis = millis; }
+
+std::string _mac_address = "000000000000";
+std::string get_mac_address() { return _mac_address; }
+
+void test_set_mac_address(const std::string &mac) { _mac_address = mac; }
 
 }  // namespace esphome

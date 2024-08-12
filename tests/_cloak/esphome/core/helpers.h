@@ -134,6 +134,10 @@ template<typename T> class Deduplicator {
 uint32_t fnv1_hash(const std::string &str);
 bool str_equals_case_insensitive(const std::string &a, const std::string &b);
 int8_t step_to_accuracy_decimals(float step);
+/// Check whether a string starts with a value.
+bool str_startswith(const std::string &str, const std::string &start);
+/// Check whether a string ends with a value.
+bool str_endswith(const std::string &str, const std::string &end);
 
 using std::to_string;
 
@@ -217,5 +221,8 @@ template<typename T> constexpr const T &clamp(const T &v, const T &lo, const T &
   return clamp(v, lo, hi, std::less<T>{});
 }
 #endif
+
+std::string get_mac_address();
+void test_set_mac_address(const std::string &mac);
 
 }  // namespace esphome
