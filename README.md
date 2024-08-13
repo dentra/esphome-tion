@@ -1,4 +1,4 @@
-[version-shield]: https://img.shields.io/static/v1?label=Версия&message=next&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2024.8.0&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
