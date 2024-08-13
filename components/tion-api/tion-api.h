@@ -8,6 +8,7 @@
 
 #include <etl/delegate.h>
 
+#include "tion-api-defines.h"
 #include "utils.h"
 #include "pi_controller.h"
 
@@ -66,8 +67,8 @@ struct TionTraits {
   // включая 0 - режим ожидания (standby), 1 - первая скорость и т.д.
   uint16_t max_fan_power[7];
 
-  uint16_t get_max_heater_power() const { return this->max_heater_power * 10u; }
-  float get_max_fan_power(size_t index) const { return this->max_fan_power[index] * 0.01f; }
+  uint16_t get_max_heater_power() const { return TION__HEAT_CONST_TO_POWER(this->max_heater_power); }
+  float get_max_fan_power(size_t fan_speed) const { return TION__FAN_CONST_TO_POWER(this->max_fan_power[fan_speed]); }
 
   /// Массив производительностей бризера для каждой скорости, включая 0.
   const uint8_t *auto_prod;

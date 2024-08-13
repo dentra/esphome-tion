@@ -386,7 +386,7 @@ struct BoostTimeLeft {
 
 struct FanPower {
   static float get(TionApiComponent *c, const TionState &state) {
-    return c->traits().max_fan_power[state.power_state ? state.fan_speed : 0] * 0.01f;
+    return c->traits().get_max_fan_power(state.power_state ? state.fan_speed : 0);
   }
 };
 

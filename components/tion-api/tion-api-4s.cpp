@@ -324,7 +324,7 @@ Tion4sApi::Tion4sApi() {
   this->traits_.supports_gate_position_change = true;
   this->traits_.supports_gate_error = true;
   this->traits_.supports_reset_filter = true;
-  this->traits_.max_heater_power = TION_4S_HEATER_POWER1 / 10;
+  this->traits_.max_heater_power = TION_4S_HEATER_POWER1;
   this->traits_.max_fan_speed = 6;
   this->traits_.min_target_temperature = TION_MIN_TEMPERATURE;
   this->traits_.max_target_temperature = TION_MAX_TEMPERATURE;
@@ -377,9 +377,9 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
   this->state_.airflow_m3 = state.counters.airflow();
   this->traits_.max_heater_power =                                        //-//
       state.heater_present == tion4s_state_t::HEATER_PRESENT_1000W        //-//
-          ? TION_4S_HEATER_POWER1 / 10                                    //-//
+          ? TION_4S_HEATER_POWER1                                         //-//
           : state.heater_present == tion4s_state_t::HEATER_PRESENT_1400W  //-//
-                ? TION_4S_HEATER_POWER2 / 10                              //-//
+                ? TION_4S_HEATER_POWER2                                   //-//
                 : 0;                                                      //-//
   this->traits_.max_fan_speed = state.max_fan_speed;
   // this->traits_.min_target_temperature = -30;

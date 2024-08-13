@@ -278,7 +278,7 @@ TionO2Api::TionO2Api() : TionApiBase() {
   this->traits_.supports_manual_antifrize = true;
 #endif
   this->traits_.supports_sound_state = true;
-  this->traits_.max_heater_power = TION_O2_HEATER_POWER / 10;
+  this->traits_.max_heater_power = TION_O2_HEATER_POWER;
   this->traits_.max_fan_speed = 4;
   this->traits_.min_target_temperature = -30;
   this->traits_.max_target_temperature = 25;

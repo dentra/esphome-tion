@@ -209,7 +209,7 @@ Tion3sApi::Tion3sApi() {
   this->traits_.supports_manual_antifrize = true;
 #endif
   this->traits_.supports_reset_filter = true;
-  this->traits_.max_heater_power = TION_3S_HEATER_POWER / 10;
+  this->traits_.max_heater_power = TION_3S_HEATER_POWER;
   this->traits_.max_fan_speed = 6;
   this->traits_.min_target_temperature = TION_MIN_TEMPERATURE;
   this->traits_.max_target_temperature = TION_MAX_TEMPERATURE;

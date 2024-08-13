@@ -139,7 +139,7 @@ TionLtApi::TionLtApi() {
   this->traits_.supports_sound_state = true;
   this->traits_.supports_pcb_pwr_temperature = true;
   this->traits_.supports_reset_filter = true;
-  this->traits_.max_heater_power = TION_LT_HEATER_POWER / 10;
+  this->traits_.max_heater_power = TION_LT_HEATER_POWER;
   this->traits_.max_fan_speed = 6;
   this->traits_.min_target_temperature = TION_MIN_TEMPERATURE;
   this->traits_.max_target_temperature = TION_MAX_TEMPERATURE;
@@ -183,7 +183,7 @@ void TionLtApi::update_state_(const tionlt_state_t &state) {
   this->state_.filter_time_left = state.counters.filter_time;
   this->state_.airflow_counter = state.counters.airflow_counter;
   this->state_.airflow_m3 = state.counters.airflow();
-  this->traits_.max_heater_power = state.heater_present ? TION_LT_HEATER_POWER / 10 : 0;
+  this->traits_.max_heater_power = state.heater_present ? TION_LT_HEATER_POWER : 0;
   this->traits_.max_fan_speed = state.max_fan_speed;
   // this->traits_.min_target_temperature = -30;
   // this->traits_.min_target_temperature = 25;
