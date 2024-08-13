@@ -42,5 +42,6 @@ secrets.yaml
 /components/setup
 /components/_*
 /components/http_request
+/components/mqtt
 
 /fw
