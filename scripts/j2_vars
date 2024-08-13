@@ -5,7 +5,7 @@ if [ "$1" != "" ]; then
   version_tion=$1
 fi
 
-version_vport=2024.1.0
+version_vport=2024.8.0
 if [ "$version_tion" == "next" ]; then
   version_vport="master"
 fi
