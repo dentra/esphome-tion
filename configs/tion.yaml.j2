@@ -34,7 +34,7 @@ substitutions:
   # WiFi settings.
   wifi_ssid: !secret wifi_ssid
   wifi_password: !secret wifi_password
-  # WiFi Access Point passsword.
+  # WiFi Access Point password.
   wifi_ap_password: tion-0123-{{ type }}
 
   {%- if (project_source|length) > 0 %}
@@ -79,8 +79,8 @@ packages:
       # - packages/tion_o2_proxy.yaml
       {%- endif %#}
       {%- if type in ["3s", "o2"] %}
-      ## Antifrize protection. Automatically turns on the heater at a temperature of 0°C and below.
-      - packages/tion_enable_antifrize.yaml
+      ## Antifreeze protection. Automatically turns on the heater at a temperature of 0°C and below.
+      - packages/tion_enable_antifreeze.yaml
       {%- endif %}
       ## Common configuration settings. Do not comment or move or remove!
       - packages/base.yaml
@@ -125,9 +125,9 @@ packages:
     refresh: {{ packages_refresh }}
     {%- endif %}
 
-# Uncomment to enable MQTT connecion.
+# Uncomment to enable MQTT connection.
 # mqtt:
-#   broker: !secret mqtt_borker
+#   broker: !secret mqtt_broker
 #   port: !secret mqtt_port
 #   username: !secret mqtt_username
 #   password: !secret mqtt_password
@@ -136,7 +136,7 @@ packages:
 # Enable Home Assistant API connection. Please disable if you use MQTT
 api:
 
-# WiFi hotspot configuration.
+# WiFi access point configuration.
 wifi:
   # Comment next 2 lines to enable manual WiFi configuration via access point.
   ssid: $wifi_ssid
@@ -164,7 +164,7 @@ vport:
     ## Optional, Send a pair command after every connect (experimental feature)
     # experimental_always_pair: false
     {%- endif %}
-    ## Optional, Interval between sending commmands. Set to 0ms to send one command per loop.
+    ## Optional, Interval between sending commands. Set to 0ms to send one command per loop.
     # command_interval: {{ "100ms" if port == "ble" else "20ms" }}
     ## Optional, Command queue size. Default: 10.
     # command_queue_size: 16
@@ -178,7 +178,7 @@ vport:
 tion:
   type: {{ type }}
   id: tion_api
-  # Optional, use vport_id with mnultiple breezers.
+  # Optional, use vport_id with multiple breezers.
   vport_id: tion_{{ port }}_vport
   # Optional, How often query device state. Default: 15s.
   update_interval: {{ "15s" if port == "uart" else "60s" }}
@@ -208,7 +208,7 @@ tion:
 {%- if type == "3s" %}
   #  * mixed - set gate position to mixed air intake (3S only)
 {%- endif %}
-  # Uncoment next 4 lines to enable example presets.
+  # Uncomment next 4 lines to enable example presets.
   # presets:
   #   home: { fan_speed: 2, temperature: 16, heater: False }
   #   away: { fan_speed: 1, temperature: 10, heater: False }
@@ -224,7 +224,7 @@ tion:
 #
 # Next sections set are only example configuration.
 #
-# In most cases it is enought, but if you prefer to customize please refer to
+# In most cases it is enough, but if you prefer to customize please refer to
 # CONFIGURATION.md for full set of available entities and options.
 #
 ################################################################################
@@ -237,7 +237,7 @@ climate:
     enable_heat_cool: True
 
 sensor:
-  # Temperatire of air before heater, °C (celsius).
+  # Temperature of air before heater, °C (celsius).
   - platform: tion
     id: tion_outdoor_temperature
     type: outdoor_temperature
@@ -295,7 +295,7 @@ switch:
     # Optional, Heater state when boost enabled. If not set current state will be used.
     #heater: False
     # Optional, Target heater temperature state when boost enabled.
-    #           If not set or set to 0 - current target temperture will be used.
+    #           If not set or set to 0 - current target temperature will be used.
     #temperature: 10
 
 number:
