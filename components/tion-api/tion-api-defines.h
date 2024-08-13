@@ -59,43 +59,95 @@
 // 3 скорость: 19.4 Вт
 // 4 скорость: 23.0 Вт
 // https://ammo1.ru/21851
+#ifndef TION_O2_MAX_FAN_POWER0
 #define TION_O2_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(0.73)  // 0.73 Вт
+#endif
+#ifndef TION_O2_MAX_FAN_POWER1
 #define TION_O2_MAX_FAN_POWER1 TION__FAN_POWER_TO_CONST(10.3)  // 10.3 Вт
+#endif
+#ifndef TION_O2_MAX_FAN_POWER2
 #define TION_O2_MAX_FAN_POWER2 TION__FAN_POWER_TO_CONST(19.0)  // 19.0 Вт
+#endif
+#ifndef TION_O2_MAX_FAN_POWER3
 #define TION_O2_MAX_FAN_POWER3 TION__FAN_POWER_TO_CONST(19.4)  // 19.4 Вт
+#endif
+#ifndef TION_O2_MAX_FAN_POWER4
 #define TION_O2_MAX_FAN_POWER4 TION__FAN_POWER_TO_CONST(23.0)  // 23.0 Вт
+#endif
 
 // Параметры потребления от пользователей
 // https://t.me/esphome_tion/8144
-#define TION_3S_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(1)   // 1 Вт
+#ifndef TION_3S_MAX_FAN_POWER0
+#define TION_3S_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(1)  // 1 Вт
+#endif
+#ifndef TION_3S_MAX_FAN_POWER1
 #define TION_3S_MAX_FAN_POWER1 TION__FAN_POWER_TO_CONST(17)  // 17 Вт
+#endif
+#ifndef TION_3S_MAX_FAN_POWER2
 #define TION_3S_MAX_FAN_POWER2 TION__FAN_POWER_TO_CONST(21)  // 21 Вт
+#endif
+#ifndef TION_3S_MAX_FAN_POWER3
 #define TION_3S_MAX_FAN_POWER3 TION__FAN_POWER_TO_CONST(26)  // 26 Вт
+#endif
+#ifndef TION_3S_MAX_FAN_POWER4
 #define TION_3S_MAX_FAN_POWER4 TION__FAN_POWER_TO_CONST(23)  // 23 Вт
+#endif
+#ifndef TION_3S_MAX_FAN_POWER5
 #define TION_3S_MAX_FAN_POWER5 TION__FAN_POWER_TO_CONST(27)  // 27 Вт
+#endif
+#ifndef TION_3S_MAX_FAN_POWER6
 #define TION_3S_MAX_FAN_POWER6 TION__FAN_POWER_TO_CONST(29)  // 29 Вт
+#endif
 
 // Параметры потребления от пользователей
 // https://t.me/esphome_tion/3329
 // https://github.com/dentra/esphome-tion/issues/24
 // взято усредненное значение
-#define TION_4S_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(1)     // 1
+#ifndef TION_4S_MAX_FAN_POWER0
+#define TION_4S_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(1)  // 1
+#endif
+#ifndef TION_4S_MAX_FAN_POWER1
 #define TION_4S_MAX_FAN_POWER1 TION__FAN_POWER_TO_CONST(15.1)  // 15.1 Вт / 15
+#endif
+#ifndef TION_4S_MAX_FAN_POWER2
 #define TION_4S_MAX_FAN_POWER2 TION__FAN_POWER_TO_CONST(16.6)  // 16.2 Вт / 17
+#endif
+#ifndef TION_4S_MAX_FAN_POWER3
 #define TION_4S_MAX_FAN_POWER3 TION__FAN_POWER_TO_CONST(23.3)  // 23.3 Вт / 23
+#endif
+#ifndef TION_4S_MAX_FAN_POWER4
 #define TION_4S_MAX_FAN_POWER4 TION__FAN_POWER_TO_CONST(23.9)  // 23.8 Вт / 24
+#endif
+#ifndef TION_4S_MAX_FAN_POWER5
 #define TION_4S_MAX_FAN_POWER5 TION__FAN_POWER_TO_CONST(25.6)  // 25.2 Вт / 26
+#endif
+#ifndef TION_4S_MAX_FAN_POWER6
 #define TION_4S_MAX_FAN_POWER6 TION__FAN_POWER_TO_CONST(32.8)  // 30.7 Вт / 35
+#endif
 
 // Параметры потребления от пользователей
 // https://github.com/dentra/esphome-tion/issues/24
-#define TION_LT_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(1)   // 1 Вт
-#define TION_LT_MAX_FAN_POWER1 TION__FAN_POWER_TO_CONST(2)   // 2 Вт
-#define TION_LT_MAX_FAN_POWER2 TION__FAN_POWER_TO_CONST(4)   // 4 Вт
-#define TION_LT_MAX_FAN_POWER3 TION__FAN_POWER_TO_CONST(6)   // 6 Вт
-#define TION_LT_MAX_FAN_POWER4 TION__FAN_POWER_TO_CONST(8)   // 8 Вт
+#ifndef TION_LT_MAX_FAN_POWER0
+#define TION_LT_MAX_FAN_POWER0 TION__FAN_POWER_TO_CONST(1)  // 1 Вт
+#endif
+#ifndef TION_LT_MAX_FAN_POWER1
+#define TION_LT_MAX_FAN_POWER1 TION__FAN_POWER_TO_CONST(2)  // 2 Вт
+#endif
+#ifndef TION_LT_MAX_FAN_POWER2
+#define TION_LT_MAX_FAN_POWER2 TION__FAN_POWER_TO_CONST(4)  // 4 Вт
+#endif
+#ifndef TION_LT_MAX_FAN_POWER3
+#define TION_LT_MAX_FAN_POWER3 TION__FAN_POWER_TO_CONST(6)  // 6 Вт
+#endif
+#ifndef TION_LT_MAX_FAN_POWER4
+#define TION_LT_MAX_FAN_POWER4 TION__FAN_POWER_TO_CONST(8)  // 8 Вт
+#endif
+#ifndef TION_LT_MAX_FAN_POWER5
 #define TION_LT_MAX_FAN_POWER5 TION__FAN_POWER_TO_CONST(10)  // 10 Вт
+#endif
+#ifndef TION_LT_MAX_FAN_POWER6
 #define TION_LT_MAX_FAN_POWER6 TION__FAN_POWER_TO_CONST(26)  // 26 Вт
+#endif
 
 // LT factory defaults: 2/4/6, 10/20/25 °C
 #define TION_LT_BUTTON_PRESET_FAN1 2
