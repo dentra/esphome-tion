@@ -1,0 +1,64 @@
+substitutions:
+  tx_pin: GPIO16 # U0TXD
+  rx_pin: GPIO17 # U0RXD
+  led_pin: GPIO15 # Yellow USER LED
+  button_pin: GPIO9 # BOOT Button
+  usb_dn_pin: GPIO12 # USB D+
+  usb_dp_pin: GPIO13 # USB D-
+
+esp32:
+  flash_size: 4MB
+  framework:
+    sdkconfig_options:
+      # Fix flash size warning
+      CONFIG_ESPTOOLPY_FLASHSIZE_4MB: y
+
+logger:
+  logs:
+    status_led: INFO
+
+light:
+  - platform: status_led
+    id: light_status_led
+    name: Onboard LED
+    icon: mdi:led-on
+    internal: true
+    entity_category: diagnostic
+    pin:
+      number: $led_pin
+      inverted: true
+      ignore_strapping_warning: true
+    effects:
+      - strobe:
+          name: "fast_pulse"
+          colors:
+            - state: true
+              duration: 0.1s
+            - state: false
+              duration: 0.1s
+
+binary_sensor:
+  - platform: gpio
+    id: g_button
+    name: Onboard Button
+    icon: mdi:radiobox-marked
+    internal: true
+    entity_category: diagnostic
+    pin:
+      number: $button_pin
+      inverted: true
+      ignore_strapping_warning: true
+    on_multi_click:
+      - timing:
+          - on for at least 7s
+        then:
+          - lambda: |-
+              auto call = id(light_status_led).turn_on();
+              call.set_effect("fast_pulse");
+              call.perform();
+          - delay: 2s
+          - lambda: |-
+              global_preferences->reset();
+          - delay: 200ms
+          - lambda: |-
+              App.safe_reboot();
