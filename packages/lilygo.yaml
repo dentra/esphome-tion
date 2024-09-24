@@ -13,7 +13,7 @@ spi:
 light:
   - platform: spi_led_strip
     id: statusledlight
-    num_leds: 30
+    num_leds: 1
     effects:
       - pulse:
           name: "fast_pulse"
