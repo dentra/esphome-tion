@@ -1,0 +1,6 @@
+# ESP-IDF Framework 4.4.5 used in ESPHome 2023.12.x
+esp32:
+  framework:
+    type: esp-idf
+    version: 4.4.5
+    platform_version: 5.4.0

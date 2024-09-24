@@ -1,0 +1,6 @@
+# ESP-IDF Framework 4.4.7 used in ESPHome 2024.5.x
+esp32:
+  framework:
+    type: esp-idf
+    version: 4.4.7
+    platform_version: 5.4.0
