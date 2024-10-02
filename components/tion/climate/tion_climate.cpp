@@ -46,6 +46,9 @@ climate::ClimateTraits TionClimate::traits() {
   if (this->enable_heat_cool_) {
     traits.add_supported_mode(climate::CLIMATE_MODE_HEAT_COOL);
   }
+  if (this->parent_->traits().supports_kiv) {
+    traits.add_supported_fan_mode(climate::CLIMATE_FAN_OFF);
+  }
   if (this->enable_fan_auto_) {
     traits.add_supported_fan_mode(climate::CLIMATE_FAN_AUTO);
   }
@@ -116,6 +119,10 @@ void TionClimate::control(const climate::ClimateCall &call) {
       ESP_LOGD(TAG, "Set auto fan mode");
       tion->set_auto_state(true);
     }
+    if (this->parent_->traits().supports_kiv && fan_mode == climate::CLIMATE_FAN_OFF) {
+      ESP_LOGD(TAG, "Stopping fan");
+      tion->set_fan_speed(0);
+    }
   }
 
   if (call.get_custom_fan_mode().has_value()) {
@@ -172,13 +179,10 @@ void TionClimate::on_state_(const TionState &state) {
   }
 
   if (this->enable_fan_auto_ && state.auto_state) {
-    if (this->fan_mode.value_or(climate::CLIMATE_FAN_OFF) != climate::CLIMATE_FAN_AUTO) {
-      this->fan_mode = climate::CLIMATE_FAN_AUTO;
-      this->custom_fan_mode.reset();
+    if (this->set_fan_speed_(-1)) {
       has_changes = true;
     }
   } else if (this->set_fan_speed_(state.fan_speed)) {
-    this->fan_mode.reset();
     has_changes = true;
   }
 
@@ -206,21 +210,41 @@ void TionClimate::on_state_(const TionState &state) {
   }
 }
 
-bool TionClimate::set_fan_speed_(uint8_t fan_speed) {
-  if (fan_speed > 0 && fan_speed <= this->parent_->traits().max_fan_speed) {
-    if (fan_mode_to_speed(this->custom_fan_mode) != fan_speed) {
-      this->custom_fan_mode = fan_speed_to_mode(fan_speed);
+bool TionClimate::set_fan_speed_(int8_t fan_speed) {
+  if (fan_speed < 0) {
+    if (!this->fan_mode.has_value() || *this->fan_mode != climate::CLIMATE_FAN_AUTO) {
+      this->custom_fan_mode.reset();
+      this->fan_mode = climate::CLIMATE_FAN_AUTO;
       return true;
     }
     return false;
   }
 
-  auto ok_fan_speed = this->mode == climate::CLIMATE_MODE_OFF && fan_speed == 0;
-  if (!ok_fan_speed) {
-    ESP_LOGW(TAG, "Unsupported fan speed %u (max: %u)", fan_speed, this->parent_->traits().max_fan_speed);
+  if (fan_speed == 0) {
+    if (this->parent_->traits().supports_kiv) {
+      if (!this->fan_mode.has_value() || *this->fan_mode != climate::CLIMATE_FAN_OFF) {
+        this->custom_fan_mode.reset();
+        this->fan_mode = climate::CLIMATE_FAN_OFF;
+        return true;
+      }
+    }
+    if (this->mode != climate::CLIMATE_MODE_OFF) {
+      ESP_LOGW(TAG, "Unsupported zero fan speed");
+    }
+    return false;
   }
 
-  return true;
+  if (fan_speed <= this->parent_->traits().max_fan_speed) {
+    if (fan_mode_to_speed(this->custom_fan_mode) != fan_speed) {
+      this->fan_mode.reset();
+      this->custom_fan_mode = fan_speed_to_mode(fan_speed);
+      return true;
+    }
+  }
+
+  ESP_LOGW(TAG, "Unsupported fan speed: %u (max: %u)", fan_speed, this->parent_->traits().max_fan_speed);
+
+  return false;
 }
 
 }  // namespace tion
