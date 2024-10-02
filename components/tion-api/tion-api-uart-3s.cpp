@@ -55,7 +55,7 @@ Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUart
       return READ_THIS_LOOP;
     }
     if (frame->rx.head != this->head_type_) {
-      TION_LOGW(TAG, "Unxepected byte: 0x%02X", frame->rx.head);
+      TION_LOGW(TAG, "Unexpected byte: 0x%02X", frame->rx.head);
       return READ_THIS_LOOP;
     }
   }
@@ -87,7 +87,7 @@ Tion3sUartProtocol::read_frame_result_t Tion3sUartProtocol::read_frame_(TionUart
   TION_LOGV(TAG, "RX: %s", hex_cstr(&frame->data, sizeof(frame->data)));
 
   if (frame->magic != FRAME_MAGIC_END) {
-    TION_LOGW(TAG, "Invlid frame magic %02X", frame->magic);
+    TION_LOGW(TAG, "Invalid frame magic %02X", frame->magic);
     this->reset_buf_();
     return READ_THIS_LOOP;
   }

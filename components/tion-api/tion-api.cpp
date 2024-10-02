@@ -187,7 +187,7 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
     // не разрешаем скорость 0, вместо этого выключаем бризер
     if (fan_speed == 0) {
       if (call->get_power_state().value_or(cs.power_state)) {
-        // залогируем только для не авто-режима
+        // залоггируем только для не авто-режима
         if (!call->get_auto_state().value_or(false)) {
           TION_LOGW(TAG, "Zero fan speed lead to power off");
         }
@@ -327,7 +327,7 @@ void TionStateCall::dump() const {
 
 void TionStateCall::perform() {
   if (this->auto_state_.value_or(false)) {
-    // сделаем сброс накопленых ошибок
+    // сделаем сброс накопленных ошибок
     this->api_->auto_update(0, nullptr);
   }
   if (this->has_changes()) {
@@ -452,7 +452,7 @@ void TionApiBase::set_boost_heater_state(bool heater_state) {
   }
 }
 
-void TionApiBase::set_boost_target_temperture(int8_t target_temperature) {
+void TionApiBase::set_boost_target_temperature(int8_t target_temperature) {
   if (this->traits_.boost_target_temperature != target_temperature) {
     if (target_temperature < this->traits_.min_target_temperature ||
         target_temperature > this->traits_.max_target_temperature) {
@@ -726,7 +726,7 @@ bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
     return false;
   }
   TION_LOGV(TAG, "Auto new fan speed %u", fan_speed);
-  // для понимания, что переключение было из авто-режима, всегда вытавляем авто
+  // для понимания, что переключение было из авто-режима, всегда выставляем авто
   call->set_auto_state(true);
   call->set_fan_speed(fan_speed);
   return true;
@@ -753,7 +753,7 @@ uint8_t TionApiBase::auto_pi_update_(uint16_t current) {
       }
     }
   }
-  // не нашли подходящего значения, работаем по-минимому
+  // не нашли подходящего значения, работаем по-минимуму
   return this->auto_min_fan_speed_;
 }
 

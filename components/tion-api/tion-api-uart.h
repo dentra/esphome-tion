@@ -18,7 +18,7 @@ template<size_t frame_max_size_value> class TionUartProtocolBase : public TionPr
   enum { FRAME_MAX_SIZE = frame_max_size_value };
   // NOLINTNEXTLINE(readability-identifier-naming)
   enum read_frame_result_t {
-    // let perfrom read next frame on next loop
+    // let perform read next frame on next loop
     READ_NEXT_LOOP = 0,
     // stay read frame in current loop
     READ_THIS_LOOP = 1,

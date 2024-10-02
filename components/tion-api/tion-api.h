@@ -52,19 +52,19 @@ struct TionTraits {
 
   // Максимальная скорость вентиляции.
   uint8_t max_fan_speed;
-  // Минимальная целевая темперетура.
+  // Минимальная целевая температура.
   int8_t min_target_temperature;
-  // Максимальная целевая темперетура.
+  // Максимальная целевая температура.
   int8_t max_target_temperature;
 
   // Мощность тэна в Вт * 0.1. Например, для 3S, значение будет 145.
-  // Может быть 0, если теэн отсутсвует, актуально для моделей с индексом ECO.
+  // Может быть 0, если тэн отсутствует, актуально для моделей с индексом ECO.
   // 4s: 1000 и 1400, по паспорту 1000 и 800 (EU)
   // lt: 1000, по паспорту 850
   // 3s: 1450
   // o2: 1450
   uint8_t max_heater_power;
-  // Потребление энергии без обогреватлея для всех скоростей в Вт * 100,
+  // Потребление энергии без обогревателя для всех скоростей в Вт * 100,
   // включая 0 - режим ожидания (standby), 1 - первая скорость и т.д.
   uint16_t max_fan_power[7];
 
@@ -96,7 +96,7 @@ class TionState {
     bool sound_state : 1;
     // Состояние световых оповещений.
     bool led_state : 1;
-    // Автоматичекское управление.
+    // Автоматическое управление.
     bool auto_state : 1;
     // Предупреждение о необходимости замены фильтра.
     bool filter_state : 1;
@@ -267,20 +267,20 @@ class TionApiBase {
   virtual void write_state(TionStateCall *call) = 0;
   virtual void reset_filter() = 0;
 
-  // Вызывающая сторона отвественна за вызов perform..
+  // Вызывающая сторона ответственна за вызов perform..
   void enable_boost(bool state, TionStateCall *call);
   void enable_boost(uint16_t boost_time, TionStateCall *call);
   void set_boost_time(uint16_t boost_time);
   void set_boost_heater_state(bool heater_state);
-  void set_boost_target_temperture(int8_t target_temperature);
-  // Вызывающая сторона отвественна за вызов perform.
+  void set_boost_target_temperature(int8_t target_temperature);
+  // Вызывающая сторона ответственна за вызов perform.
   void enable_preset(const std::string &preset, TionStateCall *call);
   std::set<std::string> get_presets() const;
   bool has_presets() const { return !this->presets_.empty(); }
   void add_preset(const std::string &name, const PresetData &data);
   PresetData get_preset(const std::string &name) const;
   const std::string &get_active_preset() const { return this->active_preset_; }
-  /// Вызывающая сторона отвественна за вызов perform.
+  /// Вызывающая сторона ответственна за вызов perform.
   /// @return true если были изменения и требуются выполнить perform
   bool auto_update(uint16_t current, TionStateCall *call);
   void set_auto_pi_data(float kp, float ti, int db);

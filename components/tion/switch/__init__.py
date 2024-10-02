@@ -84,4 +84,4 @@ async def to_code(config: dict):
     # boost settings
     cgp.setup_value(config, CONF_DURATION, var.set_boost_time)
     cgp.setup_value(config, CONF_HEATER, var.set_boost_heater_state)
-    cgp.setup_value(config, CONF_TEMPERATURE, var.set_boost_target_temperture)
+    cgp.setup_value(config, CONF_TEMPERATURE, var.set_boost_target_temperature)

@@ -49,7 +49,7 @@ Tion4sUartProtocol::read_frame_result_t Tion4sUartProtocol::read_frame_(TionUart
       return READ_THIS_LOOP;
     }
     if (frame->magic != Tion4sRawUartFrame::FRAME_MAGIC) {
-      TION_LOGW(TAG, "Unxepected byte: 0x%02X", frame->magic);
+      TION_LOGW(TAG, "Unexpected byte: 0x%02X", frame->magic);
       return READ_THIS_LOOP;
     }
   }

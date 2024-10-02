@@ -10,7 +10,7 @@ namespace tion_4s {
 enum {
   // запрос на изменение без сохранения состояния
   FRAME_TYPE_STATE_SET = 0x3230,
-  // ответ на запрос состояния или запрос на изменеия
+  // ответ на запрос состояния или запрос на изменения
   FRAME_TYPE_STATE_RSP = 0x3231,
   // запрос состояния
   FRAME_TYPE_STATE_REQ = 0x3232,
@@ -45,8 +45,8 @@ enum {
   FRAME_TYPE_TURBO_REQ = 0x4132,  // BLE Only
   FRAME_TYPE_TURBO_RSP = 0x4131,  // BLE Only
 
-  FRAME_TYPE_HEARTBIT_REQ = 0x3932,  // UART Only, every 3 sec
-  FRAME_TYPE_HEARTBIT_RSP = 0x3931,  // UART Only
+  FRAME_TYPE_HEARTBEAT_REQ = 0x3932,  // UART Only, every 3 sec
+  FRAME_TYPE_HEARTBEAT_RSP = 0x3931,  // UART Only
 };
 
 #pragma pack(push, 1)
@@ -83,7 +83,7 @@ struct tion4s_state_t {
     bool sound_state : 1;
     // Байт 0, бит 2. Состояние световых оповещений.
     bool led_state : 1;
-    // Байт 0, бит 3. Сотояние обогревателя.
+    // Байт 0, бит 3. Состояние обогревателя.
     bool heater_state : 1;
     // Байт 0, бит 4. Режим обогрева.
     HeaterMode heater_mode : 1;
@@ -99,8 +99,8 @@ struct tion4s_state_t {
     bool ma_auto : 1;
     // Байт 1, бит 4.
     bool active_timer : 1;
-    // зарезервированно.
-    // на каждый запрос состояния изменется таким образом:
+    // зарезервировано.
+    // на каждый запрос состояния изменится таким образом:
     // 0 -> 2 -> 4 -> 6 -> 0 -> 1 -> 3 -> 5 -> 7 -> 1 -> 2 -> 4 и т.д.
     uint8_t reserved : 3;
   };
@@ -120,7 +120,7 @@ struct tion4s_state_t {
   int8_t pcb_pwr_temperature;
   // Байт 9-24. 9-12 - work_time, 13-16 - fan_time, 17-20 - filter_time, 21-24 - airflow_counter
   tion_4s_state_counters_t counters;
-  // Байт 25-28. Ошибки и/или предупредждения.
+  // Байт 25-28. Ошибки и/или предупреждения.
   uint32_t errors;
   // fan speed limit.
   uint8_t max_fan_speed;
@@ -214,7 +214,7 @@ struct tion4s_state_set_t {
   };
   // Байт 2.
   tion4s_state_t::GatePosition gate_position;
-  // Байт 3. температрура нагревателя.
+  // Байт 3. температура нагревателя.
   int8_t target_temperature;
   // Байт 4. Скорость вентиляции.
   uint8_t fan_speed;

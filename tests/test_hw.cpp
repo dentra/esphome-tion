@@ -105,7 +105,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       return check(frame->state, fn);
     }
 
-    case dentra::tion_4s::FRAME_TYPE_HEARTBIT_REQ: {
+    case dentra::tion_4s::FRAME_TYPE_HEARTBEAT_REQ: {
       if (size != 0) {
         ESP_LOGE(TAG, "Incorrect heartbeat request data size: %zu", size);
         return false;
@@ -113,7 +113,7 @@ bool check_cmd(uint16_t type, const void *data, size_t size, check_fn_t fn) {
       break;
     }
 
-    case dentra::tion_4s::FRAME_TYPE_HEARTBIT_RSP: {
+    case dentra::tion_4s::FRAME_TYPE_HEARTBEAT_RSP: {
       if (size != sizeof(tion_hw_rsp_heartbeat_t)) {
         ESP_LOGE(TAG, "Incorrect state request data size: %zu", size);
         return false;

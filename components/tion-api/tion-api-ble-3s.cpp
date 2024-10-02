@@ -38,7 +38,7 @@ bool Tion3sBleProtocol::read_data(const uint8_t *data, size_t size) {
     return false;
   }
   if (data == nullptr || size == 0) {
-    TION_LOGW(TAG, "Empy frame data");
+    TION_LOGW(TAG, "Empty frame data");
     return false;
   }
   if (size != sizeof(Tion3sRawBleFrame)) {

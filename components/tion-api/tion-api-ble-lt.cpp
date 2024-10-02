@@ -124,7 +124,7 @@ bool TionLtBleProtocol::write_frame(uint16_t frame_type, const void *frame_data,
   tx_frame->random = 0xAD;
   tx_frame->size = sizeof(tx_buf);
   tx_frame->data.type = frame_type;
-  tx_frame->data.ble_request_id = 1;  // TODO возможно можно инкрементировать и проверять в ответе
+  tx_frame->data.ble_request_id = 1;  // TODO возможно можно инкриминировать и проверять в ответе
   std::memcpy(tx_frame->data.data, frame_data, frame_data_size);
 
   uint16_t crc = __builtin_bswap16(crc16_ccitt_false_ffff(tx_frame, sizeof(tx_buf) - sizeof(crc)));

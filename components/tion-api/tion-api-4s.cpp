@@ -24,7 +24,7 @@ uint16_t Tion4sApi::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
   // do not use switch statement with non-contiguous values, as this will generate a lookup table with wasted space.
 #ifdef TION_ENABLE_HEARTBEAT
-  if (frame_type == FRAME_TYPE_HEARTBIT_RSP) {
+  if (frame_type == FRAME_TYPE_HEARTBEAT_RSP) {
     struct RawHeartbeatFrame {
       tion::tion_dev_info_t::work_mode_t work_mode;  // always 1
     } PACKED;
@@ -228,7 +228,7 @@ bool Tion4sApi::set_turbo(uint16_t time, uint32_t request_id) const {
 #ifdef TION_ENABLE_HEARTBEAT
 bool Tion4sApi::send_heartbeat() const {
   TION_LOGD(TAG, "Request Heartbeat");
-  return this->write_frame(FRAME_TYPE_HEARTBIT_REQ);
+  return this->write_frame(FRAME_TYPE_HEARTBEAT_REQ);
 }
 #endif
 

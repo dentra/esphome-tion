@@ -6,7 +6,7 @@
 #include "tion-api-defines.h"
 
 /*
-21.01.2023 20:58 (внешнаяя температура в мск T=-10 (0xF6) T=-12 (0xF4) Td=-13 (0xF3))
+21.01.2023 20:58 (внешняя температура в мск T=-10 (0xF6) T=-12 (0xF4) Td=-13 (0xF3))
 Через 1.138 сек. после запуска
     RF модуль: 00 ff
     Бризер: 10 04 10 01 00 FA
@@ -16,13 +16,13 @@
             00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18
     Бризер: 11 0С 14 17 10 02 3С 04 00 00 04 0А ВС 01 47 73 СВ 01 E3
 
-Через ~200 миллисек и каждые 200 миллисек.
+Через ~200 мс и каждые 200 мс.
     RF модуль: 03 FC
     Бризер: 13 00 EC
     RF модуль: 04 00 FB
     Бризер: 55 AA
 
-22.01.2023 23:07 (внешнаяя температура в мск T=-10 (0xF6))
+22.01.2023 23:07 (внешняя температура в мск T=-10 (0xF6))
 ## Если RF модуль не подключён к бризеру
 
     0. pause ~1137 msec
@@ -216,7 +216,7 @@ void TionO2Api::write_state(TionStateCall *call) {
   this->state_.sound_state = st.sound_state;
 
   if (!st.auto_state && st.sound_state) {
-    // не пищим в атоматическом режиме.
+    // не пищим в ароматическом режиме.
     // трюк с писком заключается в установке и снятия ma_pair_accepted
     // снимается в update_work_mode
     this->set_work_mode({
@@ -294,7 +294,7 @@ TionO2Api::TionO2Api() : TionApiBase() {
 
 void TionO2Api::update_dev_mode_(const DevModeFlags &dev_mode) {
   if (dev_mode.user) {
-    // TODO нужно ли отклбчать auto если пользователь нажал физ кноку
+    // TODO нужно ли отключать auto если пользователь нажал физ кнопку
     // this->state_.auto_state = false;
     this->state_.comm_source = CommSource::USER;
   } else {
