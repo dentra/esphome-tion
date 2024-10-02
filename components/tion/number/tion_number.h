@@ -24,7 +24,7 @@ template<class C> class TionNumber : public number::Number, public Component, pu
   explicit TionNumber(TionApiComponent *api) : Parented(api) {}
 
   float get_setup_priority() const override {
-    // сетап должен быть раньше mqtt, в противном случаее не успеют вытащиться значения traits
+    // сетап должен быть раньше mqtt, в противном случае не успеют вытащиться значения traits
     return setup_priority::AFTER_WIFI;
   }
 

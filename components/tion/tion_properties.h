@@ -369,7 +369,7 @@ struct AirflowCounter {
 };
 
 struct PcbCtlTemperature {
-  static bool is_supported(TionApiComponent *c) { return c->traits().supports_pcb_ctl_temperatire; }
+  static bool is_supported(TionApiComponent *c) { return c->traits().supports_pcb_ctl_temperature; }
 
   static int8_t get(const TionState &state) { return state.pcb_ctl_temperature; }
 };

@@ -171,7 +171,7 @@ bool Tion4sApi::request_state_() const {
 
 bool Tion4sApi::request_turbo_() const {
   TION_LOGD(TAG, "Request Turbo");
-  // TODO проверить, возможно необходимо/можно послыать request_id
+  // TODO проверить, возможно необходимо/можно посылать request_id
   return this->write_frame(FRAME_TYPE_TURBO_REQ);
 }
 
@@ -319,7 +319,7 @@ Tion4sApi::Tion4sApi() {
   this->traits_.supports_fan_time = true;
   this->traits_.supports_led_state = true;
   this->traits_.supports_sound_state = true;
-  this->traits_.supports_pcb_ctl_temperatire = true;
+  this->traits_.supports_pcb_ctl_temperature = true;
   this->traits_.supports_pcb_pwr_temperature = true;
   this->traits_.supports_gate_position_change = true;
   this->traits_.supports_gate_error = true;

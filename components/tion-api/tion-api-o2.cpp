@@ -274,8 +274,8 @@ TionO2Api::TionO2Api() : TionApiBase() {
 
   this->traits_.supports_work_time = true;
   this->traits_.supports_gate_error = true;
-#ifdef TION_ENABLE_ANTIFRIZE
-  this->traits_.supports_manual_antifrize = true;
+#ifdef TION_ENABLE_ANTIFREEZE
+  this->traits_.supports_manual_antifreeze = true;
 #endif
   this->traits_.supports_sound_state = true;
   this->traits_.max_heater_power = TION_O2_HEATER_POWER;

@@ -205,8 +205,8 @@ Tion3sApi::Tion3sApi() {
   this->traits_.supports_sound_state = true;
   this->traits_.supports_gate_position_change = true;
   this->traits_.supports_gate_position_change_mixed = true;
-#ifdef TION_ENABLE_ANTIFRIZE
-  this->traits_.supports_manual_antifrize = true;
+#ifdef TION_ENABLE_ANTIFREEZE
+  this->traits_.supports_manual_antifreeze = true;
 #endif
   this->traits_.supports_reset_filter = true;
   this->traits_.max_heater_power = TION_3S_HEATER_POWER;

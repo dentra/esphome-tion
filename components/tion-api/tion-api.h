@@ -30,13 +30,14 @@ struct TionTraits {
     bool supports_fan_time : 1;
     bool supports_airflow_counter : 1;
     bool supports_gate_error : 1;
-    bool supports_pcb_ctl_temperatire : 1;
+    bool supports_pcb_ctl_temperature : 1;
     bool supports_pcb_pwr_temperature : 1;
-    // true means manual antifrize support
-    bool supports_manual_antifrize : 1;
+    // true means manual antifreeze support
+    bool supports_manual_antifreeze : 1;
     // true means native boost support
     bool supports_boost : 1;
     bool supports_reset_filter : 1;
+    bool supports_kiv : 1;
   };
 
   using ErrorsDecoderPtr = std::add_pointer_t<std::string(uint32_t errors)>;

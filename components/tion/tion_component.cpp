@@ -48,8 +48,8 @@ void TionApiComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "  Force update: %s", ONOFF(this->force_update_));
   ESP_LOGCONFIG(TAG, "  State timeout: %.1f s", this->state_timeout_ * 0.001f);
   ESP_LOGCONFIG(TAG, "  Batch timeout: %.1f s", this->batch_timeout_ * 0.001f);
-  if (this->traits().supports_manual_antifrize) {
-    ESP_LOGCONFIG(TAG, "  Manual antifrize: enabled");
+  if (this->traits().supports_manual_antifreeze) {
+    ESP_LOGCONFIG(TAG, "  Manual antifreeze: enabled");
   }
 }
 

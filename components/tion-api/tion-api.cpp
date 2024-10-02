@@ -99,7 +99,7 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
   if (traits.supports_pcb_pwr_temperature) {
     TION_DUMP(TAG, "pcb_pwr_temp: %d °C", this->pcb_pwr_temperature);
   }
-  if (traits.supports_pcb_ctl_temperatire) {
+  if (traits.supports_pcb_ctl_temperature) {
     TION_DUMP(TAG, "pcb_ctl_temp: %d °C", this->pcb_ctl_temperature);
   }
 
@@ -287,9 +287,9 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
     }
   }
 
-  if (this->traits_.supports_manual_antifrize) {
+  if (this->traits_.supports_manual_antifreeze) {
     if (ns.power_state && !ns.heater_state && ns.outdoor_temperature < 0) {
-      TION_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
+      TION_LOGW(TAG, "Antifreeze protection has worked. Heater now enabled.");
       ns.heater_state = true;
     }
   }
@@ -420,10 +420,10 @@ void TionApiBase::notify_state_(uint32_t request_id) {
     }
   }
 
-  if (this->traits_.supports_manual_antifrize) {
+  if (this->traits_.supports_manual_antifreeze) {
     const auto &cs = this->state_;
     if (cs.power_state && !cs.heater_state && cs.outdoor_temperature < 0) {
-      TION_LOGW(TAG, "Antifrize protection has worked. Heater now enabled.");
+      TION_LOGW(TAG, "Antifreeze protection has worked. Heater now enabled.");
       if (call == nullptr) {
         call = new TionStateCall(this);
       }

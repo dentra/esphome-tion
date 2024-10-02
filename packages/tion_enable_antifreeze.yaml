@@ -1,4 +1,4 @@
 esphome:
   platformio_options:
     build_flags:
-      - -DTION_ENABLE_ANTIFRIZE
+      - -DTION_ENABLE_ANTIFREEZE
