@@ -37,7 +37,6 @@ preferences:
 
 wifi:
   ap:
-    ssid: "$friendly_name Hotspot"
 captive_portal:
 
 ota:
@@ -47,6 +46,7 @@ ota:
 logger:
   logs:
     esp-idf: INFO
+    light: INFO
 
 external_components:
   - source: $vport_source
@@ -63,6 +63,7 @@ external_components:
       - nvs
       - setup
       - dtu
+      - declaration
     refresh: $vport_source_refresh
   - source: $project_source
     refresh: $project_source_refresh

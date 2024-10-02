@@ -8,6 +8,10 @@ packages:
 esp32:
   board: $board
 
+logger:
+  logs:
+    esp-idf: INFO
+
 esp32_ble_tracker:
   id: tion_esp32_ble_tracker
 
