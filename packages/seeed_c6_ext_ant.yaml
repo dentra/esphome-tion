@@ -21,4 +21,4 @@ setup:
       gpio_set_direction(gpio_select_ext_antenna, GPIO_MODE_OUTPUT);
       gpio_set_level    (gpio_select_ext_antenna, 1); // use external antenna
 
-      ESP_LOGI("main", "External Antenna was activated");
+      ESP_LOGI("seeed_c6_ext_ant.yaml", "External Antenna was activated");

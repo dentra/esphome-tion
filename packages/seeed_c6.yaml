@@ -1,4 +1,7 @@
 substitutions:
+  board: esp32-c6-devkitc-1
+  board_code: seeed_xiao_esp32c6
+  board_name: Seeed Studio XIAO ESP32C6
   tx_pin: GPIO16 # U0TXD
   rx_pin: GPIO17 # U0RXD
   led_pin: GPIO15 # Yellow USER LED
@@ -6,15 +9,28 @@ substitutions:
   usb_dn_pin: GPIO12 # USB D+
   usb_dp_pin: GPIO13 # USB D-
 
+packages:
+  seeed_c6.logger: !include logger_jtag.yaml
+
+esphome:
+  platformio_options:
+    # https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32C6/boards.txt
+    # XIAO_ESP32C6.build.flash_mode=qio
+    board_build.flash_mode: qio
+
 esp32:
   flash_size: 4MB
   framework:
     sdkconfig_options:
       # Fix flash size warning
       CONFIG_ESPTOOLPY_FLASHSIZE_4MB: y
+      # Enable QIO mode
+      CONFIG_ESPTOOLPY_FLASHMODE_QIO: "y"
+      CONFIG_FLASHMODE_QIO: "y"
 
 logger:
   logs:
+    light: INFO
     status_led: INFO
 
 light:

@@ -1,0 +1,14 @@
+switch:
+  - platform: gpio
+    name: External Antenna
+    entity_category: diagnostic
+    icon: mdi:antenna
+    pin: GPIO14
+
+# do not create output component that used only once
+setup:
+  - lambda: |-
+      gpio_num_t gpio_enable_ext_antenna = ::GPIO_NUM_3;
+      gpio_reset_pin    (gpio_enable_ext_antenna);
+      gpio_set_direction(gpio_enable_ext_antenna, GPIO_MODE_OUTPUT);
+      gpio_set_level    (gpio_enable_ext_antenna, 0); // turn on this function
