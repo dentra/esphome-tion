@@ -54,6 +54,15 @@ class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, typename i
 
   TionVPortType get_type() const { return TionVPortType::VPORT_UART; }
 
+  void call_setup() override {
+    super_t::call_setup();
+    // cleanup all existing data
+    while (this->io_->available()) {
+      uint8_t c;
+      this->io->read_array(&c, sizeof(c));
+    }
+  }
+
 #ifdef USE_TION_HALF_DUPLEX
   void write(const typename io_t::frame_spec_type &frame, size_t size) override {
     if (this->await_frame_) {
