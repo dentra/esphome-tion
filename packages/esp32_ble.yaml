@@ -8,9 +8,6 @@ packages:
 esp32:
   board: $board
 
-wifi:
-  power_save_mode: light
-
 esp32_ble_tracker:
   id: tion_esp32_ble_tracker
 

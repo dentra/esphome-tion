@@ -9,9 +9,6 @@ esp32:
   framework:
     type: esp-idf
 
-wifi:
-  power_save_mode: none
-
 logger:
   # Make sure logging is not using the serial port
   baud_rate: 0
