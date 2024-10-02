@@ -180,8 +180,16 @@ tion:
   id: tion_api
   # Optional, use vport_id with multiple breezers.
   vport_id: tion_{{ port }}_vport
-  # Optional, How often query device state. Default: 15s.
-  update_interval: {{ "15s" if port == "uart" else "60s" }}
+  # Optional, How often query device state. Default: 60s.
+  {%- if port == "uart" %}
+    {%- if type == "4s" %}
+  update_interval: 15s
+    {%- else %}
+  update_interval: 30s
+    {%- endif %}
+  {%- else %}
+  update_interval: 60s
+  {%- endif %}
   # Optional, Timeout to combine update operations. Default: 200ms.
   batch_timeout: 200ms
   # Optional, Timeout to enable state problem sensor. Must be less than update_interval. Default: 3s.

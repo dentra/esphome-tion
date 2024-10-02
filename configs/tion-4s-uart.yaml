@@ -89,7 +89,7 @@ tion:
   id: tion_api
   # Optional, use vport_id with multiple breezers.
   vport_id: tion_uart_vport
-  # Optional, How often query device state. Default: 15s.
+  # Optional, How often query device state. Default: 60s.
   update_interval: 15s
   # Optional, Timeout to combine update operations. Default: 200ms.
   batch_timeout: 200ms

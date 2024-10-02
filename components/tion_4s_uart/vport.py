@@ -9,9 +9,7 @@ ESP_PLATFORMS = [PLATFORM_ESP32]
 
 CONF_HEARTBEAT_INTERVAL = "heartbeat_interval"
 
-Tion4sUartVPort = tion.tion_ns.class_(
-    "Tion4sUartVPort", cg.PollingComponent, vport.VPort
-)
+Tion4sUartVPort = tion.tion_ns.class_("Tion4sUartVPort", cg.Component, vport.VPort)
 Tion4sUartIO = tion.tion_ns.class_("Tion4sUartIO")
 
 CONFIG_SCHEMA = vport.vport_uart_schema(Tion4sUartVPort, Tion4sUartIO).extend(

@@ -12,7 +12,7 @@ AUTO_LOAD = ["vport", "tion"]
 CONF_EXPERIMENTAL_ALWAYS_PAIR = "experimental_always_pair"
 
 Tion3sBleIO = tion.tion_ns.class_("Tion3sBleIO")
-Tion3sBleVPort = tion.tion_ns.class_("Tion3sBleVPort", cg.PollingComponent, vport.VPort)
+Tion3sBleVPort = tion.tion_ns.class_("Tion3sBleVPort", cg.Component, vport.VPort)
 
 CONFIG_SCHEMA = vport.vport_ble_schema(Tion3sBleVPort, Tion3sBleIO).extend(
     {

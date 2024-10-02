@@ -139,7 +139,7 @@ CONFIG_SCHEMA = cv.All(
             }
         )
         .extend(vport.VPORT_CLIENT_SCHEMA)
-        .extend(cv.polling_component_schema("15s")),
+        .extend(cv.polling_component_schema("60s")),
         cgp.validate_type(CONF_BUTTON_PRESETS, "lt"),
     ),
 )

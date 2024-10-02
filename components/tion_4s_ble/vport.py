@@ -9,7 +9,7 @@ DEPENDENCIES = ["ble_client"]
 AUTO_LOAD = ["vport", "tion"]
 
 
-Tion4sBleVPort = tion.tion_ns.class_("Tion4sBleVPort", cg.PollingComponent, vport.VPort)
+Tion4sBleVPort = tion.tion_ns.class_("Tion4sBleVPort", cg.Component, vport.VPort)
 Tion4sBleIO = tion.tion_ns.class_("Tion4sBleIO")
 
 CONFIG_SCHEMA = vport.vport_ble_schema(Tion4sBleVPort, Tion4sBleIO)

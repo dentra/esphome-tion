@@ -10,7 +10,7 @@ Tion3sUartVPort = tion.tion_ns.class_(
 )
 Tion3sUartIO = tion.tion_ns.class_("Tion3sUartIO")
 
-CONFIG_SCHEMA = vport.vport_uart_schema(Tion3sUartVPort, Tion3sUartIO, "60s")
+CONFIG_SCHEMA = vport.vport_uart_schema(Tion3sUartVPort, Tion3sUartIO)
 
 
 async def to_code(config):
