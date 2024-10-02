@@ -71,6 +71,7 @@ bool TionLtApi::write_state(const TionState &state, uint32_t request_id) const {
     return false;
   }
   tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
+  this->fix_st_set_(&st_set);
   TION_DUMP(TAG, "req  : %" PRIu32, st_set.request_id);
   TION_DUMP(TAG, "power: %s", ONOFF(st_set.data.power_state));
   TION_DUMP(TAG, "sound: %s", ONOFF(st_set.data.sound_state));
@@ -96,6 +97,7 @@ bool TionLtApi::reset_filter(const TionState &state, uint32_t request_id) const 
   tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
   st_set.data.filter_reset = true;
   st_set.data.filter_time = 181;
+  this->fix_st_set_(&st_set);
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
 }
 
@@ -107,6 +109,7 @@ bool TionLtApi::factory_reset(const TionState &state, uint32_t request_id) const
   }
   tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
   st_set.data.factory_reset = true;
+  this->fix_st_set_(&st_set);
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
 }
 
@@ -118,7 +121,30 @@ bool TionLtApi::reset_errors(const TionState &state, uint32_t request_id) const 
   }
   tionlt_state_set_req_t st_set(state, this->button_presets_, request_id);
   st_set.data.error_reset = true;
+  this->fix_st_set_(&st_set);
   return this->write_frame(FRAME_TYPE_STATE_SET, st_set);
+}
+
+void TionLtApi::fix_st_set_(tionlt_state_set_req_t *set) const {
+  if (set->data.fan_speed != 0) {
+    return;
+  }
+  if (!this->traits_.supports_kiv) {
+    set->data.fan_speed = 1;
+    return;
+  }
+  // для предотвращения обморожения не разрешаем работу в режиме kiv если внешняя температура менее 5 °C
+  if (this->state_.outdoor_temperature < 5) {
+    set->data.fan_speed = 1;
+    TION_LOGW(TAG, "KIV mode not supported when outdoor temperature less than 5 °C");
+    return;
+  }
+  // не разрешаем работу в режиме kiv если включен обогреватель
+  if (set->data.heater_state) {
+    set->data.fan_speed = 1;
+    TION_LOGW(TAG, "KIV mode not supported when heater is on");
+    return;
+  }
 }
 
 void TionLtApi::request_state() {
@@ -161,7 +187,7 @@ void TionLtApi::update_dev_info_(const tion::tion_dev_info_t &dev_info) {
 }
 
 void TionLtApi::update_state_(const tionlt_state_t &state) {
-    this->state_.initialized = true;
+  this->state_.initialized = true;
 
   this->state_.power_state = state.power_state;
   this->state_.heater_state = state.heater_state;
@@ -218,6 +244,8 @@ void TionLtApi::dump_state_(const tionlt_state_t &state) const {
 void TionLtApi::set_button_presets(const dentra::tion_lt::button_presets_t &button_presets) {
   this->button_presets_ = button_presets;
 }
+
+void TionLtApi::enable_kiv_support() { this->traits_.supports_kiv = true; }
 
 }  // namespace tion
 }  // namespace dentra

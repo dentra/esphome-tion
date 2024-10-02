@@ -30,6 +30,8 @@ class TionLtApi : public TionApiBase, public tion::TionApiWriter {
   }
   void reset_filter() override { this->reset_filter(this->state_, ++this->request_id_); }
 
+  void enable_kiv_support();
+
  protected:
   tion_lt::button_presets_t button_presets_{
       .tmp{
@@ -50,6 +52,8 @@ class TionLtApi : public TionApiBase, public tion::TionApiWriter {
   void dump_state_(const tion_lt::tionlt_state_t &state) const;
   void update_state_(const tion_lt::tionlt_state_t &state);
   void update_dev_info_(const tion::tion_dev_info_t &dev_info);
+
+  void fix_st_set_(tion_lt::tionlt_state_set_req_t *set) const;
 };
 
 }  // namespace tion

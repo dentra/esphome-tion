@@ -156,7 +156,11 @@ class Tion4sApiComponent : public TionApiComponentBase<dentra::tion_4s::Tion4sAp
 class TionLtApiComponent : public TionApiComponentBase<dentra::tion::TionLtApi> {
  public:
   explicit TionLtApiComponent(TionApiComponentBase::Api *api, TionVPortType vport_type)
-      : TionApiComponentBase(api, vport_type) {}
+      : TionApiComponentBase(api, vport_type) {
+    if (vport_type == TionVPortType::VPORT_UART) {
+      api->enable_kiv_support();
+    }
+  }
 
   void set_button_presets(const dentra::tion_lt::button_presets_t &button_presets) {
     this->typed_api()->set_button_presets(button_presets);
