@@ -107,7 +107,7 @@ template<typename C> class Controller {
       return true;
     } else {
       if (state == nullptr) {
-        // пустой state означает, ошибку получения состоянияя
+        // пустой state означает, ошибку получения состояния
         return false;
       }
       if constexpr (checker().has_api_state_get()) {
@@ -460,7 +460,7 @@ namespace text_sensor {
 
 struct Errors {
   static std::string get(TionApiComponent *c, const TionState &state) {
-    return c->traits().errors_decoder(state.errors);
+    return c->traits().errors_decode(state.errors);
   };
 };
 

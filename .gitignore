@@ -40,6 +40,8 @@ secrets.yaml
 /components/esp32_usb_dis
 /components/*_jtag
 /components/setup
+/components/declaration
+/components/dtu
 /components/_*
 /components/http_request
 /components/mqtt

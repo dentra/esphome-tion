@@ -28,7 +28,7 @@ enum : uint8_t {
   // get alarm
   FRAME_TYPE_ALARM = 0x9,
   // set alrm to on
-  FRAME_TYPE_ALRAM_ON = 0xA,
+  FRAME_TYPE_ALARM_ON = 0xA,
   // set alrm to off
   FRAME_TYPE_ALARM_OFF = 0xB,
 };
@@ -73,7 +73,7 @@ struct tion3s_state_t {
     bool preset_state : 1;
     // Байт 3, бит 1.
     bool presets_state : 1;
-    // зарезервированно
+    // зарезервировано
     uint8_t reserved : 6;
   } flags;
   // Байт 4.
@@ -82,7 +82,7 @@ struct tion3s_state_t {
   int8_t current_temperature2;
   // Байт 6. Температура воздуха на входе в бризер (температура на улице).
   int8_t outdoor_temperature;
-  // Байт 7-8. Остаточsный ресурс фильтров в днях. То, что показывается в приложении как "время жизни фильтров".
+  // Байт 7-8. Остаточный ресурс фильтров в днях. То, что показывается в приложении как "время жизни фильтров".
   uint16_t filter_time;
   // Байт 9. Часы.
   uint8_t hours;
@@ -105,7 +105,9 @@ struct tion3s_state_t {
     return ((barr_4 <= 0 ? barr_5 : barr_4) + (barr_5 <= 0 ? barr_4 : barr_5)) / 2;
   }
 
+  enum { GATE_ERROR_NUM = 5 };
   static std::string decode_errors(uint32_t errors);
+  static void report_errors(uint32_t errors);
 };
 
 // NOLINTNEXTLINE(readability-identifier-naming)

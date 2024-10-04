@@ -9,13 +9,81 @@
 namespace dentra {
 namespace tion {
 
+static const char *const TAG = "tion-api-lt";
+
+}
+}  // namespace dentra
+
+namespace dentra {
+namespace tion_lt {
+constexpr size_t ERRORS_COUNT = tionlt_state_t::ERROR_MAX_BIT - tionlt_state_t::ERROR_MIN_BIT + 1;
+static const char *const ERRORS[ERRORS_COUNT] = {
+    // EC01
+    "Ошибка в работе заслонки",
+    // EC02
+    "Ошибка в работе заслонки",
+    // EC03
+    "Ошибка в работе заслонки",
+    // EC04
+    "Ошибка работы нагревателя",
+    // EC05
+    "Ошибка работы нагревателя",
+    // EC06
+    "Ошибка работы нагревателя",
+    // EC07
+    "Ошибка измерения температуры",
+    // EC08
+    "Ошибка измерения температуры",
+    // EC09
+    "Ошибка измерения температуры",
+    // EC10
+    "Ошибка измерения температуры",
+    // EC11
+    "Ошибка работы нагревателя",
+};
+
+constexpr size_t WARNINGS_COUNT = tionlt_state_t::WARNING_MAX_BIT - tionlt_state_t::WARNING_MIN_BIT + 1;
+static const char *const WARNINGS[WARNINGS_COUNT] = {
+    // WS01
+    "Температура поступающего воздуха выше допустимого значения",
+    // WS02
+    "Температура поступающего воздуха ниже допустимого значения",
+    // WS03
+    "Температура платы управления выше допустимого значения",
+    // WS04
+    "Температура платы управления ниже допустимого значения",
+};
+
+void tionlt_state_t::report_errors(uint32_t errors) {
+  tion::enum_errors(errors, tionlt_state_t::ERROR_MIN_BIT, tionlt_state_t::ERROR_MAX_BIT, nullptr,
+                    [](uint8_t err, const void *) {
+                      if (err > 0 && (err - 1) < ERRORS_COUNT) {
+                        TION_REPORT_EC(tion::TAG, err, ERRORS[err - 1]);
+                      } else {
+                        TION_REPORT_EC_UNK(tion::TAG, err);
+                      }
+                    });
+  tion::enum_errors(errors, tionlt_state_t::WARNING_MIN_BIT, tionlt_state_t::WARNING_MAX_BIT, nullptr,
+                    [](uint8_t err, const void *) {
+                      if (err > 0 && (err - 1) < WARNINGS_COUNT) {
+                        TION_REPORT_WS(tion::TAG, err, WARNINGS[err - 1]);
+                      } else {
+                        TION_REPORT_WS_UNK(tion::TAG, err);
+                      }
+                    });
+}
+
+}  // namespace tion_lt
+}  // namespace dentra
+
+namespace dentra {
+namespace tion {
+
 using tion::TionTraits;
 using tion::TionState;
 using tion_lt::tionlt_state_t;
 using tion_lt::tionlt_state_set_req_t;
 using namespace tion_lt;
-
-static const char *const TAG = "tion-api-lt";
 
 static const uint8_t PROD[] = {0, TION_LT_AUTO_PROD};
 
@@ -155,7 +223,8 @@ void TionLtApi::request_state() {
 }
 
 TionLtApi::TionLtApi() {
-  this->traits_.errors_decoder = tionlt_state_t::decode_errors;
+  this->traits_.errors_decode = tionlt_state_t::decode_errors;
+  this->traits_.errors_report = tionlt_state_t::report_errors;
 
   this->traits_.supports_heater_var = true;
   this->traits_.supports_work_time = true;
@@ -163,7 +232,7 @@ TionLtApi::TionLtApi() {
   this->traits_.supports_fan_time = true;
   this->traits_.supports_led_state = true;
   this->traits_.supports_sound_state = true;
-  this->traits_.supports_pcb_pwr_temperature = true;
+  this->traits_.supports_pcb_ctl_temperature = true;
   this->traits_.supports_reset_filter = true;
   this->traits_.max_heater_power = TION_LT_HEATER_POWER;
   this->traits_.max_fan_speed = 6;
@@ -196,7 +265,7 @@ void TionLtApi::update_state_(const tionlt_state_t &state) {
   this->state_.comm_source = state.comm_source;
   this->state_.auto_state = state.ma_auto;
   this->state_.filter_state = state.filter_state;
-  // this->state_.gate_error_state = 0;
+  this->state_.gate_error_state = (state.errors & tionlt_state_t::GATE_ERROR_BIT) != 0;
   this->state_.gate_position = state.gate_state ? TionGatePosition::OPENED : TionGatePosition::CLOSED;
   this->state_.fan_speed = state.fan_speed;
   this->state_.outdoor_temperature = state.outdoor_temperature;
@@ -216,7 +285,7 @@ void TionLtApi::update_state_(const tionlt_state_t &state) {
   // this->state_.hardware_version = dev_info.hardware_version;
   // this->state_.firmware_version = dev_info.firmware_version;
   this->state_.pcb_ctl_temperature = state.pcb_temperature;
-  this->state_.pcb_pwr_temperature = state.pcb_temperature;
+  // this->state_.pcb_pwr_temperature = 0;
   this->state_.errors = state.errors;
 
   this->dump_state_(state);

@@ -81,6 +81,7 @@ struct tiono2_state_t {
   static std::string decode_errors(uint32_t errors) {
     return tion::decode_errors(errors, ERROR_MIN_BIT, ERROR_MAX_BIT, 0, 0);
   }
+  static void report_errors(uint32_t errors);
 };
 
 static_assert(sizeof(tiono2_state_t) == 17, "Invalid tiono2_state_t size");

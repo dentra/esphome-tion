@@ -55,7 +55,13 @@ using tion_4s_state_counters_t = tion::tion_state_counters_t<15>;
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tion4s_state_t {
-  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 29, GATE_ERROR_BIT = 1 << 0 };
+  enum {
+    ERROR_MIN_BIT = 0,
+    ERROR_MAX_BIT = 10,
+    WARNING_MIN_BIT = 24,
+    WARNING_MAX_BIT = 29,
+    GATE_ERROR_BIT = (1 << 0) | (1 << 1) | (1 << 2),
+  };
 
   enum HeaterMode : uint8_t {
     HEATER_MODE_HEATING = 0,
@@ -130,6 +136,7 @@ struct tion4s_state_t {
   static std::string decode_errors(uint32_t errors) {
     return tion::decode_errors(errors, ERROR_MIN_BIT, ERROR_MAX_BIT, WARNING_MIN_BIT, WARNING_MAX_BIT);
   }
+  static void report_errors(uint32_t errors);
 };
 
 // NOLINTNEXTLINE(readability-identifier-naming)

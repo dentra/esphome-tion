@@ -66,6 +66,43 @@ static const char *const TAG = "tion-api-uart-o2";
 
 static const uint8_t PROD[] = {0, TION_O2_AUTO_PROD};
 
+constexpr size_t ERRORS_COUNT = tiono2_state_t::ERROR_MAX_BIT - tiono2_state_t::ERROR_MIN_BIT + 1;
+static const char *const ERRORS[ERRORS_COUNT] = {
+    // EC01
+    "Температура входящего воздуха более +50 °C",
+    // EC02
+    "Температура уличного воздуха ниже значения, установленного параметром «Минимальная допустимая температура»",
+    // EC03
+    "Температура выходящего воздуха более +50 °C",
+    // EC04
+    "Значение температуры выходящего воздуха ниже 25 °C (при включенном нагревателе)",
+    // EC05
+    "Ошибка работы заслонки",
+    // EC06
+    "Переохлаждение платы управления или индикации",
+    // EC07
+    "Цепь датчика NTC температуры наружного воздуха короткозамкнута",
+    // EC08
+    "Обрыв в цепи датчика NTC температуры воздуха после нагревателя",
+    // EC09
+    "Цепь датчика NTC температуры воздуха, поступающего в прибор, короткозамкнута",
+    // EC10
+    "Обрыв в цепи датчика NTC температуры воздуха, поступающего в прибор",
+    // EC11
+    "Сбой передачи данных между силовой платой и платой управления",
+};
+
+void tiono2_state_t::report_errors(uint32_t errors) {
+  enum_errors(errors, tiono2_state_t::ERROR_MIN_BIT, tiono2_state_t::ERROR_MAX_BIT, nullptr,
+              [](uint8_t err, const void *) {
+                if (err > 0 && (err - 1) < ERRORS_COUNT) {
+                  TION_REPORT_EC(TAG, err, ERRORS[err - 1]);
+                } else {
+                  TION_REPORT_EC_UNK(TAG, err);
+                }
+              });
+}
+
 size_t get_req_frame_size(uint8_t frame_type) {
   if (frame_type == FRAME_TYPE_DEV_MODE_REQ) {
     return 1;
@@ -270,7 +307,8 @@ void TionO2Api::request_state() {
 }
 
 TionO2Api::TionO2Api() : TionApiBase() {
-  this->traits_.errors_decoder = tiono2_state_t::decode_errors;
+  this->traits_.errors_decode = tiono2_state_t::decode_errors;
+  this->traits_.errors_report = tiono2_state_t::report_errors;
 
   this->traits_.supports_work_time = true;
   this->traits_.supports_gate_error = true;
@@ -319,7 +357,7 @@ void TionO2Api::update_state_(const tiono2_state_t &state) {
   // this->state_.comm_source = CommSource::USER;
   // this->state_.auto_state = false;
   this->state_.filter_state = state.filter_state;
-  this->state_.gate_error_state = state.errors & tiono2_state_t::GATE_ERROR_BIT;
+  this->state_.gate_error_state = (state.errors & tiono2_state_t::GATE_ERROR_BIT) != 0;
   this->state_.gate_position = state.power_state ? TionGatePosition::OPENED : TionGatePosition::CLOSED;
   this->state_.fan_speed = state.fan_speed;
   this->state_.outdoor_temperature = state.outdoor_temperature;

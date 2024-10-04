@@ -14,45 +14,51 @@ namespace tion {
 static const char *const TAG = "tion-api";
 #define INVALID_STATE_CALL() TION_LOGW(TAG, "Invalid state call")
 
-std::string decode_errors(uint32_t errors, uint8_t error_min_bit, uint8_t error_max_bit, uint8_t warning_min_bit,
-                          uint8_t warning_max_bit) {
-  if (errors == 0) {
-    return {};
-  }
+void report_errors(uint32_t errors, uint8_t error_min_bit, uint8_t error_max_bit, uint8_t warning_min_bit,
+                   uint8_t warning_max_bit) {}
 
-  std::string error_messages;
-  for (uint8_t i = error_min_bit; i <= error_max_bit; i++) {
+void enum_errors(uint32_t errors, uint8_t min_bit, uint8_t max_bit, const void *param,
+                 const std::function<void(uint8_t, const void *)> &fn) {
+  for (uint8_t i = min_bit; i <= max_bit; i++) {
     uint32_t mask = 1 << i;
     if ((errors & mask) == mask) {
-      if (!error_messages.empty()) {
-        error_messages += ", ";
-      }
-      error_messages += "EC";
-      error_messages += std::to_string(i + 1);
+      fn(i - min_bit + 1, param);
     }
   }
+}
+
+std::string decode_errors(uint32_t errors, uint8_t error_min_bit, uint8_t error_max_bit, uint8_t warning_min_bit,
+                          uint8_t warning_max_bit) {
+  std::string messages;
+
+  auto add_message = [&messages](uint8_t err, const void *param) {
+    if (!messages.empty()) {
+      messages += ", ";
+    }
+    messages += static_cast<const char *>(param);
+    if (err < 10) {
+      messages += '0';
+    }
+    messages += std::to_string(err);
+  };
+
+  enum_errors(errors, error_min_bit, error_max_bit, "EC", add_message);
 
   if (warning_min_bit != warning_max_bit) {
-    for (uint8_t i = warning_min_bit; i <= warning_max_bit; i++) {
-      uint32_t mask = 1 << i;
-      if ((errors & mask) == mask) {
-        if (!error_messages.empty()) {
-          error_messages += ", ";
-        }
-        error_messages += "WS";
-        error_messages += std::to_string(i + 1);
-      }
-    }
+    enum_errors(errors, warning_min_bit, warning_max_bit, "WS", add_message);
   }
 
-  return error_messages;
+  return messages;
 }
 
 void TionState::dump(const char *TAG, const TionTraits &traits) const {
-  if (traits.errors_decoder) {
-    const auto errors = traits.errors_decoder(this->errors);
-    if (!errors.empty()) {
-      TION_LOGW(TAG, "Breezer alert: %s", errors.c_str());
+  if (this->errors) {
+    if (traits.errors_decode) {
+      const auto errors = traits.errors_decode(this->errors);
+      TION_LOGW(TAG, "Breezer alert[0x%" PRIx32 "]: %s", this->errors, errors.c_str());
+    }
+    if (traits.errors_report) {
+      traits.errors_report(this->errors);
     }
   }
 
@@ -96,11 +102,11 @@ void TionState::dump(const char *TAG, const TionTraits &traits) const {
     TION_DUMP(TAG, "airflow     : %.3f m³ (%" PRIu32 ")", this->airflow_m3, this->airflow_counter);
   }
 
-  if (traits.supports_pcb_pwr_temperature) {
-    TION_DUMP(TAG, "pcb_pwr_temp: %d °C", this->pcb_pwr_temperature);
-  }
   if (traits.supports_pcb_ctl_temperature) {
     TION_DUMP(TAG, "pcb_ctl_temp: %d °C", this->pcb_ctl_temperature);
+  }
+  if (traits.supports_pcb_pwr_temperature) {
+    TION_DUMP(TAG, "pcb_pwr_temp: %d °C", this->pcb_pwr_temperature);
   }
 
   if (this->firmware_version) {

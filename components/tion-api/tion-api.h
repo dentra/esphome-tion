@@ -40,8 +40,10 @@ struct TionTraits {
     bool supports_kiv : 1;
   };
 
-  using ErrorsDecoderPtr = std::add_pointer_t<std::string(uint32_t errors)>;
-  ErrorsDecoderPtr errors_decoder{};
+  using ErrorsDecodePtr = std::add_pointer_t<std::string(uint32_t errors)>;
+  ErrorsDecodePtr errors_decode{};
+  using ErrorsReportPtr = std::add_pointer_t<void(uint32_t errors)>;
+  ErrorsReportPtr errors_report{};
 
   // Время работы режима "Турбо" в секундах.
   uint16_t boost_time;
@@ -149,14 +151,15 @@ class TionState {
   uint16_t firmware_version;
   uint16_t hardware_version;
 
-  // lt/4s only sensor: ctrl pcb temperature.
+  // Температура платы управления (4s/lt only).
   int8_t pcb_ctl_temperature;
-  // 4s only sensor: pwr pcb temperature.
+  // Температура силовой платы (4s only).
   int8_t pcb_pwr_temperature;
 
   //////////// 4S/LT
-  // 4s: EC01 - ошибка заслонки
-  // o2: EC15 - ошибка заслонки
+  // 4s: EC01,02,03 - ошибка заслонки
+  // o2: EC05 - ошибка заслонки
+  // 3s: EC05 - ошибка заслонки
   uint32_t errors;
 
   bool get_gate_state() const { return this->gate_position == TionGatePosition::OPENED; }
@@ -219,6 +222,14 @@ class TionStateCall {
   optional<TionGatePosition> gate_position_;
   optional<bool> auto_state_;
 };
+
+#define TION_REPORT_EC(tag, code, msg) TION_LOGW(tag, "EC%02u: %s", err, msg);
+#define TION_REPORT_WS(tag, code, msg) TION_LOGW(tag, "WS%02u: %s", err, msg);
+#define TION_REPORT_EC_UNK(tag, code) TION_REPORT_EC(tag, code, "Неизвестная ошибка")
+#define TION_REPORT_WS_UNK(tag, code) TION_REPORT_WS(tag, code, "Неизвестное предупреждение")
+
+void enum_errors(uint32_t errors, uint8_t min_bit, uint8_t max_bit, const void *param,
+                 const std::function<void(uint8_t, const void *)> &fn);
 
 std::string decode_errors(uint32_t errors, uint8_t error_min_bit, uint8_t error_max_bit, uint8_t warning_min_bit,
                           uint8_t warning_max_bit);

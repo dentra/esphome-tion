@@ -59,7 +59,7 @@ class TionVPortUARTComponent : public vport::VPortUARTComponent<io_t, typename i
     // cleanup all existing data
     while (this->io_->available()) {
       uint8_t c;
-      this->io->read_array(&c, sizeof(c));
+      this->io_->read_array(&c, sizeof(c));
     }
   }
 

@@ -19,6 +19,70 @@ using tion::TionGatePosition;
 using tion::TionTraits;
 using tion::TionState;
 
+constexpr size_t ERRORS_COUNT = tion4s_state_t::ERROR_MAX_BIT - tion4s_state_t::ERROR_MIN_BIT + 1;
+static const char *const ERRORS[ERRORS_COUNT] = {
+    // EC01
+    "При движении заслонки целевой концевой выключатель не меняет состояние в отличие от исходного",
+    // EC02
+    "При движении заслонки ни один концевой выключатель не меняет состояние",
+    // EC03
+    "Оба концевых выключателя замкнуты при отсутствии управляющего сигнала на силовой ключ заслонки",
+    // EC04
+    "Показания выходного датчика отличаются от целевой температуры на 3 °C "
+    "и показания входного датчика меньше целевой температуры",
+    // EC05
+    "Показания выходного датчика меньше целевой температуры на 6 °C "
+    "и показания входного датчика меньше целевой температуры",
+    // EC06
+    "Показания выходного датчика больше целевой температуры на 12 °C "
+    "и показания входного датчика меньше целевой температуры",
+    // EC07
+    "Температура на выходе из устройства выше допустимой или замыкание на двух выходных датчиках",
+    // EC08
+    "Температура на выходе из устройства ниже допустимой или обрыв на двух выходных датчиках",
+    // EC09
+    "Температура на выходе из устройства выше допустимой или замыкание на одном выходном датчике",
+    // EC10
+    "Температура на выходе из устройства ниже допустимой или обрыв на одном выходном датчике",
+    // EC11
+    "Обрыв электрической цепи питания нагревателя",
+};
+
+constexpr size_t WARNINGS_COUNT = tion4s_state_t::WARNING_MAX_BIT - tion4s_state_t::WARNING_MIN_BIT + 1;
+static const char *const WARNINGS[WARNINGS_COUNT] = {
+    // WS01
+    "Температура поступающего воздуха выше допустимого значения",
+    // WS02
+    "Температура поступающего воздуха ниже допустимого значения",
+    // WS03
+    "Температура платы управления выше допустимого значения",
+    // WS04
+    "Температура силовой платы выше допустимого значения",
+    // WS05
+    "Температура платы управления ниже допустимого значения",
+    // WS06
+    "Температура силовой платы ниже допустимого значения",
+};
+
+void tion4s_state_t::report_errors(uint32_t errors) {
+  tion::enum_errors(errors, tion4s_state_t::ERROR_MIN_BIT, tion4s_state_t::ERROR_MAX_BIT, nullptr,
+                    [](uint8_t err, const void *) {
+                      if (err > 0 && (err - 1) < ERRORS_COUNT) {
+                        TION_REPORT_EC(TAG, err, ERRORS[err - 1]);
+                      } else {
+                        TION_REPORT_EC_UNK(TAG, err);
+                      }
+                    });
+  tion::enum_errors(errors, tion4s_state_t::WARNING_MIN_BIT, tion4s_state_t::WARNING_MAX_BIT, nullptr,
+                    [](uint8_t err, const void *) {
+                      if (err > 0 && (err - 1) < WARNINGS_COUNT) {
+                        TION_REPORT_WS(TAG, err, WARNINGS[err - 1]);
+                      } else {
+                        TION_REPORT_WS_UNK(TAG, err);
+                      }
+                    });
+}
+
 uint16_t Tion4sApi::get_state_type() const { return FRAME_TYPE_STATE_RSP; }
 
 void Tion4sApi::read_frame(uint16_t frame_type, const void *frame_data, size_t frame_data_size) {
@@ -311,7 +375,8 @@ void Tion4sApi::request_state() {
 }
 
 Tion4sApi::Tion4sApi() {
-  this->traits_.errors_decoder = tion4s_state_t::decode_errors;
+  this->traits_.errors_decode = tion4s_state_t::decode_errors;
+  this->traits_.errors_report = tion4s_state_t::report_errors;
 
   this->traits_.supports_heater_var = true;
   this->traits_.supports_work_time = true;
@@ -357,7 +422,7 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
   this->state_.comm_source = state.comm_source;
   this->state_.auto_state = state.ma_connected;
   this->state_.filter_state = state.filter_state;
-  this->state_.gate_error_state = state.errors & tion4s_state_t::GATE_ERROR_BIT;
+  this->state_.gate_error_state = (state.errors & tion4s_state_t::GATE_ERROR_BIT) != 0;
   this->state_.gate_position =                                           //-//
       state.gate_position == tion4s_state_t::GATE_POSITION_OUTDOOR       //-//
           ? TionGatePosition::OUTDOOR                                    //-//

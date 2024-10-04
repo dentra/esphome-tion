@@ -16,7 +16,7 @@ bool Tion3sBleIO::ble_reg_for_notify() const {
     return true;
   }
 
-  // при постоянном подключении требуется переподключение, иначе мы никогде не получим notify
+  // при постоянном подключении требуется переподключение, иначе мы никогда не получим notify
   // поэтому всегда подписываемся
   if (this->vport_->is_persistent_connection()) {
     return true;

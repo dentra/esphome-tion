@@ -35,9 +35,9 @@ template<typename T, size_t V> struct BleAdvField {
       this->data = data;
     }
   }
-#ifndef __clang__
-  BleAdvField(const char *data) { memcpy(this->data, data, sizeof(T)); }
-#endif
+  // #ifndef __clang__
+  //   BleAdvField(const char *data) { memcpy(this->data, data, sizeof(T)); }
+  // #endif
 } PACKED;
 
 void Tion4sRC::adv(bool pair) {
@@ -84,8 +84,8 @@ void Tion4sRC::adv(bool pair) {
   } PACKED;
   static_assert(sizeof(TionAdvManuData) == 13);
 
-  // для пульта важна последовательность следования данныйх внутри "рекламы", требуется:
-  // flags, manu, name. esp_ble_gap_config_adv_data послыает данные в последовательности:
+  // для пульта важна последовательность следования данных внутри "рекламы", требуется:
+  // flags, manu, name. esp_ble_gap_config_adv_data посылает данные в последовательности:
   // flags, name, manu. поэтому используем esp_ble_gap_config_adv_data_raw
 
   struct {
@@ -283,7 +283,7 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
         break;
       }
 
-      // TODO доп проверка что структура данных верна, перенести в хидер
+      // TODO доп проверка что структура данных верна, перенести в заголовок
       static_assert(sizeof(FirmwareInfo) == 132);
 
       if (size != sizeof(FirmwareInfo)) {
@@ -373,7 +373,7 @@ void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
 
       const auto fw_size = req->size - sizeof(FirmwareInfo::data);
       if (fw_size != this->fw_size_) {
-        ESP_LOGW(TAG, "Invalid chek size: %" PRIu32, fw_size);
+        ESP_LOGW(TAG, "Invalid check size: %" PRIu32, fw_size);
         this->pr_.write_frame(FRAME_TYPE_UPDATE_ERROR, nullptr, 0);
       }
 
@@ -414,7 +414,7 @@ void Tion4sRC::on_state(const TionState &st) {
   state.data.max_fan_speed = this->api_->get_traits().max_fan_speed;
   state.data.heater_var = st.heater_var;
 
-  TION_RC_DUMP(TAG, "RSP[%u]", state.request_id);
+  TION_RC_DUMP(TAG, "RSP[%" PRIu32 "]", state.request_id);
   TION_RC_DUMP(TAG, "  fan : %u", st.fan_speed);
   TION_RC_DUMP(TAG, "  temp: %d", st.target_temperature);
   TION_RC_DUMP(TAG, "  flow: %u", static_cast<uint8_t>(st.gate_position));

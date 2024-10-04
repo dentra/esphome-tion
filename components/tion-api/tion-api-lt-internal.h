@@ -42,7 +42,13 @@ struct button_presets_t {
 
 // NOLINTNEXTLINE(readability-identifier-naming)
 struct tionlt_state_t {
-  enum { ERROR_MIN_BIT = 0, ERROR_MAX_BIT = 10, WARNING_MIN_BIT = 24, WARNING_MAX_BIT = 27 };
+  enum {
+    ERROR_MIN_BIT = 0,
+    ERROR_MAX_BIT = 10,
+    WARNING_MIN_BIT = 24,
+    WARNING_MAX_BIT = 27,
+    GATE_ERROR_BIT = (1 << 0) | (1 << 1) | (1 << 2),
+  };
 
   enum GateState : uint8_t {
     // закрыто
@@ -85,7 +91,7 @@ struct tionlt_state_t {
   int8_t outdoor_temperature;
   // Байт 6. Текущая температура воздуха после нагревателя (внутри помещения).
   int8_t current_temperature;
-  // Байт 7. Внутренняя температура платы.
+  // Байт 7. Внутренняя температура платы управления.
   int8_t pcb_temperature;
   // Байт 8-23. 8-11 - work_time, 12-15 - fan_time, 16-19 - filter_time, 20-23 - airflow_counter
   tion_lt_state_counters_t counters;
@@ -108,6 +114,7 @@ struct tionlt_state_t {
   static std::string decode_errors(uint32_t errors) {
     return tion::decode_errors(errors, ERROR_MIN_BIT, ERROR_MAX_BIT, WARNING_MIN_BIT, WARNING_MAX_BIT);
   }
+  static void report_errors(uint32_t errors);
 };
 
 struct tionlt_state_get_req_t {

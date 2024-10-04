@@ -8,11 +8,19 @@
 #include "tion-api-defines.h"
 
 namespace dentra {
+namespace tion {
+
+static const char *const TAG = "tion-api-3s";
+
+}
+}  // namespace dentra
+
+namespace dentra {
 namespace tion_3s {
 
 using tion::TionTraits;
 
-#define ERRORS_COUNT 17
+constexpr size_t ERRORS_COUNT = 17;
 
 static const char *const ERRORS[ERRORS_COUNT] = {
     // EC01
@@ -59,13 +67,24 @@ std::string tion3s_state_t::decode_errors(uint32_t errors) {
   return "EC" + std::to_string(errors);
 }
 
-}  // namespace tion_3s
+void tion3s_state_t::report_errors(uint32_t errors) {
+  if (errors > 0) {
+    uint8_t err = static_cast<uint8_t>(errors);
+    if (errors < ERRORS_COUNT) {
+      TION_REPORT_EC(tion::TAG, static_cast<int>(err), ERRORS[err - 1]);
+    } else {
+      TION_REPORT_EC_UNK(tion::TAG, static_cast<int>(err));
+    }
+  }
+}
 
+}  // namespace tion_3s
+}  // namespace dentra
+
+namespace dentra {
 namespace tion {
 
 using namespace tion_3s;
-
-static const char *const TAG = "tion-api-3s";
 
 static const uint8_t PROD[] = {0, TION_3S_AUTO_PROD};
 
@@ -200,7 +219,8 @@ bool Tion3sApi::factory_reset_(const tion::TionState &state) const {
 }
 
 Tion3sApi::Tion3sApi() {
-  this->traits_.errors_decoder = tion3s_state_t::decode_errors;
+  this->traits_.errors_decode = tion3s_state_t::decode_errors;
+  this->traits_.errors_report = tion3s_state_t::report_errors;
 
   this->traits_.supports_sound_state = true;
   this->traits_.supports_gate_position_change = true;
@@ -235,7 +255,7 @@ void Tion3sApi::update_state_(const tion_3s::tion3s_state_t &state) {
   // this->state_.comm_source = state.comm_source;
   this->state_.auto_state = state.flags.ma_connected;
   this->state_.filter_state = state.filter_time <= 30;
-  // this->state_.gate_error_state = state.errors & tion4s_state_t::GATE_ERROR_BIT;
+  this->state_.gate_error_state = state.last_error == tion_3s::tion3s_state_t::GATE_ERROR_NUM;
   this->state_.gate_position =                                                  //-//
       state.gate_position == tion3s_state_t::GATE_POSITION_INDOOR               //-//
           ? TionGatePosition::INDOOR                                            //-//
@@ -282,14 +302,6 @@ void Tion3sApi::dump_state_(const tion_3s::tion3s_state_t &state) const {
   TION_DUMP(TAG, "hours       : %u h", state.hours);
   TION_DUMP(TAG, "minutes     : %u min", state.minutes);
   TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.flags.reserved, tion::get_flag_bits(state.flags.reserved));
-
-  if (state.last_error > 0) {
-    if (state.last_error < ERRORS_COUNT) {
-      TION_LOGE(TAG, "%s", tion_3s::ERRORS[state.last_error - 1]);
-    } else {
-      TION_LOGE(TAG, "Неизвестная ошибка EC %u", state.last_error);
-    }
-  }
 }
 
 }  // namespace tion
