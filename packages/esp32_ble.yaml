@@ -1,5 +1,7 @@
 substitutions:
+  tion_conn: ble
   board: esp32dev
+  board_code: $board
 
 packages:
   # pin the esp-idf framework to 4.4.7

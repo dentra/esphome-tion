@@ -1,5 +1,7 @@
 substitutions:
+  tion_conn: uart
   board: esp32dev
+  board_code: $board
   tx_pin: TX
   rx_pin: RX
   baud_rate: "9600"

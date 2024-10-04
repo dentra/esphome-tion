@@ -7,7 +7,7 @@ substitutions:
   project_source: github://dentra/esphome-tion@$project_branch
   # project source refresh interval
   project_source_refresh: 12h
-  # project idenitfier
+  # project identifier
   project_id: tion
   # node name
   node_name: $project_id
@@ -21,9 +21,9 @@ substitutions:
 esphome:
   name: $node_name
   friendly_name: $friendly_name
-  comment: Tion breezer control
+  comment: https://t.me/esphome_tion
   project:
-    name: "dentra.$project_id"
+    name: "dentra.$project_id-${tion_type}-${tion_conn}-${board_code}"
     version: "$project_version"
   min_version: "2024.8.3"
   platformio_options:
@@ -42,11 +42,6 @@ captive_portal:
 ota:
   - id: esphome_ota
     platform: esphome
-
-logger:
-  logs:
-    esp-idf: INFO
-    light: INFO
 
 external_components:
   - source: $vport_source

@@ -32,6 +32,8 @@ packages:
       - packages/uptime.yaml
       ## Additional Restart button.
       - packages/restart.yaml
+      ## Tion type package
+      - packages/tion_lt.yaml
       ## Unlock Tion 30°C heating.
       #- packages/tion_temperature30c.yaml
       ## Additional energy sensor.
