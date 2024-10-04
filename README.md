@@ -4,7 +4,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.7.1&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2024.8.3&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
@@ -146,7 +146,7 @@ UART подключение различно для разных моделей 
 
 Для UART-подключения `Tion O2 Mac` используется штатный, но доступный только при небольшой
 разборке бризера, разъем. Требуются начальные навыки работы с паяльником для подключения
-разъема типа XH2.54 4pin male к ESP (распиновку см. [здесь](https://github.com/dentra/esphome-tion/issues/4#issuecomment-1910494611))
+разъема типа XH2.54 4pin male к ESP (распиновку см. [здесь](https://github.com/dentra/tion-hardware/blob/master/o2/pin_schema.jpg))
 
 Уточняйте доступность по приобретению готового переходника для подключения стика
 [Lilygo T-Dongle S3](https://github.com/Xinyuan-LilyGO/T-Dongle-S3).
@@ -176,6 +176,9 @@ UART подключение различно для разных моделей 
 * Поместите модифицированный файл в директорию с конфигурацией ESPHome
 * Запустите сборку и прошивку вашей конфигурации
 * Добавьте появившееся устройство в Home Assistant
+
+
+По прошивке доступна [видео-инструкция](https://t.me/esphome_tion/13868).
 
 > [!TIP]
 > MAC-адрес для работы в режиме BLE можно посмотреть в приложении Tion Remote,
