@@ -1,0 +1,29 @@
+substitutions:
+  board: esp32-c6-devkitc-1
+
+packages:
+  tion.esp32_ble: !include esp32_ble.yaml
+
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32_ble:
+  enable_on_boot: false
+
+wifi:
+  on_connect:
+    - ble.enable
+
+esp32:
+  board: $board
+  variant: ESP32C6
+
+declaration:
+  - include: esp_idf_version.h
+
+setup:
+  - lambda: |-
+      #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 3, 0)
+      #error ESP32C6 requires ESP-IDF 5.3.0 and higher
+      #endif
