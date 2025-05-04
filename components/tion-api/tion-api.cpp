@@ -725,16 +725,29 @@ bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
     fan_speed = this->auto_update_func_(current);
     if (fan_speed < this->auto_min_fan_speed_) {
       fan_speed = this->auto_min_fan_speed_;
-
     } else if (fan_speed > this->auto_max_fan_speed_) {
       fan_speed = this->auto_max_fan_speed_;
     }
   } else {
     fan_speed = this->auto_pi_update_(current);
   }
-  if (fan_speed == this->state_.fan_speed) {
+
+  // Если скорость вентиляции 0, то выключаем обогреватель
+  if (fan_speed == 0) {
+    if (this->state_.power_state) {
+      call->set_power_state(false);
+    }
+  } else {
+    // Если вентилятор выключен и мы должны его включить
+    if (!this->state_.power_state) {
+      call->set_power_state(true);
+    }
+  }
+
+  if (fan_speed == this->state_.fan_speed && this->state_.power_state == call) {
     return false;
   }
+
   if (this->state_.boost_time_left > 0) {
     return false;
   }
