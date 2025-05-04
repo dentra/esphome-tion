@@ -719,6 +719,11 @@ bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
     return false;
   }
 
+  if (this->state_.boost_time_left > 0) {
+    TION_LOGV(TAG, "Boost is in progress, skip auto update");
+    return false;
+  }
+
   uint8_t fan_speed = this->state_.fan_speed;
 
   if (this->auto_update_func_) {
@@ -736,25 +741,28 @@ bool TionApiBase::auto_update(uint16_t current, TionStateCall *call) {
   if (fan_speed == 0) {
     if (this->state_.power_state) {
       call->set_power_state(false);
+      TION_LOGV(TAG, "Auto update: power off");
     }
   } else {
     // Если вентилятор выключен и мы должны его включить
     if (!this->state_.power_state) {
       call->set_power_state(true);
+      TION_LOGV(TAG, "Auto update: power on");
     }
   }
 
-  if (fan_speed == this->state_.fan_speed && this->state_.power_state == call) {
+  if (fan_speed != this->state_.fan_speed) {
+    call->set_fan_speed(fan_speed);
+    TION_LOGV(TAG, "Auto update: fan speed %u", fan_speed);
+  }
+
+  if (!call->has_changes()) {
     return false;
   }
 
-  if (this->state_.boost_time_left > 0) {
-    return false;
-  }
-  TION_LOGV(TAG, "Auto new fan speed %u", fan_speed);
   // для понимания, что переключение было из авто-режима, всегда выставляем авто
   call->set_auto_state(true);
-  call->set_fan_speed(fan_speed);
+
   return true;
 }
 
