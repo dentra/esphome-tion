@@ -21,3 +21,5 @@ for type in "${types[@]}"; do
     done
   done
 done
+
+esphome compile $test_dir/tion-multiple.yaml

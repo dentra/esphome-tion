@@ -1,0 +1,92 @@
+substitutions:
+  tion_mac_address: 00:00:00:00:00:00
+  project_source: ../../components
+  project_version: next
+  project_source_refresh: 0s
+  vport_source_refresh: 0s
+
+packages:
+  tion.base: !include ../../packages/base.yaml
+  tion.esp32_ble: !include ../../packages/esp32_ble.yaml
+  tion.lt: !include ../../packages/tion/lt.yaml
+
+api:
+wifi:
+
+ble_client:
+- id: tion_kitchen_ble_client
+  mac_address: F8:96:7A:05:1A:35
+
+climate:
+- enable_fan_auto: false
+  enable_heat_cool: false
+  id: tion_office_breezer
+  name: Office Breezer
+  platform: tion
+  tion_id: tion_office_api
+- enable_fan_auto: false
+  enable_heat_cool: false
+  id: tion_kitchen_breezer
+  name: Kitchen Breezer
+  platform: tion
+  tion_id: tion_kitchen_api
+
+esp32_ble_tracker:
+  scan_parameters:
+    interval: 1100ms
+    window: 1100ms
+
+esphome:
+  friendly_name: ESP32 Office
+  name: esphome-office
+logger: {}
+number: []
+ota:
+- platform: esphome
+
+sensor:
+- entity_category: diagnostic
+  filters:
+    throttle_average: 60s
+  id: tion_office_ble_rssi
+  mac_address: 00:00:00:00:00:00
+  name: Office Breezer RSSI
+  platform: ble_rssi
+- entity_category: diagnostic
+  filters:
+    throttle_average: 60s
+  id: tion_kitchen_ble_rssi
+  mac_address: 00:00:00:00:00:00
+  name: Kitchen Breezer RSSI
+  platform: ble_rssi
+
+tion:
+- batch_timeout: 100ms
+  force_update: false
+  id: tion_office_api
+  restore_state: false
+  state_timeout: 30s
+  type: lt
+  update_interval: 60s
+  vport_id: tion_office_ble_vport
+- batch_timeout: 100ms
+  force_update: false
+  id: tion_kitchen_api
+  restore_state: false
+  state_timeout: 30s
+  type: lt
+  update_interval: 60s
+  vport_id: tion_kitchen_ble_vport
+
+vport:
+- ble_client_id: tion_ble_client
+  connection_timeout: 5s
+  id: tion_office_ble_vport
+  persistent_connection: false
+  platform: tion_lt_ble
+- ble_client_id: tion_kitchen_ble_client
+  connection_timeout: 5s
+  id: tion_kitchen_ble_vport
+  persistent_connection: false
+  platform: tion_lt_ble
+

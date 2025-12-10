@@ -17,9 +17,14 @@ def FILTER_SOURCE_FILES() -> list[str]:
     included_types: list[str] = []
     excluded_types: list[str] = list(TION_ALL_TYPES)
     for tion in CORE.config["tion"]:
-        typ = tion["type"]
-        included_types.append(typ)
-        excluded_types.remove(typ)
+        types = tion["type"]
+        if not isinstance(types, list):
+            types = [types]
+        for typ in types:
+            if typ not in included_types:
+                included_types.append(typ)
+            if typ in excluded_types:
+                excluded_types.remove(typ)
 
     included_ports: list[str] = [
         define.name[10:].lower()
