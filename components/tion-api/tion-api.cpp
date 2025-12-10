@@ -684,7 +684,7 @@ void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
   }
 
   for (auto &&it : this->presets_) {
-    if (strcasecmp(preset, it.name) == 0) {
+    if (it.name && strcasecmp(preset, it.name) == 0) {
       this->activate_preset_ = &it;
       this->active_preset_ = nullptr;
       if (it.has_timer()) {
