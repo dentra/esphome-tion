@@ -129,7 +129,11 @@ void TionApiComponent::state_check_schedule_() {
     if (this->status_has_error()) {
       ESP_LOGW(TAG, "State was not received in %.1f s", this->state_timeout_ * 0.001f);
     } else {
+#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 12, 0)
       this->status_set_error(str_sprintf("State was not received in %.1f s", this->state_timeout_ * 0.001f).c_str());
+#else
+      this->status_set_error(LOG_STR("State was not received"));
+#endif
     }
     // notify subscribers
     this->state_callback_.call(nullptr);
