@@ -62,8 +62,8 @@ template<class C> class TionSelect : public select::Select, public Component, pu
  protected:
   void internal_publish_state_(const char *st) {
     if (st) {
-      if (this->parent_->get_force_update() || !this->has_state() || this->current_option() == nullptr ||
-          std::strcmp(st, this->current_option()) != 0) {
+      if (this->parent_->get_force_update() || !this->has_state() || this->current_option().empty() ||
+          std::strcmp(st, this->current_option().c_str()) != 0) {
         this->publish_state(st);
       }
     }

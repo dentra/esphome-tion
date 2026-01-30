@@ -11,6 +11,7 @@ constexpr static const auto FAN_MODE_LABELS = {"1", "2", "3", "4", "5", "6"};
 
 // ВАЖНО: fan_mode не должен быть nullptr
 inline uint8_t fan_mode_to_speed(const char *fan_mode) { return *fan_mode - '0'; }
+inline uint8_t fan_mode_to_speed(const StringRef &fan_mode) { return fan_mode_to_speed(fan_mode.c_str()); }
 // ВАЖНО: минимальная скорость 1
 inline const char *speed_to_fan_mode(uint8_t fan_speed) { return *(FAN_MODE_LABELS.begin() + (fan_speed - 1)); }
 
@@ -134,7 +135,7 @@ void TionClimate::control(const climate::ClimateCall &call) {
     } else if (call.has_custom_preset()) {
       const auto preset = call.get_custom_preset();
       TION_C_LOGD(TAG, "Set custom preset %s", preset);
-      this->parent_->api()->enable_preset(preset, tion);
+      this->parent_->api()->enable_preset(preset.c_str(), tion);
     }
   }
 
@@ -224,7 +225,7 @@ void TionClimate::on_state_(const TionState &state) {
     const auto active_preset = this->parent_->api()->get_active_preset_name();
     if (const auto climate_preset = std_preset_find(active_preset); !std_preset_is_invalid(climate_preset)) {
       has_changes |= this->set_preset_(climate_preset);
-    } else if (!this->has_custom_preset() || strcasecmp(this->get_custom_preset(), active_preset) != 0) {
+    } else if (!this->has_custom_preset() || strcasecmp(this->get_custom_preset().c_str(), active_preset) != 0) {
       has_changes |= this->set_custom_preset_(active_preset);
     }
   }
