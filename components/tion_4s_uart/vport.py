@@ -1,5 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
+from esphome.components import ota
 from esphome.const import PLATFORM_ESP32
 
 from .. import tion, vport  # pylint: disable=relative-beyond-top-level
@@ -26,5 +27,5 @@ async def to_code(config):
     cg.add(var.set_heartbeat_interval(config[CONF_HEARTBEAT_INTERVAL]))
     cg.add_build_flag("-DTION_ENABLE_HEARTBEAT")
     # enable ota subscription
-    cg.add_define("USE_OTA_STATE_CALLBACK")
+    ota.request_ota_state_listeners()
     cg.add_define("USE_TION_4S")
