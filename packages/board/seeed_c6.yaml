@@ -1,5 +1,5 @@
 substitutions:
-  board: esp32-c6-devkitc-1
+  board: seeed_xiao_esp32c6
   board_code: seeed_xiao_esp32c6
   board_name: Seeed Studio XIAO ESP32C6
   # Tion UART
@@ -10,7 +10,7 @@ substitutions:
   led_pin_inverted: "true"
   led_pin_ignore_strapping_warning: "true"
   # BOOT Button
-  button_pin: GPIO9
+  button_pin: BOOT
 
 packages:
   z.logger_jtag: !include ../z/logger_jtag.yaml
