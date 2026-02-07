@@ -20,8 +20,9 @@ number:
   - platform: template
     id: tion_auto_min_time_delta
     name: Auto Min Time Delta
+    icon: mdi:fan-clock
     optimistic: true
-    min_value: 1
+    min_value: 0
     max_value: 60
     step: 1
     initial_value: 10
@@ -29,6 +30,42 @@ number:
     entity_category: config
     unit_of_measurement: min
     restore_value: true
+  # # Гистерезис.
+  # - platform: template
+  #   id: tion_auto_hysteresis
+  #   name: Auto Hysteresis
+  #   optimistic: true
+  #   min_value: 0
+  #   max_value: 100
+  #   step: 1
+  #   initial_value: 20
+  #   mode: box
+  #   entity_category: config
+  #   unit_of_measurement: ppm
+  #   restore_value: true
+select:
+  # Выбор алгоритма зависимости
+  - platform: template
+    id: tion_auto_alg
+    name: Auto Algorithm
+    optimistic: true
+    options:
+      - Линейный
+      - Квадратичный
+      - Экспоненциальный
+    initial_option: Линейный
+    entity_category: config
+    restore_value: true
+
+switch:
+  # Переключение режима плавного изменения скорости.
+  - platform: template
+    id: tion_auto_use_ramping
+    name: Auto Use Ramping
+    icon: mdi:stairs
+    optimistic: true
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_ON
 
 # Если текущий уровень CO2 отклоняется от целевого значения (setpoint),
 # рассчитывается новая целевая скорость (new_speed) на основе следующих
@@ -46,6 +83,7 @@ number:
 #       изменениями скорости.
 #     * Если прошло меньше времени, чем указано в этом интервале, новая
 #       целевая скорость игнорируется, даже если уровень CO2 изменился.
+#     * Отключается установкой значения в 0.
 #   Плавное изменение скорости (Ramping):
 #     * После определения новой целевой скорости (new_speed), текущая скорость
 #       (cur_speed) не меняется резко, а постепенно приближается к целевой с
@@ -56,7 +94,8 @@ number:
 #         Если текущая скорость выше целевой, она уменьшается на ramp_step.
 #     * Этот процесс продолжается до тех пор, пока текущая скорость не достигнет
 #       целевой.
-#     * На текущий момент ramp_step всегда равен 1
+#     * На текущий момент ramp_step всегда равен 1.
+#     * Отключается через "Auto Use Ramping".
 #   Ограничения скорости:
 #     * Скорость вентилятора всегда ограничивается минимальным (min_speed) и
 #       максимальным (max_speed) значениями, настроенными пользователем.
@@ -83,26 +122,28 @@ tion:
       // Агрессивность вентиляции
       const int aggressiveness = id(tion_auto_aggressiveness).state;
       // Минимальная скорость вентиляции
-      uint8_t min_speed = id(tion_api).api()->get_auto_min_fan_speed();
+      int min_speed = id(tion_api).api()->get_auto_min_fan_speed();
       // Максимальная скорость вентиляции
-      const uint8_t max_speed = id(tion_api).api()->get_auto_max_fan_speed();
+      const int max_speed = id(tion_api).api()->get_auto_max_fan_speed();
       // Текущая скорость вентиляции, важно брать через метод чтобы учесть выкл бризер
-      const uint8_t cur_speed = id(tion_api).api()->get_state().get_fan_speed();
+      const int cur_speed = id(tion_api).api()->get_state().get_fan_speed();
       // Минимальное время переключения вентилятора в миллисекундах
       const uint32_t min_time_delta = uint32_t(id(tion_auto_min_time_delta).state) * 60000;
       // Доступное количество скоростей для изменения минус 1
-      int8_t spd_range = max_speed - min_speed;
+      int spd_range = max_speed - min_speed;
       // Установка шага плавного изменения скорости
-      constexpr uint8_t ramp_step = 1;
-
-      #ifndef USE_ARDUINO
-      auto constrain = [](auto&& amt, auto&& low, auto&& high) { return amt < low ? low : amt > high ? high : amt; };
-      #endif
+      constexpr int ramp_step = 1;
+      // Использовать или нет, режим плавного изменения скорости
+      const bool use_ramping = id(tion_auto_use_ramping).state;
+      // Значение CO2 при котором скорость вентиляции должна включаться на максимум
+      constexpr int co2_critical = 1200;
+      // Гистерезис
+      //int hysteresis = id(tion_auto_hysteresis).state;
 
       // Время последнего обновления скорости
       static uint32_t last_update_time = 0;
 
-      ESP_LOGV("pkg_tion_auto_co2", "{ %d, %d, %u, %u, %u, %d, %" PRIu32 ", %" PRIu32 " }",
+      ESP_LOGV("pkg_tion_auto_co2", "{ %d, %d, %d, %d, %d, %d, %" PRIu32 ", %" PRIu32 " }",
         co2_level, aggressiveness, min_speed, max_speed, cur_speed,
         int(min_time_delta / 60000), last_update_time, millis());
 
@@ -120,50 +161,93 @@ tion:
       // Вычисление отклонения от целевого уровня CO2
       int deviation = co2_level - setpoint;
 
-      // специальная обработка: если минимальная скорость 0,
-      // то поддерживаем скорость 1, пока не достигнем целевой co2
-      if (min_speed == 0 && deviation > 0) {
-        min_speed++;
+      // специальная обработка: если минимальная скорость 0
+      if (min_speed == 0) {
+        // то поддерживаем скорость 1, пока не достигнем целевой co2, но при условии что бризер еще работает
+        if (cur_speed > 0 && deviation > 0) {
+          min_speed++;
+        }
+
+        // дельта СО2 для включения бризера, зависящая от агресивности
+        int max_deviation = (5 - aggressiveness) * 20 + 50;
+
+        // https://t.me/esphome_tion/25792
+        // (для предотвращения дерганины в околоцелевой зоне) если минимальная скорость 0 и текущая 0,
+        // то включим бризер, если текущий СО2 превышает целевой на max_deviation
+        if (cur_speed == 0 && deviation > max_deviation) {
+          min_speed++;
+        }
       }
 
       // Текущее время
       const uint32_t now = millis();
 
-      // Если не было обновлений, например, старт esp, или случилось
-      // переполнение, обновим время последнего обновления и выйдем,
-      // ждем дополнительный вызов вместо переключения вентилятора
-      if (last_update_time == 0 || last_update_time > now) {
-        last_update_time = now;
-        return constrain(cur_speed, min_speed, max_speed);
-      }
+      // Если задано время обновления
+      if (min_time_delta > 0) {
+        // Если не было обновлений, например, старт esp, или случилось
+        // переполнение, обновим время последнего обновления и выйдем,
+        // ждем дополнительный вызов вместо переключения вентилятора
+        if (last_update_time == 0 || last_update_time > now) {
+          last_update_time = now;
+          return std::clamp(cur_speed, min_speed, max_speed);
+        }
 
-      // Расчет временного интервала
-      uint32_t time_delta = now - last_update_time;
+        // Расчет временного интервала
+        uint32_t time_delta = now - last_update_time;
 
-      // Если прошло меньше времени, то оставляем текущую скорость
-      if (time_delta < min_time_delta) {
-        return constrain(cur_speed, min_speed, max_speed);
+        // Если прошло меньше времени, то оставляем текущую скорость
+        if (time_delta < min_time_delta) {
+          return std::clamp(cur_speed, min_speed, max_speed);
+        }
       }
 
       // Новая скорость вентилятора, минимальная по-умолчанию
-      uint8_t new_speed = min_speed;
+      int new_speed = min_speed;
 
       // Изменяем скорость если есть отклонения в большую сторону
       if (deviation > 0) {
-        // Рассчитываем корректировку скорости на основе отклонения и агрессивности
-        uint8_t adj_factor = (uint8_t)((deviation / (float)setpoint) * aggressiveness * spd_range);
+        auto alg = id(tion_auto_alg).active_index();
+        if (*alg == 0) {
+          // Линейный расчет
+          // Рассчитываем корректировку скорости на основе отклонения и агрессивности
+            int adj_factor = (deviation / (float)setpoint) * aggressiveness * spd_range;
+            int adj_speed = min_speed + adj_factor;
+            // Применим расчетную скорость
+            new_speed = adj_speed;
+        } else {
+          // новый алгоритм
+          auto co2_derivative = 1.0f;
 
-        uint8_t adj_speed = min_speed + adj_factor;
+          auto co2_max = co2_critical; // co2_critical - co2_critical_hysteresis;
+          auto co2_target = setpoint; // setpoint + setpoint_hysteresis;
+          auto co2_deviation = deviation; // co2_level - co2_target;
 
-        // Применим расчетную скорость
-        new_speed = adj_speed;
+          float co2_range = co2_max - co2_target;
+
+          float ratio = co2_deviation / co2_range; // линейно
+          if (*alg == 2) { // квадратично
+            ratio = std::pow(ratio, 2.0f);
+          } else if (*alg == 3) { // экспоненциально
+            ratio = std::exp(ratio) - 1.0f;
+          }
+          ratio = std::clamp(ratio, 0.0f, 1.0f);
+
+          float base_aggression = 6.0f / aggressiveness;
+          float dynamic_aggression = base_aggression; // base_aggression * (1.0f + 0.3f * co2_derivative);
+          float speed = min_speed + dynamic_aggression * spd_range * ratio;
+
+          new_speed = std::round(speed);
+        }
       }
 
-      // Плавно изменяем текущую скорость
-      new_speed = constrain(new_speed, cur_speed - ramp_step, cur_speed + ramp_step);
+      // Если доступен режим плавного изменения скорости
+      if (use_ramping) {
+        // Плавно изменяем текущую скорость
+        new_speed = std::clamp(new_speed, cur_speed - ramp_step, cur_speed + ramp_step);
+      }
 
       // Ограничиваем скорость допустимым диапазоном
-      new_speed = constrain(new_speed, min_speed, max_speed);
+      new_speed = std::clamp(new_speed, min_speed, max_speed);
 
       // Если скорость изменилась, то обновим время последнего переключения
       if (cur_speed != new_speed) {
