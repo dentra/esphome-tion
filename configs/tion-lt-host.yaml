@@ -39,10 +39,16 @@ vport:
 tion:
   force_update: false
   presets:
-    Boost:
-      work_time: 1min
-    Скорость 3:
-      fan_speed: 3
+    # Boost:
+    #   work_time: 1min
+    # Скорость 3:
+    #   fan_speed: 3
+    boost: {fan_speed: 6 }
+    5: {fan_speed: 5 }
+    4: {fan_speed: 4 }
+    3: {fan_speed: 3 }
+    2: {fan_speed: 2 }
+    sleep: {fan_speed: 1 }
 
 sensor:
   - id: !remove tion_wifi_signal
