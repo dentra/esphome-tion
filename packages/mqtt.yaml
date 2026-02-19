@@ -1,5 +1,8 @@
 substitutions:
+  tion_conn: "mqtt"
   time_platform: sntp
+  mqtt_host: ""
+  mqtt_port: 1883
 
 mqtt:
   publish_nan_as_none: true

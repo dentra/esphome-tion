@@ -1,5 +1,6 @@
 substitutions:
   time_platform: sntp
+  mqtt_port: 4444
 
 esphome:
   platformio_options:
