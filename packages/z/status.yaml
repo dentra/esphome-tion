@@ -21,12 +21,21 @@ light:
       inverted: $led_pin_inverted
       ignore_strapping_warning: $led_pin_ignore_strapping_warning
     effects:
-      - strobe:
-          name: "fast_pulse"
-          colors:
-            - state: true
-              duration: 0.1s
-            - state: false
-              duration: 0.1s
+      - lambda:
+          name: fast_pulse
+          update_interval: 0.1s
+          lambda: |-
+            static bool state = false;
+            auto led = id(z_status_led);
+            auto call = state ? led->turn_on() : led->turn_off();
+            call.perform();
+            state = !state;
+      # - strobe:
+      #     name: "fast_pulse"
+      #     colors:
+      #       - state: true
+      #         duration: 0.1s
+      #       - state: false
+      #         duration: 0.1s
 
 

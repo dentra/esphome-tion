@@ -4,6 +4,7 @@ substitutions:
   button_pin: GPIO0
   button_pin_inverted: "true"
   button_pin_ignore_strapping_warning: "true"
+  button_pin_mode_pullup: false
 
 binary_sensor:
   - platform: gpio
@@ -16,11 +17,15 @@ binary_sensor:
       number: $button_pin
       inverted: $button_pin_inverted
       ignore_strapping_warning: $button_pin_ignore_strapping_warning
+      mode:
+        input: true
+        pullup: ${button_pin_mode_pullup}
     on_multi_click:
       - timing:
           - on for at least 7s
         then:
           - lambda: |-
+              ESP_LOGI("z/button", "Reset signal from user button");
               auto call = id(z_status_led).turn_on();
               call.set_effect("fast_pulse");
               call.perform();
@@ -30,3 +35,4 @@ binary_sensor:
           - delay: 200ms
           - lambda: |-
               App.safe_reboot();
+

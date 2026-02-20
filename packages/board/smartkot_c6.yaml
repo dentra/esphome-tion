@@ -1,0 +1,53 @@
+substitutions:
+  board: seeed_xiao_esp32c6
+  board_code: smartkot-esp32-c6
+  board_name: SmartKot Tion
+  # Tion UART
+  tx_pin: $u0txd_pin
+  rx_pin: $u0rxd_pin
+  # Tion UART BLE
+  proxy_tx_pin: GPIO5
+  proxy_rx_pin: GPIO4
+  # USER LED 1
+  power_led_pin: GPIO1
+  # USER LED 2
+  status_led_pin: GPIO7
+  # LED Indication
+  led_pin: $status_led_pin
+  led_pin_inverted: true
+  led_pin_ignore_strapping_warning: false
+  # BOOT Button
+  button_pin: BOOT
+  button_pin_mode_pullup: true
+
+packages:
+  z.logger_jtag: !include ../z/logger_jtag.yaml
+  z.status: !include ../z/status.yaml
+  z.button: !include ../z/button.yaml
+  z.package_check: !include ../z/check_esp32_c6.yaml
+
+output:
+  - platform: gpio
+    id: power_led
+    pin:
+      number: $power_led_pin
+      inverted: false
+
+esphome:
+  platformio_options:
+    # https://documentation.espressif.com/esp32-c6-mini-1_mini-1u_datasheet_en.pdf
+    board_build.flash_mode: qio
+  on_boot:
+    - lambda: |-
+        id(power_led).turn_on();
+
+esp32:
+  flash_size: 4MB
+  framework:
+    sdkconfig_options:
+      # Fix flash size warning
+      CONFIG_ESPTOOLPY_FLASHSIZE_4MB: y
+      # Enable QIO mode
+      CONFIG_ESPTOOLPY_FLASHMODE_QIO: "y"
+      CONFIG_FLASHMODE_QIO: "y"
+
