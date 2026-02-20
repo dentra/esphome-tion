@@ -325,8 +325,8 @@ class TionApiBase {
   void set_auto_pi_data(float kp, float ti, int db);
 #endif
   void set_auto_setpoint(uint16_t setpoint);
-  void set_auto_min_fan_speed(uint8_t min_fan_speed);
-  void set_auto_max_fan_speed(uint8_t max_fan_speed);
+  void set_auto_min_fan_speed(uint8_t auto_min_fan_speed);
+  void set_auto_max_fan_speed(uint8_t auto_max_fan_speed);
   uint16_t get_auto_setpoint() const { return this->auto_setpoint_; }
   uint8_t get_auto_min_fan_speed() const { return this->auto_min_fan_speed_; }
   uint8_t get_auto_max_fan_speed() const { return this->auto_max_fan_speed_; }

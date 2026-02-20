@@ -423,7 +423,7 @@ void TionApiBase::notify_state_(uint32_t request_id) {
 
   if (this->is_boost_running()) {
     // если изменили скорость вентиляции или выключили бризер
-    if (this->state_.get_fan_speed() != this->traits_.max_fan_speed) {
+    if (this->state_.get_fan_speed() != this->state_.max_fan_speed) {
       TION_LOGD(TAG, "Boost canceled by user action");
       // пересохраняем изменившиеся данные, для восстановления
       this->boost_save_state_();
@@ -551,7 +551,7 @@ void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
     return;
   }
 
-  if (this->state_.get_fan_speed() == this->traits_.max_fan_speed) {
+  if (this->state_.get_fan_speed() == this->state_.max_fan_speed) {
     TION_LOGW(TAG, "Fan is already running at maximum speed");
     return;
   }
@@ -565,7 +565,7 @@ void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
   this->boost_save_.start_time = this->state_.work_time;
   this->boost_save_state_();
   // скорость может быть переопределена пресетом
-  call->set_fan_speed(this->traits_.max_fan_speed);
+  call->set_fan_speed(this->state_.max_fan_speed);
   this->boost_preset_().data.to_call(call);
   // дополнительно оставим авто-режим в текущем положении
   call->set_auto_state(this->state_.auto_state);
@@ -751,33 +751,33 @@ void TionApiBase::set_auto_pi_data(float kp, float ti, int db) {
 }
 #endif
 
-void TionApiBase::set_auto_min_fan_speed(uint8_t min_fan_speed) {
-  if (min_fan_speed > this->traits_.max_fan_speed - 1) {
-    TION_LOGW(TAG, "Invalid min fan speed %u", min_fan_speed);
+void TionApiBase::set_auto_min_fan_speed(uint8_t auto_min_fan_speed) {
+  if (auto_min_fan_speed > this->traits_.max_fan_speed - 1) {
+    TION_LOGW(TAG, "Invalid min fan speed %u", auto_min_fan_speed);
     return;
   }
-  this->auto_min_fan_speed_ = min_fan_speed;
+  this->auto_min_fan_speed_ = auto_min_fan_speed;
   TION_LOGD(TAG, "New auto min fan speed: %u", this->auto_min_fan_speed_);
 
-  if (min_fan_speed >= this->auto_max_fan_speed_) {
-    this->auto_max_fan_speed_ = min_fan_speed + 1;
+  if (auto_min_fan_speed >= this->auto_max_fan_speed_) {
+    this->auto_max_fan_speed_ = auto_min_fan_speed + 1;
     TION_LOGD(TAG, "Fix auto max fan speed: %u", this->auto_max_fan_speed_);
   }
 
   this->auto_update_fan_speed_();
 }
 
-void TionApiBase::set_auto_max_fan_speed(uint8_t max_fan_speed) {
-  if (max_fan_speed < 1 || max_fan_speed > this->traits_.max_fan_speed) {
-    TION_LOGW(TAG, "Invalid max fan speed %u", max_fan_speed);
+void TionApiBase::set_auto_max_fan_speed(uint8_t auto_max_fan_speed) {
+  if (auto_max_fan_speed < 1 || auto_max_fan_speed > this->traits_.max_fan_speed) {
+    TION_LOGW(TAG, "Invalid max fan speed %u", auto_max_fan_speed);
     return;
   }
 
-  this->auto_max_fan_speed_ = max_fan_speed;
+  this->auto_max_fan_speed_ = auto_max_fan_speed;
   TION_LOGD(TAG, "New auto max fan speed: %u", this->auto_max_fan_speed_);
 
-  if (max_fan_speed <= this->auto_min_fan_speed_) {
-    this->auto_min_fan_speed_ = max_fan_speed - 1;
+  if (auto_max_fan_speed <= this->auto_min_fan_speed_) {
+    this->auto_min_fan_speed_ = auto_max_fan_speed - 1;
     TION_LOGD(TAG, "Fix auto min fan speed: %u", this->auto_min_fan_speed_);
   }
 
