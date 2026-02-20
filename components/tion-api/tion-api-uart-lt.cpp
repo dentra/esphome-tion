@@ -181,8 +181,9 @@ TionLtUartProtocol::read_frame_result_t TionLtUartProtocol::read_frame_(tion::Ti
 
   auto *str = reinterpret_cast<const char *>(this->buf_);
   TION_LT_TRACE(TAG, "RX: %s", str);
-  if (this->busy_ > 0) {
-    TION_LT_TRACE(TAG, "write command in progress: %" PRIu32, this->busy_);
+  auto busy = this->busy_.load();
+  if (busy > 0) {
+    TION_LT_TRACE(TAG, "write command in progress: %" PRIu32, busy);
   } else if (std::strncmp(str, ST_MODE, sizeof(ST_MODE) - 1) == 0) {
     // StandBy or Work
     str = str + sizeof(ST_MODE) - 1;
@@ -331,25 +332,31 @@ bool TionLtUartProtocol::write_frame(uint16_t type, const void *data, size_t siz
 
       if (this->t_data.fan_speed != set.fan_speed) {
         this->write_cmd_(CMD_SET_SPEED, static_cast<int8_t>(set.fan_speed));
+        delay(10);
       }
       if (this->t_data.target_temperature != set.target_temperature) {
         this->write_cmd_(CMD_SET_TEMP, set.target_temperature);
+        delay(10);
       }
       if (this->t_data.heater_state != set.heater_state) {
         this->write_cmd_(set.heater_state ? CMD_SET_HEATER_ON : CMD_SET_HEATER_OFF);
+        delay(10);
       }
       if (this->t_data.sound_state != set.sound_state) {
         this->write_cmd_(set.sound_state ? CMD_SET_SOUND_STATE_ON : CMD_SET_SOUND_STATE_OFF);
         // команду можем выполнить, но состояние прочитать не можем. сохраним его самостоятельно
         this->t_data.sound_state = set.sound_state;
+        delay(10);
       }
       if (this->t_data.led_state != set.led_state) {
         this->write_cmd_(set.led_state ? CMD_SET_LED_STATE_ON : CMD_SET_LED_STATE_OFF);
         // команду можем выполнить, но состояние прочитать не можем. сохраним его самостоятельно
         this->t_data.led_state = set.led_state;
+        delay(10);
       }
       if (this->t_data.power_state != set.power_state) {
         this->write_cmd_(set.power_state ? CMD_POWER_ON : CMD_POWER_OFF);
+        delay(10);
       }
 
       // дополнительно сохраним состояния, которым не можем передать в бризер
