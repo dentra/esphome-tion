@@ -39,6 +39,7 @@ preferences:
 
 wifi:
   ap:
+  min_auth_mode: WPA2
 captive_portal:
 
 ota:
@@ -60,8 +61,6 @@ external_components:
       - setup
       - dtu
       - declaration
-      - web_menu
-      - settings
     refresh: $vport_source_refresh
   - source: $project_source
     refresh: $project_source_refresh

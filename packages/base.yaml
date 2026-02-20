@@ -33,6 +33,7 @@ preferences:
 
 wifi:
   ap:
+  min_auth_mode: WPA2
 captive_portal:
 
 ota:
