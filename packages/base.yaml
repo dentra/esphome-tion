@@ -26,7 +26,7 @@ esphome:
   project:
     name: "dentra.$project_id-${tion_type}-${tion_port}-${board_code}${'-mqtt' if tion_conn == 'mqtt' else '-api'}"
     version: "$project_version"
-  min_version: "2026.1.3"
+  min_version: "2026.2.0"
 
 preferences:
   flash_write_interval: 10min
