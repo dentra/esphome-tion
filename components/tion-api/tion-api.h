@@ -117,6 +117,11 @@ class TionState {
     TionGatePosition gate_position : 4;
   };
 
+  // максимальная допустимая в данный момент скорость вентиляции.
+  // изменяется в меньшую сторону при отрицательных температурах.
+  // поддерживается моделями Lite и 4S.
+  uint8_t max_fan_speed;
+
   // Температура до нагревателя.
   int8_t outdoor_temperature;
   // Температура после нагревателя.
@@ -168,7 +173,7 @@ class TionState {
   bool is_heating(const TionTraits &traits) const;
 
   // backward compatibility methods
-  bool is_initialized() const { return this->initialized || this->fan_speed > 0; }
+  bool is_initialized() const { return this->initialized || this->max_fan_speed > 0; }
   const char *get_gate_position_str(const TionTraits &traits) const;
   void dump(const char *tag, const TionTraits &traits) const;
 };

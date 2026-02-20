@@ -284,7 +284,7 @@ void Tion3sApi::update_state_(const tion_3s::tion3s_state_t &state) {
   this->state_.filter_time_left = uint32_t(state.filter_time > 360 ? 1 : state.filter_time) * (24 * 3600);
   // this->state_.airflow_counter = state.counters.airflow_counter;
   // this->traits_.heater_present = TION_3S_HEATER_POWER;
-  // this->traits_.max_fan_speed = state.max_fan_speed;
+  this->state_.max_fan_speed = this->traits_.max_fan_speed;
   // this->traits_.min_target_temperature = -30;
   // this->traits_.min_target_temperature = 25;
   // this->state_.hardware_version=dev_info.hardware_version;

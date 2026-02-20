@@ -438,7 +438,7 @@ void Tion4sApi::update_state_(const tion4s_state_t &state) {
           : state.heater_present == tion4s_state_t::HEATER_PRESENT_1400W  //-//
                 ? TION_4S_HEATER_POWER2                                   //-//
                 : 0;                                                      //-//
-  this->traits_.max_fan_speed = state.max_fan_speed;
+  this->state_.max_fan_speed = state.max_fan_speed;
   // this->traits_.min_target_temperature = -30;
   // this->traits_.min_target_temperature = 25;
   // this->state_.hardware_version = dev_info.hardware_version;

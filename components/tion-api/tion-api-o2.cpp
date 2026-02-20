@@ -373,7 +373,7 @@ void TionO2Api::update_state_(const tiono2_state_t &state) {
   this->state_.filter_time_left = state.filter_time;
   // this->state_.airflow_counter = 0;
   // this->traits_.max_heater_power = 1450/10;
-  // this->traits_.max_fan_speed = 4;
+  this->state_.max_fan_speed = this->traits_.max_fan_speed;
   // this->traits_.min_target_temperature = -30;
   // this->traits_.min_target_temperature = 25;
   // this->state_.hardware_version = dev_info.hardware_version;

@@ -204,6 +204,7 @@ sensor:
   - { platform: tion, name: sensor_airflow_counter, type: airflow_counter }
   - { platform: tion, name: sensor_pcb_ctl_temperature, type: pcb_ctl_temperature }
   - { platform: tion, name: sensor_pcb_pwr_temperature, type: pcb_pwr_temperature }
+  - { platform: tion, name: sensor_max_fan_speed, type: max_fan_speed }
 
 switch:
   ## Boost/Turbo switch.

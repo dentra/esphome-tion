@@ -288,6 +288,10 @@ struct FanSpeed {
   static uint8_t get(const TionState &state) { return state.get_fan_speed(); }
 };
 
+struct MaxFanSpeed {
+  static uint8_t get(const TionState &state) { return state.max_fan_speed; }
+};
+
 struct OutdoorTemperature {
   static int8_t get(const TionState &state) { return state.outdoor_temperature; }
 };

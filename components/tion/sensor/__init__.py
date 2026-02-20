@@ -36,6 +36,11 @@ PC = new_pc(
             CONF_ACCURACY_DECIMALS: 0,
             CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
+        "max_fan_speed": {
+            CONF_ICON: "mdi:fan-alert",
+            CONF_ACCURACY_DECIMALS: 0,
+            CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
         "outdoor_temperature": {
             CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
             CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
@@ -167,6 +172,7 @@ PC = new_pc(
         "fan": "fan_speed",
         "speed": "fan_speed",
         "indoor_temperature": "current_temperature",
+        "fan_max_speed": "max_fan_speed",
     }
 )
 

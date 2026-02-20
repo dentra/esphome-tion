@@ -267,7 +267,7 @@ void TionLtApi::update_state_(const tionlt_state_t &state) {
   this->state_.airflow_counter = state.counters.airflow_counter;
   this->state_.airflow_m3 = state.counters.airflow();
   this->traits_.max_heater_power = state.heater_present ? TION_LT_HEATER_POWER : 0;
-  this->traits_.max_fan_speed = state.max_fan_speed;
+  this->state_.max_fan_speed = state.max_fan_speed;
   // this->traits_.min_target_temperature = -30;
   // this->traits_.min_target_temperature = 25;
   // this->state_.hardware_version = dev_info.hardware_version;
