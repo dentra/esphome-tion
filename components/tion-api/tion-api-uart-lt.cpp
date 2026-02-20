@@ -6,6 +6,10 @@
 #include "utils.h"
 #include "log.h"
 
+#ifdef TION_ESPHOME
+inline void delay(uint32_t ms) { esphome::delay(ms); }
+#endif
+
 #include "tion-api-defines.h"
 #include "tion-api-internal.h"
 #include "tion-api-lt-internal.h"
