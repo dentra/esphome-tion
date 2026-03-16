@@ -1,7 +1,8 @@
 substitutions:
   board: seeed_xiao_esp32c6
-  board_code: seeed_xiao_esp32c6
-  board_name: Seeed Studio XIAO ESP32C6
+  tion:
+    board_code: $board
+    board_name: Seeed Studio XIAO ESP32C6
   # Tion UART
   tx_pin: $u0txd_pin
   rx_pin: $u0rxd_pin

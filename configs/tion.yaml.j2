@@ -296,7 +296,7 @@ sensor:
   ## Additional test-only entities
   {%- for typ in ["fan_speed", "current_temperature", "target_temperature", "power", "heater_var", "fan_power", "airflow",
             "filter_time_left", "work_time", "work_time_days", "fan_time", "fan_time_days", "airflow_counter",
-            "pcb_ctl_temperature", "pcb_pwr_temperature"] %}
+            "pcb_ctl_temperature", "pcb_pwr_temperature", "max_fan_speed"] %}
   - { platform: tion, name: sensor_{{ typ }}, type: {{ typ }} }
   {%- endfor %}
 {%- endif %}

@@ -17,14 +17,15 @@ substitutions:
   vport_version: "master"
   vport_source: github://dentra/esphome-components@$vport_version
   vport_source_refresh: 1d
-  tion_conn: ""
+  tion:
+    conn: api # default connection type
 
 esphome:
   name: $node_name
   friendly_name: $friendly_name
   comment: https://t.me/esphome_tion
   project:
-    name: "dentra.$project_id-${tion_type}-${tion_port}-${board_code}${'-mqtt' if tion_conn == 'mqtt' else '-api'}"
+    name: "dentra.$project_id-${[tion.type, tion.port, tion.board_code, tion.conn] | join('-')}"
     version: "$project_version"
   min_version: "2026.2.0"
 

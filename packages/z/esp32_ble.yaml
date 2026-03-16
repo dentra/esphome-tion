@@ -1,5 +1,6 @@
 substitutions:
-  tion_port: ble
+  tion:
+    port: ble
 
 packages:
   z.esp32: !include esp32.yaml

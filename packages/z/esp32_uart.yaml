@@ -1,5 +1,6 @@
 substitutions:
-  tion_port: uart
+  tion:
+    port: uart
 
 packages:
   z.esp32: !include esp32.yaml

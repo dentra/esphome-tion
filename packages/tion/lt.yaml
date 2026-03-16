@@ -1,5 +1,6 @@
 substitutions:
   tion_package_not_included: "false"
-  tion_type: lt
-  tion_model: Lite
+  tion:
+    type: lt
+    model: Lite
   baud_rate: "115200"

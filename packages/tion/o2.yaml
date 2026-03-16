@@ -1,5 +1,6 @@
 substitutions:
   tion_package_not_included: "false"
-  tion_type: o2
-  tion_model: O2 Mac
+  tion:
+    type: o2
+    model: O2 Mac
   baud_rate: "115200"

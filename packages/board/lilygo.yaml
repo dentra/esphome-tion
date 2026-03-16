@@ -1,7 +1,8 @@
 substitutions:
   board: esp32-s3-devkitc-1
-  board_code: lilygo-t-dongle-s3
-  board_name: LilyGo T-Dongle-S3
+  tion:
+    board_code: lilygo-t-dongle-s3
+    board_name: LilyGo T-Dongle-S3
   # Tion UART
   tx_pin: $usb_dp_pin
   rx_pin: $usb_dm_pin

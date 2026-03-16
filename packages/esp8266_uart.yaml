@@ -1,8 +1,9 @@
 substitutions:
-  tion_port: uart
   # Board definition
   board: esp01_1m
-  board_code: $board
+  tion:
+    port: uart
+    board_code: $board
 
 packages:
   # Make sure logging is not using the serial port

@@ -1,7 +1,8 @@
 substitutions:
   tion_package_not_included: "false"
-  tion_type: 3s
-  tion_model: 3S
+  tion:
+    type: 3s
+    model: 3S
   baud_rate: "115200"
 
 packages:

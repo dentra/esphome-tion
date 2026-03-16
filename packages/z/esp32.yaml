@@ -1,5 +1,6 @@
 substitutions:
-  board_code: $board
+  tion:
+    board_code: $board
 
 packages:
   z.assert_esp: !include assert_esp.yaml
