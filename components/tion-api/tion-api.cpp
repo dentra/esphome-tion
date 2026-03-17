@@ -894,8 +894,11 @@ uint8_t TionApiBase::auto_pi_update_(uint16_t current) {
 #endif
 
 bool TionApiBase::auto_is_valid() const {
-  return !!this->auto_update_func_ ||
-         (this->auto_setpoint_ > 400 && this->auto_min_fan_speed_ < this->auto_max_fan_speed_);
+  return !!this->auto_update_func_
+#ifdef TION_ENABLE_PI_CONTROLLER
+         || (this->auto_setpoint_ > 400 && this->auto_min_fan_speed_ < this->auto_max_fan_speed_);
+#endif
+  ;
 }
 
 }  // namespace tion

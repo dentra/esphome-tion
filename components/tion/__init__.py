@@ -119,7 +119,9 @@ BUTTON_PRESETS_SCHEMA = cv.Schema(
 
 AUTO_SCHEMA = cv.Schema(
     {
-        cv.Required(CONF_AUTO_CO2): cv.use_id(esphome_sensor.Sensor),
+        cv.Required(CONF_AUTO_CO2): cv.Any(
+            cv.use_id(esphome_sensor.Sensor), cv.boolean
+        ),
         cv.Optional(CONF_AUTO_SETPOINT): cv.int_range(500, 1400),
         cv.Inclusive(CONF_AUTO_MIN_FAN_SPEED, "auto_fan_speed"): cv.int_range(0, 5),
         cv.Inclusive(CONF_AUTO_MAX_FAN_SPEED, "auto_fan_speed"): cv.int_range(1, 6),
@@ -277,12 +279,12 @@ def _setup_tion_api_button_presets(config: dict, var: cg.MockObj):
 async def _setup_auto(config: dict, var):
     api = var.Papi()
 
-    code = f"{var}->auto_update(x);"
-    lam = await cg.process_lambda(
-        value=core.Lambda(code), parameters=[(cg.float_, "x")], capture=""
-    )
-
-    cg.add(cg.MockObj(config[CONF_AUTO_CO2].id, "->").add_on_state_callback(lam))
+    if not isinstance(config[CONF_AUTO_CO2], bool):
+        code = f"{var}->auto_update(x);"
+        lam = await cg.process_lambda(
+            value=core.Lambda(code), parameters=[(cg.float_, "x")], capture=""
+        )
+        cg.add(cg.MockObj(config[CONF_AUTO_CO2].id, "->").add_on_state_callback(lam))
 
     cgp.setup_value(config, CONF_AUTO_SETPOINT, api.set_auto_setpoint)
     cgp.setup_value(config, CONF_AUTO_MIN_FAN_SPEED, api.set_auto_min_fan_speed)
