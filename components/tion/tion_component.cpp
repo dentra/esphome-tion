@@ -39,16 +39,8 @@ void TionApiComponent::call_setup() {
   }
 }
 
-// обработка и обновление App.app_state_ происходит только для компонентов
-// переопределяющих loop или call_loop (см. application.cpp:148)
-void TionApiComponent::call_loop() { PollingComponent::call_loop(); }
-
 void TionApiComponent::dump_config() {
-#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 9, 0)
-  ESP_LOGCONFIG(TAG, "%s:", this->get_component_source());
-#else
   ESP_LOGCONFIG(TAG, "%s:", LOG_STR_ARG(this->get_component_log_str()));
-#endif
   LOG_UPDATE_INTERVAL(this);
   ESP_LOGCONFIG(TAG, "  Force update: %s", ONOFF(this->force_update_));
   ESP_LOGCONFIG(TAG, "  State timeout: %.1f s", this->state_timeout_ * 0.001f);
@@ -129,11 +121,7 @@ void TionApiComponent::state_check_schedule_() {
     if (this->status_has_error()) {
       ESP_LOGW(TAG, "State was not received in %.1f s", this->state_timeout_ * 0.001f);
     } else {
-#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 12, 0)
-      this->status_set_error(str_sprintf("State was not received in %.1f s", this->state_timeout_ * 0.001f).c_str());
-#else
       this->status_set_error(LOG_STR("State was not received"));
-#endif
     }
     // notify subscribers
     this->state_callback_.call(nullptr);

@@ -7,11 +7,12 @@
 #include "esphome/components/climate/climate.h"
 
 #include "../tion_component.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
-class TionClimate : public climate::Climate, public Component, public Parented<TionApiComponent> {
+class TionClimate : public EntityExtension<climate::Climate>, public Component, public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
 
  public:

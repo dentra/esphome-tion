@@ -1,5 +1,6 @@
 #pragma once
 
+#include "esphome/core/version.h"
 #include "esphome/core/component.h"
 #include "esphome/core/helpers.h"
 
@@ -82,8 +83,9 @@ template<typename C> class Controller {
 
   template<typename T> static void mark_unsupported_entity(T *entity) {
     report_unsupported(entity);
-    entity->set_icon("mdi:help");
-    entity->set_internal(true);
+    // esphome 2026.3.0 and up does not support directly set icons
+    // entity->set_icon("mdi:help");
+    entity->ext_set_internal(true);
   }
 
   template<typename T> static void mark_unsupported(T *component) {

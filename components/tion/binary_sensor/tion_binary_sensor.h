@@ -10,13 +10,16 @@
 
 #include "../tion_component.h"
 #include "../tion_properties.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
 // C - PropertyController
 template<class C>
-class TionBinarySensor : public binary_sensor::BinarySensor, public Component, public Parented<TionApiComponent> {
+class TionBinarySensor : public EntityExtension<binary_sensor::BinarySensor>,
+                         public Component,
+                         public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
   using PC = property_controller::Controller<C>;
 
@@ -41,14 +44,8 @@ class TionBinarySensor : public binary_sensor::BinarySensor, public Component, p
     }
     this->parent_->add_on_state_callback([this](const TionState *state) {
       if (!PC::publish_state(this, state)) {
-        this->set_has_state(false);
-#if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 7, 0)
-        this->state_callback_.call(false);
-#elif ESPHOME_VERSION_CODE < VERSION_CODE(2025, 11, 5)
-        this->set_state_({});
-#else
         this->set_new_state({});
-#endif
+        this->set_has_state(false);
       }
     });
   }

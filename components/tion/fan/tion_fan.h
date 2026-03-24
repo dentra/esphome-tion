@@ -7,11 +7,12 @@
 #include "esphome/components/fan/fan.h"
 
 #include "../tion_component.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
-class TionFan : public fan::Fan, public Component, public Parented<TionApiComponent> {
+class TionFan : public EntityExtension<fan::Fan>, public Component, public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
 
  public:

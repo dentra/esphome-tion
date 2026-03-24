@@ -12,15 +12,6 @@ mqtt:
 setup:
   - depends: mqtt as p_mqtt
     lambda: |-
-      #if ESPHOME_VERSION_CODE < VERSION_CODE(2025, 0, 0)
-      if (App.is_name_add_mac_suffix_enabled()) {
-        const auto app_name = str_sanitize(App.get_name());
-        if (str_startswith(app_name, p_mqtt->get_topic_prefix())) {
-          p_mqtt->set_topic_prefix(app_name);
-        }
-      }
-      #endif
-
       #ifdef TION_SPRUTHUB_SUPPORT
       const bool is_spruthub = true;
       #else

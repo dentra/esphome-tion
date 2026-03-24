@@ -9,12 +9,14 @@
 
 #include "../tion_component.h"
 #include "../tion_properties.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
 // C - PropertyController
-template<class C> class TionSwitch : public switch_::Switch, public Component, public Parented<TionApiComponent> {
+template<class C>
+class TionSwitch : public EntityExtension<switch_::Switch>, public Component, public Parented<TionApiComponent> {
   friend class property_controller::Controller<C>;
 
   constexpr static const auto *TAG = "tion_switch";

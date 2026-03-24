@@ -9,12 +9,14 @@
 
 #include "../tion_component.h"
 #include "../tion_properties.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
 // C - PropertyController
-template<class C> class TionSelect : public select::Select, public Component, public Parented<TionApiComponent> {
+template<class C>
+class TionSelect : public EntityExtension<select::Select>, public Component, public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
   using PC = property_controller::Controller<C>;
   constexpr static const auto *TAG = "tion_select";

@@ -8,12 +8,14 @@
 
 #include "../tion_component.h"
 #include "../tion_properties.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
 // C - PropertyController
-template<class C> class TionSensor : public sensor::Sensor, public Component, public Parented<TionApiComponent> {
+template<class C>
+class TionSensor : public EntityExtension<sensor::Sensor>, public Component, public Parented<TionApiComponent> {
   using TionState = dentra::tion::TionState;
   using PC = property_controller::Controller<C>;
 

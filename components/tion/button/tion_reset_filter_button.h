@@ -1,5 +1,7 @@
 #pragma once
 
+#include "esphome/core/version.h"
+
 #ifdef USE_SWITCH
 #include "esphome/components/switch/switch.h"
 #endif
@@ -18,7 +20,11 @@ class TionResetFilterButton : public TionButton<property_controller::button::Res
     TionButton::setup();
     if (this->is_failed()) {
       if (this->confirm_) {
-        PC::mark_unsupported_entity(this->confirm_);
+        // PC::mark_unsupported_entity(this->confirm_);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        this->confirm_->set_internal(true);
+#pragma GCC diagnostic pop
       }
       return;
     }

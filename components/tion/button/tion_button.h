@@ -9,12 +9,14 @@
 
 #include "../tion_component.h"
 #include "../tion_properties.h"
+#include "../tion_extension.h"
 
 namespace esphome {
 namespace tion {
 
 // C - PropertyController
-template<class C> class TionButton : public button::Button, public Component, public Parented<TionApiComponent> {
+template<class C>
+class TionButton : public EntityExtension<button::Button>, public Component, public Parented<TionApiComponent> {
  protected:
   using TionState = dentra::tion::TionState;
   using PC = property_controller::Controller<C>;

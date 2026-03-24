@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "esphome/core/defines.h"
+#include "esphome/core/version.h"
 #include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/component.h"
@@ -63,7 +64,10 @@ class TionApiComponent : public PollingComponent {
 
   void dump_config() override;
   void call_setup() override;
-  void call_loop() override;
+  // обработка и обновление App.app_state_ происходит только для компонентов
+  // переопределяющих looping_components (см. application.cpp)
+  void loop() override {}
+
   float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
 
   void update() override;

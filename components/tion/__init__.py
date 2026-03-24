@@ -394,18 +394,42 @@ AutoCondition = tion_ns.class_("AutoCondition", automation.Condition)
 FanSpeedSetAction = tion_ns.class_("FanSpeedSetAction", automation.Action)
 
 
-@register_action("tion.power.toggle", PowerToggleAction, TION_ACTION_SCHEMA)
-@register_action("tion.power.turn_on", PowerTurnOnAction, TION_ACTION_SCHEMA)
-@register_action("tion.power.turn_off", PowerTurnOffAction, TION_ACTION_SCHEMA)
-@register_action("tion.heater.toggle", HeaterToggleAction, TION_ACTION_SCHEMA)
-@register_action("tion.heater.turn_on", HeaterTurnOnAction, TION_ACTION_SCHEMA)
-@register_action("tion.heater.turn_off", HeaterTurnOffAction, TION_ACTION_SCHEMA)
-@register_action("tion.boost.toggle", BoostToggleAction, TION_ACTION_SCHEMA)
-@register_action("tion.boost.turn_on", BoostTurnOnAction, TION_ACTION_SCHEMA)
-@register_action("tion.boost.turn_off", BoostTurnOffAction, TION_ACTION_SCHEMA)
-@register_action("tion.auto.toggle", AutoToggleAction, TION_ACTION_SCHEMA)
-@register_action("tion.auto.turn_on", AutoTurnOnAction, TION_ACTION_SCHEMA)
-@register_action("tion.auto.turn_off", AutoTurnOffAction, TION_ACTION_SCHEMA)
+@register_action(
+    "tion.power.toggle", PowerToggleAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.power.turn_on", PowerTurnOnAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.power.turn_off", PowerTurnOffAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.heater.toggle", HeaterToggleAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.heater.turn_on", HeaterTurnOnAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.heater.turn_off", HeaterTurnOffAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.boost.toggle", BoostToggleAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.boost.turn_on", BoostTurnOnAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.boost.turn_off", BoostTurnOffAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.auto.toggle", AutoToggleAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.auto.turn_on", AutoTurnOnAction, TION_ACTION_SCHEMA, synchronous=False
+)
+@register_action(
+    "tion.auto.turn_off", AutoTurnOffAction, TION_ACTION_SCHEMA, synchronous=False
+)
 async def tion_switch_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(action_id, template_arg, paren)
@@ -440,6 +464,7 @@ TION_OPERATION_BASE_SCHEMA = cv.Schema(
     TION_OPERATION_BASE_SCHEMA.extend(
         {cv.Required(CONF_VALUE): cv.templatable(cv.int_range(min=0, max=6))}
     ),
+    synchronous=False,
 )
 async def tion_number_set_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
