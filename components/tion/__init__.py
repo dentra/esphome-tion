@@ -197,12 +197,17 @@ async def _setup_tion_api(config: dict):
 
     component_source = f"tion[type={config[CONF_TYPE]}]"
 
-    if cv.Version.parse(ESPHOME_VERSION) >= cv.Version.parse("2025.9.0"):
-        from esphome.cpp_generator import LogStringLiteral
+    if cv.Version.parse(ESPHOME_VERSION) >= cv.Version.parse("2026.4.0"):
+        from esphome.cpp_helpers import register_component_source
 
-        component_source = LogStringLiteral(component_source)
+        idx = register_component_source(component_source)
+        cg.add(var.set_component_source_(idx))
+    else:
+        if cv.Version.parse(ESPHOME_VERSION) >= cv.Version.parse("2025.9.0"):
+            from esphome.cpp_generator import LogStringLiteral
 
-    cg.add(var.set_component_source(component_source))
+            component_source = LogStringLiteral(component_source)
+        cg.add(var.set_component_source(component_source))
 
     # cg.add_library("tion-api", None, "https://github.com/dentra/tion-api")
     cg.add_build_flag("-DTION_ESPHOME")

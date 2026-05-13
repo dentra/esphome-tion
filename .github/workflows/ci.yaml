@@ -23,7 +23,7 @@ on:
 
 env:
   FORCE_COLOR: 1
-  ESPHOME_VERSION: "2026.3.1"
+  ESPHOME_VERSION: "2026.4.5"
   PYTHON_VERSION: "3.12"
   # ESPHOME_DATA_DIR: ".esphome" # fails with 'not a git repository' if set
   TESTS_DIR: "tests/gen"
