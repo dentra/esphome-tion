@@ -14,7 +14,9 @@ mqtt:
 
 setup:
   - lambda: |-
-      id(tion_climate).set_name(App.get_name().c_str());
+      #if ESPHOME_VERSION_CODE < VERSION_CODE(2026, 3, 0)
+        id(tion_climate).set_name(App.get_name().c_str());
+      #endif
 
 declaration:
   - lambda: |-
