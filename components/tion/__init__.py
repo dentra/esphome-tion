@@ -122,7 +122,8 @@ AUTO_SCHEMA = cv.Schema(
         cv.Required(CONF_AUTO_CO2): cv.Any(
             cv.use_id(esphome_sensor.Sensor), cv.boolean
         ),
-        cv.Optional(CONF_AUTO_SETPOINT): cv.int_range(500, 1400),
+        # TODO как-то синхронизировать с tion-api-defines.h
+        cv.Optional(CONF_AUTO_SETPOINT): cv.int_range(400, 1400),
         cv.Inclusive(CONF_AUTO_MIN_FAN_SPEED, "auto_fan_speed"): cv.int_range(0, 5),
         cv.Inclusive(CONF_AUTO_MAX_FAN_SPEED, "auto_fan_speed"): cv.int_range(1, 6),
         cv.Exclusive(CONF_AUTO_PI_CONTROLLER, "auto_mode"): cv.Any(

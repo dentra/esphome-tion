@@ -114,7 +114,7 @@ class TionApiComponent : public PollingComponent {
       return;
     }
     auto current_co2 = static_cast<uint16_t>(co2_value);
-    if (current_co2 < 400) {
+    if (current_co2 < TION_AUTO_MIN_SETPOINT) {
       return;
     }
     auto *call = this->make_call();

@@ -442,8 +442,8 @@ struct AutoMaxFanSpeed {
 struct AutoSetpoint {
   static uint16_t get(TionApiComponent *c) { return c->api()->get_auto_setpoint(); }
   static void set(TionApiComponent *c, uint16_t state) { c->api()->set_auto_setpoint(state); }
-  static constexpr uint16_t get_min(TionApiComponent *c) { return 500; }
-  static constexpr uint16_t get_max(TionApiComponent *c) { return 1400; }
+  static constexpr uint16_t get_min(TionApiComponent *c) { return TION_AUTO_MIN_SETPOINT; }
+  static constexpr uint16_t get_max(TionApiComponent *c) { return TION_AUTO_MAX_SETPOINT; }
 };
 
 struct TargetTemperature : public sensor::TargetTemperature {
