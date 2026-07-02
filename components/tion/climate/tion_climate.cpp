@@ -8,6 +8,7 @@ namespace tion {
 static const char *const TAG = "tion_climate";
 
 constexpr static const auto FAN_MODE_LABELS = {"1", "2", "3", "4", "5", "6"};
+constexpr static const auto AIR_INTAKE_PRESETS = {"outdoor", "indoor", "mixed"};
 
 // ВАЖНО: fan_mode не должен быть nullptr
 inline uint8_t fan_mode_to_speed(const char *fan_mode) { return *fan_mode - '0'; }
@@ -96,7 +97,7 @@ climate::ClimateTraits TionClimate::traits() {
        i < max_fan_speed; i++) {
     fan_modes.push_back(speed_to_fan_mode(i + 1));
   }
-  traits.set_supported_custom_fan_modes(fan_modes);
+  this->set_supported_custom_fan_modes(fan_modes);
 
   if (this->parent_->api()->has_presets()) {
     std::vector<const char *> presets;
@@ -109,8 +110,10 @@ climate::ClimateTraits TionClimate::traits() {
       }
     }
     if (!presets.empty()) {
-      traits.set_supported_custom_presets(presets);
+      this->set_supported_custom_presets(presets);
     }
+  } else if (this->options_.enable_air_intake_preset && this->parent_->traits().supports_gate_position_change_mixed) {
+    this->set_supported_custom_presets(AIR_INTAKE_PRESETS);
   }
 
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_ACTION);
@@ -136,6 +139,17 @@ void TionClimate::control(const climate::ClimateCall &call) {
       const auto preset = call.get_custom_preset();
       TION_C_LOGD(TAG, "Set custom preset %s", preset);
       this->parent_->api()->enable_preset(preset.c_str(), tion);
+    }
+  } else if (this->options_.enable_air_intake_preset && call.has_custom_preset()) {
+    const auto preset = call.get_custom_preset();
+    size_t i = 0;
+    for (auto &&p : AIR_INTAKE_PRESETS) {
+      if (preset == p) {
+        TION_C_LOGD(TAG, "Set air intake preset %s", p);
+        tion->set_gate_position(static_cast<dentra::tion::TionGatePosition>(i));
+        break;
+      }
+      i++;
     }
   }
 
@@ -227,6 +241,14 @@ void TionClimate::on_state_(const TionState &state) {
       has_changes |= this->set_preset_(climate_preset);
     } else if (!this->has_custom_preset() || strcasecmp(this->get_custom_preset().c_str(), active_preset) != 0) {
       has_changes |= this->set_custom_preset_(active_preset);
+    }
+  } else if (this->options_.enable_air_intake_preset) {
+    const auto gate_position = static_cast<uint8_t>(state.gate_position);
+    if (gate_position < AIR_INTAKE_PRESETS.size()) {
+      const auto *active_preset = *(AIR_INTAKE_PRESETS.begin() + gate_position);
+      if (!this->has_custom_preset() || strcasecmp(this->get_custom_preset().c_str(), active_preset) != 0) {
+        has_changes |= this->set_custom_preset_(active_preset);
+      }
     }
   }
 
