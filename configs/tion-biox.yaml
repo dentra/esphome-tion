@@ -1,0 +1,498 @@
+# Tested on Tuya MCU: Product: '{"p":"9mqdhwklpvnnvb7t","v":"1.0.71","m":2}'
+
+globals:
+  - id: fast_boot
+    type: int
+    restore_value: yes
+    initial_value: '0'
+  - id: last_heater_state
+    # The last state of DP 105 (heater enabled) before the DP 101 (power on)
+    # was set to off. Used as a workaround for the unlimited heatup of the
+    # heater upon powering on with DP 105 set to true.
+    type: bool
+    restore_value: yes
+    initial_value: 'true'
+
+substitutions:
+  name: tion-biox-c3u
+  wifi_fast_connect: "true"
+  time_platform: homeassistant
+  tp_update_interval: 300s
+
+esphome:
+  name: ${name}
+  name_add_mac_suffix: true
+  min_version: 2024.6.0
+  on_boot:
+    then:
+      - script.execute: fast_boot_script
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+
+web_server:
+
+captive_portal:
+
+wifi:
+  fast_connect: "${wifi_fast_connect}"
+  ap:
+      ssid: "Tion BIOX C3U AP"
+      password: !secret ap_password
+  power_save_mode: none
+
+mdns:
+
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+
+logger:
+  level: DEBUG
+  hardware_uart: USB_SERIAL_JTAG
+
+uart:
+  - id: tion_uart0
+    tx_pin: GPIO21
+    rx_pin: GPIO20
+    # Very important:
+    baud_rate: 9600
+    rx_buffer_size: 1024
+
+light:
+  # An on-board LED on the M5Stack C3U board.
+  - platform: esp32_rmt_led_strip
+    id: onboard_led
+    rgb_order: GRB
+    pin: GPIO2
+    num_leds: 1
+    rmt_channel: 0
+    chipset: "SK6812"
+    name: "On-board LED"
+
+button:
+  - platform: restart
+    name: "Restart"
+    entity_category: config
+
+  - platform: factory_reset
+    name: "Reset"
+    id: Reset
+
+  - platform: safe_mode
+    name: "Safe Mode"
+    internal: false
+
+script:
+  - id: fast_boot_script
+    then:
+      - if:
+          condition:
+            lambda: return ( id(fast_boot) >= 3 );
+          then:
+            - lambda: |-
+                ESP_LOGD("tion-biox-c3u.yaml", "Now the counter is greater than or equal to 3, perform reset device and reboot");
+                id(fast_boot) = 0;
+                fast_boot->loop();
+                global_preferences->sync();
+                auto call = id(onboard_led).turn_on();
+                call.set_transition_length(500);
+                call.set_brightness(1.0);
+                call.set_rgb(0.0, 0.0, 1.0);
+                call.perform();
+            - delay: 5s
+            - button.press: Reset
+      - lambda: |-
+          id(fast_boot) += 1;
+          fast_boot->loop();
+          global_preferences->sync();
+          ESP_LOGD("tion-biox-c3u.yaml", "Now the counter is %d.  Reset the device when the counter is greater than or equal to 4", id(fast_boot));
+      - delay: 10s
+      - lambda: |-
+          ESP_LOGD("tion-3s-c3u.yaml", "Reset counter");
+          id(fast_boot) = 0;
+          fast_boot->loop();
+          global_preferences->sync();
+
+time:
+  - platform: ${time_platform}
+    id: ha_time
+  # Change sync interval from default 5min to 6 hours (or as set in substitutions)
+    update_interval: ${tp_update_interval}
+  # Publish the time the device was last restarted
+    on_time_sync:
+      then:
+        # Update last restart time, but only once.
+        - if:
+            condition:
+              lambda: 'return id(device_last_restart).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_last_restart
+                  state: !lambda 'return id(ha_time).now().strftime("%a %d %b %Y - %I:%M:%S %p");'
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal Percent"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+    device_class: ""
+  - platform: uptime
+    name: "Uptime Sensor"
+    id: uptime_sensor
+    entity_category: diagnostic
+    internal: true
+  - platform: "tuya"
+    name: "Concentration of CO₂"
+    sensor_datapoint: 106
+    # Per the official docs:
+    # ± (50 ppm + 5% from the measured value)
+    unit_of_measurement: "PPM"
+    device_class: "carbon_dioxide"
+    state_class: "measurement"
+  - platform: "tuya"
+    # The temperature of the air measured when the air leaves
+    # the heater into the room.
+    name: "Outlet temperature"
+    sensor_datapoint: 108
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    state_class: "measurement"
+  - platform: "tuya"
+    # Air intake temperature.
+    name: "Inlet temperature"
+    sensor_datapoint: 112
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    state_class: "measurement"
+  - platform: "tuya"
+    name: "Worktime"
+    sensor_datapoint: 113
+    unit_of_measurement: "s"
+    state_class: "measurement"
+  - platform: "tuya"
+    name: "Remaining Filter Resource"
+    sensor_datapoint: 115
+    unit_of_measurement: "%"
+    state_class: "measurement"
+  - platform: "tuya"
+    name: "PM2.5 Particle Concentration"
+    sensor_datapoint: 116
+    # PM2.5 Micro gram per cubic meter
+    # Per official docs the accuracy is:
+    # ±10 µg/m³ in range from 0 - 100 µg/m³
+    # ±10% in the range from 100 - 500 µg/m³
+    # Limits: 0 - 1000 µg/m³
+    unit_of_measurement: "µg/m³"
+    device_class: "pm25"
+    state_class: "measurement"
+  - platform: "tuya"
+    name: "Relative Humidity"
+    sensor_datapoint: 119
+    # Per official docs the range is:
+    # 0 - 80%
+    unit_of_measurement: "%"
+    device_class: "humidity"
+    state_class: "measurement"
+  #  - platform: "tuya"
+  #    # Not documented officially by the looks of it. but the value
+  #    # in Tuya IoT is in percent. The DP doesn't seem to be updated
+  #    # or affect the heating process in any way on FW 1.0.71.
+  #    name: "Heater Value"
+  #    sensor_datapoint: 120
+  #    unit_of_measurement: "%"
+  #    state_class: "measurement"
+  - platform: "tuya"
+    name: "Room Temperature"
+    sensor_datapoint: 126
+    unit_of_measurement: "°C"
+    device_class: "temperature"
+    state_class: "measurement"
+  - platform: "tuya"
+    # 0 is "No Error". The rest needs to be decoded. Other values are
+    # vendor-specific and are not decoded in the official manual but
+    # will be shown on the display (as ECXX* per the  manual).
+    name: "Device Error Code"
+    sensor_datapoint: 127
+    state_class: "measurement"
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      entity_category: diagnostic
+    ssid:
+      name: "Connected SSID"
+      entity_category: diagnostic
+    mac_address:
+      name: "Mac Address"
+      entity_category: diagnostic
+  #  Creates a sensor showing when the device was last restarted
+  - platform: template
+    name: 'Last Restart'
+    id: device_last_restart
+    icon: mdi:clock
+    entity_category: diagnostic
+    # device_class: timestamp
+    disabled_by_default: false
+    update_interval: 60s
+  - platform: template
+    name: ${name} Uptime
+    update_interval: 42s
+    icon: mdi:clock-start
+    lambda: |-
+      int seconds = (id(uptime_sensor).state);
+      int days = seconds / (24 * 3600);
+      seconds = seconds % (24 * 3600);
+      int hours = seconds / 3600;
+      seconds = seconds % 3600;
+      int minutes = seconds /  60;
+      seconds = seconds % 60;
+      if ( days ) {
+        return { (to_string(days) +"d " + to_string(hours) +"h " + to_string(minutes) +"m "+ to_string(seconds) +"s").c_str() };
+      } else if ( hours ) {
+        return { (to_string(hours) +"h " + to_string(minutes) +"m "+ to_string(seconds) +"s").c_str() };
+      } else if ( minutes ) {
+        return { (to_string(minutes) +"m "+ to_string(seconds) +"s").c_str() };
+      } else {
+        return { (to_string(seconds) +"s").c_str() };
+      }
+
+tuya:
+  uart_id: tion_uart0
+  time_id: ha_time
+
+binary_sensor:
+  - platform: "tuya"
+    # Whether a CO2 sensor is available. Cheaper models do not have it.
+    name: "CO₂ Sensor Present"
+    sensor_datapoint: 122
+  - platform: "tuya"
+    # Whether a CO2 sensor is available. Cheaper models do not have it.
+    name: "PM2.5 Sensor Present"
+    sensor_datapoint: 123
+  - platform: "tuya"
+    # Whether a CO2 sensor is available. Cheaper models do not have it.
+    name: "Temperature and Humidity Sensor"
+    sensor_datapoint: 124
+    # The current value is fetched from the MCU upon initialization.
+  - platform: "tuya"
+    # This is probably an indicator of whether it's running or not compared to DP 135
+    # that starts the process.
+    name: "Autocalibration of CO₂"
+    sensor_datapoint: 136
+  #- platform: "tuya"
+  #  # This DP is very strange. Its name seems to suggest that it's a heater presence
+  #  # indicator, however, it is not reported by the MCU upon Tuya MCU init. It is
+  #  # only reported upon MCU factory reset once and its state follows whether the
+  #  # breezer was powered on before factory reset or not. Otherwise, it doesn't
+  #  # report anything useful and is commented on. At least that's the behavior on
+  #  # the following MCU firmware:
+  #  # Product: '{"p":"9mqdhwklpvnnvb7t","v":"1.0.71","m":2}'
+  #  # So this is commented out.
+  #  name: "Heater"
+  #  sensor_datapoint: 117
+
+switch:
+  - platform: "tuya"
+    # Turn air intake on/off.
+    name: "Power On"
+    switch_datapoint: 101
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+    on_turn_on:
+      # Restore the last heater state when the power is turned on. If the heater was switched
+      # off when the power was turned off, the last state is restored.
+      lambda: |-
+        if (id(last_heater_state)) {
+            id(heater_switch).turn_on();
+        } else {
+            id(heater_switch).turn_off();
+        }
+    on_turn_off:
+      # Switch off the heater when the power is turned off. This is to avoid the
+      # firmware bug where a heater is tuned on without any limits and reaches up to
+      # 45 degrees without respecting the current limits.
+      lambda: |-
+        id(last_heater_state) = id(heater_switch).state;
+        id(heater_switch).turn_off();
+  - platform: "tuya"
+    # Whether sound feedback on user actions is enabled or not.
+    name: "Sound"
+    switch_datapoint: 103
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    # Tuya DP is "Air supply source". Off ~ outdoor air intake.
+    name: "Air Recirculation"
+    switch_datapoint: 107
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    name: "Reset to Factory Settings"
+    switch_datapoint: 109
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    name: "Reset Filters Resource Counter"
+    switch_datapoint: 110
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    # Lock touch screen controls on the device.
+    name: "Child Lock"
+    switch_datapoint: 111
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    id: heater_switch
+    # Air intake heating control.
+    name: "Air Heating Enabled"
+    switch_datapoint: 105
+    # The value is inverted based on testing and observing the "outlet temperature".
+    # Whenever this value set to False, the outlet temperature grows until the
+    # target room temperature is reached.
+    inverted: True
+    # Set to internal as it doesn't seem to be reported properly. Disable
+    # if not needed at all.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    # Automatic speed adjustment based on the measured values.
+    name: "Auto Mode"
+    switch_datapoint: 131
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    # This is not documented but is exposed as a datapoint. Use with caution.
+    name: "Debugging Data Mode"
+    switch_datapoint: 132
+    internal: True
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+  - platform: "tuya"
+    # Exposed in the Tuya app as "Calibration CO₂" with a note:
+    # For correct CO₂ level measurement, calibrate the CO₂ sensor
+    # once a month. Before starting the calibration procedure,
+    # ventilate the room where the device is located for 30
+    # minutes. There must be no people in the room. Once the
+    # calibration is finished, the breezer will emit a sound signal.
+    name: "CO₂ Auto-calibration"
+    switch_datapoint: 135
+    # The current value is fetched from the MCU upon initialization.
+    restore_mode: DISABLED
+
+number:
+  - platform: "tuya"
+    # There is another DP 125 called Fan speed but it doesn't get changed when
+    # the speed is changed using the remote. It isn't clear what it's for.
+    name: "Fan Speed"
+    number_datapoint: 102
+    # The lowest is 1. The MCU (on-board ESP32) sets it to 1 if you try 0.
+    min_value: 1
+    max_value: 7
+    step: 1
+  - platform: "tuya"
+    name: "Air heating Temperature, ℃"
+    number_datapoint: 114
+    # TODO: double check ranges in the original firmware
+    # Up to +30 in the official docs.
+    # The supported operational conditions are from -50℃ to 40℃.
+    # The min value possible to set via the standard remote is 0℃.
+    min_value: 0
+    max_value: 30
+    step: 1
+  - platform: "tuya"
+    name: "Target concentration of CO₂"
+    number_datapoint: 130
+    min_value: 400
+    max_value: 1500
+    step: 50
+  - platform: "tuya"
+    name: "Estimated Filters Lifespan"
+    number_datapoint: 134
+    min_value: 1
+    # The default in the MCU is 180 days ~ 6 months. Extend or reduce the max value
+    # if needed depending on your air quality situation.
+    max_value: 365
+    step: 1
+
+#  - platform: "tuya"
+#    # Not documented officially by the looks of it but the value
+#    # in Tuya IoT is in percent. The DP doesn't seem to be updated.
+#    name: "Heater Value (%)"
+#    number_datapoint: 120
+#    min_value: 0
+#    max_value: 100
+#    step: 1
+select:
+  - platform: "tuya"
+    name: "Light Intensity"
+    enum_datapoint: 104
+    optimistic: true
+    options:
+      0: '0'
+      1: '50%'
+      2: '100%'
+  - platform: "tuya"
+    name: "Heater Power"
+    enum_datapoint: 118
+    optimistic: true
+    options:
+      # Seems to be a fixed string for display and
+      # not adjustable otherwise. Not exposed in the
+      # app - only in Tuya IoT.
+      2: 1.4k
+    internal: true
+  - platform: "tuya"
+    name: "Panel Color"
+    enum_datapoint: 133
+    optimistic: true
+    options:
+      0: Cyan
+      1: Violet
+      2: Green
+      3: White
+      4: Yellow
+  - platform: "tuya"
+    # For the auto mode. Manual fan speed setting is not affected by this.
+    name: "Maximum Fan Speed"
+    enum_datapoint: 128
+    optimistic: true
+    options:
+      0: '0'
+      1: '1'
+      2: '2'
+      3: '3'
+      4: '4'
+      5: '5'
+      6: '6'
+      7: '7 (for short & quick venting)'
+      100: Unlimited
+  - platform: "tuya"
+    # For the auto mode. Manual fan speed setting is not affected by this.
+    name: "Minimum Fan Speed"
+    enum_datapoint: 129
+    optimistic: true
+    # Only two values are exposed in the official app.
+    options:
+      0: '0'
+      1: '1'
+
