@@ -58,6 +58,30 @@ climate::ClimatePreset std_preset_find(const char *preset) {
 void TionClimate::setup() {
   ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
 
+  // максимальная скорость может быть 4 или 6, поэтому собираем массив динамически
+  std::vector<const char *> fan_modes;
+  for (uint8_t i = 0, max_fan_speed =
+                          std::min(this->parent_->traits().max_fan_speed, static_cast<uint8_t>(FAN_MODE_LABELS.size()));
+       i < max_fan_speed; i++) {
+    fan_modes.push_back(speed_to_fan_mode(i + 1));
+  }
+  this->set_supported_custom_fan_modes(fan_modes);
+
+  if (this->parent_->api()->has_presets()) {
+    std::vector<const char *> presets;
+    for (auto &&p : this->parent_->api()->get_presets()) {
+      const auto preset = std_preset_find(p);
+      if (std_preset_is_invalid(preset)) {
+        presets.push_back(p);
+      } else {
+        this->std_presets_.insert(preset);
+      }
+    }
+    if (!presets.empty()) {
+      this->set_supported_custom_presets(presets);
+    }
+  }
+
   this->parent_->add_on_state_callback([this](const TionState *state) {
     if (state) {
       this->set_has_state(true);
@@ -89,29 +113,8 @@ climate::ClimateTraits TionClimate::traits() {
     traits.add_supported_fan_mode(climate::CLIMATE_FAN_OFF);
   }
 
-  // максимальная скорость может быть 4 или 6, поэтому собираем массив динамически
-  std::vector<const char *> fan_modes;
-  for (uint8_t i = 0, max_fan_speed =
-                          std::min(this->parent_->traits().max_fan_speed, static_cast<uint8_t>(FAN_MODE_LABELS.size()));
-       i < max_fan_speed; i++) {
-    fan_modes.push_back(speed_to_fan_mode(i + 1));
-  }
-  traits.set_supported_custom_fan_modes(fan_modes);
-
-  if (this->parent_->api()->has_presets()) {
-    std::vector<const char *> presets;
-    for (auto &&p : this->parent_->api()->get_presets()) {
-      const auto preset = std_preset_find(p);
-      if (std_preset_is_invalid(preset)) {
-        presets.push_back(p);
-      } else {
-        traits.add_supported_preset(preset);
-      }
-    }
-    if (!presets.empty()) {
-      traits.set_supported_custom_presets(presets);
-    }
-  }
+  // пресеты и пользовательские режимы вентилятора разбираются в setup()
+  traits.set_supported_presets(this->std_presets_);
 
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_ACTION);
   return traits;

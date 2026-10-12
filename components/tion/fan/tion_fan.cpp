@@ -10,6 +10,10 @@ static const char *const TAG = "tion_fan";
 void TionFan::setup() {
   ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
 
+  if (this->parent_->api()->has_presets()) {
+    this->set_supported_preset_modes(this->parent_->api()->get_presets());
+  }
+
   this->parent_->add_on_state_callback([this](const TionState *state) {
     if (state) {
       this->set_has_state(true);
@@ -22,9 +26,7 @@ void TionFan::setup() {
 
 fan::FanTraits TionFan::get_traits() {
   auto traits = fan::FanTraits(false, true, false, this->parent_->traits().max_fan_speed);
-  if (this->parent_->api()->has_presets()) {
-    traits.set_supported_preset_modes(this->parent_->api()->get_presets());
-  }
+  this->wire_preset_modes_(traits);
   return traits;
 }
 

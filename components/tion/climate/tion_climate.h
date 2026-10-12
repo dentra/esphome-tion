@@ -35,6 +35,8 @@ class TionClimate : public EntityExtension<climate::Climate>, public Component, 
     bool enable_fan_auto : 1;
     bool enable_fan_off : 1;
   } options_{};
+  // стандартные пресеты, пользовательские хранятся в climate::Climate
+  climate::ClimatePresetMask std_presets_{};
   void on_state_(const TionState &state);
   // важно this->mode уже должен быть выставлен в актуальное значение
   bool set_fan_speed_(const TionState &state);
