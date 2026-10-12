@@ -137,7 +137,7 @@ void TionClimate::control(const climate::ClimateCall &call) {
       this->parent_->api()->enable_preset(preset, tion);
     } else if (call.has_custom_preset()) {
       const auto preset = call.get_custom_preset();
-      TION_C_LOGD(TAG, "Set custom preset %s", preset);
+      TION_C_LOGD(TAG, "Set custom preset %s", preset.c_str());
       this->parent_->api()->enable_preset(preset.c_str(), tion);
     }
   }

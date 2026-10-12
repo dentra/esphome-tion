@@ -475,6 +475,6 @@ TION_OPERATION_BASE_SCHEMA = cv.Schema(
 async def tion_number_set_to_code(config, action_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, paren)
-    template_ = await cg.templatable(config[CONF_VALUE], args, int)
+    template_ = await cg.templatable(config[CONF_VALUE], args, cg.uint8)
     cg.add(var.set_value(template_))
     return var
