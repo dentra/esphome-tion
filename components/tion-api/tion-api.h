@@ -242,6 +242,8 @@ class TionApiBase {
   TionApiBase();
 
   constexpr static const char *PRESET_NONE = "None";
+  // пресет с этим именем управляет турбо-режимом
+  constexpr static const char *PRESET_BOOST = "boost";
 
   struct PresetData {
     // <0 - без изменений
@@ -313,7 +315,7 @@ class TionApiBase {
   // Вызывающая сторона ответственна за вызов perform.
   void enable_preset(const char *preset, TionStateCall *call);
   std::vector<const char *> get_presets() const;
-  bool has_presets() const { return this->presets_.size() > 1; }
+  bool has_presets() const { return this->presets_.size() > 1 || this->boost_preset_().name != nullptr; }
   void add_preset(const char *name, const PresetData &data);
   /// Всегда возвращает значение, при отсутствии активного пресета - константу PRESET_NONE
   const char *get_active_preset_name() const { return this->active_preset_ ? this->active_preset_->name : PRESET_NONE; }
@@ -356,7 +358,6 @@ class TionApiBase {
   struct NamedPreset {
     const char *name;
     PresetData data;
-    bool has_timer() const { return data.has_timer(); }
   };
 
   std::vector<NamedPreset> presets_;

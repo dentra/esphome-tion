@@ -225,6 +225,7 @@ def _setup_tion_api_presets(config: dict, var: cg.MockObj):
         return
 
     presets = {}
+    boost_preset = None
     for preset in config[CONF_PRESETS]:
         preset_name = str(preset).strip()
         if preset_name.lower() == "none":
@@ -262,6 +263,50 @@ def _setup_tion_api_presets(config: dict, var: cg.MockObj):
             if nm == CONF_WORK_TIME:
                 return 0
             return -1
+
+        # boost preset rule must be in sync with TionApiBase::add_preset
+        is_boost = preset_name.lower() == "boost"
+        if preset[CONF_WORK_TIME] is not None:
+            if is_boost:
+                logging.warning(
+                    'Preset "%s": "work_time" is deprecated and ignored, remove it. '
+                    "Boost duration is set with number boost_time or switch boost duration",
+                    preset_name,
+                )
+            else:
+                logging.warning(
+                    'Preset "%s": "work_time" is deprecated and does not set boost duration. '
+                    'Rename the preset to "boost" and remove "work_time". '
+                    "Boost duration is set with number boost_time or switch boost duration",
+                    preset_name,
+                )
+            is_boost = True
+        if is_boost:
+            if boost_preset is not None:
+                logging.warning(
+                    'Only one boost preset is supported, "%s" overrides "%s"',
+                    preset_name,
+                    boost_preset,
+                )
+            boost_preset = preset_name
+            ignored = [k for k in (CONF_GATE_POSITION, CONF_AUTO) if preset[k] is not None]
+            # power is True by default, boost always turns breezer on
+            if preset[CONF_POWER] is False:
+                ignored.insert(0, CONF_POWER)
+            if ignored:
+                logging.warning(
+                    'Boost preset "%s": %s ignored, only %s are used',
+                    preset_name,
+                    ", ".join(f'"{k}"' for k in ignored),
+                    ", ".join(
+                        f'"{k}"' for k in (CONF_FAN_SPEED, CONF_TEMPERATURE, CONF_HEATER)
+                    ),
+                )
+            if preset[CONF_FAN_SPEED] == 0:
+                logging.warning(
+                    'Boost preset "%s": "fan_speed" 0 is not supported, max speed is used',
+                    preset_name,
+                )
 
         struct_args = [(arg[0], preset_arg(arg[1])) for arg in args]
         cg.add(var.add_preset(preset_name, cg.StructInitializer("", *struct_args)))

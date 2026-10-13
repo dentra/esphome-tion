@@ -698,7 +698,7 @@ void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
   TION_LOGD(TAG, "Activate preset '%s'", preset);
   if (preset == nullptr || *preset == 0 || strcasecmp(preset, PRESET_NONE) == 0) {
     if (this->active_preset_) {
-      if (this->active_preset_->has_timer()) {
+      if (this->active_preset_ == &this->boost_preset_()) {
         this->enable_boost(false, call);
       }
       this->active_preset_ = nullptr;
@@ -711,7 +711,7 @@ void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
     if (it.name && strcasecmp(preset, it.name) == 0) {
       this->activate_preset_ = &it;
       this->active_preset_ = nullptr;
-      if (it.has_timer()) {
+      if (&it == &this->boost_preset_()) {
         this->enable_boost(true, call);
       } else {
         it.data.to_call(call);
@@ -746,18 +746,16 @@ void TionApiBase::add_preset(const char *name, const PresetData &data) {
   if (!data.is_valid(name, this->traits_)) {
     return;
   }
-  if (data.has_timer()) {
+  // work_time оставлен для совместимости, длительность турбо-режима задается отдельно.
+  // при изменении правила синхронизировать с _setup_tion_api_presets в components/tion/__init__.py
+  if (strcasecmp(name, PRESET_BOOST) == 0 || data.has_timer()) {
     TION_LOGD(TAG, "Update preset '%s': heat=%d, fan=%u, temp=%d,", name, data.heater_state, data.fan_speed,
               data.target_temperature);
     auto &preset = this->boost_preset_();
     preset.name = name;
     preset.data.target_temperature = data.target_temperature;
     preset.data.heater_state = data.heater_state;
-    if (data.fan_speed > 0) {
-      preset.data.fan_speed = data.fan_speed;
-    } else if (preset.data.fan_speed <= 0) {
-      preset.data.fan_speed = this->traits_.max_fan_speed;
-    }
+    preset.data.fan_speed = data.fan_speed > 0 ? data.fan_speed : this->traits_.max_fan_speed;
   } else {
     TION_LOGD(TAG, "Setup preset '%s': power=%d, heat=%d, fan=%u, temp=%d, gate=%u", name, data.power_state,
               data.heater_state, data.fan_speed, data.target_temperature, static_cast<uint8_t>(data.gate_position));
