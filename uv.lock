@@ -588,6 +588,7 @@ dev = [
     { name = "clang-format" },
     { name = "cmake" },
     { name = "esphome" },
+    { name = "jinja2-cli" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
@@ -600,6 +601,7 @@ dev = [
     { name = "clang-format", specifier = "==13.0.1" },
     { name = "cmake" },
     { name = "esphome", specifier = "==2026.9.1" },
+    { name = "jinja2-cli", specifier = ">=1.0.1" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
@@ -727,6 +729,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/df/bf/f7da0350254c0ed7c72f3e33cef02e048281fec7ecec5f032d4aac52226b/jinja2-3.1.6.tar.gz", hash = "sha256:0137fb05990d35f1275a587e9aee6d56da821fc83491a0fb838183be43f66d6d", size = 245115, upload-time = "2025-03-05T20:05:02.478Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl", hash = "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67", size = 134899, upload-time = "2025-03-05T20:05:00.369Z" },
+]
+
+[[package]]
+name = "jinja2-cli"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jinja2" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/b3/19afd8cfe9b6664fcc200befbc71a393cbbe343bb76a6acbeff1709d0c83/jinja2_cli-1.0.1.tar.gz", hash = "sha256:cca3e59494558640af52add7b8636cfa82eba72871a21cbbdc0a6f2000a4e5b7", size = 10129, upload-time = "2026-04-05T19:59:24.237Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3b/2f/851e062aae3d2cd4d726813f336d55760e193dc28e80b2268f9b952df8bb/jinja2_cli-1.0.1-py3-none-any.whl", hash = "sha256:b9ee0875adb8c78490ceb04486ec3a6af1d0ba83ac7e5a7af7f645eb6aa7d655", size = 11049, upload-time = "2026-04-05T19:59:23.112Z" },
 ]
 
 [[package]]
