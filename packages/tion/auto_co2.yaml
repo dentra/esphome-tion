@@ -232,7 +232,7 @@ tion:
           }
           ratio = std::clamp(ratio, 0.0f, 1.0f);
 
-          float base_aggression = 6.0f / aggressiveness;
+          float base_aggression = 6.0f / (6 - aggressiveness);
           float dynamic_aggression = base_aggression; // base_aggression * (1.0f + 0.3f * co2_derivative);
           float speed = min_speed + dynamic_aggression * spd_range * ratio;
 
