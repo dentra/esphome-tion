@@ -10,7 +10,7 @@ conns=(api mqtt)
 
 custom=false
 
-while getopts ":v:t:p:c:" opt; do
+while getopts ":vt:p:c:" opt; do
   case $opt in
     t)
       types=($OPTARG)
@@ -39,7 +39,7 @@ shift $((OPTIND-1)) # Shift positional parameters past the options
 test_dir=$prj_path/tests/gen
 conf_dir=$prj_path/configs
 
-ESPHOME_DATA_DIR=$(realpath $prj_path/.nosync/esphome-tests)
+export ESPHOME_DATA_DIR=$(realpath $prj_path)/build.tmp/esphome
 
 echo "Configuration types: ${types[@]}"
 echo "Configuration ports: ${ports[@]}"
@@ -56,4 +56,6 @@ for type in "${types[@]}"; do
   done
 done
 
-[ "$custom" != "true" ] && esphome compile $verbose $test_dir/tion-multiple.yaml
+if [ "$custom" != "true" ]; then
+  esphome $verbose compile $test_dir/tion-multiple.yaml
+fi

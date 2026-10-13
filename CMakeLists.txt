@@ -34,7 +34,7 @@ target_sources(esphome-tion.elf PRIVATE ${app_sources})
 # idf_component_register(SRCS ${app_sources})
 
 set(WORKSPACE_DIR "${CMAKE_SOURCE_DIR}")
-set(ESPHOME_DATA_DIR "${WORKSPACE_DIR}/.build/esphome")
+set(ESPHOME_DATA_DIR "${WORKSPACE_DIR}/build.tmp/esphome")
 
 include_directories("${WORKSPACE_DIR}") # will include esphome
 include_directories("${WORKSPACE_DIR}/lib/esphome-components")

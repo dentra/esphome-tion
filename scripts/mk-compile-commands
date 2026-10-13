@@ -12,7 +12,7 @@ for tc in riscv32-esp-elf xtensa-esp32-elf xtensa-esp32s3-elf xtensa-esp32s2-elf
 done
 
 SRC_DIR=$prj_path
-BLD_DIR=$prj_path/.build/Debug
+BLD_DIR=$prj_path/build.tmp/cmake
 
 echo "venv: $VIRTUAL_ENV"
 echo "idf : $IDF_PATH"

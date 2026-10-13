@@ -1,0 +1,171 @@
+# Smoke test: all breezer types and all entities in one host firmware.
+# Usage: scripts/smoke-test.sh
+substitutions:
+  node_name: tion-smoke
+  # host UART ports, overridden by e2e tests
+  port_4s: /dev/null
+  port_3s: /dev/null
+  port_lt: /dev/null
+  port_o2: /dev/null
+  time_platform: host
+  # breezer state poll interval, overridden by e2e tests
+  tion_update_interval: 60s
+  tion_state_timeout: 3s
+  # preferences write interval, overridden by e2e tests
+  flash_write_interval: 1min
+  # dentra/esphome-components source
+  vport_source: github://dentra/esphome-components@master
+
+esphome:
+  name: $node_name
+  min_version: "2026.4.0"
+
+host:
+
+preferences:
+  flash_write_interval: $flash_write_interval
+
+logger:
+  level: VERY_VERBOSE
+
+api:
+
+external_components:
+  # components from dentra/esphome-components, local scripts use local copy when available
+  - source: $vport_source
+    components:
+      - cgp
+      - etl
+      - vport
+    refresh: 1d
+  - source:
+      type: local
+      path: ../../components
+    components:
+      - tion
+      - tion-api
+      - tion_3s_uart
+      - tion_4s_uart
+      - tion_lt_uart
+      - tion_o2_uart
+
+packages:
+  e4s: !include { file: entities.yaml, vars: { tid: tion_api, p: 4S } }
+  e3s: !include { file: entities.yaml, vars: { tid: tion_3s_api, p: 3S } }
+  elt: !include { file: entities.yaml, vars: { tid: tion_lt_api, p: LT } }
+  eo2: !include { file: entities.yaml, vars: { tid: tion_o2_api, p: O2 } }
+  # package automations are bound to tion_api (4S)
+  energy: !include ../../packages/tion/energy.yaml
+  auto_co2: !include ../../packages/tion/auto_co2.yaml
+  timers: !include ../../packages/tion/4s_timers.yaml
+  # manual antifreeze for 3S and O2
+  antifreeze: !include ../../packages/tion/enable_antifreeze.yaml
+
+uart:
+  - { id: uart_4s, port: $port_4s, baud_rate: 115200 }
+  - { id: uart_3s, port: $port_3s, baud_rate: 115200 }
+  - { id: uart_lt, port: $port_lt, baud_rate: 115200 }
+  - { id: uart_o2, port: $port_o2, baud_rate: 115200 }
+
+vport:
+  - { platform: tion_4s_uart, id: vport_4s, uart_id: uart_4s }
+  - { platform: tion_3s_uart, id: vport_3s, uart_id: uart_3s }
+  - { platform: tion_lt_uart, id: vport_lt, uart_id: uart_lt }
+  - { platform: tion_o2_uart, id: vport_o2, uart_id: uart_o2 }
+
+sensor:
+  - platform: template
+    id: fake_co2
+    lambda: return 800;
+  # bind package entities to 4S
+  - { id: !extend tion_power, tion_id: tion_api }
+
+tion:
+  - id: tion_api
+    type: 4s
+    vport_id: vport_4s
+    update_interval: $tion_update_interval
+    state_timeout: $tion_state_timeout
+    restore_state: true
+    presets:
+      home: { fan_speed: 2, temperature: 16, heater: false }
+      away: { fan_speed: 1, temperature: 10, heater: false, gate_position: indoor }
+      boost: { fan_speed: 6 }
+      custom: { fan_speed: 3, auto: true }
+    on_state:
+      - lambda: ESP_LOGD("smoke", "4s fan speed %u", x.fan_speed);
+
+  - id: tion_3s_api
+    type: 3s
+    vport_id: vport_3s
+    update_interval: $tion_update_interval
+    state_timeout: $tion_state_timeout
+    force_update: true
+    presets:
+      sleep: { fan_speed: 1 }
+      mixed: { gate_position: mixed }
+    auto:
+      co2: fake_co2
+      pi_controller:
+
+  - id: tion_lt_api
+    type: lt
+    vport_id: vport_lt
+    update_interval: $tion_update_interval
+    state_timeout: $tion_state_timeout
+    enable_kiv: true
+    button_presets:
+      temperature: [10, 15, 20]
+      fan_speed: [1, 3, 5]
+    presets:
+      eco: { fan_speed: 2, heater: false }
+    auto:
+      co2: fake_co2
+
+  - id: tion_o2_api
+    type: o2
+    vport_id: vport_o2
+    update_interval: $tion_update_interval
+    state_timeout: $tion_state_timeout
+    presets:
+      comfort: { fan_speed: 3, temperature: 20 }
+
+# tion actions and conditions, compiled only, the script is never executed
+script:
+  - id: smoke_actions
+    then:
+      - if:
+          condition:
+            and:
+              - tion.power.is_on: tion_api
+              - tion.heater.is_off: tion_api
+              - tion.boost.is_off: tion_api
+              - tion.auto.is_off: tion_api
+          then:
+            - tion.heater.turn_on: tion_api
+            - tion.boost.turn_on: tion_api
+            - tion.auto.turn_on: tion_api
+            - tion.fan_speed.set:
+                id: tion_api
+                value: 3
+          else:
+            - tion.power.toggle: tion_3s_api
+            - tion.heater.toggle: tion_3s_api
+            - tion.boost.toggle: tion_3s_api
+            - tion.auto.toggle: tion_3s_api
+            - tion.fan_speed.set:
+                id: tion_3s_api
+                value: !lambda return 2;
+      - if:
+          condition:
+            or:
+              - tion.power.is_off: tion_lt_api
+              - tion.heater.is_on: tion_lt_api
+              - tion.boost.is_on: tion_lt_api
+              - tion.auto.is_on: tion_lt_api
+          then:
+            - tion.power.turn_on: tion_lt_api
+            - tion.power.turn_off: tion_o2_api
+            - tion.heater.turn_off: tion_lt_api
+            - tion.boost.turn_off: tion_lt_api
+            - tion.auto.turn_off: tion_lt_api

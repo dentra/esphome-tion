@@ -1,0 +1,88 @@
+# All tion entities bound to a single breezer.
+# vars:
+#   tid - tion component id
+#   p   - entity name prefix
+binary_sensor:
+  - { platform: tion, tion_id: $tid, name: "$p State", type: state }
+  - { platform: tion, tion_id: $tid, name: "$p Power", type: power }
+  - { platform: tion, tion_id: $tid, name: "$p Heater", type: heater }
+  - { platform: tion, tion_id: $tid, name: "$p Heating", type: heating }
+  - { platform: tion, tion_id: $tid, name: "$p Sound", type: sound }
+  - { platform: tion, tion_id: $tid, name: "$p Led", type: led }
+  - { platform: tion, tion_id: $tid, name: "$p Filter", type: filter }
+  - { platform: tion, tion_id: $tid, name: "$p Gate Error", type: gate_error }
+  - { platform: tion, tion_id: $tid, name: "$p Gate", type: gate }
+  - { platform: tion, tion_id: $tid, name: "$p Error", type: error }
+  - { platform: tion, tion_id: $tid, name: "$p Boost", type: boost }
+  - { platform: tion, tion_id: $tid, name: "$p Auto", type: auto }
+
+sensor:
+  - { platform: tion, tion_id: $tid, name: "$p Fan Speed", type: fan_speed }
+  - { platform: tion, tion_id: $tid, name: "$p Max Fan Speed", type: max_fan_speed }
+  - { platform: tion, tion_id: $tid, name: "$p Outdoor Temperature", type: outdoor_temperature }
+  - { platform: tion, tion_id: $tid, name: "$p Current Temperature", type: current_temperature }
+  - { platform: tion, tion_id: $tid, name: "$p Target Temperature", type: target_temperature }
+  - { platform: tion, tion_id: $tid, name: "$p Productivity", type: productivity }
+  - { platform: tion, tion_id: $tid, name: "$p Heater Var", type: heater_var }
+  - { platform: tion, tion_id: $tid, name: "$p Heater Power", type: heater_power }
+  - { platform: tion, tion_id: $tid, name: "$p Fan Power", type: fan_power }
+  - { platform: tion, tion_id: $tid, name: "$p Power", type: power }
+  - { platform: tion, tion_id: $tid, name: "$p Work Time", type: work_time }
+  - { platform: tion, tion_id: $tid, name: "$p Work Time Days", type: work_time_days }
+  - { platform: tion, tion_id: $tid, name: "$p Fan Time", type: fan_time }
+  - { platform: tion, tion_id: $tid, name: "$p Fan Time Days", type: fan_time_days }
+  - { platform: tion, tion_id: $tid, name: "$p Filter Time Left", type: filter_time_left }
+  - { platform: tion, tion_id: $tid, name: "$p Filter Time Left Days", type: filter_time_left_days }
+  - { platform: tion, tion_id: $tid, name: "$p Airflow", type: airflow }
+  - { platform: tion, tion_id: $tid, name: "$p Airflow Counter", type: airflow_counter }
+  - { platform: tion, tion_id: $tid, name: "$p PCB Ctl Temperature", type: pcb_ctl_temperature }
+  - { platform: tion, tion_id: $tid, name: "$p PCB Pwr Temperature", type: pcb_pwr_temperature }
+  - { platform: tion, tion_id: $tid, name: "$p Boost Time Left", type: boost_time_left }
+
+text_sensor:
+  - { platform: tion, tion_id: $tid, name: "$p Errors", type: errors }
+  - { platform: tion, tion_id: $tid, name: "$p Firmware Version", type: firmware_version }
+  - { platform: tion, tion_id: $tid, name: "$p Hardware Version", type: hardware_version }
+
+switch:
+  - { platform: tion, tion_id: $tid, name: "$p Power", type: power }
+  - { platform: tion, tion_id: $tid, name: "$p Heater", type: heater }
+  - { platform: tion, tion_id: $tid, name: "$p Sound", type: sound }
+  - { platform: tion, tion_id: $tid, name: "$p Led", type: led }
+  - { platform: tion, tion_id: $tid, name: "$p Recirculation", type: recirculation }
+  - { platform: tion, tion_id: $tid, name: "$p Boost", type: boost }
+  - { platform: tion, tion_id: $tid, name: "$p Auto", type: auto }
+
+number:
+  - { platform: tion, tion_id: $tid, name: "$p Fan Speed", type: fan_speed }
+  - { platform: tion, tion_id: $tid, name: "$p Target Temperature", type: target_temperature }
+  - { platform: tion, tion_id: $tid, name: "$p Boost Time", type: boost_time }
+  - { platform: tion, tion_id: $tid, name: "$p Auto Setpoint", type: auto_setpoint }
+  - { platform: tion, tion_id: $tid, name: "$p Auto Min Fan Speed", type: auto_min_fan_speed }
+  - { platform: tion, tion_id: $tid, name: "$p Auto Max Fan Speed", type: auto_max_fan_speed }
+
+select:
+  - { platform: tion, tion_id: $tid, name: "$p Air Intake", type: air_intake }
+  - { platform: tion, tion_id: $tid, name: "$p Presets", type: presets }
+  - { platform: tion, tion_id: $tid, name: "$p Fan Speed", type: fan_speed }
+
+button:
+  - platform: tion
+    tion_id: $tid
+    name: "$p Reset Filter"
+    type: reset_filter
+    confirm:
+      name: "$p Reset Filter Confirm"
+
+climate:
+  - platform: tion
+    tion_id: $tid
+    name: "$p Climate"
+    enable_heat_cool: true
+    enable_fan_auto: true
+    enable_fan_off: true
+
+fan:
+  - platform: tion
+    tion_id: $tid
+    name: "$p Fan"

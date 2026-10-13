@@ -7,6 +7,7 @@ secrets.yaml
 /.platformio
 /.venv
 /.nosync
+/build.tmp
 /.clang_complete
 /.gcc-flags.json
 /.temp-clang-tidy.cpp

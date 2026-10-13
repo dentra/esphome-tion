@@ -9,7 +9,7 @@ from build import PRJ_PATH, Build, make_builds
 from helpers import debug, info, trace
 
 CONFIG_PATH = "fw"
-BUILD_PATH = ".build/fota"
+BUILD_PATH = "build.tmp/fw"
 FOTA_JSON = "scripts/fota.json.j2"
 
 
