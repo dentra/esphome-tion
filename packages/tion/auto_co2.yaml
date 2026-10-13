@@ -216,8 +216,8 @@ tion:
 
       // Изменяем скорость если есть отклонения в большую сторону
       if (deviation > 0) {
-        auto alg = id(tion_auto_alg).active_index();
-        if (*alg == 0) {
+        auto alg = id(tion_auto_alg).active_index().value_or(0);
+        if (alg == 0) {
           // Линейный расчет
           // Рассчитываем корректировку скорости на основе отклонения и агрессивности
             int adj_factor = (deviation / (float)setpoint) * aggressiveness * spd_range;
@@ -235,9 +235,9 @@ tion:
           float co2_range = co2_max - co2_target;
 
           float ratio = co2_deviation / co2_range; // линейно
-          if (*alg == 1) { // квадратично
+          if (alg == 1) { // квадратично
             ratio = std::pow(ratio, 2.0f);
-          } else if (*alg == 2) { // экспоненциально
+          } else if (alg == 2) { // экспоненциально
             ratio = std::exp(ratio) - 1.0f;
           }
           ratio = std::clamp(ratio, 0.0f, 1.0f);
