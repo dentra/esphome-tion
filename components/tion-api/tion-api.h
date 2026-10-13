@@ -311,6 +311,8 @@ class TionApiBase {
   /// Работает ли турбо-режим, программный или нативный.
   virtual bool is_boost_running() const { return this->is_soft_boost_running_(); }
   virtual uint16_t get_boost_time_left() const;
+  /// Время ожидания подтверждения буста бризером, мс.
+  void set_boost_confirm_timeout(uint32_t timeout) { this->boost_confirm_timeout_ = timeout; }
 
   // Вызывающая сторона ответственна за вызов perform.
   void enable_preset(const char *preset, TionStateCall *call);
@@ -318,7 +320,7 @@ class TionApiBase {
   bool has_presets() const { return this->presets_.size() > 1 || this->boost_preset_().name != nullptr; }
   void add_preset(const char *name, const PresetData &data);
   /// Всегда возвращает значение, при отсутствии активного пресета - константу PRESET_NONE
-  const char *get_active_preset_name() const { return this->active_preset_ ? this->active_preset_->name : PRESET_NONE; }
+  const char *get_active_preset_name() const;
 
   /// Вызывающая сторона ответственна за вызов perform.
   /// @return true если были изменения и требуются выполнить perform
@@ -354,6 +356,7 @@ class TionApiBase {
     // бризер подтвердил переход на скорость буста
     bool confirmed;
   } boost_save_{};
+  uint32_t boost_confirm_timeout_{TION_BOOST_CONFIRM_TIMEOUT};
 
   struct NamedPreset {
     const char *name;

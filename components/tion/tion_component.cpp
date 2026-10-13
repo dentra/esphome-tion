@@ -37,6 +37,10 @@ void TionApiComponent::call_setup() {
     ESP_LOGW(TAG, "Invalid state timeout: %.1f s", this->state_timeout_ * 0.001f);
     this->state_timeout_ = 0;
   }
+  // команда буста может быть отложена на batch_timeout, ответ на нее приходит не позже state_timeout
+  if (this->state_timeout_ > 0) {
+    this->api_->set_boost_confirm_timeout(this->batch_timeout_ + this->state_timeout_);
+  }
 }
 
 void TionApiComponent::dump_config() {

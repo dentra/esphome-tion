@@ -559,6 +559,72 @@ TEST_CASE("boost: not started when already at boost speed") {
   CHECK_FALSE(b.api().is_boost_running());
 }
 
+TEST_CASE("presets: boost preset is not active when boost did not start") {
+  Breezer4s b;
+  b.api().add_preset("boost", TionApiBase::PresetData{.target_temperature = -1,
+                                                      .heater_state = -1,
+                                                      .power_state = 1,
+                                                      .fan_speed = -1,
+                                                      .gate_position = TionGatePosition::NONE,
+                                                      .auto_state = -1,
+                                                      .work_time = 0});
+  b.api().set_boost_time(60);
+  b.call([](auto &c) { c.set_fan_speed(6); });
+  b.process();
+
+  b.call([&](auto &c) { b.api().enable_preset("boost", &c); });
+  b.process();
+  REQUIRE_FALSE(b.api().is_boost_running());
+  CHECK(strcasecmp(b.api().get_active_preset_name(), "none") == 0);
+
+  b.respond(1);
+  b.process();
+  CHECK(strcasecmp(b.api().get_active_preset_name(), "none") == 0);
+}
+
+TEST_CASE("presets: boost preset is active while boost is running") {
+  Breezer4s b;
+  b.api().add_preset("boost", TionApiBase::PresetData{.target_temperature = -1,
+                                                      .heater_state = -1,
+                                                      .power_state = 1,
+                                                      .fan_speed = -1,
+                                                      .gate_position = TionGatePosition::NONE,
+                                                      .auto_state = -1,
+                                                      .work_time = 0});
+  b.api().set_boost_time(60);
+
+  // boost started not by preset
+  b.call([&](auto &c) { b.base().enable_boost(true, &c); });
+  b.process();
+  REQUIRE(b.api().is_boost_running());
+  CHECK(strcasecmp(b.api().get_active_preset_name(), "boost") == 0);
+
+  b.work(61);
+  b.respond(1);
+  b.process();
+  REQUIRE_FALSE(b.api().is_boost_running());
+  CHECK(strcasecmp(b.api().get_active_preset_name(), "none") == 0);
+}
+
+TEST_CASE("boost: confirm timeout is configurable") {
+  Breezer4s b;
+  b.api().set_boost_time(60);
+  b.api().set_boost_confirm_timeout(3000);
+
+  b.call([&](auto &c) { b.base().enable_boost(true, &c); });
+  // breezer ignores boost request
+  b.take_set();
+  test::FakeClock::advance(2999);
+  b.respond(1);
+  CHECK(b.api().is_boost_running());
+
+  test::FakeClock::advance(1);
+  b.respond(1);
+  b.process();
+  CHECK_FALSE(b.api().is_boost_running());
+  CHECK(b.st.fan_speed == 2);
+}
+
 TEST_CASE("auto: fan speed follows co2 within limits") {
   Breezer4s b;
   b.api().set_auto_setpoint(700);

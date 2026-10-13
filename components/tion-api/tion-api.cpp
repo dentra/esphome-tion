@@ -495,7 +495,7 @@ void TionApiBase::notify_state_(uint32_t request_id) {
       if (fan_speed == boost.boost_fan_speed) {
         TION_LOGD(TAG, "Boost confirmed");
         boost.confirmed = true;
-      } else if (tion::millis() - boost.request_time < TION_BOOST_CONFIRM_TIMEOUT) {
+      } else if (tion::millis() - boost.request_time < this->boost_confirm_timeout_) {
         // состояние могло быть отправлено бризером до применения буста
         TION_LOGV(TAG, "Boost is waiting for confirmation");
       } else {
@@ -650,10 +650,9 @@ void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
   this->boost_save_.request_time = tion::millis();
   this->boost_save_.confirmed = false;
   this->boost_save_state_();
-  // скорость может быть переопределена пресетом
-  call->set_fan_speed(this->state_.max_fan_speed);
   this->boost_preset_().data.to_call(call);
-  this->boost_save_.boost_fan_speed = call->get_fan_speed().value_or(this->state_.max_fan_speed);
+  call->set_fan_speed(target_fan_speed);
+  this->boost_save_.boost_fan_speed = target_fan_speed;
   // дополнительно оставим авто-режим в текущем положении
   call->set_auto_state(this->state_.auto_state);
 }
@@ -755,20 +754,21 @@ void TionApiBase::boost_cancel_(TionStateCall *call) {
   TION_LOGD(TAG, "Boost finished");
   this->boost_save_.start_time = 0;
   this->boost_save_.to_call(call);
-  // пресет буста больше не активен
-  if (this->activate_preset_ == &this->boost_preset_()) {
-    this->activate_preset_ = nullptr;
+}
+
+const char *TionApiBase::get_active_preset_name() const {
+  // пресет буста активен ровно пока работает турбо-режим, в т.ч. запущенный не через пресет
+  if (this->boost_preset_().name != nullptr && this->is_boost_running()) {
+    return this->boost_preset_().name;
   }
-  if (this->active_preset_ == &this->boost_preset_()) {
-    this->active_preset_ = nullptr;
-  }
+  return this->active_preset_ ? this->active_preset_->name : PRESET_NONE;
 }
 
 void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
   if (preset == nullptr || *preset == 0 || strcasecmp(preset, PRESET_NONE) == 0) {
     TION_LOGD(TAG, "Activate preset '%s'", PRESET_NONE);
-    // пресет буста может быть еще не подтвержден бризером
-    if (this->active_preset_ == &this->boost_preset_() || this->activate_preset_ == &this->boost_preset_()) {
+    // буст может быть еще не подтвержден бризером
+    if (this->is_boost_running()) {
       this->enable_boost(false, call);
     }
     this->active_preset_ = nullptr;
@@ -780,8 +780,7 @@ void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
   for (auto &&it : this->presets_) {
     if (it.name && strcasecmp(preset, it.name) == 0) {
       if (&it == &this->boost_preset_()) {
-        this->activate_preset_ = &it;
-        this->active_preset_ = nullptr;
+        // активность пресета буста определяется работой турбо-режима, а не совпадением состояния
         this->enable_boost(true, call);
       } else {
         // иначе по окончании буст восстановит сохраненное состояние поверх пресета

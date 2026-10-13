@@ -272,6 +272,36 @@ TEST_CASE("4s ble: auto mode does not interfere with native turbo") {
   CHECK(b.h.tx.empty());
 }
 
+TEST_CASE("4s ble: boost preset follows native turbo") {
+  Breezer4sBle b;
+  // native turbo ignores preset temperature and heater, state never matches the preset
+  b.h.api.add_preset("boost", dentra::tion::TionApiBase::PresetData{.target_temperature = 20,
+                                                                    .heater_state = 1,
+                                                                    .power_state = 1,
+                                                                    .fan_speed = -1,
+                                                                    .gate_position = TionGatePosition::NONE,
+                                                                    .auto_state = -1,
+                                                                    .work_time = 0});
+  b.h.api.set_boost_time(600);
+  TionStateCall call(&b.h.api);
+  b.h.api.enable_preset("boost", &call);
+  call.perform();
+  CHECK(strcasecmp(b.h.api.get_active_preset_name(), "none") == 0);
+
+  b.turbo(true, 600);
+  CHECK(strcasecmp(b.h.api.get_active_preset_name(), "boost") == 0);
+  b.turbo(false, 0);
+  CHECK(strcasecmp(b.h.api.get_active_preset_name(), "none") == 0);
+
+  // later manual max speed does not activate boost preset
+  b.st.fan_speed = 6;
+  b.st.heater_state = true;
+  b.st.target_temperature = 20;
+  b.h.receive(test::encode_ble<TionLtBleProtocol>(dentra::tion_4s::FRAME_TYPE_STATE_RSP,
+                                                  tion4s_raw_frame_t<tion4s_state_t>{1, b.st}));
+  CHECK(strcasecmp(b.h.api.get_active_preset_name(), "none") == 0);
+}
+
 TEST_CASE("4s ble: native turbo state does not trigger soft boost logic") {
   Breezer4sBle b;
   b.turbo(true, 600);
