@@ -225,9 +225,9 @@ tion:
           float co2_range = co2_max - co2_target;
 
           float ratio = co2_deviation / co2_range; // линейно
-          if (*alg == 2) { // квадратично
+          if (*alg == 1) { // квадратично
             ratio = std::pow(ratio, 2.0f);
-          } else if (*alg == 3) { // экспоненциально
+          } else if (*alg == 2) { // экспоненциально
             ratio = std::exp(ratio) - 1.0f;
           }
           ratio = std::clamp(ratio, 0.0f, 1.0f);
