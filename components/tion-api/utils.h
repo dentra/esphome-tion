@@ -7,6 +7,12 @@
 #include "esphome/core/helpers.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
+#else
+#include <optional>
+#endif
+
+#if !__has_builtin(__builtin_bswap16)
+#include <byteswap.h>
 #endif
 
 namespace dentra {
@@ -38,7 +44,6 @@ void delay(uint32_t ms);
 #ifndef ONOFF
 #define ONOFF(b) ((b) ? "ON" : "OFF")
 #endif
-#include <optional>
 using std::optional;
 std::string __attribute__((format(printf, 1, 2))) str_sprintf(const char *fmt, ...);
 // добавляет форматированную строку в buf с позиции pos, возвращает новую позицию (не больше size)
@@ -47,7 +52,6 @@ buf_append_printf(char *buf, size_t size, size_t pos, const char *fmt, ...);
 #endif
 
 #if !__has_builtin(__builtin_bswap16)
-#include <byteswap.h>
 #define __builtin_bswap16 __bswap_16
 #endif
 
