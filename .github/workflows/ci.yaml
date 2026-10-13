@@ -30,6 +30,45 @@ env:
   BUILD_DIR: "configs"
 
 jobs:
+  checks:
+    if: startsWith(github.server_url, 'https://github.com')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        # esphome version is pinned in pyproject.toml
+        run: uv sync --locked
+      - name: Check ESPHome version
+        run: |
+          version=$(uv run esphome version | awk '{print $2}')
+          if [ "$version" != "$ESPHOME_VERSION" ]; then
+            echo "::error::pyproject.toml esphome $version differs from ESPHOME_VERSION $ESPHOME_VERSION"
+            exit 1
+          fi
+      - name: Generate fake secrets.yaml
+        run: |
+          echo -e "wifi_ssid: ssid\nwifi_password: password\nmqtt_broker: localhost\nmqtt_port: 1883" > ${{ env.TESTS_DIR }}/secrets.yaml
+      - name: Cache ESPHome and PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            build.tmp/esphome
+          key: ${{ runner.os }}-checks-${{ env.ESPHOME_VERSION }}-${{ hashFiles('uv.lock') }}
+      - name: Register problem matchers
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/gcc.json"
+      - name: Unit tests
+        run: scripts/unit-test.sh
+      - name: Smoke test
+        run: scripts/smoke-test.sh
+      - name: Config tests
+        run: scripts/config-test.sh
   tests:
     if: startsWith(github.server_url, 'https://github.com')
     runs-on: ubuntu-latest
