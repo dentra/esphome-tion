@@ -217,15 +217,23 @@ class Tion4sApiComponent : public TionApiComponentBase<dentra::tion_4s::Tion4sAp
 class TionLtApiComponent : public TionApiComponentBase<dentra::tion::TionLtApi> {
  public:
   explicit TionLtApiComponent(TionApiComponentBase::Api *api, TionVPortType vport_type)
-      : TionApiComponentBase(api, vport_type) {
-    if (vport_type == TionVPortType::VPORT_UART) {
-      api->enable_kiv_support();
+      : TionApiComponentBase(api, vport_type), vport_type_(vport_type) {}
+
+  void enable_kiv_support() {
+    // kiv поддерживается только при подключении по UART
+    if (this->vport_type_ != TionVPortType::VPORT_UART) {
+      ESP_LOGW("tion_component", "KIV mode is supported only over UART");
+      return;
     }
+    this->typed_api()->enable_kiv_support();
   }
 
   void set_button_presets(const dentra::tion_lt::button_presets_t &button_presets) {
     this->typed_api()->set_button_presets(button_presets);
   }
+
+ protected:
+  TionVPortType vport_type_;
 };
 #endif
 

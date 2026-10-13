@@ -143,6 +143,12 @@ def check_type(key, typ, required: bool = False):
     return cgp.validate_type(key, typ, required)
 
 
+def validate_enable_kiv(config):
+    if config[CONF_ENABLE_KIV] and config[CONF_TYPE] != "lt":
+        raise cv.Invalid(f"{CONF_ENABLE_KIV} is valid only for the type lt")
+    return config
+
+
 CONFIG_SCHEMA = cv.All(
     cv.ensure_list(
         cv.Schema(
@@ -166,6 +172,7 @@ CONFIG_SCHEMA = cv.All(
         .extend(vport.VPORT_CLIENT_SCHEMA)
         .extend(cv.polling_component_schema("60s")),
         cgp.validate_type(CONF_BUTTON_PRESETS, "lt"),
+        validate_enable_kiv,
     ),
 )
 
@@ -369,8 +376,9 @@ async def to_code(config: dict):
         if conf[CONF_RESTORE_STATE]:
             cg.add_define("USE_TION_RESTORE_STATE")
             cg.add(var.set_rtc_key(f"{conf[CONF_ID].id}-v2"))
-        if CONF_ENABLE_KIV:
+        if conf[CONF_ENABLE_KIV]:
             cg.add_build_flag("-DTION_ENABLE_KIV")
+            cg.add(var.enable_kiv_support())
 
 
 def new_pc(pc_cfg: dict[str, str | dict[str, Any]]):
