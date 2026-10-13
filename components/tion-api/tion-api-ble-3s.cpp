@@ -60,7 +60,11 @@ bool Tion3sBleProtocol::write_frame(uint16_t frame_type, const void *frame_data,
     return false;
   }
   Tion3sRawBleFrame frame{.data = {.type = frame_type, .data = {}}, .magic = Tion3sRawBleFrame::FRAME_MAGIC};
-  if (frame_data_size <= sizeof(frame.data.data)) {
+  if (frame_data_size > sizeof(frame.data.data)) {
+    TION_LOGW(TAG, "Frame data size %zu is too large, max %zu", frame_data_size, sizeof(frame.data.data));
+    return false;
+  }
+  if (frame_data_size > 0) {
     std::memcpy(frame.data.data, frame_data, frame_data_size);
   }
   return this->writer_(reinterpret_cast<const uint8_t *>(&frame), sizeof(frame));
