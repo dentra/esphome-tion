@@ -68,7 +68,7 @@ void tion_log_printf_(int level, const char *tag, int line, const char *format, 
 
 #ifndef TION_LOGV
 #if TION_LOG_LEVEL >= TION_LOG_LEVEL_VERBOSE
-#define TION_LOGV(tag, format, ...) tion_log_printf_(TION_LOG_LEVEL_VERBOSE, tag, __LINE__, format, ##__VA_ARGS__)
+#define TION_LOGV(tag, format, ...) ::dentra::tion::tion_log_printf_(TION_LOG_LEVEL_VERBOSE, tag, __LINE__, format, ##__VA_ARGS__)
 #else
 #define TION_LOGV(tag, format, ...)
 #endif
@@ -76,7 +76,7 @@ void tion_log_printf_(int level, const char *tag, int line, const char *format, 
 
 #ifndef TION_LOGD
 #if TION_LOG_LEVEL >= TION_LOG_LEVEL_DEBUG
-#define TION_LOGD(tag, format, ...) tion_log_printf_(TION_LOG_LEVEL_DEBUG, tag, __LINE__, format, ##__VA_ARGS__)
+#define TION_LOGD(tag, format, ...) ::dentra::tion::tion_log_printf_(TION_LOG_LEVEL_DEBUG, tag, __LINE__, format, ##__VA_ARGS__)
 #else
 #define TION_LOGD(tag, format, ...)
 #endif
@@ -84,7 +84,7 @@ void tion_log_printf_(int level, const char *tag, int line, const char *format, 
 
 #ifndef TION_LOGI
 #if TION_LOG_LEVEL >= TION_LOG_LEVEL_INFO
-#define TION_LOGI(tag, format, ...) tion_log_printf_(TION_LOG_LEVEL_INFO, tag, __LINE__, format, ##__VA_ARGS__)
+#define TION_LOGI(tag, format, ...) ::dentra::tion::tion_log_printf_(TION_LOG_LEVEL_INFO, tag, __LINE__, format, ##__VA_ARGS__)
 #else
 #define TION_LOGI(tag, format, ...)
 #endif
@@ -92,7 +92,7 @@ void tion_log_printf_(int level, const char *tag, int line, const char *format, 
 
 #ifndef TION_LOGW
 #if TION_LOG_LEVEL >= TION_LOG_LEVEL_WARN
-#define TION_LOGW(tag, format, ...) tion_log_printf_(TION_LOG_LEVEL_WARN, tag, __LINE__, format, ##__VA_ARGS__)
+#define TION_LOGW(tag, format, ...) ::dentra::tion::tion_log_printf_(TION_LOG_LEVEL_WARN, tag, __LINE__, format, ##__VA_ARGS__)
 #else
 #define TION_LOGW(tag, format, ...)
 #endif
@@ -100,7 +100,7 @@ void tion_log_printf_(int level, const char *tag, int line, const char *format, 
 
 #ifndef TION_LOGE
 #if TION_LOG_LEVEL >= TION_LOG_LEVEL_ERROR
-#define TION_LOGE(tag, format, ...) tion_log_printf_(TION_LOG_LEVEL_ERROR, tag, __LINE__, format, ##__VA_ARGS__)
+#define TION_LOGE(tag, format, ...) ::dentra::tion::tion_log_printf_(TION_LOG_LEVEL_ERROR, tag, __LINE__, format, ##__VA_ARGS__)
 #else
 #define TION_LOGE(tag, format, ...)
 #endif

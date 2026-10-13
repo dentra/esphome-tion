@@ -1,6 +1,10 @@
 #include <cstdlib>
 #include <string>
 #include <climits>  // CHAR_BIT
+#ifndef TION_ESPHOME
+#include <chrono>
+#include <cstdarg>
+#endif
 
 #include "utils.h"
 
@@ -41,6 +45,29 @@ static inline std::string hex(const void *data, uint32_t size, char sep, bool ad
 }
 
 std::string tion_hexencode(const void *data, uint32_t size) { return hex(data, size, '.', true); };
+
+__attribute__((weak)) uint32_t millis() {
+  static const auto start = std::chrono::steady_clock::now();
+  const auto elapsed = std::chrono::steady_clock::now() - start;
+  return static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
+}
+
+__attribute__((weak)) void delay(uint32_t ms) {}
+
+std::string str_sprintf(const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  const int len = std::vsnprintf(nullptr, 0, fmt, args);
+  va_end(args);
+  std::string str;
+  if (len > 0) {
+    str.resize(len);
+    va_start(args, fmt);
+    std::vsnprintf(str.data(), len + 1, fmt, args);
+    va_end(args);
+  }
+  return str;
+}
 
 #endif
 

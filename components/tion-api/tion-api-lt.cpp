@@ -293,7 +293,7 @@ void TionLtApi::dump_state_(const tionlt_state_t &state) const {
             state.button_presets.fan[2], state.button_presets.tmp[0],  //-//
             state.button_presets.tmp[1], state.button_presets.tmp[2]);
   TION_DUMP(TAG, "errors_cnt  : %s",
-            format_hex_pretty(reinterpret_cast<const uint8_t *>(&state.errors_cnt), sizeof(state.errors_cnt)).c_str());
+            tion::tion_hexencode(&state.errors_cnt, sizeof(state.errors_cnt)).c_str());
   TION_DUMP(TAG, "test_type   : 0x%02X (%s)", state.test_type, tion::get_flag_bits(state.test_type));
   TION_DUMP(TAG, "reserved    : 0x%02X (%s)", state.reserved, tion::get_flag_bits(state.reserved));
 }
