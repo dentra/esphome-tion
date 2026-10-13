@@ -3,6 +3,7 @@ from typing import Any
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import esphome.final_validate as fv
 from esphome import automation, core
 from esphome.automation import register_action, register_condition
 from esphome.components import sensor as esphome_sensor
@@ -13,6 +14,7 @@ from esphome.const import (
     CONF_ID,
     CONF_LAMBDA,
     CONF_ON_STATE,
+    CONF_PLATFORM,
     CONF_POWER,
     CONF_RESTORE_STATE,
     CONF_TEMPERATURE,
@@ -175,6 +177,25 @@ CONFIG_SCHEMA = cv.All(
         validate_enable_kiv,
     ),
 )
+
+
+def _final_validate_enable_kiv(config):
+    vports = {
+        str(vp[CONF_ID]): vp[CONF_PLATFORM]
+        for vp in fv.full_config.get().get("vport", [])
+    }
+    for conf in config:
+        if (
+            conf[CONF_ENABLE_KIV]
+            and vports.get(str(conf[vport.CONF_VPORT_ID])) != "tion_lt_uart"
+        ):
+            raise cv.Invalid(
+                f"{CONF_ENABLE_KIV} is supported only over UART", path=[CONF_ENABLE_KIV]
+            )
+    return config
+
+
+FINAL_VALIDATE_SCHEMA = _final_validate_enable_kiv
 
 
 async def new_vport_api_wrapper(config: dict, component_class: MockObjClass):
