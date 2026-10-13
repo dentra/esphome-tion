@@ -25,7 +25,7 @@ _Loader.add_multi_constructor("!", lambda loader, suffix, node: loader.construct
 @cache
 def validated(config: Path) -> dict:
     """Returns config validated by esphome."""
-    env = dict(os.environ, ESPHOME_DATA_DIR=str(BUILD / "esphome"))
+    env = dict(os.environ, ESPHOME_DATA_DIR=str(BUILD / "esphome"), ESPHOME_NOGITIGNORE="1")
     res = subprocess.run([sys.executable, "-m", "esphome", "config", str(config)], cwd=ROOT, env=env,
                          capture_output=True, text=True, check=False)
     assert res.returncode == 0, res.stdout + res.stderr

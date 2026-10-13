@@ -9,6 +9,8 @@ if [[ -z "${VIRTUAL_ENV}" && -f $prj_path/.venv/bin/activate ]]; then
   source $prj_path/.venv/bin/activate
 fi
 
+# do not let esphome create .gitignore next to configs
+export ESPHOME_NOGITIGNORE=1
 export ESPHOME_DATA_DIR=$prj_path/build.tmp/esphome
 
 # use local esphome-components when linked into components dir

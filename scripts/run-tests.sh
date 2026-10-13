@@ -39,6 +39,8 @@ shift $((OPTIND-1)) # Shift positional parameters past the options
 test_dir=$prj_path/tests/gen
 conf_dir=$prj_path/configs
 
+# do not let esphome create .gitignore next to configs
+export ESPHOME_NOGITIGNORE=1
 export ESPHOME_DATA_DIR=$(realpath $prj_path)/build.tmp/esphome
 
 echo "Configuration types: ${types[@]}"

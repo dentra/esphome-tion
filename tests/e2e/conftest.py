@@ -40,7 +40,7 @@ def firmware() -> Path:
     args += ["compile", str(ROOT / "tests" / "smoke" / "tion-smoke.yaml")]
     log = BUILD / "logs" / "e2e-build.log"
     log.parent.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, ESPHOME_DATA_DIR=str(BUILD / "esphome"))
+    env = dict(os.environ, ESPHOME_DATA_DIR=str(BUILD / "esphome"), ESPHOME_NOGITIGNORE="1")
     with log.open("w") as f:
         res = subprocess.run(args, cwd=ROOT, env=env, stdout=f, stderr=subprocess.STDOUT, check=False)
     if res.returncode != 0:

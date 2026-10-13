@@ -3,7 +3,7 @@
 secrets.yaml
 
 /.vscode
-/.esphome
+.esphome/
 /.platformio
 /.venv
 /.nosync
