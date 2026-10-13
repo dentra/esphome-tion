@@ -39,6 +39,10 @@ shift $((OPTIND-1)) # Shift positional parameters past the options
 test_dir=$prj_path/tests/gen
 conf_dir=$prj_path/configs
 
+if [[ -z "${VIRTUAL_ENV}" && -f $prj_path/.venv/bin/activate ]]; then
+  source $prj_path/.venv/bin/activate
+fi
+
 # do not let esphome create .gitignore next to configs
 export ESPHOME_NOGITIGNORE=1
 export ESPHOME_DATA_DIR=$(realpath $prj_path)/build.tmp/esphome
