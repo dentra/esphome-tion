@@ -2,6 +2,7 @@
 #include <string>
 #include <climits>  // CHAR_BIT
 #ifndef TION_ESPHOME
+#include <algorithm>
 #include <chrono>
 #include <cstdarg>
 #endif
@@ -67,6 +68,20 @@ std::string str_sprintf(const char *fmt, ...) {
     va_end(args);
   }
   return str;
+}
+
+size_t buf_append_printf(char *buf, size_t size, size_t pos, const char *fmt, ...) {
+  if (pos >= size) {
+    return size;
+  }
+  va_list args;
+  va_start(args, fmt);
+  const int written = std::vsnprintf(buf + pos, size - pos, fmt, args);
+  va_end(args);
+  if (written < 0) {
+    return pos;
+  }
+  return std::min(pos + static_cast<size_t>(written), size);
 }
 
 #endif

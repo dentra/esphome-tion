@@ -21,6 +21,12 @@ inline uint32_t millis() { return esphome::millis(); }
 inline void delay(uint32_t ms) { esphome::delay(ms); }
 using esphome::optional;
 using esphome::str_sprintf;
+// на ESP8266 buf_append_printf - макрос, оборачивающий формат в PSTR и вызывающий buf_append_printf_p
+#ifdef USE_ESP8266
+using esphome::buf_append_printf_p;
+#else
+using esphome::buf_append_printf;
+#endif
 #else
 #define PACKED __attribute__((packed))
 std::string tion_hexencode(const void *data, uint32_t size);
@@ -35,6 +41,9 @@ void delay(uint32_t ms);
 #include <optional>
 using std::optional;
 std::string __attribute__((format(printf, 1, 2))) str_sprintf(const char *fmt, ...);
+// добавляет форматированную строку в buf с позиции pos, возвращает новую позицию (не больше size)
+size_t __attribute__((format(printf, 4, 5)))
+buf_append_printf(char *buf, size_t size, size_t pos, const char *fmt, ...);
 #endif
 
 #if !__has_builtin(__builtin_bswap16)

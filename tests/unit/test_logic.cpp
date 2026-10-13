@@ -398,9 +398,38 @@ TEST_CASE("presets: log shows only defined parameters") {
                                                       .gate_position = TionGatePosition::NONE,
                                                       .auto_state = -1,
                                                       .work_time = 0});
+  b.api().add_preset("full", TionApiBase::PresetData{.target_temperature = 25,
+                                                     .heater_state = 0,
+                                                     .power_state = 0,
+                                                     .fan_speed = 6,
+                                                     .gate_position = TionGatePosition::OUTDOOR,
+                                                     .auto_state = 0,
+                                                     .work_time = 0});
   dentra::tion::set_logger(nullptr);
   CHECK(std::count(logs.begin(), logs.end(), "Setup preset 'mixed': power=on, gate=mixed, auto=off") == 1);
   CHECK(std::count(logs.begin(), logs.end(), "Update boost preset 'boost': temp=20") == 1);
+  CHECK(std::count(logs.begin(), logs.end(),
+                   "Setup preset 'full': power=off, heat=off, fan=6, temp=25, gate=outdoor, auto=off") == 1);
+}
+
+TEST_CASE("presets: boost log ignores power, gate and auto") {
+  std::vector<std::string> logs;
+  dentra::tion::set_logger([&logs](int, const char *, int, const char *format, va_list args) {
+    char buf[256];
+    vsnprintf(buf, sizeof(buf), format, args);
+    logs.emplace_back(buf);
+  });
+  Breezer4s b;
+  logs.clear();
+  b.api().add_preset("boost", TionApiBase::PresetData{.target_temperature = 25,
+                                                      .heater_state = 1,
+                                                      .power_state = 1,
+                                                      .fan_speed = 6,
+                                                      .gate_position = TionGatePosition::OUTDOOR,
+                                                      .auto_state = 0,
+                                                      .work_time = 0});
+  dentra::tion::set_logger(nullptr);
+  CHECK(std::count(logs.begin(), logs.end(), "Update boost preset 'boost': heat=on, fan=6, temp=25") == 1);
 }
 
 TEST_CASE("presets: other presets are not boost") {
