@@ -12,12 +12,6 @@ mqtt:
   discovery: false
   publish_nan_as_none: false
 
-setup:
-  - lambda: |-
-      #if ESPHOME_VERSION_CODE < VERSION_CODE(2026, 3, 0)
-        id(tion_climate).set_name(App.get_name().c_str());
-      #endif
-
 declaration:
   - lambda: |-
       #ifdef TION_PKG_SPRUTHUB_INCLUDED
@@ -29,3 +23,10 @@ declaration:
       #ifndef TION_PKG_MQTT_INCLUDED
         #error Please enable package mqtt.yaml before spruthub.yaml
       #endif
+
+# SprutHub template "(.*)/climate/(.*)/mode/state" takes device name from the climate object_id.
+# Climate without own name (as configs had before 2025-01-21) uses friendly_name for name and object_id.
+# Do not use !remove, entity without name becomes internal.
+climate:
+  - id: !extend tion_climate
+    name: None
