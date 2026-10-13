@@ -1,4 +1,0 @@
-# Optional switch to temporary disable OTA to reduce CPU usage. Optimal for ESP8266 chip series.
-otax:
-  enabled:
-    name: OTA Enabled

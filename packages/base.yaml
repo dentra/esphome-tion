@@ -46,7 +46,6 @@ external_components:
     components:
       - crash_info
       - etl
-      - otax
       - vport
       - settings
       - coredump
