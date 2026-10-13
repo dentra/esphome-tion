@@ -218,7 +218,7 @@ tion:
           // новый алгоритм
           auto co2_derivative = 1.0f;
 
-          auto co2_max = co2_critical; // co2_critical - co2_critical_hysteresis;
+          auto co2_max = std::max(co2_critical, setpoint + 100); // co2_critical - co2_critical_hysteresis;
           auto co2_target = setpoint; // setpoint + setpoint_hysteresis;
           auto co2_deviation = deviation; // co2_level - co2_target;
 
