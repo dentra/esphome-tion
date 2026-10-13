@@ -836,8 +836,8 @@ void TionApiBase::set_auto_setpoint(uint16_t setpoint) {
 void TionApiBase::auto_reset() {
   TION_LOGD(TAG, "Auto update settings min: %u, max: %u, setpoint: %u", this->auto_min_fan_speed_,
             this->auto_max_fan_speed_, this->auto_setpoint_);
-  // сначала уведомим все сущности об изменениях
-  if (this->on_state_) {
+  // сначала уведомим все сущности об изменениях, но только если состояние уже получено от бризера
+  if (this->on_state_ && this->state_.is_initialized()) {
     this->on_state_(this->state_, 0);
   }
   // потом уведомим авто-режим

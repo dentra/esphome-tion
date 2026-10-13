@@ -57,6 +57,11 @@ void TionApiComponent::update() {
 
 void TionApiComponent::on_state_(const TionState &state, const uint32_t request_id) {
   ESP_LOGV(TAG, "State received, request_id: %" PRIu32, request_id);
+  if (!state.is_initialized()) {
+    // состояние от бризера еще не получено, не восстанавливаем и не сохраняем его
+    ESP_LOGV(TAG, "State is not initialized yet");
+    return;
+  }
   // clear error reporting
   this->status_clear_error();
   this->cancel_timeout(STATE_TIMEOUT);
