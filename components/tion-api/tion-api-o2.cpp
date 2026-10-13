@@ -247,6 +247,10 @@ bool TionO2Api::set_work_mode(WorkModeFlags work_mode) const {
 
 void TionO2Api::write_state(TionStateCall *call) {
   TION_LOGV(TAG, "Request State set");
+  if (!this->state_.is_initialized()) {
+    TION_LOGW(TAG, "State was not initialized");
+    return;
+  }
   const auto st = this->make_write_state_(call);
 
   // auto_state невозможно получить от бризера
