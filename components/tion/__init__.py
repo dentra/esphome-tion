@@ -518,7 +518,7 @@ async def tion_switch_to_code(config, action_id, template_arg, args):
 @register_condition("tion.power.is_on", PowerCondition, TION_ACTION_SCHEMA)
 @register_condition("tion.heater.is_on", HeaterCondition, TION_ACTION_SCHEMA)
 @register_condition("tion.boost.is_on", BoostCondition, TION_ACTION_SCHEMA)
-@register_condition("tion.auto.is_on", BoostCondition, TION_ACTION_SCHEMA)
+@register_condition("tion.auto.is_on", AutoCondition, TION_ACTION_SCHEMA)
 async def tion_switch_is_on_to_code(config, condition_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(condition_id, template_arg, paren, True)
@@ -527,7 +527,7 @@ async def tion_switch_is_on_to_code(config, condition_id, template_arg, args):
 @register_condition("tion.power.is_off", PowerCondition, TION_ACTION_SCHEMA)
 @register_condition("tion.heater.is_off", HeaterCondition, TION_ACTION_SCHEMA)
 @register_condition("tion.boost.is_off", BoostCondition, TION_ACTION_SCHEMA)
-@register_condition("tion.auto.is_off", BoostCondition, TION_ACTION_SCHEMA)
+@register_condition("tion.auto.is_off", AutoCondition, TION_ACTION_SCHEMA)
 async def tion_switch_is_off_to_code(config, condition_id, template_arg, args):
     paren = await cg.get_variable(config[CONF_ID])
     return cg.new_Pvariable(condition_id, template_arg, paren, False)
