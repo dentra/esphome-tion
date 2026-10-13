@@ -169,6 +169,51 @@ const char *TionState::get_gate_position_str(const TionTraits &traits) const {
   return this->gate_position == TionGatePosition::OPENED ? "opened" : "closed";
 }
 
+// Имя позиции заслонки как в конфигурации пресетов.
+static const char *gate_position_name(TionGatePosition gate_position) {
+  switch (gate_position) {
+    case TionGatePosition::OUTDOOR:
+      return "outdoor";
+    case TionGatePosition::INDOOR:
+      return "indoor";
+    case TionGatePosition::MIXED:
+      return "mixed";
+    default:
+      return "unknown";
+  }
+}
+
+// Только заданные параметры пресета, например: "power=on, fan=3, gate=mixed".
+static std::string preset_data_str(const TionApiBase::PresetData &data, bool boost) {
+  std::string res;
+  auto add = [&res](const std::string &param) {
+    if (!res.empty()) {
+      res += ", ";
+    }
+    res += param;
+  };
+  // турбо-режим использует только скорость, температуру и обогреватель
+  if (!boost && data.has_power_state()) {
+    add(str_sprintf("power=%s", data.power_state > 0 ? "on" : "off"));
+  }
+  if (data.has_heater_state()) {
+    add(str_sprintf("heat=%s", data.heater_state > 0 ? "on" : "off"));
+  }
+  if (data.has_fan_speed()) {
+    add(str_sprintf("fan=%d", data.fan_speed));
+  }
+  if (data.has_target_temperature()) {
+    add(str_sprintf("temp=%d", data.target_temperature));
+  }
+  if (!boost && data.has_gate_position()) {
+    add(str_sprintf("gate=%s", gate_position_name(data.gate_position)));
+  }
+  if (!boost && data.has_auto_state()) {
+    add(str_sprintf("auto=%s", data.auto_state > 0 ? "on" : "off"));
+  }
+  return res.empty() ? "no changes" : res;
+}
+
 TionState TionApiBase::make_write_state_(TionStateCall *call) const {
   // текущее состояние
   const auto &cs = this->state_;
@@ -353,7 +398,7 @@ void TionStateCall::dump() const {
     TION_DUMP(TAG, "  target T: %d", *this->target_temperature_);
   }
   if (this->gate_position_.has_value()) {
-    TION_DUMP(TAG, "  gate pos: %u", static_cast<uint8_t>(*this->gate_position_));
+    TION_DUMP(TAG, "  gate pos: %s", gate_position_name(*this->gate_position_));
   }
   if (this->power_state_.has_value()) {
     TION_DUMP(TAG, "  power   : %s", ONOFF(*this->power_state_));
@@ -704,8 +749,8 @@ void TionApiBase::boost_cancel_(TionStateCall *call) {
 }
 
 void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
-  TION_LOGD(TAG, "Activate preset '%s'", preset);
   if (preset == nullptr || *preset == 0 || strcasecmp(preset, PRESET_NONE) == 0) {
+    TION_LOGD(TAG, "Activate preset '%s'", PRESET_NONE);
     // пресет буста может быть еще не подтвержден бризером
     if (this->active_preset_ == &this->boost_preset_() || this->activate_preset_ == &this->boost_preset_()) {
       this->enable_boost(false, call);
@@ -715,6 +760,7 @@ void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
     return;
   }
 
+  TION_LOGD(TAG, "Activate preset '%s'", preset);
   for (auto &&it : this->presets_) {
     if (it.name && strcasecmp(preset, it.name) == 0) {
       if (&it == &this->boost_preset_()) {
@@ -763,16 +809,14 @@ void TionApiBase::add_preset(const char *name, const PresetData &data) {
   // work_time оставлен для совместимости, длительность турбо-режима задается отдельно.
   // при изменении правила синхронизировать с _setup_tion_api_presets в components/tion/__init__.py
   if (strcasecmp(name, PRESET_BOOST) == 0 || data.has_timer()) {
-    TION_LOGD(TAG, "Update preset '%s': heat=%d, fan=%u, temp=%d,", name, data.heater_state, data.fan_speed,
-              data.target_temperature);
+    TION_LOGD(TAG, "Update boost preset '%s': %s", name, preset_data_str(data, true).c_str());
     auto &preset = this->boost_preset_();
     preset.name = name;
     preset.data.target_temperature = data.target_temperature;
     preset.data.heater_state = data.heater_state;
     preset.data.fan_speed = data.fan_speed > 0 ? data.fan_speed : this->traits_.max_fan_speed;
   } else {
-    TION_LOGD(TAG, "Setup preset '%s': power=%d, heat=%d, fan=%u, temp=%d, gate=%u", name, data.power_state,
-              data.heater_state, data.fan_speed, data.target_temperature, static_cast<uint8_t>(data.gate_position));
+    TION_LOGD(TAG, "Setup preset '%s': %s", name, preset_data_str(data, false).c_str());
     this->presets_.push_back({.name = name, .data = data});
   }
 }
