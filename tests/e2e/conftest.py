@@ -21,24 +21,24 @@ BUILD = ROOT / "build.tmp"
 NODE_NAME = "tion-e2e"
 API_PORT = 6053
 # host uart port must be a two level path
-PORTS = {m: f"/tmp/tion-e2e-{m}" for m in ("4s", "3s", "lt", "o2")}
+MODELS = ("4s", "3s", "lt", "o2")
+PORTS = {m: f"/tmp/tion-e2e-{m}" for m in MODELS}
 
 
-@pytest.fixture(scope="session")
-def firmware() -> Path:
-    """Builds host firmware once per session. Set TION_E2E_NO_BUILD=1 to reuse existing build."""
-    program = BUILD / "esphome" / "build" / NODE_NAME / ".pioenvs" / NODE_NAME / "program"
+def build_firmware(config: str, node_name: str, models: tuple[str, ...]) -> Path:
+    """Builds host firmware from tests/smoke/<config>. Set TION_E2E_NO_BUILD=1 to reuse existing build."""
+    program = BUILD / "esphome" / "build" / node_name / ".pioenvs" / node_name / "program"
     if os.environ.get("TION_E2E_NO_BUILD") and program.exists():
         return program
-    args = [sys.executable, "-m", "esphome", "-s", "node_name", NODE_NAME, "-s", "tion_update_interval", "2s"]
+    args = [sys.executable, "-m", "esphome", "-s", "node_name", node_name, "-s", "tion_update_interval", "2s"]
     args += ["-s", "flash_write_interval", "1s", "-s", "tion_state_timeout", "1s"]
-    for m, port in PORTS.items():
-        args += ["-s", f"port_{m}", port]
+    for m in models:
+        args += ["-s", f"port_{m}", PORTS[m]]
     # use local esphome-components when linked into components dir
     if (ROOT / "components" / "vport").exists():
         args += ["-s", "vport_source", str(ROOT / "components")]
-    args += ["compile", str(ROOT / "tests" / "smoke" / "tion-smoke.yaml")]
-    log = BUILD / "logs" / "e2e-build.log"
+    args += ["compile", str(ROOT / "tests" / "smoke" / config)]
+    log = BUILD / "logs" / f"{node_name}-build.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, ESPHOME_DATA_DIR=str(BUILD / "esphome"), ESPHOME_NOGITIGNORE="1")
     with log.open("w") as f:
@@ -46,6 +46,18 @@ def firmware() -> Path:
     if res.returncode != 0:
         pytest.fail(f"firmware build failed, see {log}")
     return program
+
+
+@pytest.fixture(scope="session")
+def firmware() -> Path:
+    """Host firmware from tests/smoke/tion-smoke.yaml, all breezer models."""
+    return build_firmware("tion-smoke.yaml", NODE_NAME, MODELS)
+
+
+@pytest.fixture(scope="session")
+def auto_co2_firmware() -> Path:
+    """Host firmware from tests/smoke/tion-auto-co2.yaml, 4S with packages/tion/auto_co2.yaml."""
+    return build_firmware("tion-auto-co2.yaml", f"{NODE_NAME}-auto-co2", ("4s",))
 
 
 def object_id(name: str) -> str:
@@ -103,8 +115,9 @@ class Device:
 class Bench:
     """Ports, emulators and preferences live for the whole test, firmware can be restarted."""
 
-    def __init__(self, firmware: Path, name: str) -> None:
+    def __init__(self, firmware: Path, name: str, models: tuple[str, ...] = MODELS) -> None:
         self.firmware = firmware
+        self.models = models
         self.name = name
         self.prefs = BUILD / "e2e" / "prefs" / name
         shutil.rmtree(self.prefs, ignore_errors=True)
@@ -112,12 +125,14 @@ class Bench:
         self.log_dir = BUILD / "logs" / "e2e"
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.loop = asyncio.get_running_loop()
-        self.ports = {m: PtyPort(p) for m, p in PORTS.items()}
-        self.emu4s = Tion4sUart(self.ports["4s"])
-        self.emu3s = Tion3sUart(self.ports["3s"])
-        self.emult = TionLtUart(self.ports["lt"])
-        self.emuo2 = TionO2Uart(self.ports["o2"])
-        self.emus = [self.emu4s, self.emu3s, self.emult, self.emuo2]
+        self.ports = {m: PtyPort(PORTS[m]) for m in models}
+        emu_types = {"4s": Tion4sUart, "3s": Tion3sUart, "lt": TionLtUart, "o2": TionO2Uart}
+        emus = {m: emu_types[m](port) for m, port in self.ports.items()}
+        self.emu4s = emus.get("4s")
+        self.emu3s = emus.get("3s")
+        self.emult = emus.get("lt")
+        self.emuo2 = emus.get("o2")
+        self.emus = list(emus.values())
         for emu in self.emus:
             emu.attach(self.loop)
         self.runs = 0
@@ -156,7 +171,7 @@ class Bench:
         dev.entities = {entity_id(e): e for e in entities}
         client.subscribe_states(lambda st: dev.states.__setitem__((domain(st), st.key), st))
         # commands are ignored until breezer state is received
-        for m in ("4s", "3s", "lt", "o2"):
+        for m in self.models:
             await dev.wait_for(lambda: dev.value(f"text_sensor.{m}_firmware_version") not in (None, ""),
                                what=f"{m} state")
             await dev.wait_for(lambda: dev.state(f"climate.{m}_climate") is not None, what=f"{m} climate")
@@ -215,3 +230,12 @@ async def bench(firmware: Path, request: pytest.FixtureRequest) -> AsyncIterator
 @pytest.fixture
 async def device(bench: Bench) -> Device:
     return await bench.start()
+
+
+@pytest.fixture
+async def auto_co2_device(auto_co2_firmware: Path, request: pytest.FixtureRequest) -> AsyncIterator[Device]:
+    b = Bench(auto_co2_firmware, re.sub(r"[^a-zA-Z0-9_]+", "_", request.node.name), ("4s",))
+    try:
+        yield await b.start()
+    finally:
+        await b.close()

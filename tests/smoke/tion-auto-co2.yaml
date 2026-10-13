@@ -1,0 +1,86 @@
+# Smoke test of packages/tion/auto_co2.yaml: single 4S with tion as a mapping like in user configs,
+# otherwise the package lambda is dropped while merging into the tion list of tion-smoke.yaml.
+# Usage: scripts/smoke-test.sh
+substitutions:
+  node_name: tion-auto-co2
+  # host UART port, overridden by e2e tests
+  port_4s: /dev/null
+  # breezer state poll interval, overridden by e2e tests
+  tion_update_interval: 60s
+  tion_state_timeout: 3s
+  # dentra/esphome-components source
+  vport_source: github://dentra/esphome-components@master
+
+esphome:
+  name: $node_name
+  min_version: "2026.4.0"
+
+host:
+
+logger:
+  level: VERY_VERBOSE
+
+api:
+
+external_components:
+  # components from dentra/esphome-components, local scripts use local copy when available
+  - source: $vport_source
+    components:
+      - cgp
+      - etl
+      - vport
+    refresh: 1d
+  - source:
+      type: local
+      path: ../../components
+    components:
+      - tion
+      - tion-api
+      - tion_4s_uart
+
+packages:
+  e4s: !include { file: entities.yaml, vars: { tid: tion_api, p: 4S } }
+  auto_co2: !include ../../packages/tion/auto_co2.yaml
+
+uart:
+  - { id: uart_4s, port: $port_4s, baud_rate: 115200 }
+
+vport:
+  - { platform: tion_4s_uart, id: vport_4s, uart_id: uart_4s }
+
+tion:
+  id: tion_api
+  type: 4s
+  vport_id: vport_4s
+  update_interval: $tion_update_interval
+  state_timeout: $tion_state_timeout
+  auto:
+    co2: fake_co2
+
+# co2 value is set through API by e2e tests
+number:
+  - platform: template
+    name: Fake CO2
+    optimistic: true
+    min_value: 0
+    max_value: 5000
+    step: 1
+    on_value:
+      - sensor.template.publish:
+          id: fake_co2
+          state: !lambda return x;
+
+sensor:
+  - platform: template
+    id: fake_co2
+    update_interval: never
+
+binary_sensor:
+  - platform: template
+    name: Auto Is On
+    condition:
+      tion.auto.is_on: tion_api
+  - platform: template
+    name: Auto Is Off
+    condition:
+      tion.auto.is_off: tion_api
