@@ -565,8 +565,11 @@ void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
     return;
   }
 
-  if (this->state_.get_fan_speed() == this->state_.max_fan_speed) {
-    TION_LOGW(TAG, "Fan is already running at maximum speed");
+  // скорость может быть переопределена пресетом
+  const auto &boost_fan_speed = this->boost_preset_().data.fan_speed;
+  const uint8_t target_fan_speed = boost_fan_speed > 0 ? boost_fan_speed : this->state_.max_fan_speed;
+  if (this->state_.get_fan_speed() == target_fan_speed) {
+    TION_LOGW(TAG, "Fan is already running at boost speed %u", target_fan_speed);
     return;
   }
 
@@ -697,23 +700,28 @@ void TionApiBase::boost_cancel_(TionStateCall *call) {
 void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {
   TION_LOGD(TAG, "Activate preset '%s'", preset);
   if (preset == nullptr || *preset == 0 || strcasecmp(preset, PRESET_NONE) == 0) {
-    if (this->active_preset_) {
-      if (this->active_preset_ == &this->boost_preset_()) {
-        this->enable_boost(false, call);
-      }
-      this->active_preset_ = nullptr;
+    // пресет буста может быть еще не подтвержден бризером
+    if (this->active_preset_ == &this->boost_preset_() || this->activate_preset_ == &this->boost_preset_()) {
+      this->enable_boost(false, call);
     }
+    this->active_preset_ = nullptr;
     this->activate_preset_ = nullptr;
     return;
   }
 
   for (auto &&it : this->presets_) {
     if (it.name && strcasecmp(preset, it.name) == 0) {
-      this->activate_preset_ = &it;
-      this->active_preset_ = nullptr;
       if (&it == &this->boost_preset_()) {
+        this->activate_preset_ = &it;
+        this->active_preset_ = nullptr;
         this->enable_boost(true, call);
       } else {
+        // иначе по окончании буст восстановит сохраненное состояние поверх пресета
+        if (this->is_boost_running()) {
+          this->enable_boost(false, call);
+        }
+        this->activate_preset_ = &it;
+        this->active_preset_ = nullptr;
         it.data.to_call(call);
       }
       return;
