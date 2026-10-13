@@ -27,7 +27,7 @@ class TionSensor : public EntityExtension<sensor::Sensor>, public Component, pub
   float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
 
   void dump_config() override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       return;
     }
     LOG_SENSOR("", "Tion Sensor", this);

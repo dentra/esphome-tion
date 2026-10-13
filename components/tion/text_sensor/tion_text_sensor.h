@@ -29,7 +29,7 @@ class TionTextSensor : public EntityExtension<text_sensor::TextSensor>,
   float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
 
   void dump_config() override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       return;
     }
     LOG_TEXT_SENSOR("", "Tion TextSensor", this);

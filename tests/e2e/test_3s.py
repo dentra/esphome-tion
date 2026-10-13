@@ -1,10 +1,11 @@
 """Tion 3S over UART."""
 
 import asyncio
+import re
 
 from aioesphomeapi import ClimateMode
 
-from conftest import Device
+from conftest import Bench, Device
 
 
 async def test_state_is_published(device: Device) -> None:
@@ -66,3 +67,15 @@ async def test_reset_filter_requires_confirmation(device: Device) -> None:
     await device.wait_for(lambda: device.value("switch.3s_reset_filter_confirm") is True, what="confirm on")
     device.client.button_command(device.key("button.3s_reset_filter"))
     await device.wait_for(lambda: emu.state.filter_resets == 1, what="breezer filter reset")
+
+
+async def test_unsupported_entities_are_hidden(bench: Bench) -> None:
+    device = await bench.start()
+    for eid in ("switch.3s_led", "binary_sensor.3s_led", "sensor.3s_work_time", "sensor.3s_airflow_counter"):
+        assert eid not in device.entities, eid
+        # same entity is exposed by a model that supports it
+        assert eid.replace("3s", "4s") in device.entities, eid
+    log = bench.log()
+    assert "Unsupported 3S Led" in log
+    # unsupported entity is a model limitation, not a component failure
+    assert not re.search(r"\btion\.\S+ was marked as failed", log)

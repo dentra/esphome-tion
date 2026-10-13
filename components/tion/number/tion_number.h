@@ -31,7 +31,7 @@ class TionNumber : public EntityExtension<number::Number>, public Component, pub
   }
 
   void dump_config() override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       return;
     }
     LOG_NUMBER("", "Tion Number", this);

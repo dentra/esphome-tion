@@ -18,7 +18,7 @@ class TionResetFilterButton : public TionButton<property_controller::button::Res
 
   void setup() override {
     TionButton::setup();
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       if (this->confirm_) {
         // PC::mark_unsupported_entity(this->confirm_);
 #pragma GCC diagnostic push

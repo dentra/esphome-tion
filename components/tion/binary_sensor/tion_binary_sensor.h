@@ -31,7 +31,7 @@ class TionBinarySensor : public EntityExtension<binary_sensor::BinarySensor>,
   float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
 
   void dump_config() override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       return;
     }
     LOG_BINARY_SENSOR("", "Tion BinarySensor", this);

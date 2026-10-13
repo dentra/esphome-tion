@@ -90,8 +90,12 @@ template<typename C> class Controller {
 
   template<typename T> static void mark_unsupported(T *component) {
     mark_unsupported_entity(component);
-    component->mark_failed();
+    // не mark_failed(): ограничение модели не ошибка, не нужен [E] и STATUS_LED_ERROR.
+    // loop() у сущностей нет, LOOP_DONE ставится только здесь.
+    component->disable_loop();
   }
+
+  template<typename T> static bool is_unsupported(const T *component) { return component->is_idle(); }
 
   template<typename T> static void report_unsupported(T *component) {
     ESP_LOGW(TAG, "Unsupported %s", component->get_name().c_str());
@@ -131,7 +135,7 @@ template<typename C> class Controller {
   }
 
   template<typename T, typename V> static void control(T *component, V state) {
-    if (component->is_failed()) {
+    if (is_unsupported(component)) {
       report_unsupported(component);
       return;
     }

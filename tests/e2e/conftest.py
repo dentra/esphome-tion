@@ -124,13 +124,15 @@ class Bench:
         self.device: Device | None = None
         self._proc: subprocess.Popen | None = None
         self._log_file = None
+        self.log_path: Path | None = None
 
     async def start(self) -> Device:
         """Starts firmware and waits until breezer state is received."""
         assert self._proc is None, "firmware is already running"
         self.runs += 1
         suffix = "" if self.runs == 1 else f"-{self.runs}"
-        self._log_file = (self.log_dir / f"{self.name}{suffix}.log").open("wb")
+        self.log_path = self.log_dir / f"{self.name}{suffix}.log"
+        self._log_file = self.log_path.open("wb")
         env = dict(os.environ, ESPHOME_PREFDIR=str(self.prefs))
         # pty makes firmware output line buffered, so boot logs are captured even after kill
         self._out, out_slave = pty.openpty()
@@ -169,6 +171,14 @@ class Bench:
             self.loop.remove_reader(self._out)
             return
         self._log_file.write(re.sub(rb"\x1b\[[0-9;]*m", b"", data).replace(b"\r", b""))
+
+    def log(self) -> str:
+        """Firmware output of the current (or last) run."""
+        if self.log_path is None:
+            return ""
+        if self._log_file is not None:
+            self._log_file.flush()
+        return self.log_path.read_text(errors="replace")
 
     async def stop(self) -> None:
         """Kills firmware like power loss, preferences already written are kept."""

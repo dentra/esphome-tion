@@ -27,7 +27,7 @@ class TionSelect : public EntityExtension<select::Select>, public Component, pub
   float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
 
   void dump_config() override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       return;
     }
     LOG_SELECT("", "Tion Select", this);
@@ -71,7 +71,7 @@ class TionSelect : public EntityExtension<select::Select>, public Component, pub
     }
   }
   void control(const std::string &value) override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       PC::report_unsupported(this);
       return;
     }

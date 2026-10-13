@@ -31,7 +31,7 @@ class TionSwitch : public EntityExtension<switch_::Switch>, public Component, pu
   float get_setup_priority() const override { return setup_priority::AFTER_WIFI; }
 
   void dump_config() override {
-    if (this->is_failed()) {
+    if (PC::is_unsupported(this)) {
       return;
     }
     LOG_SWITCH("", "Tion Switch", this);
@@ -47,7 +47,7 @@ class TionSwitch : public EntityExtension<switch_::Switch>, public Component, pu
         [this](const TionState *state) { this->set_has_state(PC::publish_state(this, state)); });
   }
 
-  bool assumed_state() override { return this->is_failed(); }
+  bool assumed_state() override { return PC::is_unsupported(this); }
 
   dentra::tion::TionApiBase *api() const { return this->parent_->api(); }
 
