@@ -526,7 +526,10 @@ struct Presets {
       const auto presets = c->api()->get_presets();
       FixedVector<const char *> result;
       result.init(presets.size());
-      std::copy(presets.begin(), presets.end(), result.begin());
+      // после init() элементы добавляются только через push_back()
+      for (auto &&preset : presets) {
+        result.push_back(preset);
+      }
       return result;
     }
     return {};
