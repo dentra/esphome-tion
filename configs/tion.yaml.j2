@@ -79,12 +79,6 @@ packages:
   {%- endfor %}
 {%- endif %}
 
-{#- {%- if not is_prod and port == "ble" and packages["esp-idf/4.4.7"].enabled %}
-external_components:
-  - source: ../../esphome-2025.6-patched
-    components: [ esp32_ble ]
-{%- endif %} #}
-
 ## Uncomment to enable MQTT connection and remove api section.
 ## Do not forget to uncomment mqtt.yaml or if you plan to use SprutHub spruthub.yaml package above.
 {{ "" if conn == "mqtt" else "# " }}mqtt:

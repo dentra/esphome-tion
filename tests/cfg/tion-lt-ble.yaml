@@ -1,9 +1,0 @@
-substitutions:
-  node_name: test-lt-ble
-  project_branch: next
-  project_source: ../../components
-
-packages:
-  tion1: !include ../../configs/tion-4s-ble.yaml
-  tion2: !include pkg_tion_lt.yaml
-

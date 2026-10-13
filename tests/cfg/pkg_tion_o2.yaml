@@ -1,3 +1,0 @@
-packages:
-  common: !include pkg_common.yaml
-  rc: !include pkg_rc.yaml

@@ -1,4 +1,0 @@
-packages:
-  timers: !include ../../packages/tion_4s_timers.yaml
-  common: !include pkg_common.yaml
-  rc: !include pkg_rc.yaml

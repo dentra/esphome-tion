@@ -1,9 +1,0 @@
-substitutions:
-  node_name: test-o2-uart
-  project_branch: next
-  project_source: ../../components
-
-packages:
-  tion1: !include ../../configs/tion-o2-uart.yaml
-  tion2: !include pkg_tion_o2.yaml
-

@@ -1,9 +1,0 @@
-substitutions:
-  node_name: test-4s-uart
-  project_branch: next
-  project_source: ../../components
-
-packages:
-  tion1: !include ../../configs/tion-4s-uart.yaml
-  tion2: !include pkg_tion_4s.yaml
-
