@@ -422,25 +422,39 @@ void TionApiBase::notify_state_(uint32_t request_id) {
   TionStateCall *call = nullptr;
 
   if (this->is_soft_boost_running_()) {
-    // если изменили скорость вентиляции или выключили бризер
-    if (this->state_.get_fan_speed() != this->state_.max_fan_speed) {
-      TION_LOGD(TAG, "Boost canceled by user action");
-      // пересохраняем изменившиеся данные, для восстановления
-      this->boost_save_state_();
-      if (call == nullptr) {
+    const auto fan_speed = this->state_.get_fan_speed();
+    auto &boost = this->boost_save_;
+    if (!boost.confirmed) {
+      if (fan_speed == boost.boost_fan_speed) {
+        TION_LOGD(TAG, "Boost confirmed");
+        boost.confirmed = true;
+      } else if (tion::millis() - boost.request_time < TION_BOOST_CONFIRM_TIMEOUT) {
+        // состояние могло быть отправлено бризером до применения буста
+        TION_LOGV(TAG, "Boost is waiting for confirmation");
+      } else {
+        // бризер не применил буст или его состояние изменили, далее обработаем как действие пользователя
+        TION_LOGW(TAG, "Boost was not confirmed by breezer");
+        boost.confirmed = true;
+      }
+    }
+
+    if (boost.confirmed) {
+      // если изменили скорость вентиляции или выключили бризер
+      if (fan_speed != boost.boost_fan_speed) {
+        TION_LOGD(TAG, "Boost canceled by user action");
+        // пересохраняем изменившиеся данные, для восстановления
+        this->boost_save_state_();
         call = new TionStateCall(this);
-      }
-      this->boost_cancel_(call);  // TODO убедиться что пресет сбросится далее
-    } else {
-      auto time_left = this->get_boost_time_left();
-      // только если натив буст не поддерживается
-      if (!this->traits_.supports_boost && time_left == 0) {
-        if (call == nullptr) {
+        this->boost_cancel_(call);
+      } else {
+        auto time_left = this->get_boost_time_left();
+        // только если натив буст не поддерживается
+        if (!this->traits_.supports_boost && time_left == 0) {
           call = new TionStateCall(this);
+          this->boost_cancel_(call);
         }
-        this->boost_cancel_(call);  // TODO убедиться что пресет сбросится далее
+        TION_DUMP(TAG, "Boost time left %d s", time_left);
       }
-      TION_DUMP(TAG, "Boost time left %d s", time_left);
     }
   }
 
@@ -563,10 +577,13 @@ void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
 
   TION_LOGD(TAG, "Schedule boost for %d s", boost_time);
   this->boost_save_.start_time = this->state_.work_time;
+  this->boost_save_.request_time = tion::millis();
+  this->boost_save_.confirmed = false;
   this->boost_save_state_();
   // скорость может быть переопределена пресетом
   call->set_fan_speed(this->state_.max_fan_speed);
   this->boost_preset_().data.to_call(call);
+  this->boost_save_.boost_fan_speed = call->get_fan_speed().value_or(this->state_.max_fan_speed);
   // дополнительно оставим авто-режим в текущем положении
   call->set_auto_state(this->state_.auto_state);
 }
@@ -668,6 +685,13 @@ void TionApiBase::boost_cancel_(TionStateCall *call) {
   TION_LOGD(TAG, "Boost finished");
   this->boost_save_.start_time = 0;
   this->boost_save_.to_call(call);
+  // пресет буста больше не активен
+  if (this->activate_preset_ == &this->boost_preset_()) {
+    this->activate_preset_ = nullptr;
+  }
+  if (this->active_preset_ == &this->boost_preset_()) {
+    this->active_preset_ = nullptr;
+  }
 }
 
 void TionApiBase::enable_preset(const char *preset, TionStateCall *call) {

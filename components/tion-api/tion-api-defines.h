@@ -4,6 +4,12 @@
 #define TION_DEFAULT_MAX_TEMPERATURE 25
 #define TION_DEFAULT_BOOST_TIME 1200
 
+// Время ожидания подтверждения буста бризером, мс.
+// Состояния со скоростью отличной от скорости буста в течение этого времени считаются устаревшими.
+#ifndef TION_BOOST_CONFIRM_TIMEOUT
+#define TION_BOOST_CONFIRM_TIMEOUT 10000
+#endif
+
 #ifndef TION_BOOST_TIME
 #define TION_BOOST_TIME TION_DEFAULT_BOOST_TIME
 #endif

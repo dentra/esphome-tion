@@ -345,6 +345,12 @@ class TionApiBase {
 
   struct : public PresetData {
     uint32_t start_time;
+    // время запроса буста, мс
+    uint32_t request_time;
+    // запрошенная скорость буста
+    uint8_t boost_fan_speed;
+    // бризер подтвердил переход на скорость буста
+    bool confirmed;
   } boost_save_{};
 
   struct NamedPreset {
