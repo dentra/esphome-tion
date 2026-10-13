@@ -202,7 +202,12 @@ tion:
 
         // Если прошло меньше времени, то оставляем текущую скорость
         if (time_delta < min_time_delta) {
-          return std::clamp(cur_speed, min_speed, max_speed);
+          const int speed = std::clamp(cur_speed, min_speed, max_speed);
+          // принудительное изменение скорости (например, включение бризера) тоже считаем переключением
+          if (speed != cur_speed) {
+            last_update_time = now;
+          }
+          return speed;
         }
       }
 
