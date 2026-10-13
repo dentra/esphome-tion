@@ -177,6 +177,11 @@ tion:
         if (cur_speed == 0 && deviation > max_deviation) {
           min_speed++;
         }
+
+        // бризер выключен и порог включения не превышен, остаемся выключенными
+        if (cur_speed == 0 && deviation <= max_deviation) {
+          return 0;
+        }
       }
 
       // Текущее время
