@@ -323,16 +323,22 @@ TionState TionApiBase::make_write_state_(TionStateCall *call) const {
   }
 
   if (this->traits_.supports_kiv && ns.power_state && ns.fan_speed == 0) {
+    bool kiv_allowed = true;
     // для предотвращения обморожения не разрешаем работу в режиме kiv если внешняя температура менее 5 °C
     if (this->state_.outdoor_temperature < 5) {
-      ns.power_state = false;
+      kiv_allowed = false;
       TION_LOGW(TAG, "KIV mode not supported when outdoor temperature less than 5 °C");
-    } else
+    } else if (ns.heater_state) {
       // не разрешаем работу в режиме kiv если включен обогреватель
-      if (ns.heater_state) {
-        ns.power_state = false;
-        TION_LOGW(TAG, "KIV mode not supported when heater is on");
-      }
+      kiv_allowed = false;
+      TION_LOGW(TAG, "KIV mode not supported when heater is on");
+    }
+    if (!kiv_allowed) {
+      // вместо kiv выключаем бризер, сохраняя текущую скорость для последующего включения
+      ns.power_state = false;
+      // если бризер уже был в режиме kiv, то при включении используем первую скорость
+      ns.fan_speed = cs.fan_speed > 0 ? cs.fan_speed : 1;
+    }
   }
 
   return ns;
