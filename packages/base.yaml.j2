@@ -2,7 +2,7 @@ substitutions:
   # project version
   project_version: "{{ version_tion }}"
   # project branch
-  project_branch: $project_version
+  project_branch: "{{ version_tion_ref }}"
   # project git source
   project_source: github://dentra/esphome-tion@$project_branch
   # project source refresh interval

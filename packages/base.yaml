@@ -1,8 +1,8 @@
 substitutions:
   # project version
-  project_version: "next"
+  project_version: "2026.10.0"
   # project branch
-  project_branch: $project_version
+  project_branch: "v2026.10.0"
   # project git source
   project_source: github://dentra/esphome-tion@$project_branch
   # project source refresh interval
@@ -14,7 +14,7 @@ substitutions:
   # name for main entity and prefix for all others.
   friendly_name: $node_name
   # vport and additional components configuration parameters
-  vport_version: "master"
+  vport_version: "2026.10.0"
   vport_source: github://dentra/esphome-components@$vport_version
   vport_source_refresh: 1d
   tion:
@@ -27,7 +27,7 @@ esphome:
   project:
     name: "dentra.$project_id-${[tion.type, tion.port, tion.board_code, tion.conn] | join('-')}"
     version: "$project_version"
-  min_version: "2026.4.0"
+  min_version: "2026.9.1"
 
 preferences:
   flash_write_interval: 10min

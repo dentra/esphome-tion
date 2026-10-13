@@ -1,8 +1,8 @@
-[version-shield]: https://img.shields.io/static/v1?label=Версия&message=next&color=green
+[version-shield]: https://img.shields.io/static/v1?label=Версия&message=2026.10.0&color=green
 [version]: https://github.com/dentra/esphome-tion/releases/
 [license-shield]: https://img.shields.io/static/v1?label=Лицензия&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2026.4.0&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2026.9.1&color=green&logo=esphome
 [esphome-release]: https://github.com/esphome/esphome/releases/
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Открыть+в+VSCode&color=blue&logo=visualstudiocode
 [open-in-vscode]: https://open.vscode.dev/dentra/esphome-tion

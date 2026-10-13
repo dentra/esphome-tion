@@ -5,8 +5,11 @@ if [ "$1" != "" ]; then
   version_tion=$1
 fi
 
-version_vport=2024.12.0
+# git ref of the release: tags are prefixed with "v"
+version_tion_ref=v$version_tion
+version_vport=2026.10.0
 if [ "$version_tion" == "next" ]; then
+  version_tion_ref=next
   version_vport="master"
 fi
 
@@ -16,6 +19,7 @@ version_esphome=${version_esphome[1]}
 vars=(
   ${vars[@]}
   version_tion=$version_tion
+  version_tion_ref=$version_tion_ref
   version_esphome=$version_esphome
   version_vport=$version_vport
 )
