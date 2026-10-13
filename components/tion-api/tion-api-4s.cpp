@@ -479,6 +479,13 @@ void Tion4sApi::enable_boost(uint16_t boost_time, tion::TionStateCall *call) {
   }
 }
 
+bool Tion4sApi::is_boost_running() const {
+  if (this->traits_.supports_boost) {
+    return this->native_boost_time_left_ > 0;
+  }
+  return tion::TionApiBase::is_boost_running();
+}
+
 uint16_t Tion4sApi::get_boost_time_left() const {
   if (this->traits_.supports_boost) {
     return this->native_boost_time_left_;

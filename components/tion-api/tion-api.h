@@ -306,7 +306,8 @@ class TionApiBase {
   uint16_t get_boost_time() const { return this->boost_preset_().data.work_time; }
   void set_boost_heater_state(bool heater_state);
   void set_boost_target_temperature(int8_t target_temperature);
-  bool is_boost_running() const { return this->boost_save_.start_time != 0; }
+  /// Работает ли турбо-режим, программный или нативный.
+  virtual bool is_boost_running() const { return this->is_soft_boost_running_(); }
   virtual uint16_t get_boost_time_left() const;
 
   // Вызывающая сторона ответственна за вызов perform.
@@ -371,6 +372,8 @@ class TionApiBase {
 
   void notify_state_(uint32_t request_id);
 
+  /// Работает ли программный турбо-режим.
+  bool is_soft_boost_running_() const { return this->boost_save_.start_time != 0; }
   void boost_enable_(uint16_t boost_time, TionStateCall *call);
   void boost_cancel_(TionStateCall *call);
   void boost_save_state_();

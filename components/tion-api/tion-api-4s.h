@@ -81,6 +81,7 @@ class Tion4sApi : public tion::TionApiBase, public tion::TionApiWriter {
   void reset_filter() override { this->reset_filter(this->state_, ++this->request_id_); }
 
   uint16_t get_boost_time_left() const override;
+  bool is_boost_running() const override;
 
  protected:
   on_turbo_type on_turbo_{};

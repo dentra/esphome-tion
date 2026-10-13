@@ -421,7 +421,7 @@ TionApiBase::TionApiBase()
 void TionApiBase::notify_state_(uint32_t request_id) {
   TionStateCall *call = nullptr;
 
-  if (this->is_boost_running()) {
+  if (this->is_soft_boost_running_()) {
     // если изменили скорость вентиляции или выключили бризер
     if (this->state_.get_fan_speed() != this->state_.max_fan_speed) {
       TION_LOGD(TAG, "Boost canceled by user action");
@@ -484,7 +484,7 @@ void TionApiBase::set_boost_time(uint16_t boost_time) {
 }
 
 uint16_t TionApiBase::get_boost_time_left() const {
-  if (this->is_boost_running()) {
+  if (this->is_soft_boost_running_()) {
     const auto work_time = this->state_.work_time - this->boost_save_.start_time;
     auto &preset = this->boost_preset_().data;
     if (work_time < preset.work_time) {
@@ -546,7 +546,7 @@ void TionApiBase::enable_boost(uint16_t boost_time, TionStateCall *call) {
 }
 
 void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
-  if (this->is_boost_running()) {
+  if (this->is_soft_boost_running_()) {
     TION_LOGW(TAG, "Boost is already in progress, time left %u s", this->get_boost_time_left());
     return;
   }
@@ -662,7 +662,7 @@ bool TionApiBase::PresetData::is_modified(const TionState &st) const {
 }
 
 void TionApiBase::boost_cancel_(TionStateCall *call) {
-  if (!this->is_boost_running()) {
+  if (!this->is_soft_boost_running_()) {
     return;
   }
   TION_LOGD(TAG, "Boost finished");
