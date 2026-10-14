@@ -51,7 +51,11 @@ PC = new_pc(
         "current_temperature": {
             CONF_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
             CONF_STATE_CLASS: STATE_CLASS_MEASUREMENT,
-            CONF_ICON: cgp.ICON_HOME_THERMOMETER,
+            # This is the SUPPLY air temperature (air leaving the unit, after the
+            # heater) - NOT a room/indoor sensor. The unit has no room probe.
+            # Use a neutral icon instead of mdi:home-thermometer, which falsely
+            # implies a room temperature.
+            CONF_ICON: "mdi:thermometer-lines",
             CONF_UNIT_OF_MEASUREMENT: UNIT_CELSIUS,
             CONF_ACCURACY_DECIMALS: 0,
         },
@@ -173,6 +177,14 @@ PC = new_pc(
         "speed": "fan_speed",
         "indoor_temperature": "current_temperature",
         "fan_max_speed": "max_fan_speed",
+        # HVAC airflow-oriented aliases (non-breaking, more accurate naming):
+        # the unit measures air at the intake (outdoor side) and the supply
+        # (after the heater), there is no room/indoor probe.
+        "intake_temperature": "outdoor_temperature",
+        "inlet_temperature": "outdoor_temperature",
+        "supply_temperature": "current_temperature",
+        "outlet_temperature": "current_temperature",
+        "discharge_temperature": "current_temperature",
     }
 )
 
