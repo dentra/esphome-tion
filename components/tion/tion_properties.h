@@ -507,14 +507,14 @@ struct AirIntake {
     }
     return {};
   };
-  static const char *get(const TionState &state, const FixedVector<const char *> &options) {
+  template<typename O> static const char *get(const TionState &state, const O &options) {
     const auto value = static_cast<uint8_t>(state.gate_position);
     if (value < options.size()) {
       return options[value];
     }
     return {};
   }
-  static void set(TionStateCall *call, const std::string &state, const FixedVector<const char *> &options) {
+  template<typename O> static void set(TionStateCall *call, const std::string &state, const O &options) {
     for (size_t i = 0; i < options.size(); i++) {
       if (options[i] == state) {
         call->set_gate_position(static_cast<TionGatePosition>(i));

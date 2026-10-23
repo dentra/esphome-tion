@@ -8,7 +8,7 @@ dev = [
     "black",
     "clang-format==13.0.1",
     "cmake",
-    "esphome==2026.9.1",
+    "esphome==2026.10.0",
     "jinja2-cli>=1.0.1",
     "pytest",
     "pytest-asyncio",
