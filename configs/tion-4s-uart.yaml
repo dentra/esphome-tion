@@ -11,10 +11,14 @@ substitutions:
   ## WiFi Access Point password.
   wifi_ap_password: tion-0123-4s
 
+  vport_source_refresh: 0s
+  project_source_refresh: 0s
+
 packages:
   tion:
+    refresh: 0s
     url: https://github.com/dentra/esphome-tion
-    ref: v2026.10.1 # cant use substitutions here
+    ref: next # cant use substitutions here
     files:
       ## You can enable or disable some of the features listed below.
       ## The disabled feature starts with # symbol.
