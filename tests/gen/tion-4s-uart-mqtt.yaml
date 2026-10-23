@@ -111,11 +111,13 @@ tion:
   ## Available gate_position:
   ##  * outdoor - set gate position to outdoor air intake (3S and 4S only)
   ##  * indoor - set gate position to indoor air intake (3S and 4S only)
-  ## Uncomment next 4 lines to enable example presets.
+  ## Uncomment next 5 lines to enable example presets.
+  ## Preset with name boost sets boost/turbo mode fan speed.
   # presets:
   #   home: { fan_speed: 2, temperature: 16, heater: False }
   #   away: { fan_speed: 1, temperature: 10, heater: False }
   #   sleep: { fan_speed: 1, temperature: 18 }
+  #   boost: { fan_speed: 4 }
   presets:
     home: { fan_speed: 2, temperature: 16, heater: False }
     away: { fan_speed: 1, temperature: 10, heater: False }

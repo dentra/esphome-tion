@@ -306,6 +306,13 @@ class TionApiBase {
   virtual void enable_boost(uint16_t boost_time, TionStateCall *call);
   void set_boost_time(uint16_t boost_time);
   uint16_t get_boost_time() const { return this->boost_preset_().data.work_time; }
+  /// Задает скорость турбо-режима от 1 до traits.max_fan_speed, другие значения игнорируются.
+  /// Применяется при следующем включении турбо-режима, на уже работающий не влияет.
+  void set_boost_fan_speed(uint8_t fan_speed);
+  /// Скорость турбо-режима, заданная set_boost_fan_speed() или параметром fan_speed пресета boost.
+  /// Если скорость не задана ни тем ни другим, возвращает traits.max_fan_speed.
+  /// Турбо-режим включается на этой скорости, но не выше state.max_fan_speed (текущей максимальной скорости бризера).
+  uint8_t get_boost_fan_speed() const;
   void set_boost_heater_state(bool heater_state);
   void set_boost_target_temperature(int8_t target_temperature);
   /// Работает ли турбо-режим, программный или нативный.

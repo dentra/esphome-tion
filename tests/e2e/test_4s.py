@@ -56,6 +56,24 @@ async def test_boost_runs_and_restores_state(device: Device) -> None:
     await device.wait_for(lambda: device.value("switch.4s_boost") is False, what="boost switch off")
 
 
+async def test_boost_fan_speed_from_number(device: Device) -> None:
+    emu = device.emu4s
+    # initial value comes from boost preset (or max speed when preset has no fan_speed)
+    await device.wait_for(lambda: device.value("number.4s_boost_fan_speed") == 6, what="boost fan speed 6")
+
+    device.client.number_command(device.key("number.4s_boost_fan_speed"), 4)
+    await device.wait_for(lambda: device.value("number.4s_boost_fan_speed") == 4, what="boost fan speed 4")
+
+    device.client.switch_command(device.key("switch.4s_boost"), True)
+
+    await device.wait_for(lambda: emu.state.fan_speed == 4, what="breezer boost speed 4")
+    await device.wait_for(lambda: device.value("switch.4s_boost") is True, what="boost switch on")
+
+    device.client.switch_command(device.key("switch.4s_boost"), False)
+
+    await device.wait_for(lambda: emu.state.fan_speed == 2, what="breezer speed restored")
+
+
 async def test_state_problem_when_breezer_is_silent(device: Device) -> None:
     emu = device.emu4s
     await device.wait_for(lambda: device.value("binary_sensor.4s_state") is False, what="state ok")

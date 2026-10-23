@@ -268,6 +268,85 @@ TEST_CASE("boost: preset with custom fan speed") {
   CHECK(b.st.fan_speed == 2);
 }
 
+TEST_CASE("boost: fan speed setter") {
+  Breezer4s b;
+  CHECK(b.api().get_boost_fan_speed() == 6);
+
+  b.api().set_boost_fan_speed(3);
+  CHECK(b.api().get_boost_fan_speed() == 3);
+
+  // out of range values are ignored
+  b.api().set_boost_fan_speed(0);
+  b.api().set_boost_fan_speed(7);
+  CHECK(b.api().get_boost_fan_speed() == 3);
+
+  b.api().set_boost_time(60);
+  b.call([&](auto &c) { b.base().enable_boost(true, &c); });
+  b.process();
+  CHECK(b.api().is_boost_running());
+  CHECK(b.st.fan_speed == 3);
+}
+
+TEST_CASE("boost: fan speed is limited by breezer max fan speed") {
+  Breezer4s b;
+  b.st.max_fan_speed = 5;
+  b.respond(1);
+  b.api().set_boost_fan_speed(6);
+  b.api().set_boost_time(60);
+
+  b.call([&](auto &c) { b.base().enable_boost(true, &c); });
+  b.process();
+  CHECK(b.st.fan_speed == 5);
+
+  // boost is confirmed by the breezer and keeps running
+  test::FakeClock::advance(TION_BOOST_CONFIRM_TIMEOUT);
+  b.work(30);
+  b.respond(1);
+  b.process();
+  CHECK(b.api().is_boost_running());
+  CHECK(b.st.fan_speed == 5);
+}
+
+TEST_CASE("boost: fan speed from preset is the initial value") {
+  Breezer4s b;
+  b.api().add_preset("boost", TionApiBase::PresetData{.target_temperature = -1,
+                                                      .heater_state = -1,
+                                                      .power_state = 1,
+                                                      .fan_speed = 4,
+                                                      .gate_position = TionGatePosition::NONE,
+                                                      .auto_state = -1,
+                                                      .work_time = 0});
+  CHECK(b.api().get_boost_fan_speed() == 4);
+}
+
+TEST_CASE("boost: fan speed change while running applies next time") {
+  Breezer4s b;
+  b.api().set_boost_time(60);
+  b.call([&](auto &c) { b.base().enable_boost(true, &c); });
+  b.process();
+  REQUIRE(b.api().is_boost_running());
+  REQUIRE(b.st.fan_speed == 6);
+
+  b.api().set_boost_fan_speed(4);
+  test::FakeClock::advance(TION_BOOST_CONFIRM_TIMEOUT);
+  b.work(30);
+  b.respond(1);
+  b.process();
+  CHECK(b.api().is_boost_running());
+  CHECK(b.st.fan_speed == 6);
+
+  b.work(31);
+  b.respond(1);
+  b.process();
+  REQUIRE_FALSE(b.api().is_boost_running());
+  CHECK(b.st.fan_speed == 2);
+
+  b.call([&](auto &c) { b.base().enable_boost(true, &c); });
+  b.process();
+  CHECK(b.api().is_boost_running());
+  CHECK(b.st.fan_speed == 4);
+}
+
 TEST_CASE("boost: canceled boost preset does not become active later") {
   Breezer4s b;
   b.api().add_preset("boost", TionApiBase::PresetData{.target_temperature = -1,

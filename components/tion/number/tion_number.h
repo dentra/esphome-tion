@@ -48,6 +48,10 @@ class TionNumber : public EntityExtension<number::Number>, public Component, pub
   void setup() override {
     ESP_LOGD(TAG, "Setting up %s...", this->get_name().c_str());
 
+    if (!PC::is_supported(this)) {
+      return;
+    }
+
     if (std::isnan(this->traits.get_min_value())) {
       this->traits.set_min_value(C::get_min(this->parent_));
     }
@@ -95,6 +99,12 @@ class TionNumber : public EntityExtension<number::Number>, public Component, pub
       PC::control(this, value);
       if (this->restore_value_) {
         this->pref_.save(&value);
+      }
+      if constexpr (PC::checker().has_api_set() && PC::checker().has_api_get()) {
+        // значение не зависит от состояния бризера, публикуем сразу, а не при следующем обновлении
+        if (!PC::is_unsupported(this)) {
+          this->publish_state(C::get(this->parent_));
+        }
       }
     }
   }

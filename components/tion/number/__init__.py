@@ -66,6 +66,10 @@ PC = new_pc(
                 initial_value=10,
             ),
         },
+        "boost_fan_speed": {
+            CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
+            CONF_ICON: cgp.ICON_FAN,
+        },
         "auto_setpoint": {
             CONF_ENTITY_CATEGORY: ENTITY_CATEGORY_CONFIG,
             CONF_UNIT_OF_MEASUREMENT: UNIT_PARTS_PER_MILLION,
@@ -93,6 +97,7 @@ PC = new_pc(
         "fan": "fan_speed",
         "speed": "fan_speed",
         "boost": "boost_time",
+        "boost_speed": "boost_fan_speed",
         "auto_min_speed": "auto_min_fan_speed",
         "auto_max_speed": "auto_max_fan_speed",
     }

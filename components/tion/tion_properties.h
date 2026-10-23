@@ -465,6 +465,17 @@ struct BoostTime {
   static constexpr uint8_t get_max(TionApiComponent *c) { return 60; }
 };
 
+struct BoostFanSpeed {
+  static uint8_t get(TionApiComponent *c) { return c->api()->get_boost_fan_speed(); }
+  static void set(TionApiComponent *c, uint8_t state) { c->api()->set_boost_fan_speed(state); }
+
+  // встроенный турбо-режим бризера (4S BLE) скорость не использует
+  static bool is_supported(TionApiComponent *c) { return !c->traits().supports_boost; }
+
+  static constexpr uint8_t get_min(TionApiComponent *c) { return 1; }
+  static uint8_t get_max(TionApiComponent *c) { return c->traits().max_fan_speed; }
+};
+
 }  // namespace number
 
 namespace text_sensor {

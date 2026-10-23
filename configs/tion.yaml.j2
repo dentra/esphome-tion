@@ -190,11 +190,19 @@ tion:
 {%- if type == "3s" %}
   ##  * mixed - set gate position to mixed air intake (3S only)
 {%- endif %}
+{%- if type == "4s" and port == "ble" %}
   ## Uncomment next 4 lines to enable example presets.
+{%- else %}
+  ## Uncomment next 5 lines to enable example presets.
+  ## Preset with name boost sets boost/turbo mode fan speed.
+{%- endif %}
   # presets:
   #   home: { fan_speed: 2, temperature: 16, heater: False }
   #   away: { fan_speed: 1, temperature: 10, heater: False }
   #   sleep: { fan_speed: 1, temperature: 18 }
+{%- if not (type == "4s" and port == "ble") %}
+  #   boost: { fan_speed: 4 }
+{%- endif %}
 {%- if not is_prod %}
   presets:
     home: { fan_speed: 2, temperature: 16, heater: False }

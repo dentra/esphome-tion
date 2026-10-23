@@ -146,11 +146,13 @@ tion:
   ##    temperature: 16         # Optional, Integer, range 0-30, default: None.
   ##    heater: False           # Optional, Boolean, default: None.
   ##    auto: None              # Optional, Boolean, default: None.
-  ## Uncomment next 4 lines to enable example presets.
+  ## Uncomment next 5 lines to enable example presets.
+  ## Preset with name boost sets boost/turbo mode fan speed.
   # presets:
   #   home: { fan_speed: 2, temperature: 16, heater: False }
   #   away: { fan_speed: 1, temperature: 10, heater: False }
   #   sleep: { fan_speed: 1, temperature: 18 }
+  #   boost: { fan_speed: 4 }
 
 ################################################################################
 ##

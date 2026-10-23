@@ -564,6 +564,20 @@ void TionApiBase::set_boost_time(uint16_t boost_time) {
   }
 }
 
+void TionApiBase::set_boost_fan_speed(uint8_t fan_speed) {
+  if (fan_speed < 1 || fan_speed > this->traits_.max_fan_speed) {
+    TION_LOGW(TAG, "Invalid boost fan speed %u", fan_speed);
+    return;
+  }
+  TION_LOGD(TAG, "New boost fan speed: %u", fan_speed);
+  this->boost_preset_().data.fan_speed = fan_speed;
+}
+
+uint8_t TionApiBase::get_boost_fan_speed() const {
+  const auto fan_speed = this->boost_preset_().data.fan_speed;
+  return fan_speed > 0 ? fan_speed : this->traits_.max_fan_speed;
+}
+
 uint16_t TionApiBase::get_boost_time_left() const {
   if (this->is_soft_boost_running_()) {
     const auto work_time = this->state_.work_time - this->boost_save_.start_time;
@@ -634,7 +648,11 @@ void TionApiBase::boost_enable_(uint16_t boost_time, TionStateCall *call) {
 
   // скорость может быть переопределена пресетом
   const auto &boost_fan_speed = this->boost_preset_().data.fan_speed;
-  const uint8_t target_fan_speed = boost_fan_speed > 0 ? boost_fan_speed : this->state_.max_fan_speed;
+  uint8_t target_fan_speed = boost_fan_speed > 0 ? boost_fan_speed : this->state_.max_fan_speed;
+  // бризер может ограничить максимальную скорость, иначе турбо-режим не будет подтвержден
+  if (this->state_.max_fan_speed > 0 && target_fan_speed > this->state_.max_fan_speed) {
+    target_fan_speed = this->state_.max_fan_speed;
+  }
   if (this->state_.get_fan_speed() == target_fan_speed) {
     TION_LOGW(TAG, "Fan is already running at boost speed %u", target_fan_speed);
     return;
