@@ -35,9 +35,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: true
       - name: Install dependencies
@@ -53,11 +53,10 @@ jobs:
       - name: Generate fake secrets.yaml
         run: |
           echo -e "wifi_ssid: ssid\nwifi_password: password\nmqtt_broker: localhost\nmqtt_port: 1883" > ${{ env.TESTS_DIR }}/secrets.yaml
-      - name: Cache ESPHome and PlatformIO
-        uses: actions/cache@v4
+      - name: Cache ESPHome
+        uses: actions/cache@v6
         with:
           path: |
-            ~/.platformio
             build.tmp/esphome
           key: ${{ runner.os }}-checks-${{ env.ESPHOME_VERSION }}-${{ hashFiles('uv.lock') }}
       - name: Register problem matchers
@@ -85,7 +84,7 @@ jobs:
             port: ble
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Generate fake secrets.yaml
         run: |
           echo -e "wifi_ssid: ssid\nwifi_password: password\nmqtt_broker: localhost\nmqtt_port: 1883" > ${{ env.TESTS_DIR }}/secrets.yaml
@@ -94,7 +93,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/clang-tidy.json"
           echo "::add-matcher::.github/workflows/matchers/gcc.json"
       - name: Build project
-        uses: dentra/esphome-action@main
+        uses: dentra/esphome-action@v2
         id: esphome
         with:
           version: ${{ env.ESPHOME_VERSION }}
@@ -125,7 +124,7 @@ jobs:
             port: ble
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Generate fake secrets.yaml
         run: |
           echo -e "wifi_ssid: ssid\nwifi_password: password\nmqtt_broker: localhost\nmqtt_port: 1883" > ${{ env.BUILD_DIR }}/secrets.yaml
@@ -134,7 +133,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/clang-tidy.json"
           echo "::add-matcher::.github/workflows/matchers/gcc.json"
       - name: Build project
-        uses: dentra/esphome-action@main
+        uses: dentra/esphome-action@v2
         id: esphome
         with:
           version: ${{ env.ESPHOME_VERSION }}
@@ -151,7 +150,7 @@ jobs:
       #   run: |
       #     ls -l ${{ steps.esphome.outputs.firmware-path }}/firmware.*
       # - name: Upload artifacts
-      #   uses: actions/upload-artifact@v4
+      #   uses: actions/upload-artifact@v7
       #   with:
       #     name: ${{ matrix.component }}-test-${{ github.run_id }}.zip
       #     path: |
