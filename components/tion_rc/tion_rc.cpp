@@ -1,6 +1,7 @@
 #include <cinttypes>
 #include "esphome/core/defines.h"
 #include "esphome/core/log.h"
+#include <esp_mac.h>
 #include "esphome/components/esp32_ble_server/ble_2902.h"
 
 // #include "../tion-api/tion-api-internal.h"
@@ -9,6 +10,10 @@
 // #endif
 
 #include "tion_rc.h"
+
+#ifndef USE_TION_RC_EMU
+#include "../tion/tion_component.h"
+#endif
 
 namespace esphome {
 namespace tion_rc {
@@ -19,25 +24,31 @@ TionRC::TionRC(tion::TionApiComponent *tion, TionRCControl *control) : control_(
   this->control_->set_writer([this](const uint8_t *data, size_t size) {
     TION_RC_DUMP(TAG, "TX RC: %s", format_hex_pretty(data, size).c_str());
     if (this->char_notify_) {
-      this->char_notify_->set_value(data, size);
+      this->char_notify_->set_value(std::vector<uint8_t>(data, data + size));
       this->char_notify_->notify();
     }
     return true;
   });
 
+#ifndef USE_TION_RC_EMU
   tion->add_on_state_callback([this](const dentra::tion::TionState *state) {
     if (state && this->control_->has_state_req()) {
       this->control_->on_state(*state);
     }
   });
+#endif
+}
+
+void TionRC::setup() {
+  global_ble_server->on_connect([this](uint16_t) { this->on_client_connect(); });
+  global_ble_server->on_disconnect([this](uint16_t) { this->on_client_disconnect(); });
 }
 
 void TionRC::setup_service_() {
   ESP_LOGD(TAG, "Setting up BLE service...");
 
   const auto service_uuid = ESPBTUUID::from_raw(this->control_->get_ble_service());
-  global_ble_server->create_service(service_uuid, true);
-  this->service_ = global_ble_server->get_service(service_uuid);
+  this->service_ = global_ble_server->create_service(service_uuid, true);
 
   // смена порядка создания сервиса ведет к тому, что паблишится корявый notify-дескриптор
 
@@ -49,9 +60,9 @@ void TionRC::setup_service_() {
       this->service_->create_characteristic(this->control_->get_ble_char_tx(), BLECharacteristic::PROPERTY_WRITE);
   // не очень понятно почему не применяется в конструкторе, поэтому попробуем так
   char_rx->set_write_no_response_property(true);
-  char_rx->on_write([this](const std::vector<uint8_t> &data) {
+  char_rx->on_write([this](std::span<const uint8_t> data, uint16_t) {
     if (!data.empty()) {
-      TION_RC_DUMP(TAG, "RX RC: %s", format_hex_pretty(data).c_str());
+      TION_RC_DUMP(TAG, "RX RC: %s", format_hex_pretty(data.data(), data.size()).c_str());
       this->control_->pr_read_data(data.data(), data.size());
     }
   });
@@ -60,6 +71,31 @@ void TionRC::setup_service_() {
 }
 
 void TionRC::adv(bool pair) {
+  // esphome 2026 advertises only with a public address and does not advertise services created at runtime,
+  // so the advertising is fully controlled here. esphome does not touch it while nobody requested
+  // global_ble->advertising_start(); it may stop it on connect/disconnect, we restart it on disconnect.
+  esp_ble_gap_stop_advertising();
+
+  esp_bd_addr_t addr;
+  bool random_addr = this->control_->use_random_address();
+  if (this->has_address_) {
+    memcpy(addr, this->address_, sizeof(addr));
+    // configured random static address (two most significant bits are 1), public otherwise
+    random_addr = (addr[0] & 0xC0) == 0xC0;
+  } else {
+    esp_read_mac(addr, ESP_MAC_BT);
+    if (random_addr) {
+      // random static address: two most significant bits are 1
+      addr[0] |= 0xC0;
+    }
+  }
+  if (random_addr) {
+    esp_ble_gap_set_rand_addr(addr);
+  } else if (this->has_address_) {
+    ESP_LOGW(TAG, "Configured address is not random static, advertising with the public one");
+    esp_read_mac(addr, ESP_MAC_BT);
+  }
+  this->control_->set_address(addr);
   this->control_->adv(pair);
 
   // Для 4S scan response содержит следующую информацию:
@@ -88,26 +124,28 @@ void TionRC::adv(bool pair) {
   adv_scan_rsp_data.p_service_uuid = uuid.uuid.uuid128;
   esp_ble_gap_config_adv_data(&adv_scan_rsp_data);
 
-  // esp_ble_adv_params_t adv_prams{
-  //     .adv_int_min = 0x20,
-  //     .adv_int_max = 0x40,
-  //     .adv_type = ADV_TYPE_IND,
-  //     .own_addr_type = BLE_ADDR_TYPE_RANDOM,
-  //     .peer_addr = {},
-  //     .peer_addr_type = BLE_ADDR_TYPE_PUBLIC,
-  //     .channel_map = ADV_CHNL_ALL,
-  //     .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
-  // };
-  // esp_bd_addr_t mac;
-  // esp_read_mac(mac, ESP_MAC_BT);
-  // esp_ble_gap_set_rand_addr(mac);
-  // esp_ble_gap_config_local_privacy(true);
-  // esp_ble_gap_start_advertising(&adv_prams);
+  esp_ble_adv_params_t adv_params{
+      .adv_int_min = 0x20,
+      .adv_int_max = 0x40,
+      .adv_type = ADV_TYPE_IND,
+      .own_addr_type = random_addr ? BLE_ADDR_TYPE_RANDOM : BLE_ADDR_TYPE_PUBLIC,
+      .peer_addr = {},
+      .peer_addr_type = BLE_ADDR_TYPE_PUBLIC,
+      .channel_map = ADV_CHNL_ALL,
+      .adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY,
+  };
+  const esp_err_t err = esp_ble_gap_start_advertising(&adv_params);
+  if (err != ESP_OK) {
+    ESP_LOGW(TAG, "esp_ble_gap_start_advertising failed: %s", esp_err_to_name(err));
+  }
 
-  ESP_LOGD(TAG, "Advertising sent. pair=%s", ONOFF(pair));
+  ESP_LOGD(TAG, "Advertising started. pair=%s, address=%02X:%02X:%02X:%02X:%02X:%02X (%s)", ONOFF(pair), addr[0],
+           addr[1], addr[2], addr[3], addr[4], addr[5], random_addr ? "random" : "public");
 }
 
 void TionRC::loop() {
+  this->control_->loop();
+
   if (!global_ble_server->is_running()) {
     this->state_ = State::STOPPED;
     return;
@@ -154,8 +192,8 @@ void TionRC::stop() {
 
 void TionRC::on_client_connect() {
   ESP_LOGD(TAG, "Client connected");
+  // advertising is stopped by the stack on connect, it is restarted after disconnect (State::STARTING)
   if (this->pair_mode_) {
-    this->adv(false);
     this->pair_mode_->publish_state(false);
   }
 }

@@ -2,6 +2,7 @@
 #include "esphome/core/defines.h"
 #include "esphome/core/log.h"
 
+
 #include "../tion-api/tion-api-4s-internal.h"
 
 #include "tion_rc_4s.h"
@@ -105,18 +106,22 @@ void Tion4sRC::adv(bool pair) {
   if (pair) {
     raw_adv_data.flags.data |= ESP_BLE_ADV_FLAG_GEN_DISC;
   }
-  // пульт не проверяет адрес в "рекламе"
-  // esp_bd_addr_t mac;
-  // esp_read_mac(mac, ESP_MAC_BT);
-  // for (int i = 0; i < sizeof(esp_bd_addr_t); i++) {
-  //   raw_adv_data.manu.data.mac[i] = mac[(sizeof(esp_bd_addr_t) - 1) - i];
-  // }
+  // пульт не проверяет адрес в "рекламе", но настоящий 4S передает свой адрес (LSB first), например для MagicAir
+  for (size_t i = 0; i < sizeof(esp_bd_addr_t); i++) {
+    raw_adv_data.manu.data.mac[i] = this->address_[(sizeof(esp_bd_addr_t) - 1) - i];
+  }
 
   static_assert(sizeof(raw_adv_data) == 30);
   esp_ble_gap_config_adv_data_raw(reinterpret_cast<uint8_t *>(&raw_adv_data), sizeof(raw_adv_data));
 }
 
 void Tion4sRC::on_frame(uint16_t type, const uint8_t *data, size_t size) {
+#ifdef USE_TION_RC_EMU
+  if (this->api_ == nullptr) {
+    this->emu_on_frame_(type, data, size);
+    return;
+  }
+#endif
   switch (type) {
     case FRAME_TYPE_STATE_REQ: {
       using tion4s_raw_state_t = tion4s_state_t;
@@ -425,6 +430,244 @@ void Tion4sRC::on_state(const TionState &st) {
   this->pr_.write_frame(FRAME_TYPE_STATE_RSP, &state, sizeof(state));
   this->state_req_id_ = 0;
 }
+
+#ifdef USE_TION_RC_EMU
+
+static const char *const TAG_EMU = "tion_rc_4s_emu";
+
+// 180 days, same as ftreset of the real breezer
+static constexpr uint32_t EMU_FILTER_TIME = 180UL * 24UL * 3600UL;
+
+void Tion4sRC::emu_reset_() {
+  this->emu_ = {};
+  auto &st = this->emu_;
+  st.power_state = true;
+  st.sound_state = true;
+  st.led_state = true;
+  st.heater_mode = tion4s_state_t::HEATER_MODE_FANONLY;
+  st.heater_present = tion4s_state_t::HEATER_PRESENT_1000W;
+  st.gate_position = tion4s_state_t::GATE_POSITION_OUTDOOR;
+  st.target_temperature = 20;
+  st.fan_speed = 2;
+  st.outdoor_temperature = 5;
+  st.current_temperature = 5;
+  st.pcb_ctl_temperature = 25;
+  st.pcb_pwr_temperature = 30;
+  st.counters.filter_time = EMU_FILTER_TIME;
+  st.max_fan_speed = 6;
+}
+
+void Tion4sRC::loop() {
+  if (this->api_ != nullptr) {
+    return;
+  }
+  const uint32_t now = millis();
+  if (this->emu_tick_ == 0) {
+    this->emu_reset_();
+    this->emu_tick_ = now;
+    ESP_LOGI(TAG_EMU, "Breezer 4S emulation started");
+    return;
+  }
+  if (now - this->emu_tick_ < 1000) {
+    return;
+  }
+  this->emu_tick_ += 1000;
+  this->emu_time_ += this->emu_time_ != 0 ? 1 : 0;
+
+  // once per second, as the real breezer does
+  auto &st = this->emu_;
+  st.counters.work_time++;
+  if (st.power_state) {
+    st.counters.fan_time++;
+    if (st.counters.filter_time > 0) {
+      st.counters.filter_time--;
+    }
+    st.counters.airflow_counter += st.fan_speed == 6 ? 8 : st.fan_speed + 1;
+  }
+  const bool heating = st.power_state && st.heater_mode == tion4s_state_t::HEATER_MODE_HEATING &&
+                       st.target_temperature > st.outdoor_temperature;
+  st.heater_state = heating;
+  st.heater_var = heating ? 50 : 0;
+  st.current_temperature = heating ? st.target_temperature : st.outdoor_temperature;
+  st.filter_state = st.counters.filter_time < 30UL * 24UL * 3600UL;
+
+  if (this->emu_turbo_left_ > 0 && --this->emu_turbo_left_ == 0) {
+    st.fan_speed = this->emu_turbo_fan_;
+    ESP_LOGI(TAG_EMU, "Turbo finished, fan restored to %u", st.fan_speed);
+  }
+}
+
+void Tion4sRC::emu_send_state_(uint32_t request_id) {
+  const tion4s_raw_frame_t<tion4s_state_t> rsp{.request_id = request_id, .data = this->emu_};
+  this->pr_.write_frame(FRAME_TYPE_STATE_RSP, &rsp, sizeof(rsp));
+}
+
+void Tion4sRC::emu_send_turbo_(uint32_t request_id) {
+  const tion4s_raw_frame_t<tion4s_turbo_t> rsp{
+      .request_id = request_id,
+      .data = {.is_active = this->emu_turbo_left_ > 0, .turbo_time = this->emu_turbo_left_, .err_code = 0},
+  };
+  this->pr_.write_frame(FRAME_TYPE_TURBO_RSP, &rsp, sizeof(rsp));
+}
+
+void Tion4sRC::emu_on_frame_(uint16_t type, const uint8_t *data, size_t size) {
+  this->emu_frames_++;
+  const uint32_t request_id = size >= sizeof(uint32_t) ? *reinterpret_cast<const uint32_t *>(data) : 0;
+  // compact line for every frame: easy to grep and to measure intervals by log timestamps
+  ESP_LOGD(TAG_EMU, "RX #%" PRIu32 " %04X req=%" PRIu32 ": %s", this->emu_frames_, type, request_id,
+           format_hex_pretty(data, size).c_str());
+
+  auto &st = this->emu_;
+  switch (type) {
+    case FRAME_TYPE_STATE_REQ:
+      // real firmware answers with request_id of the last SET
+      this->emu_send_state_(this->emu_req_id_);
+      break;
+
+    case FRAME_TYPE_STATE_SET:
+    case FRAME_TYPE_STATE_SAV: {
+      if (size < sizeof(tion4s_raw_frame_t<tion4s_state_set_t>) - sizeof(uint16_t)) {
+        ESP_LOGW(TAG_EMU, "SET too short: %zu", size);
+        break;
+      }
+      const auto &set = reinterpret_cast<const tion4s_raw_frame_t<tion4s_state_set_t> *>(data)->data;
+      this->emu_sets_++;
+      this->emu_req_id_ = request_id;
+      ESP_LOGI(TAG_EMU,
+               "SET #%" PRIu32 " %04X req=%" PRIu32 " flags=%02X %02X pwr=%u snd=%u led=%u heat=%u comm=%u "
+               "ma_conn=%u ma_auto=%u fres=%u eres=%u filt=%u gate=%u temp=%d fan=%u",
+               this->emu_sets_, type, request_id, data[4], data[5], set.power_state, set.sound_state, set.led_state,
+               set.heater_mode == tion4s_state_t::HEATER_MODE_HEATING, static_cast<uint8_t>(set.comm_source),
+               set.ext_flags.ma_connected, set.ext_flags.ma_auto, set.factory_reset, set.error_reset,
+               set.filter_reset, set.gate_position, set.target_temperature, set.fan_speed);
+
+      if (set.factory_reset) {
+        this->emu_reset_();
+        this->emu_send_state_(request_id);
+        break;
+      }
+      // the rules of firmware 0x04C7: apply 0x33AD6, merge 0x339D2, mode 0x30FB8
+      st.power_state = set.power_state;
+      st.sound_state = set.sound_state;
+      st.led_state = set.led_state;
+      st.heater_mode = set.heater_mode;
+      st.ma_connected = set.ext_flags.ma_connected;
+      // kept only for BLE source, which is always the case here
+      st.ma_auto = set.ext_flags.ma_auto;
+      // LSB of the source code, BLE = 1
+      st.comm_source = static_cast<dentra::tion::CommSource>(1);
+      st.gate_position = set.gate_position;
+      st.target_temperature = set.target_temperature < 0 ? 0 : (set.target_temperature > 30 ? 30 : set.target_temperature);
+      if (this->emu_turbo_left_ == 0) {
+        st.fan_speed = set.fan_speed == 0 ? 1 : (set.fan_speed > 6 ? 6 : set.fan_speed);
+      }
+      if (set.error_reset) {
+        st.errors = 0;
+      }
+      if (set.filter_reset) {
+        // filter_time is the optional trailing field the length guard above allows to be absent
+        const bool has_filter_time = size >= sizeof(tion4s_raw_frame_t<tion4s_state_set_t>);
+        st.counters.filter_time =
+            has_filter_time && set.filter_time ? set.filter_time * 24UL * 3600UL : EMU_FILTER_TIME;
+      }
+      this->emu_send_state_(request_id);
+      break;
+    }
+
+    case FRAME_TYPE_DEV_INFO_REQ: {
+      const tion_dev_info_t dev_info{
+          .work_mode = tion_dev_info_t::NORMAL,
+          .device_type = tion_dev_info_t::BR4S,
+          .firmware_version = 0x04C7,
+          .hardware_version = 1,
+          .reserved = {},
+      };
+      this->pr_.write_frame(FRAME_TYPE_DEV_INFO_RSP, &dev_info, sizeof(dev_info));
+      break;
+    }
+
+    case FRAME_TYPE_TURBO_REQ:
+      this->emu_send_turbo_(request_id);
+      break;
+
+    case FRAME_TYPE_TURBO_SET: {
+      if (size < sizeof(tion4s_raw_frame_t<tion4s_turbo_set_t>)) {
+        ESP_LOGW(TAG_EMU, "TURBO_SET too short: %zu", size);
+        break;
+      }
+      const auto &set = reinterpret_cast<const tion4s_raw_frame_t<tion4s_turbo_set_t> *>(data)->data;
+      ESP_LOGI(TAG_EMU, "TURBO_SET req=%" PRIu32 " time=%u", request_id, set.time);
+      if (set.time > 0) {
+        if (this->emu_turbo_left_ == 0) {
+          this->emu_turbo_fan_ = st.fan_speed;
+        }
+        this->emu_turbo_left_ = set.time;
+        st.fan_speed = 6;
+      } else if (this->emu_turbo_left_ > 0) {
+        this->emu_turbo_left_ = 0;
+        st.fan_speed = this->emu_turbo_fan_;
+      }
+      this->emu_send_turbo_(request_id);
+      break;
+    }
+
+    case FRAME_TYPE_TIME_SET: {
+      if (size < sizeof(tion4s_raw_frame_t<tion4s_time_t>)) {
+        ESP_LOGW(TAG_EMU, "TIME_SET too short: %zu", size);
+        break;
+      }
+      const auto &set = reinterpret_cast<const tion4s_raw_frame_t<tion4s_time_t> *>(data)->data;
+      this->emu_time_ = set.unix_time;
+      ESP_LOGI(TAG_EMU, "TIME_SET req=%" PRIu32 " unix=%" PRId64, request_id, set.unix_time);
+      const tion4s_raw_frame_t<tion4s_time_t> rsp{.request_id = request_id, .data = {.unix_time = this->emu_time_}};
+      this->pr_.write_frame(FRAME_TYPE_TIME_RSP, &rsp, sizeof(rsp));
+      break;
+    }
+
+    case FRAME_TYPE_TIME_REQ: {
+      const tion4s_raw_frame_t<tion4s_time_t> rsp{.request_id = request_id, .data = {.unix_time = this->emu_time_}};
+      this->pr_.write_frame(FRAME_TYPE_TIME_RSP, &rsp, sizeof(rsp));
+      break;
+    }
+
+    case FRAME_TYPE_TIMER_SET:
+    case FRAME_TYPE_TIMER_REQ: {
+      // timers are not emulated: echo the timer for SET, empty timer for REQ
+      tion4s_raw_frame_t<tion4s_timer_rsp_t> rsp{.request_id = request_id, .data = {}};
+      if (size >= sizeof(uint32_t) + sizeof(uint8_t)) {
+        rsp.data.timer_id = data[4];
+      }
+      if (type == FRAME_TYPE_TIMER_SET && size >= sizeof(rsp)) {
+        memcpy(&rsp.data, data + sizeof(uint32_t), sizeof(rsp.data));
+        ESP_LOGI(TAG_EMU, "TIMER_SET req=%" PRIu32 ": %s", request_id, format_hex_pretty(data, size).c_str());
+      }
+      this->pr_.write_frame(FRAME_TYPE_TIMER_RSP, &rsp, sizeof(rsp));
+      break;
+    }
+
+    case FRAME_TYPE_TIMERS_STATE_REQ: {
+      const tion4s_raw_frame_t<tion4s_timers_state_t> rsp{.request_id = request_id, .data = {}};
+      this->pr_.write_frame(FRAME_TYPE_TIMERS_STATE_RSP, &rsp, sizeof(rsp));
+      break;
+    }
+
+    case FRAME_TYPE_ERR_CNT_REQ: {
+      // real firmware: request_id + 20 counters
+      struct {
+        uint32_t request_id;
+        uint8_t er[20];
+      } PACKED rsp{.request_id = request_id, .er = {}};
+      this->pr_.write_frame(FRAME_TYPE_ERR_CNT_RSP, &rsp, sizeof(rsp));
+      break;
+    }
+
+    default:
+      ESP_LOGW(TAG_EMU, "Unsupported frame %04X: %s", type, format_hex_pretty(data, size).c_str());
+      break;
+  }
+}
+
+#endif  // USE_TION_RC_EMU
 
 }  // namespace tion_rc
 }  // namespace esphome

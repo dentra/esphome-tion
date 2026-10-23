@@ -16,21 +16,27 @@ def FILTER_SOURCE_FILES() -> list[str]:
 
     included_types: list[str] = []
     excluded_types: list[str] = list(TION_ALL_TYPES)
-    for tion in CORE.config["tion"]:
+    configured_types = []
+    for tion in CORE.config.get("tion", []):
         types = tion["type"]
-        if not isinstance(types, list):
-            types = [types]
-        for typ in types:
-            if typ not in included_types:
-                included_types.append(typ)
-            if typ in excluded_types:
-                excluded_types.remove(typ)
+        configured_types.extend(types if isinstance(types, list) else [types])
+    # tion_rc emulates a breezer over BLE and needs its protocol even without a matching tion
+    rc_config = CORE.config.get("tion_rc")
+    if rc_config:
+        configured_types.append(rc_config["type"])
+    for typ in configured_types:
+        if typ not in included_types:
+            included_types.append(typ)
+        if typ in excluded_types:
+            excluded_types.remove(typ)
 
     included_ports: list[str] = [
         define.name[10:].lower()
         for define in CORE.defines
         if define.name in [f"USE_VPORT_{prt.upper()}" for prt in TION_ALL_PORTS]
     ]
+    if rc_config and "ble" not in included_ports:
+        included_ports.append("ble")
     excluded_ports: list[str] = list(TION_ALL_PORTS)
     for port in included_ports:
         excluded_ports.remove(port)
