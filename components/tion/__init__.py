@@ -56,6 +56,30 @@ CONF_AUTO_KP = "kp"
 CONF_AUTO_TI = "ti"
 CONF_AUTO_DB = "db"
 
+
+class _UsbJtagPinWarningFilter(logging.Filter):
+    """Drops USB-Serial-JTAG pin warning when logger does not use USB.
+
+    Boards like lilygo connect breezer UART to USB pins and move logger to UART0,
+    so there is no conflict with USB-Serial-JTAG.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if "USB-Serial-JTAG" not in str(record.msg):
+            return True
+        logger = (core.CORE.raw_config or {}).get("logger")
+        if not isinstance(logger, dict):
+            return False
+        if str(logger.get("baud_rate")) == "0":
+            return False
+        return str(logger.get("hardware_uart", "USB")).upper().startswith("USB")
+
+
+for _variant in ("c3", "c6", "s2", "s3"):
+    logging.getLogger(f"esphome.components.esp32.gpio_esp32_{_variant}").addFilter(
+        _UsbJtagPinWarningFilter()
+    )
+
 tion_ns = cg.esphome_ns.namespace("tion")
 dentra_tion_ns = cg.global_ns.namespace("dentra").namespace("tion")
 
