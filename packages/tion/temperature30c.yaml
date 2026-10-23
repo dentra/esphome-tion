@@ -1,4 +1,3 @@
 esphome:
-  platformio_options:
-    build_flags:
-      - -DTION_MAX_TEMPERATURE=30
+  build_flags:
+    - -DTION_MAX_TEMPERATURE=30

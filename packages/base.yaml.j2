@@ -28,12 +28,6 @@ esphome:
     name: "dentra.$project_id-${[tion.type, tion.port, tion.board_code, tion.conn] | join('-')}"
     version: "$project_version"
   min_version: "{{ version_esphome }}"
-  {#- # TODO remove after https://github.com/esphome/esphome/pull/8603 get released
-  platformio_options:
-    build_flags:
-      - -std=gnu++17
-    build_unflags:
-      - -std=gnu++11 #}
 
 preferences:
   flash_write_interval: 10min

@@ -1,8 +1,7 @@
 esphome:
-  platformio_options:
-    build_flags:
-      # Включаем поддержку работы с расписанием
-      - -DTION_ENABLE_SCHEDULER
+  build_flags:
+    # Включаем поддержку работы с расписанием
+    - -DTION_ENABLE_SCHEDULER
 
 button:
   # Позволяет получить в логе информацию о всех существующих таймерах

@@ -3,10 +3,9 @@ substitutions:
   mqtt_port: 4444
 
 esphome:
-  platformio_options:
-    build_flags:
-      # Включаем поддержку работы со SprutHub
-      - -DTION_SPRUTHUB_SUPPORT
+  build_flags:
+    # Включаем поддержку работы со SprutHub
+    - -DTION_SPRUTHUB_SUPPORT
 
 mqtt:
   discovery: false

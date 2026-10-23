@@ -12,10 +12,9 @@ packages:
   tion: !include tion-lt-uart.yaml
 
 esphome:
-  platformio_options:
-    build_flags:
-      - -g3
-      - -O0
+  build_flags:
+    - -g3
+    - -O0
 
 api:
 
