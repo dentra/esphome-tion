@@ -328,7 +328,7 @@ bool Tion4sApi::request_timers_state(const uint32_t request_id) const {
 
 bool Tion4sApi::set_time(time_t time, uint32_t request_id) const {
   const tion4s_raw_frame_t<tion4s_time_t> req{.request_id = request_id, .data = {.unix_time = time}};
-  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %lld", request_id, req.data.unix_time);
+  TION_LOGD(TAG, "Request[%" PRIu32 "] Time %" PRId64, request_id, req.data.unix_time);
   return this->write_frame(FRAME_TYPE_TIME_SET, req);
 }
 #endif

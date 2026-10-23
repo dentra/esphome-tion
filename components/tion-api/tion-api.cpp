@@ -736,7 +736,7 @@ bool TionApiBase::PresetData::is_modified(const TionState &st) const {
     return true;
   }
   if (this->has_gate_position() && this->gate_position != st.gate_position) {
-    TION_LOGV(TAG, "Preset is modified by %s: %d vs %d", "gate", int(st.gate_position), this->gate_position);
+    TION_LOGV(TAG, "Preset is modified by %s: %d vs %d", "gate", int(st.gate_position), int(this->gate_position));
     return true;
   }
   if (this->has_auto_state() && this->auto_state != st.auto_state) {
