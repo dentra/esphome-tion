@@ -19,14 +19,11 @@ packages:
   z.button: !include ../z/button.yaml
   z.package_check: !include ../z/check_esp32_c6.yaml
 
-esphome:
-  platformio_options:
-    # https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32C6/boards.txt
-    # XIAO_ESP32C6.build.flash_mode=qio
-    board_build.flash_mode: qio
-
 esp32:
   flash_size: 4MB
+  # https://files.seeedstudio.com/wiki/SeeedStudio-XIAO-ESP32C6/boards.txt
+  # XIAO_ESP32C6.build.flash_mode=qio
+  flash_mode: qio
   framework:
     sdkconfig_options:
       # Fix flash size warning

@@ -35,15 +35,14 @@ output:
       inverted: false
 
 esphome:
-  platformio_options:
-    # https://documentation.espressif.com/esp32-c6-mini-1_mini-1u_datasheet_en.pdf
-    board_build.flash_mode: qio
   on_boot:
     - lambda: |-
         id(power_led).turn_on();
 
 esp32:
   flash_size: 4MB
+  # https://documentation.espressif.com/esp32-c6-mini-1_mini-1u_datasheet_en.pdf
+  flash_mode: qio
   framework:
     sdkconfig_options:
       # Fix flash size warning

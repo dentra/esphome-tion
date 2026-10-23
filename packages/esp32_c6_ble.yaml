@@ -5,10 +5,6 @@ substitutions:
 packages:
   tion.esp32_ble: !include z/esp32_ble.yaml
 
-esphome:
-  platformio_options:
-    board_build.flash_mode: dio
-
 esp32_ble:
   enable_on_boot: false
 
@@ -18,6 +14,7 @@ wifi:
 
 esp32:
   variant: ESP32C6
+  flash_mode: dio
 
 declaration:
   - include: esp_idf_version.h
