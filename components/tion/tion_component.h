@@ -78,8 +78,8 @@ class TionApiComponent : public PollingComponent {
    *
    * @param callback The callback to call.
    */
-  void add_on_state_callback(std::function<void(const TionState *)> &&callback) {
-    this->state_callback_.add(std::move(callback));
+  template<typename F> void add_on_state_callback(F &&callback) {
+    this->state_callback_.add(std::forward<F>(callback));
   }
 
 #ifdef TION_ENABLE_API_CONTROL_CALLBACK
@@ -89,8 +89,8 @@ class TionApiComponent : public PollingComponent {
    *
    * @param callback The callback to call.
    */
-  void add_on_control_callback(std::function<void(TionStateCall *)> &&callback) {
-    this->control_callback_.add(std::move(callback));
+  template<typename F> void add_on_control_callback(F &&callback) {
+    this->control_callback_.add(std::forward<F>(callback));
   }
 #endif
 
