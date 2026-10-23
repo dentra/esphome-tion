@@ -26,6 +26,7 @@ template<class protocol_type> class TionBleIO : public TionIO<protocol_type>, pu
     this->set_ble_service(this->protocol_.get_ble_service());
     this->set_ble_char_tx(this->protocol_.get_ble_char_tx());
     this->set_ble_char_rx(this->protocol_.get_ble_char_rx());
+    this->set_ble_disconnect_on_auth_fail(true);
   }
 
   void set_on_ready(on_ready_type &&on_ready) { this->on_ready_ = std::move(on_ready); }

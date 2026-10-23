@@ -13,7 +13,8 @@ class Tion3sBleVPort;
 
 class Tion3sBleIO : public TionBleIO<dentra::tion::Tion3sBleProtocol> {
  public:
-  explicit Tion3sBleIO() { this->set_ble_encryption(esp_ble_sec_act_t::ESP_BLE_SEC_ENCRYPT); }
+  // 3S has its own pairing procedure, keep connection after failed auth as before
+  explicit Tion3sBleIO() { this->set_ble_disconnect_on_auth_fail(false); }
 
   bool ble_reg_for_notify() const override;
 
