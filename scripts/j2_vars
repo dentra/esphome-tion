@@ -15,12 +15,15 @@ fi
 
 version_esphome=($(esphome version))
 version_esphome=${version_esphome[1]}
+# minimal esphome version for packages, checked to build
+version_esphome_min=2026.9.1
 
 vars=(
   ${vars[@]}
   version_tion=$version_tion
   version_tion_ref=$version_tion_ref
   version_esphome=$version_esphome
+  version_esphome_min=$version_esphome_min
   version_vport=$version_vport
 )
 

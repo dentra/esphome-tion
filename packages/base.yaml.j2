@@ -27,7 +27,7 @@ esphome:
   project:
     name: "dentra.$project_id-${[tion.type, tion.port, tion.board_code, tion.conn] | join('-')}"
     version: "$project_version"
-  min_version: "{{ version_esphome }}"
+  min_version: "{{ version_esphome_min }}"
 
 preferences:
   flash_write_interval: 10min
