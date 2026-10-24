@@ -5,9 +5,7 @@ updates:
     target-branch: next
     schedule:
       interval: daily
-    # update transitive dependencies too (security fixes)
-    allow:
-      - dependency-type: all
+    # transitive dependencies are refreshed with `uv lock --upgrade` on esphome bump
     # esphome version is bumped manually together with ci.yaml and README
     ignore:
       - dependency-name: esphome
