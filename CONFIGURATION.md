@@ -314,14 +314,17 @@ sensor:
 
 ### Тип outdoor_temperature
 
-Состояние датчика внешней температуры.
+Температура воздуха на входе в бризер (уличного).
+
+> [!TIP]
+> Алиасы: `intake_temperature`, `inlet_temperature`
 
 ### Тип current_temperature
 
-Состояние датчика внутренней температуры.
+Температура воздуха на выходе из бризера (после нагревателя).
 
 > [!TIP]
-> Алиасы: `indoor_temperature`
+> Алиасы: `indoor_temperature`, `supply_temperature`, `outlet_temperature`, `discharge_temperature`
 
 ### Тип target_temperature
 
