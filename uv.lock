@@ -852,14 +852,11 @@ wheels = [
 
 [[package]]
 name = "marshmallow"
-version = "3.26.2"
+version = "4.3.1"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/55/79/de6c16cc902f4fc372236926b0ce2ab7845268dcc30fb2fbb7f71b418631/marshmallow-3.26.2.tar.gz", hash = "sha256:bbe2adb5a03e6e3571b573f42527c6fe926e17467833660bebd11593ab8dfd57", size = 222095, upload-time = "2025-12-22T06:53:53.309Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4e/d7/611e68d57e6a903c29cb33b5afec0f93b4baecacc6c6c62e33cde9eb9dcb/marshmallow-4.3.1.tar.gz", hash = "sha256:fb6b8048af08d4ab061610d5b7d3696a7e4c95337dbda880edb9f95812cabc20", size = 218308, upload-time = "2026-08-08T14:27:29.517Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/be/2f/5108cb3ee4ba6501748c4908b908e55f42a5b66245b4cfe0c99326e1ef6e/marshmallow-3.26.2-py3-none-any.whl", hash = "sha256:013fa8a3c4c276c24d26d84ce934dc964e2aa794345a0f8c7e5a7191482c8a73", size = 50964, upload-time = "2025-12-22T06:53:51.801Z" },
+    { url = "https://files.pythonhosted.org/packages/43/57/4526ca0e214a3d158690e3393f6d547a2f8070f88d6388ab21d5b0aac8a1/marshmallow-4.3.1-py3-none-any.whl", hash = "sha256:e65accfbe277546df92ed7996a678c90e063e9a7c2a2f5e03f7d0b90e3768c42", size = 49219, upload-time = "2026-08-08T14:27:28.078Z" },
 ]
 
 [[package]]
