@@ -7,10 +7,9 @@ sensor:
       throttle_average: 60s
     entity_category: diagnostic
 
-  # - platform: ble_client
-  #   type: rssi
-  #   ble_client_id: tion_ble_client
-  #   name: RSSI
-  #   filters:
-  #     throttle_average: 60s
-  #   entity_category: diagnostic
+# breezer does not advertise while connected (persistent mode), read RSSI of the connection
+interval:
+  - interval: 20s
+    then:
+      lambda: |-
+        id(tion_ble_vport).read_rssi([](int8_t rssi) { id(tion_ble_rssi).publish_state(rssi); });
