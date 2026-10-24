@@ -1,0 +1,26 @@
+name: retarget
+
+# Pull requests are accepted into next only, master is the release branch.
+on:
+  pull_request_target:
+    types: [opened]
+    branches: [master]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  retarget:
+    if: >-
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      !contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Change base branch to next
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr edit "$PR" --base next
+          gh pr comment "$PR" --body "Изменения принимаются в ветку \`next\`, base этого PR изменён на \`next\`. Пожалуйста, сделайте rebase на \`next\` и push: это устранит возможные конфликты и перезапустит проверки CI для \`next\`."
