@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    target-branch: next
+    schedule:
+      interval: daily
+    # update transitive dependencies too (security fixes)
+    allow:
+      - dependency-type: all
+    # esphome version is bumped manually together with ci.yaml and README
+    ignore:
+      - dependency-name: esphome
+      - dependency-name: clang-format
+    groups:
+      uv:
+        patterns: ["*"]
+        update-types: [minor, patch]
