@@ -16,9 +16,8 @@ inline uint8_t fan_mode_to_speed(const StringRef &fan_mode) { return fan_mode_to
 inline const char *speed_to_fan_mode(uint8_t fan_speed) { return *(FAN_MODE_LABELS.begin() + (fan_speed - 1)); }
 
 const char *preset_to_string(climate::ClimatePreset preset) {
-#ifndef USE_STORE_LOG_STR_IN_FLASH
-  return LOG_STR_ARG(climate::climate_preset_to_string(preset));
-#else
+#ifdef USE_ESP8266
+  // на ESP8266 LOG_STR хранится во флеше, а результат сравнивается через strcasecmp
   switch (preset) {
     case climate::CLIMATE_PRESET_NONE:
       return "NONE";
@@ -39,6 +38,8 @@ const char *preset_to_string(climate::ClimatePreset preset) {
     default:
       return "UNKNOWN";
   }
+#else
+  return LOG_STR_ARG(climate::climate_preset_to_string(preset));
 #endif
 }
 
