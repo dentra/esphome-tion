@@ -7,7 +7,7 @@ fi
 
 # git ref of the release: tags are prefixed with "v"
 version_tion_ref=v$version_tion
-version_vport=2026.10.0
+version_vport=2026.11.0
 if [ "$version_tion" == "next" ]; then
   version_tion_ref=next
   version_vport="master"
