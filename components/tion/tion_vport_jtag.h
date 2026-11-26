@@ -14,6 +14,7 @@
 #include "esphome/components/vport/vport_uart.h"
 
 #include "../tion-api/tion-api-uart.h"
+#include "../tion-api/utils.h"
 
 #include "tion_vport.h"
 

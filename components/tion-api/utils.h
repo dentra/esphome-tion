@@ -4,6 +4,7 @@
 #include <string>
 
 #ifdef TION_ESPHOME
+#include "esphome/core/alloc_helpers.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
